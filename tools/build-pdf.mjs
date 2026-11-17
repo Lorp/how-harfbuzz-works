@@ -1,4 +1,5 @@
-// Builds the book as one PDF, 6 × 9 inches, with book/cover.png as its cover, then
+// Builds the book as one PDF, 6 × 9 inches, with book/cover.png as its cover
+// (and book/cover-back.png, if there is one, as its last page), then
 // the front matter (blanks, half-title, title page, imprint).
 //
 // usage: node tools/build-pdf.mjs [OUT.pdf]   (or: npm run pdf)
@@ -108,7 +109,9 @@ const front = [
 </div>`,
 ].join("\n");
 
-const cover = `data:image/png;base64,${fs.readFileSync(path.join(ROOT, "book", "cover.png")).toString("base64")}`;
+const png = (name) => `data:image/png;base64,${fs.readFileSync(path.join(ROOT, "book", name)).toString("base64")}`;
+const cover = png("cover.png");
+const backCover = fs.existsSync(path.join(ROOT, "book", "cover-back.png")) ? png("cover-back.png") : null;
 
 const print = `
 <style>
@@ -305,11 +308,27 @@ const htmlFile = printPdf(doc(mainHtml), OUT, "book.html");
 // placeholder page 1. qpdf keeps the rest of the book's pages, outline, links
 // and tags, and packs its objects into compressed streams, which halves the
 // file: most of it is the structure tree that makes the PDF accessible.
-const coverPdf = path.join(printDir, "cover.pdf");
-printPdf(`<!doctype html><html><head><meta charset="utf-8"><style>
+const coverPage = (src, alt, out, name) => printPdf(`<!doctype html><html><head><meta charset="utf-8"><style>
 @page { size: 6in 9in; margin: 0; } html, body { margin: 0; }
 img { display: block; width: 6in; height: 9in; object-fit: cover; }
-</style></head><body><img src="${cover}" alt="How HarfBuzz Works"></body></html>`, coverPdf, "cover.html");
+</style></head><body>${src ? `<img src="${src}" alt="${alt}">` : "&nbsp;"}</body></html>`, out, name);
+const coverPdf = path.join(printDir, "cover.pdf");
+coverPage(cover, "How HarfBuzz Works", coverPdf, "cover.html");
+// The back cover, the last page, which is a left-hand (even) page: after a
+// blank if the book ends on one. It has no page number.
+const bookPages = Number(spawnSync("qpdf", ["--show-npages", OUT], { encoding: "utf8" }).stdout.trim());
+const back = [];
+if (backCover) {
+  if (bookPages % 2 === 0) {
+    const blankPdf = path.join(printDir, "blank.pdf");
+    coverPage(null, "", blankPdf, "blank.html");
+    back.push(blankPdf, "1");
+  }
+  const backPdf = path.join(printDir, "cover-back.pdf");
+  coverPage(backCover, "Back cover", backPdf, "cover-back.html");
+  back.push(backPdf, "1");
+}
+const UNNUMBERED_FROM = bookPages + 1; // the back cover, and any blank before it
 // The printed page numbers, stamped on as an overlay: a PDF of the same
 // number of pages, blank but for the number, at the outer foot of the page.
 // Pages with no text (blanks Chrome adds so a part starts on the right) get
@@ -341,12 +360,12 @@ printPdf(`<!doctype html><html><head><meta charset="utf-8">${head.match(/<link[^
 // “PDF-page first-number [style]”, style “none”, “roman” or (left out) arabic.
 // The same labels go into the PDF, for viewers that show them.
 const labelsFile = OUT.replace(/\.pdf$/, "") + ".pages.txt";
-fs.writeFileSync(labelsFile, `1 1 none\n${ROMAN_FROM} 1 roman\n${ARABIC_FROM} 1\n`);
+fs.writeFileSync(labelsFile, `1 1 none\n${ROMAN_FROM} 1 roman\n${ARABIC_FROM} 1\n${back.length ? `${UNNUMBERED_FROM} 1 none\n` : ""}`);
 
 const joined = OUT + ".tmp";
-const q = spawnSync("qpdf", ["--object-streams=generate", OUT, "--pages", coverPdf, "1", OUT, "2-z", "--",
+const q = spawnSync("qpdf", ["--object-streams=generate", OUT, "--pages", coverPdf, "1", OUT, "2-z", ...back, "--",
   "--overlay", foliosPdf, "--",
-  "--set-page-labels", "1:", `${ROMAN_FROM}:r/1`, `${ARABIC_FROM}:D/1`, "--", joined], { encoding: "utf8" });
+  "--set-page-labels", "1:", `${ROMAN_FROM}:r/1`, `${ARABIC_FROM}:D/1`, ...(back.length ? [`${UNNUMBERED_FROM}:`] : []), "--", joined], { encoding: "utf8" });
 if (q.status !== 0 && q.status !== 3) { console.error(q.stderr); process.exit(1); }
 fs.renameSync(joined, OUT);
 console.log(labelsFile);

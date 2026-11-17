@@ -6,6 +6,9 @@ Read it [online](https://lorp.github.io/how-harfbuzz-works/) or as a [PDF](https
 
 A book about the inside of [HarfBuzz](https://github.com/harfbuzz/harfbuzz), written from its source code (version 15.1.0), for type designers, font engineers and programmers.
 
+“I skimmed a few chapters. Genuinely useful to aspiring HarfBuzz developers.”  
+— *Behdad Esfahbod*
+
 Every shaping result and trace in the book is made by running HarfBuzz on small test fonts when the book is built, and every view of a font table is made from the compiled font, so the text can’t drift from what HarfBuzz actually does.
 
 ## Layout
@@ -13,7 +16,7 @@ Every shaping result and trace in the book is made by running HarfBuzz on small 
 * `book/toc.txt`: the order of the book
 * `book/front/`, `book/chapters/`, `book/end/`: one Markdown file per page
 * `book/book.json`: title, subtitle, and the HarfBuzz version described
-* `book/cover.png`: the cover, for the PDF
+* `book/cover.png`, `book/cover-back.png`: the front and back covers, for the PDF
 * `fonts/<page>/`: each chapter’s feature files, the fonts built from them, and `build.sh`
 * `tools/`: building HarfBuzz (`build-harfbuzz.sh`), the site (`build-site.mjs`, Node), and the test fonts and their views (`build-test-font.py`, `font-views.py`, Python)
 * `notes/`: research towards the book, such as the survey of the source
