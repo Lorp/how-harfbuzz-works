@@ -2,6 +2,8 @@
 
 *From Unicode to positioned glyphs, and everything in between*
 
+Read it [online](https://lorp.github.io/how-harfbuzz-works/) or as a [PDF](https://lorp.github.io/how-harfbuzz-works/print/how-harfbuzz-works.pdf).
+
 A book about the inside of [HarfBuzz](https://github.com/harfbuzz/harfbuzz), written from its source code (version 15.1.0), for type designers, font engineers and programmers.
 
 Every shaping result and trace in the book is made by running HarfBuzz on small test fonts when the book is built, and every view of a font table is made from the compiled font, so the text can’t drift from what HarfBuzz actually does.
