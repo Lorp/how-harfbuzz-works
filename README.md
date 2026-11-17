@@ -13,6 +13,7 @@ Every shaping result and trace in the book is made by running HarfBuzz on small 
 * `book/toc.txt`: the order of the book
 * `book/front/`, `book/chapters/`, `book/end/`: one Markdown file per page
 * `book/book.json`: title, subtitle, and the HarfBuzz version described
+* `book/cover.png`: the cover, for the PDF
 * `fonts/<page>/`: each chapter’s feature files, the fonts built from them, and `build.sh`
 * `tools/`: building HarfBuzz (`build-harfbuzz.sh`), the site (`build-site.mjs`, Node), and the test fonts and their views (`build-test-font.py`, `font-views.py`, Python)
 * `notes/`: research towards the book, such as the survey of the source

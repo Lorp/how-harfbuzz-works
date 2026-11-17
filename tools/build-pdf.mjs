@@ -1,4 +1,4 @@
-// Builds the book as one PDF, 6 × 9 inches, with cover.png as its cover, then
+// Builds the book as one PDF, 6 × 9 inches, with book/cover.png as its cover, then
 // the front matter (blanks, half-title, title page, imprint).
 //
 // usage: node tools/build-pdf.mjs [OUT.pdf]   (or: npm run pdf)
@@ -108,7 +108,7 @@ const front = [
 </div>`,
 ].join("\n");
 
-const cover = `data:image/png;base64,${fs.readFileSync(path.join(ROOT, "cover.png")).toString("base64")}`;
+const cover = `data:image/png;base64,${fs.readFileSync(path.join(ROOT, "book", "cover.png")).toString("base64")}`;
 
 const print = `
 <style>
