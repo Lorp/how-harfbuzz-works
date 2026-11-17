@@ -1,0 +1,18 @@
+# The test font for the chapter "Fonts as bytes": two single substitutions,
+# both in liga so that they are on by default. build-fonts.py then makes
+# copies of the font with one field of lookup 0 changed.
+languagesystem DFLT dflt;
+languagesystem latn dflt;
+
+lookup ALT {
+    sub [a e] by [a.alt1 e.init];
+} ALT;
+
+lookup X {
+    sub x by f;
+} X;
+
+feature liga {
+    lookup ALT;
+    lookup X;
+} liga;

@@ -1,0 +1,21 @@
+# Test font for “From features to lookups”: the Arabic shaper's stages.
+# Lookups are numbered in the order they appear: Buzz is lookup 0, init 1,
+# fina 2, Harf 3.
+languagesystem DFLT dflt;
+languagesystem arab dflt;
+
+feature Buzz {
+  sub beh.init by beh.buzz;
+} Buzz;
+
+feature init {
+  sub beh by beh.init;
+} init;
+
+feature fina {
+  sub beh by beh.fina;
+} fina;
+
+feature Harf {
+  sub teh by beh;
+} Harf;

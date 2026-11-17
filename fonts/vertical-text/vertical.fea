@@ -1,0 +1,58 @@
+# The test font for “Vertical text”: a few CJK-style glyphs, their
+# vertical alternates, and the GPOS a vertical run can use.
+# build-fonts.py compiles it into vertical.ttf, and derives the other
+# fonts from it.
+
+languagesystem DFLT dflt;
+languagesystem hani dflt;
+languagesystem kana dflt;
+languagesystem latn dflt;
+
+@MARKS = [dakuten];
+table GDEF {
+  GlyphClassDef , , @MARKS, ;
+} GDEF;
+
+# Horizontal features, which a vertical run never asks for.
+feature liga {
+  sub a b by a_b;
+} liga;
+
+feature kern {
+  pos a b -100;
+} kern;
+
+# Vertical alternates for the punctuation and the brackets.
+feature vert {
+  lookup VERT {
+    sub ideocomma by ideocomma.vert;
+    sub ideoperiod by ideoperiod.vert;
+    sub cornerleft by cornerleft.vert;
+    sub cornerright by cornerright.vert;
+    sub parenleftfw by parenleftfw.vert;
+    sub parenrightfw by parenrightfw.vert;
+    sub ellipsis by ellipsis.vert;
+  } VERT;
+} vert;
+
+# Vertical kerning: a full stop followed by a closing bracket, closer.
+feature vkrn {
+  pos ideoperiod.vert cornerright.vert <0 0 0 -300>;
+} vkrn;
+
+# Proportional vertical metrics: the comma takes half an em.
+feature vpal {
+  pos ideocomma.vert <0 250 0 -500>;
+} vpal;
+
+# The voiced-sound mark attaches to the right of its kana.
+markClass dakuten <anchor 150 800> @TOP_RIGHT;
+feature mark {
+  pos base ka <anchor 950 850> mark @TOP_RIGHT;
+} mark;
+
+# A cursive chain down the line: each link enters at the top and leaves
+# at the bottom, a little to the right of where it came in.
+feature curs {
+  pos cursive l <anchor 400 830> <anchor 600 -70>;
+} curs;

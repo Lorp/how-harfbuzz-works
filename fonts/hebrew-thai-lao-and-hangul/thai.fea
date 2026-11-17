@@ -1,0 +1,21 @@
+# Test fonts for “Hebrew, Thai, Lao and Hangul”: Thai and Lao.
+# thai.ttf is built from this file. Its one lookup does in GSUB what the
+# PUA fallback does for old fonts in one case: YO YING loses its
+# descender before a vowel below. It is there mainly so that the font has
+# a GSUB with the thai script. (thai-pua.ttf and thai-pua-mac.ttf have no
+# GSUB at all.)
+languagesystem thai dflt;
+languagesystem lao  dflt;
+
+table GDEF {
+  GlyphClassDef [kokai dodek popla yoying thothan dochada saraaa
+                 yoying.nodesc lko lsaraaa dottedcircle],
+                ,
+                [sarai sarau maiek maitho maichattawa nikhahit
+                 lmaiek lnikhahit],
+                ;
+} GDEF;
+
+feature ccmp {
+    sub yoying' [sarau] by yoying.nodesc;
+} ccmp;

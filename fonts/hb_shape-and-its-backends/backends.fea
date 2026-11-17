@@ -1,0 +1,40 @@
+# Test font for “hb_shape and its backends”: a little of everything the
+# ot shaper does and the fallback shaper doesn't. A ligature, a kerning
+# pair, a mark to attach to a base (the font has no precomposed é), and
+# Arabic joining forms.
+languagesystem DFLT dflt;
+languagesystem latn dflt;
+languagesystem arab dflt;
+
+table GDEF {
+  GlyphClassDef [A V e f i beh beh.init beh.medi beh.fina], [f_i], [acutecomb], ;
+} GDEF;
+
+feature liga {
+  sub f i by f_i;
+} liga;
+
+feature kern {
+  pos A V -150;
+} kern;
+
+markClass acutecomb <anchor 0 500> @TOP;
+
+feature mark {
+  pos base e <anchor 250 650> mark @TOP;
+} mark;
+
+feature init {
+  script arab;
+    sub beh by beh.init;
+} init;
+
+feature medi {
+  script arab;
+    sub beh by beh.medi;
+} medi;
+
+feature fina {
+  script arab;
+    sub beh by beh.fina;
+} fina;

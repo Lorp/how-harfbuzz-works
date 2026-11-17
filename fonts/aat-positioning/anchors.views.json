@@ -1,0 +1,9 @@
+{
+ "font": "anchors.ttf",
+ "sha256": "21e56d22391b1c90ac2bfda563d852300596de7bf34ad6c2cfbb376d59f397a2",
+ "lookups": {},
+ "tables": {
+  "ankr": "<ankr>\n  <AnchorPoints Format=\"0\">\n    <Flags value=\"0\"/>\n    <Anchors>\n      <Lookup glyph=\"A\">\n        <!-- AnchorPointCount=1 -->\n        <AnchorPoint index=\"0\">\n          <XCoordinate value=\"300\"/>\n          <YCoordinate value=\"600\"/>\n        </AnchorPoint>\n      </Lookup>\n      <Lookup glyph=\"T\">\n        <!-- AnchorPointCount=1 -->\n        <AnchorPoint index=\"0\">\n          <XCoordinate value=\"300\"/>\n          <YCoordinate value=\"600\"/>\n        </AnchorPoint>\n      </Lookup>\n      <Lookup glyph=\"V\">\n        <!-- AnchorPointCount=1 -->\n        <AnchorPoint index=\"0\">\n          <XCoordinate value=\"300\"/>\n          <YCoordinate value=\"600\"/>\n        </AnchorPoint>\n      </Lookup>\n      <Lookup glyph=\"acutecomb\">\n        <!-- AnchorPointCount=1 -->\n        <AnchorPoint index=\"0\">\n          <XCoordinate value=\"-300\"/>\n          <YCoordinate value=\"520\"/>\n        </AnchorPoint>\n      </Lookup>\n      <Lookup glyph=\"o\">\n        <!-- AnchorPointCount=1 -->\n        <AnchorPoint index=\"0\">\n          <XCoordinate value=\"250\"/>\n          <YCoordinate value=\"520\"/>\n        </AnchorPoint>\n      </Lookup>\n    </Anchors>\n  </AnchorPoints>\n</ankr>",
+  "kerx": "kerx version 2, 1 subtable\nsubtable 0: format 4, length 94\n  coverage: none\n  tupleCount: 0\n  nClasses: 6\n  classes: A: 4, T: 4, V: 4, o: 4, acutecomb: 5\n  state 0: entries by class [0, 0, 0, 0, 1, 2]\n  state 1: entries by class [0, 0, 0, 0, 1, 2]\n  entry 0: newState 0, no action\n  entry 1: newState 0, Mark, no action\n  entry 2: newState 0, action 0\n  flags: action type 1 (anchor point actions), actions at 78\n  action 0: marked glyph's anchor 0, current glyph's anchor 0"
+ }
+}

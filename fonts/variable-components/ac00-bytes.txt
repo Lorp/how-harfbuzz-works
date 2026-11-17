@@ -1,0 +1,10 @@
+── glyph 3, component 0 (offsets from the start of VARC)
+00f3  3e              flags = 0x3e: HAVE_AXES, AXIS_VALUES_HAVE_VARIATION, TRANSFORM_HAS_VARIATION, HAVE_TRANSLATE_X, HAVE_TRANSLATE_Y
+00f4  00 04           gid = 4
+00f6  00              axisIndicesIndex = 0 → axes 0000, 0001, 0002
+00f7  42              axisValues: run of 3 words
+00f8  ef 7d 03 33 de dc axisValues: -4227, 819, -8484
+00fe  00              axisValuesVarIndex = 0
+00ff  01              transformVarIndex = 1
+0100  ff f6           translateX = -10
+0102  00 18           translateY = 24

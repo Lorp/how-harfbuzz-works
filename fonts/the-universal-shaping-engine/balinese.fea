@@ -1,0 +1,17 @@
+# Test font for “The Universal Shaping Engine”: Balinese.
+# build-fonts.py compiles it whole (balinese.ttf) and without blwf
+# (balinese-no-blwf.ttf).
+languagesystem bali dflt;
+
+table GDEF {
+  GlyphClassDef [ka ta sa taling tedung bisah dottedcircle],
+                ,
+                [adeg suku ulu surang cecek ka.sub ta.sub],
+                ;
+} GDEF;
+
+# Adeg-adeg + consonant is the consonant's subjoined form (gantungan).
+feature blwf {
+    sub adeg ka by ka.sub;
+    sub adeg ta by ta.sub;
+} blwf;

@@ -1,0 +1,9 @@
+# Test font for “Joining scripts”: the Syriac abbreviation mark, which
+# stch breaks into three tiles: fixed, repeating, fixed. The Arabic shaper
+# then repeats the middle tile until the tiles span the word after the mark.
+languagesystem DFLT dflt;
+languagesystem syrc dflt;
+
+feature stch {
+    sub sam by sam.end sam.rep sam.end;
+} stch;

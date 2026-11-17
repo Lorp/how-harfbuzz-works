@@ -5,9 +5,9 @@ libraries (raster/vector/GPU), subsetting/instancing/repacking/depend, and
 testing/robustness. GSUB/GPOS lookups, the shaping pipeline, script shapers and
 AAT are excluded.
 
-All paths are relative to the checkout's `src/` unless they start with
+All paths are relative to the checkout’s `src/` unless they start with
 `docs/`, `test/` or a top-level file. Line numbers are for the 15.1.0 checkout
-(commit `3df40d9`). "(inferred)" marks conclusions I drew rather than read.
+(commit `3df40d9`). “(inferred)” marks conclusions I drew rather than read.
 
 ---
 
@@ -15,10 +15,10 @@ All paths are relative to the checkout's `src/` unless they start with
 
 | Topic | Old belief | 15.1.0 reality | Evidence |
 |---|---|---|---|
-| Sanitizer edits | Sanitize "neuters" bad offsets in place (writable blob, `may_edit`, `HB_SANITIZE_MAX_EDITS`) | No editing at all. A table that fails `sanitize()` is replaced by the empty blob. `HB_SANITIZE_MAX_EDITS` is still `#define`d (hb-sanitize.hh:108) but nothing reads it | hb-sanitize.hh:97-102 (the "Note:" in the header comment), `sanitize_blob` hb-sanitize.hh:405-438; NEWS 12.3.0 ("Invalid font tables (eg. GSUB/GPOS) are outright rejected") |
-| Kahn's algorithm in repacker | docs/repacker.md: Kahn first, then shortest-distance | Only `sort_shortest_distance()` exists; no Kahn anywhere in code | `grep -i kahn` hits only docs/repacker.md; hb-repacker.hh:407 |
+| Sanitizer edits | Sanitize “neuters” bad offsets in place (writable blob, `may_edit`, `HB_SANITIZE_MAX_EDITS`) | No editing at all. A table that fails `sanitize()` is replaced by the empty blob. `HB_SANITIZE_MAX_EDITS` is still `#define`d (hb-sanitize.hh:108) but nothing reads it | hb-sanitize.hh:97-102 (the “Note:” in the header comment), `sanitize_blob` hb-sanitize.hh:405-438; NEWS 12.3.0 (“Invalid font tables (eg. GSUB/GPOS) are outright rejected”) |
+| Kahn’s algorithm in repacker | docs/repacker.md: Kahn first, then shortest-distance | Only `sort_shortest_distance()` exists; no Kahn anywhere in code | `grep -i kahn` hits only docs/repacker.md; hb-repacker.hh:407 |
 | Raster/vector SVG glyphs | 13.1.1 added SVG-in-OT rendering to raster and vector | Dropped in 14.2.0. Their `image` callbacks accept only PNG/BGRA; an SVG image returns false so painting falls through | hb-raster-paint.cc:1002,1022; hb-vector-paint-svg.cc:643; NEWS 14.2.0 |
-| Raster/vector/GPU status | "experimental" | Stable API/ABI since 15.0.0 | NEWS 15.0.0 |
+| Raster/vector/GPU status | “experimental” | Stable API/ABI since 15.0.0 | NEWS 15.0.0 |
 | Beyond-64K and cubic `GLYF` | experimental, off by default | On by default since 15.0.0; only `HB_MINI` disables them | hb-config.hh:93-97; NEWS 15.0.0 |
 | `avar` v2 instancing | full instancing only (12.3.0) | Partial instancing too (14.3.0) | AVAR2-INSTANCING.md; hb-ot-var-avar-table.hh:803 `_subset_avar2` |
 | Work limits | per-subsystem limits only | Cumulative **budgets** (14.5.0) shared across nested draw/paint/VARC/glyf/CFF work, exposed through public `hb_draw_*_budget` / `hb_paint_*_budget` | hb-limits.hh:197-282; hb-draw.hh:41-43,197-200 |
@@ -29,9 +29,9 @@ Doc/code mismatches a book should not copy:
 * docs/serializer.md:107 links to `reapcker.md` (typo).
 * test/fuzzing/README.md says the depend fuzzer needs `-Ddepend_api=true`; the
   real meson option is `experimental_api` (meson_options.txt:65).
-* The `hb-sanitize.hh` header comment still says sanitize returns "either the
-  sanitized blob, or empty blob", which is correct; but its name history ("used
-  to try to recover from errors by modifying the data") is the only remaining
+* The `hb-sanitize.hh` header comment still says sanitize returns “either the
+  sanitized blob, or empty blob”, which is correct; but its name history (“used
+  to try to recover from errors by modifying the data”) is the only remaining
   trace of edit-on-sanitize.
 
 ---
@@ -45,19 +45,19 @@ Doc/code mismatches a book should not copy:
 * `hb-machinery.hh`: `StructAtOffset`/`StructAfter`, `DEFINE_SIZE_*`, lazy loaders.
 * `hb-sanitize.hh`: the sanitizer.
 * `hb-dispatch.hh`: the generic dispatch context (60 lines).
-* `hb-open-file.hh`: the sfnt container (TTC, dfont, OTTO, 'true', 'typ1').
+* `hb-open-file.hh`: the sfnt container (TTC, dfont, OTTO, ‘true’, ‘typ1’).
 * `hb-ot-face.hh`, `hb-ot-face-table-list.hh`, `hb-ot-face.cc`: per-face lazy tables.
-* `hb-ot-dual.hh`: `SmallTypes`/`MediumTypes` and the beyond-64K "dual" accelerator.
+* `hb-ot-dual.hh`: `SmallTypes`/`MediumTypes` and the beyond-64K “dual” accelerator.
 * `hb-face.cc`, `hb-face-builder.cc`, `hb-blob.cc`.
 
-### The "struct over bytes" idiom
+### The “struct over bytes” idiom
 
 * Integer types are `NumType<BE, Type, Size>` (hb-open-type.hh:57-113),
-  typedef'd as `HBUINT8/16/24/32/64`, `HBINT*`, little-endian `*LE` variants
+  typedef’d as `HBUINT8/16/24/32/64`, `HBINT*`, little-endian `*LE` variants
   and float types (hb-open-type.hh:115-137). Storage is a byte array
   (`HBInt` in hb-algs.hh, with a bswap fast path under `HB_FAST_NUM_ACCESS`),
   so structs have **no alignment requirement** and can be laid directly over
-  mmap'd font bytes. Conversion out is via `operator WideType ()`.
+  mmap’d font bytes. Conversion out is via `operator WideType ()`.
 * There is no signed 24-bit type, on purpose (comment at hb-open-type.hh:123).
 * `HBUINT32VAR` (hb-open-type.hh:149-232) is a 1–5-byte variable-length
   integer (prefix-coded in the top bits of the first byte), used by VARC.
@@ -68,7 +68,7 @@ Doc/code mismatches a book should not copy:
   offset; a zero offset yields `Null(Type)` (const) or `Crap(Type)` (mutable).
   `NNOffsetTo` (non-nullable) variants exist. A `static_assert`
   (hb-open-type.hh:417) refuses nullable offsets to types whose Null object
-  can't be safely defined.
+  can’t be safely defined.
 * Arrays: `UnsizedArrayOf` (556), `ArrayOf<Type, LenType>` (712) with
   `Array16Of/24Of/32Of`, `HeadlessArrayOf` (898; count includes the implicit
   first element), `ArrayOfM1` (994; count minus one), `SortedArrayOf` (1048)
@@ -81,7 +81,7 @@ Doc/code mismatches a book should not copy:
   that the sanitizer (`check_struct` uses `min_size`) and the Null machinery
   read via SFINAE (hb-null.hh:42-107).
 * `hb-ot-dual.hh:38-74`: `Layout::SmallTypes` (16-bit glyph ids/offsets) and
-  `MediumTypes` (24-bit glyph ids and offsets, 32-bit "long" offsets) let a
+  `MediumTypes` (24-bit glyph ids and offsets, 32-bit “long” offsets) let a
   single template body produce both the classic tables and the OFF 5th-edition
   beyond-64K ones (`gvar`/`GVAR`, `glyf`/`GLYF`, `hmtx`/`HMTX`, 24-bit
   GSUB/GPOS formats, COLR `PaintGlyph2` = format 33).
@@ -90,15 +90,15 @@ Doc/code mismatches a book should not copy:
 
 * `_hb_NullPool` is a 640-byte all-zero static array (`HB_NULL_POOL_SIZE`,
   hb-null.hh:39; defined hb-static.cc:51). `Null(T)` reinterprets it as a `T`.
-  Because counts and offsets in a zeroed struct are 0, a Null table "behaves
-  like an empty table" with no branches at call sites.
+  Because counts and offsets in a zeroed struct are 0, a Null table “behaves
+  like an empty table” with no branches at call sites.
 * Types whose zero bytes would mean something wrong get explicit Null bytes
-  (hb-static.cc:54-61): `Index` and `VarIdx` are all 0xFF (= "no index"),
+  (hb-static.cc:54-61): `Index` and `VarIdx` are all 0xFF (= “no index”),
   `LangSys` has reqFeatureIndex 0xFFFF, `RangeRecord`/`ClipRecord` start with
   0x01 (so start > end, an empty range), etc.
 * `Crap(T)` (hb-null.hh:165-188) is a *writable* scratch copy of Null, used
   when code writes through a null offset. Deliberately not thread-local (it
-  "only exists to catch and divert program logic bugs", hb-null.hh:166-169).
+  “only exists to catch and divert program logic bugs”, hb-null.hh:166-169).
 * `hb_nonnull_ptr_t` (hb-null.hh:196-218) is a pointer that reads as Null when nullptr.
 * Not every struct can be nullable: a struct that defines `min_size` but not
   `null_size` is declaring itself non-nullable (hb-null.hh:61-63).
@@ -106,7 +106,7 @@ Doc/code mismatches a book should not copy:
 ### Sanitizing (hb-sanitize.hh)
 
 * Contract (header comment, hb-sanitize.hh:69-96): `sanitize()` returns true iff
-  it is safe to call the object's other methods. What it checks depends on what
+  it is safe to call the object’s other methods. What it checks depends on what
   the accessors assume: GSUB/GPOS/GDEF check every offset up front (simpler
   accessors); glyf/loca do **not** (O(1) load, checks at glyph load), because
   checking loca would cost O(num-glyphs).
@@ -119,8 +119,8 @@ Doc/code mismatches a book should not copy:
   * `max_ops` is set in `start_processing` (230-252) to `length × 64` clamped
     to [16384, 0x3FFFFFFF] (`HB_SANITIZE_MAX_OPS_*`, 111-119). Note that
     `check_range` (276-294) decrements `max_ops` **by the number of bytes
-    checked**, not by one per call, so the budget is "bytes examined ≈ 64×
-    table size".
+    checked**, not by one per call, so the budget is “bytes examined ≈ 64×
+    table size”.
   * `max_subtables` with `HB_SANITIZE_MAX_SUBTABLES` 0x4000 via
     `visit_subtables` (147-151).
   * `check_start_recursion`/`end_recursion` (380-390) bound recursion.
@@ -133,12 +133,15 @@ Doc/code mismatches a book should not copy:
   hb-open-type.hh:180-186, hb-open-file.hh:281). Its purpose, as I read it, is
   to stop the compiler from hoisting reads of not-yet-validated data above the
   check (inferred; no comment states it).
-* `set_object`/`hb_sanitize_with_object_t` (191-226, 455-466) temporarily
-  narrow the sanitize range to one sub-object (used e.g. by CFF).
-* `lazy_some_gpos` (hb-sanitize.hh:470): the GSUB/GPOS accelerator sets it
-  (hb-ot-layout-gsubgpos.hh:6713) so that heavy GPOS value-record checks
-  (PairSet, PairPosFormat2, ValueFormat, Anchor, Cursive) are skipped at load
-  and done lazily at apply time. So the "check everything up front for GPOS"
+* `set_object`/`hb_sanitize_with_object_t` (193-226, 460-470) temporarily
+  narrow the sanitize range to one sub-object. Used only by `kern`/`kerx`
+  (hb-aat-layout-kerx-table.hh:1122, :1168); the `morx` uses are commented out.
+* `lazy_some_gpos` (hb-sanitize.hh:457): the GSUB/GPOS accelerator sets it
+  (hb-ot-layout-gsubgpos.hh:6713) so that some GPOS offsets are not followed at
+  load: Device offsets in SinglePos/PairPos value records, CursivePos entry/exit
+  anchors, and AnchorMatrix anchors. The value records’ own bytes and the
+  MarkArray anchors are still checked at load; the deferred offsets are
+  checked at apply time. So the “check everything up front for GPOS”
   rule now has exceptions (OT/Layout/GPOS/PairSet.hh:112 etc.).
 * Since 12.3.0 a failed table is dropped entirely, matching Core Text and not
   DirectWrite/HarfRust (NEWS). A side effect noted in NEWS 13.0.0: overly
@@ -152,16 +155,16 @@ Doc/code mismatches a book should not copy:
   `may_dispatch` lets the sanitizer check the format field before switching
   (hb-sanitize.hh:136-141). The same tables are thereby walked by
   sanitize, subset, closure, collect-glyphs, apply, depend, etc. (one schema,
-  many visitors). The sanitizer's own `_dispatch` prefers `obj.sanitize(...)`
+  many visitors). The sanitizer’s own `_dispatch` prefers `obj.sanitize(...)`
   and falls back to `obj.dispatch(...)` via `hb_priority` (hb-sanitize.hh:154-165).
 * COLR `Paint` is a good example of a big format switch (OT/Color/COLR/COLR.hh:~2280-2320).
 
 ### Container (hb-open-file.hh)
 
-* `OpenTypeFontFile` (485) switches on the first tag: 'OTTO', 0x00010000,
-  'true', 'typ1' (single face), 'ttcf' (TTC), 0x00000100 (Mac dfont resource fork).
+* `OpenTypeFontFile` (485) switches on the first tag: ‘OTTO’, 0x00010000,
+  ‘true’, ‘typ1’ (single face), ‘ttcf’ (TTC), 0x00000100 (Mac dfont resource fork).
 * `TTCHeaderVersion1` (219-262): with `version.minor >= 1` (OFF 5th ed.
-  "extended TTC"), a second directory list follows the first (plus a 12-byte
+  “extended TTC”), a second directory list follows the first (plus a 12-byte
   gap for major version 2) and is the one used.
 * `OpenTypeOffsetTable::serialize` (~120-200) writes a font, computing table
   checksums and `head.checkSumAdjustment = 0xB1B0AFBA − sum`.
@@ -175,19 +178,22 @@ Doc/code mismatches a book should not copy:
   `hb-ot-face-table-list.hh`: each table becomes an
   `hb_table_lazy_loader_t<T, ORDER>` (a sanitized blob) or each accelerated
   table an `hb_face_lazy_loader_t<T_accelerator_t, ORDER>`.
-* **Pointer-math trick**: loaders don't store a face pointer. `hb_face_t *face`
-  is declared immediately before the loaders ("MUST be JUST before",
+* **Pointer-math trick**: loaders don’t store a face pointer. `hb_face_t *face`
+  is declared immediately before the loaders (“MUST be JUST before”,
   hb-ot-face.hh:61), and each loader finds it at
-  `((Data **) this) - WheresData` where `WheresData` is the table's ordinal in
+  `((Data **) this) - WheresData` where `WheresData` is the table’s ordinal in
   the enum (hb-machinery.hh:155-167). One pointer per table, no back-pointer.
 * `hb_lazy_loader_t::get_stored` (hb-machinery.hh:230-250) is lock-free:
   acquire-load; if null, create; publish with `cmpexch(nullptr, p)`; on a race,
   destroy own copy and retry. Failures are cached as a *tagged* Null pointer
-  (low bit set, `tag_null`, 273-284) so a failed load isn't retried and so a
-  per-library Null object from another library is still recognized.
+  (low bit set, `tag_null`, 273-284) when an accelerator’s `create()` returns NULL
+  (allocation failure), and so a per-library Null object from another library
+  is still recognized. A missing or broken *table* is instead stored as the empty
+  blob, an ordinary value. `cmpexch` is `compare_exchange_weak`: spurious
+  failures are possible and only cost another pass.
 * `hb_table_lazy_loader_t::create` (330-335) is just `hb_sanitize_context_t().reference_table<T>(face)`.
-* What's **not** in the list: HVAR/VVAR (loaded inside the hmtx/vmtx
-  accelerators, hb-ot-hmtx-table.hh:486,496), `GLYF`/`LOCA` (loaded by the glyf
+* What’s **not** in the list: HVAR/VVAR (loaded inside the hmtx/vmtx
+  accelerators, hb-ot-hmtx-table.hh:455,496), `GLYF`/`LOCA` (loaded by the glyf
   accelerator itself), the `GVAR` dual (gvar accelerator). JSTF and opbd are
   commented out.
 * `hb_dual_accelerator_t<Lower, Upper>` (hb-ot-dual.hh:78-110): if the
@@ -200,7 +206,7 @@ Doc/code mismatches a book should not copy:
 2. Types over bytes: NumType, fixed types, offsets, arrays, the size macros.
 3. Null and Crap: why HarfBuzz code rarely checks for missing tables.
 4. Sanitize: the contract, what is checked when, budgets, `hb_barrier`, and
-   the 12.3.0 shift from "repair" to "reject" (with the harfbust history).
+   the 12.3.0 shift from “repair” to “reject” (with the harfbust history).
 5. Dispatch: one schema, many visitors (sanitize/subset/closure/apply/depend).
 6. The container: sfnt, TTC (incl. extended TTC), dfont; face indices and
    named-instance bits.
@@ -234,15 +240,15 @@ Doc/code mismatches a book should not copy:
    `avar->map_coords_16_16`, then rounding to **2.14** (`(v + 2) >> 2`).
    Doing avar in 16.16 keeps precision through avar v2 (inferred motive).
 3. `avar` v1: `SegmentMaps::map_float` (hb-ot-var-avar-table.hh:152-~260) is a
-   deliberately *extended* version of the spec ("CoreText is wild... PingFangUI
-   avar needs all this special-casing", 172-176): it tolerates maps with fewer
+   deliberately *extended* version of the spec (“CoreText is wild... PingFangUI
+   avar needs all this special-casing”, 172-176): it tolerates maps with fewer
    than 3 entries, repeated boundary entries, and runs of identical
    `fromCoord`s (fixed in 14.4.0).
 4. `avar` v2 (545-596): after the v1 segment maps, every axis gets
    `delta = varStore.get_delta(varIdxMap.map(i), coords_2_14)`; the delta is
    computed from the **v1-mapped coords of all axes**, added unclamped, and
-   only the result is clamped to [-1,1] ("matching fontTools"). So avar2 lets
-   any axis's final position depend on all the others.
+   only the result is clamped to [-1,1] (“matching fontTools”). So avar2 lets
+   any axis’s final position depend on all the others.
 5. `_hb_font_adopt_var_coords` (hb-font.cc:2166-2180) stores `coords` (int
    2.14), `design_coords`, `has_nonzero_coords`, and bumps the font serial so
    caches (advance caches, gvar scalar caches) invalidate.
@@ -256,16 +262,16 @@ Doc/code mismatches a book should not copy:
   tent, plus robustness: invalid regions (start>peak, peak>end, or a region
   crossing zero) evaluate to **1** (i.e. ignore the axis), not 0.
 * `VarData` stores word/byte (and with the LONG_WORDS bit, 32/16-bit) delta
-  rows; `get_delta` multiplies each region's scalar by its delta.
+  rows; `get_delta` multiplies each region’s scalar by its delta.
 * `hb_scalar_cache_t` (2637-2726): a per-call array of region scalars, NaN
-  meaning "not computed", atomics so it can be shared; up to 128 entries on
+  meaning “not computed”, atomics so it can be shared; up to 128 entries on
   the stack (`STATIC_LENGTH`). Created per font/coords and cached in
   `hb_ot_font_t` (hb-ot-font.cc:78-111 acquire/release pattern).
 * `DeltaSetIndexMap` (formats 0/1) maps glyph/axis indices to (outer, inner).
 * `MultiItemVariationStore`/`MultiVarData`/`SparseVarRegionList`: a newer IVS
   whose rows are *vectors* of deltas (TupleList = CFF2Index of TupleValues),
-  used by VARC. 14.6.0 changed it to a "revised variation-store format
-  incompatible with the previous one" (NEWS).
+  used by VARC. 14.6.0 changed it to a “revised variation-store format
+  incompatible with the previous one” (NEWS).
 
 ### gvar (and GVAR)
 
@@ -278,13 +284,13 @@ Doc/code mismatches a book should not copy:
   (`infer_delta`, 664-685) on unreferenced points per contour.
 * Fast paths a book should mention:
   * When a tuple applies to all points and no tuple in the glyph has private
-    points, deltas are added straight into the points as they're decoded
+    points, deltas are added straight into the points as they’re decoded
     (`decompile_deltas_add_to_points`, 693-765) — no intermediate arrays.
   * Shared-tuple scalars are cached per font (scalar cache sized to
     `min(sharedTupleCount, 0x1000)`). **Intermediate tuples are not cached**
     against the shared index, because the intermediate region belongs to the
-    tuple, not the shared peak (hb-ot-var-common.hh:146-152). 15.1.0's NEWS
-    "Fix wrong outlines in gvar fonts with intermediate tuples" is very likely
+    tuple, not the shared peak (hb-ot-var-common.hh:146-152). 15.1.0’s NEWS
+    “Fix wrong outlines in gvar fonts with intermediate tuples” is very likely
     this (inferred).
   * For ≥16 axes it skips zero peaks four at a time with a 64-bit read (171-184).
   * `phantom_only` mode only computes the four phantom points (used for
@@ -297,14 +303,14 @@ Doc/code mismatches a book should not copy:
 ### Advances: HVAR or phantom points
 
 `hb-ot-font.cc:436-499`: horizontal advances use HVAR if present; otherwise,
-if gvar is present, glyf's **phantom points** with gvar deltas
+if gvar is present, glyf’s **phantom points** with gvar deltas
 (`glyf.get_advance_with_var_unscaled`, 484); otherwise unvaried hmtx. Same for
 vertical (562-609). Phantom points are built in `Glyph::get_points`
 (OT/glyf/Glyph.hh:392-414) from hmtx/vmtx and the glyph bbox.
 
 ### cvar
 
-HarfBuzz doesn't hint, so `cvar` is only used by the subsetter/instancer: when
+HarfBuzz doesn’t hint, so `cvar` is only used by the subsetter/instancer: when
 fully instancing, deltas are applied into `cvt ` (hb-subset.cc:349-356,
 `cvar::add_cvt_and_apply_deltas`). Its table entry in hb-ot-face exists for that.
 
@@ -320,12 +326,12 @@ fully instancing, deltas are applied into `cvt ` (hb-subset.cc:349-356,
   `HBUINT32VAR` fields.
 * `VarComponent::get_path_at` (VARC.cc:344-466): evaluate the optional
   condition; decode axis indices and values, add their variations (from the
-  multi-IVS at the *parent's* coords); build a new coordinate vector
-  (`coord_setter_t`, which can address axes **beyond fvar's axis count**, up
+  multi-IVS at the *parent’s* coords); build a new coordinate vector
+  (`coord_setter_t`, which can address axes **beyond fvar’s axis count**, up
   to `HB_VAR_COMPOSITE_MAX_AXES` 4096 — hidden per-component axes);
   `RESET_UNSPECIFIED_AXES` decides whether unspecified axes reset to 0 or
   inherit; compute the transform (with variations), compose, and recurse.
-* Leaves are drawn by glyf → CFF2 → CFF1 **at the component's coordinates**
+* Leaves are drawn by glyf → CFF2 → CFF1 **at the component’s coordinates**
   through a transforming pen (VARC.cc:487-504). So VARC is a layer above the
   outline formats and never sees GSUB.
 * Draw order in `hb_ot_draw_glyph_or_fail` (hb-ot-font.cc:900-934): VARC first,
@@ -343,7 +349,7 @@ fully instancing, deltas are applied into `cvt ` (hb-subset.cc:349-356,
 4. gvar: tuple headers, shared tuples, point numbers, packed deltas, IUP,
    phantom points; the fast paths; GVAR.
 5. cvar and hinting (or rather, why HarfBuzz only writes it).
-6. VARC: variable components, hidden axes, conditions, transforms; why it's a
+6. VARC: variable components, hidden axes, conditions, transforms; why it’s a
    draw-time feature only.
 
 ---
@@ -376,15 +382,15 @@ fully instancing, deltas are applied into `cvt ` (hb-subset.cc:349-356,
 * Callbacks: move_to, line_to, quadratic_to, cubic_to, close_path, plus (14.5.0)
   set_budget/get_budget/get_budget_remaining (hb-draw.hh:35-44).
 * **move_to is lazy**: `hb_draw_funcs_t::move_to` only records the point;
-  the client's move_to is emitted on the first segment (`start_path`), and
-  close_path inserts a closing line_to if the contour isn't closed
+  the client’s move_to is emitted on the first segment (`start_path`), and
+  close_path inserts a closing line_to if the contour isn’t closed
   (hb-draw.hh:112-178). So clients never see empty contours or unclosed paths.
 * `hb_draw_session_t` (hb-draw.hh:194-252) carries the draw state and a
-  pointer to the live budget (a backend's, or a local `HB_BUDGET_GLYPH` 2^24).
+  pointer to the live budget (a backend’s, or a local `HB_BUDGET_GLYPH` 2^24).
 * Synthetic slant/embolden: when the font has them, the outline is first
-  recorded into an `hb_outline_t`, slanted around the glyph's horizontal
+  recorded into an `hb_outline_t`, slanted around the glyph’s horizontal
   origin, then emboldened (`hb_outline_t::embolden`), then replayed
-  (hb-font.hh:690-748). Slant before embolden "produces nicer results".
+  (hb-font.hh:690-748). Slant before embolden “produces nicer results”.
 
 ### glyf
 
@@ -393,22 +399,22 @@ fully instancing, deltas are applied into `cvt ` (hb-subset.cc:349-356,
 * Composite components are loaded recursively (`HB_MAX_NESTING_LEVEL` 64,
   `HB_MAX_GRAPH_EDGE_COUNT` 16384, `hb_decycler_t` for cycles,
   `HB_GLYF_MAX_POINTS` 200000, budgets).
-* **Each component contributes one "point" to the composite's own point list
+* **Each component contributes one “point” to the composite’s own point list
   — its offset** — so gvar can vary component offsets and phantoms
   (`points[old_length + comp_index]` in Glyph.hh:~520). USE_MY_METRICS copies
-  the component's phantoms. Anchored (point-matching) components are supported.
+  the component’s phantoms. Anchored (point-matching) components are supported.
 * Point-to-path: `path_builder_t::consume_point` (path-builder.hh:39-~170),
   based on ttf-parser, handles implied on-curve midpoints, all-off-curve
   contours, and **cubic** off-curve pairs.
 * Contour start rotation: if a contour starts off-curve, the code feeds the
-  last point first to match FreeType/Core Text, *unless* it's a cubic pair
+  last point first to match FreeType/Core Text, *unless* it’s a cubic pair
   (rotating by one would re-pair the cubic controls) (glyf.hh:330-385; note
   the dead `if (false)` branch at 311 kept for reference).
 * **Cubic glyf**: `SimpleGlyph::FLAG_CUBIC` = 0x80. `read_flags` masks it off
   unless `extended` (SimpleGlyph.hh:137-138), and `extended` is true only when
   the glyphs come from the uppercase `GLYF`/`LOCA` tables (glyf.hh:226-239). So
   bit 0x80 in a lowercase `glyf` is ignored; cubic TrueType outlines only
-  exist in `GLYF`. (Relevant to FontPen's own format rules.)
+  exist in `GLYF`. (Relevant to FontPen’s own format rules.)
 * glyf accelerator prefers `GLYF`+`LOCA` when both are present, else `glyf`+`loca`.
   `num_glyphs` is clamped by loca length and maxp (glyf.hh:254-255).
 * No hinting: glyph instructions are never executed (inferred; there is no
@@ -439,7 +445,7 @@ fully instancing, deltas are applied into `cvt ` (hb-subset.cc:349-356,
   and since 14.2.0 arbitrary path via `push_clip_path_start/_end`), color,
   image, linear/radial/sweep gradients, groups (`push_group_for` new),
   custom palette colours, `fill_glyph` (14.3.0), and budgets.
-* `fill_glyph`'s default decomposes into push_clip_glyph + color + pop_clip
+* `fill_glyph`’s default decomposes into push_clip_glyph + color + pop_clip
   (hb-paint.cc:63-75); backends override it to fill a glyph outline directly.
 * Glyph source order (`hb_ot_paint_glyph_or_fail`, hb-ot-font.cc:939-957):
   COLR → SVG → CBDT → sbix. If none applies, `hb_font_t::paint_glyph`
@@ -480,15 +486,15 @@ fully instancing, deltas are applied into `cvt ` (hb-subset.cc:349-356,
 All three are separate shared libraries (`libharfbuzz-raster`, `-vector`,
 `-gpu`), stable since 15.0.0, built by default (meson_options.txt:36-41).
 Each implements `hb_draw_funcs_t` and `hb_paint_funcs_t` that you pass to
-`hb_font_draw_glyph`/`hb_font_paint_glyph`; the `*_glyph()` helpers are "thin
-convenience wrappers" over that (NEWS 14.2.0). Getters for funcs take the
+`hb_font_draw_glyph`/`hb_font_paint_glyph`; the `*_glyph()` helpers are “thin
+convenience wrappers” over that (NEWS 14.2.0). Getters for funcs take the
 instance (const) since 14.2.0.
 
 ### hb-raster (hb-raster.h, hb-raster-draw.cc, hb-raster-paint.cc, hb-raster-image.cc)
 
 * Output: `hb_raster_image_t` in A8 or BGRA32 (hb-raster.h:38-47); PNG
   serialize/deserialize with libpng (13.1.0).
-* Draw: curves are flattened on the fly (flatness 0.25 px) into edges in
+* Draw: curves are flattened on the fly (flatness 0.25 px [corrected: that constant, `HB_RASTER_FLAT_THRESH`, is in code disabled under `if (false)`; the active flatness tests are FreeType’s, `hb-raster-draw.cc:684`, `:889`]) into edges in
   24.8 fixed point (hb-raster-draw.cc:42-60); then an **analytic coverage
   rasterizer** (comment at 1236-1251): per cell accumulate `cover` (signed dy)
   and `area` (twice the trapezoid area), then a left-to-right sweep
@@ -514,15 +520,15 @@ instance (const) since 14.2.0.
 
 ### hb-gpu (hb-gpu.h, hb-gpu-draw.cc, hb-gpu-paint.cc, hb-gpu.cc, shaders)
 
-* Based on Eric Lengyel's **Slug** algorithm (NEWS 14.0.0): outlines are
+* Based on Eric Lengyel’s **Slug** algorithm (NEWS 14.0.0): outlines are
   encoded on the CPU into a blob of RGBA16I texels (hb-gpu-draw.cc:425-450)
   and rasterized per-pixel in the fragment shader — no glyph atlas of bitmaps.
 * Encoding: everything becomes **quadratic** curves; lines are degenerate
   quadratics (`acc_emit_conic`); cubics are converted by `hb-gpu-cu2qu.hh`
   (tolerance 0.5 font units, max depth 10). Coordinates are quantized to
   1/4 font unit (`HB_GPU_UNITS_PER_EM` 4, hb-gpu-draw.hh:38). Curves are
-  binned into up to 16 horizontal and 16 vertical bands ("capped at 16 per
-  Slug paper", hb-gpu-draw.cc:510-514). Max 65536 curves per glyph.
+  binned into up to 16 horizontal and 16 vertical bands (“capped at 16 per
+  Slug paper”, hb-gpu-draw.cc:510-514). Max 65536 curves per glyph.
 * Shaders in GLSL, WGSL, MSL, HLSL (`hb-gpu-*.glsl` etc., embedded as `.hh`
   by `gen-gpu-shader-artifacts.py`); `hb_gpu_shader_source(stage, lang)`.
   Fragment helpers include MSAA-aware coverage, ppem, and
@@ -539,7 +545,7 @@ instance (const) since 14.2.0.
   used by the core library for synthetic slant/embolden and by the WASM API;
   `hb_outline_recording_pen_get_funcs()` records any draw into it.
 * `hb-geometry.hh`: `hb_extents_t` (35), `hb_transform_t` (136),
-  `hb_bounds_t` (338), `hb_transform_decomposed_t` (385; VARC's
+  `hb_bounds_t` (338), `hb_transform_decomposed_t` (385; VARC’s
   translate/rotate/scale/skew/tcenter form). Shared by paint-extents, VARC,
   and the renderers.
 
@@ -582,7 +588,7 @@ instance (const) since 14.2.0.
   `hb-subset-cff2.cc` (2130 lines), `hb-cff-specializer.hh`,
   `hb-cff-width-optimizer.hh`, `hb-subset-cff2-to-cff1.hh`, `hb-subset-cff2-round.hh`.
 * Depend: `hb-depend.{hh,cc}`, `hb-depend-data.hh`, table `depend()` methods
-  (e.g. glyf.hh:269-279, OT/Color/COLR/colrv1-depend.hh); docs/depend-*.md.
+  (e.g. glyf.hh:273-284 [corrected], OT/Color/COLR/colrv1-depend.hh); docs/depend-*.md.
 
 ### Plan: glyph closure is a staged pipeline
 
@@ -631,26 +637,26 @@ another glyph to gid 0.
 * `hb_resolve_graph_overflows` (hb-repacker.hh:401-461): shortest-distance
   topological sort (Dijkstra-like, edge weight = child size + 2^16 or 2^32);
   if anything overflows and the table is GSUB/GPOS, run the
-  "specialization": split oversized subtables (PairPos, MarkBasePos,
+  “specialization”: split oversized subtables (PairPos, MarkBasePos,
   Ligature) and promote lookups to Extension; then iterate up to `max_rounds`
   (32 for subsetting; 20 with extension recalculation for the public
   `hb_subset_serialize_or_fail`) and `HB_REPACKER_MAX_ITERATIONS` 500:
-  isolate subgraphs under 32-bit offsets into separate "spaces", else
+  isolate subgraphs under 32-bit offsets into separate “spaces”, else
   duplicate shared children or raise priorities; re-sort. If it still
-  overflows and extensions weren't tried, recurse with them on.
+  overflows and extensions weren’t tried, recurse with them on.
 * Limits: `HB_REPACKER_MAX_VERTICES` 800000, `MAX_SPACES` 8000 (hb-limits.hh:283-293).
 * Errors are a `graph_result_t` (hb-result.hh) with an enum including
   `CYCLE_DETECTED`, `ORPHANED_NODES`, `OVERFLOW_RESOLUTION_FAILED`.
 
 ### Instancing
 
-* HarfBuzz's instancer is **fused with the subsetter**: each table's
+* HarfBuzz’s instancer is **fused with the subsetter**: each table’s
   `subset()` both drops glyphs and instances variations (stated in
-  AVAR2-INSTANCING.md "Key architectural difference").
+  AVAR2-INSTANCING.md “Key architectural difference”).
 * Axis limits are (min, default, max) `Triple`s; `rebase_tent`
   (hb-subset-instancer-solver.hh:94-106, ported from fontTools) re-expresses
   each region (tent) under new limits as a list of (scalar, new tent) pairs,
-  where an empty tent is a constant "gain" added to defaults.
+  where an empty tent is a constant “gain” added to defaults.
 * gvar/cvar: `tuple_variations_t` (TupleVariationData) decompiles tuples into
   `tuple_delta_t`s, rebases them, merges equal regions, optionally re-runs IUP
   optimization (`hb-subset-instancer-iup.cc`; contours over 512 points keep
@@ -660,13 +666,13 @@ another glyph to gid 0.
 * Full instancing of glyf recomputes bboxes, metrics, maxp/head maxima
   (`head_maxp_info_t` through `Glyph::get_points`), and uses one cumulative
   `HB_BUDGET_SUBSET_GLYF` (2^28) for the whole table (hb-limits.hh:240-251).
-* avar2 partial instancing: "offset compensation" (AVAR2-INSTANCING.md).
+* avar2 partial instancing: “offset compensation” (AVAR2-INSTANCING.md).
 * CFF2: instancing; `DOWNGRADE_CFF2` converts a pinned CFF2 to CID-keyed CFF1
   (`hb-subset-cff2-to-cff1.hh`); `CFF_IDENTITY_CHARSET` (14.3.0) for PDF.
 * CFF subsetting: subroutine closure and renumbering, or desubroutinize; a
-  "specializer" (generalize then re-specialize charstrings, after fontTools,
+  “specializer” (generalize then re-specialize charstrings, after fontTools,
   hb-cff-specializer.hh) and width optimizer; 15.0.0+ fails if subroutine
-  calls aren't preceded by an immediate number (unless desubroutinizing).
+  calls aren’t preceded by an immediate number (unless desubroutinizing).
 
 ### Preprocessing
 
@@ -676,12 +682,12 @@ closures, cmap maps and especially parsed CFF, for repeated subsets.
 
 ### hb-depend (experimental)
 
-* Purpose: extract the font's full **glyph dependency graph** once (edges
+* Purpose: extract the font’s full **glyph dependency graph** once (edges
   gid → dependent gid, tagged by table: GSUB with feature tag, glyf/GLYF
   composites, CFF seac, COLR, MATH; UVS excluded), so applications (e.g.
   font segmentation for incremental font transfer) can compute closures
   themselves without running the subsetter (NEWS 14.3.0; docs/depend-api.md).
-* Difference from closure: depend records every lookup's edges independently
+* Difference from closure: depend records every lookup’s edges independently
   (no sequential accumulation); ligatures carry a set of required co-glyphs,
   contextual rules a context set; edge flags `FROM_CONTEXT_POSITION` and
   `FROM_NESTED_CONTEXT` mark expected over-approximation
@@ -696,7 +702,7 @@ closures, cmap maps and especially parsed CFF, for repeated subsets.
    (input sets, flags, axis pinning/ranges, plans, preprocess).
 2. The plan: closures in stages, glyph maps, table dropping.
 3. Writing tables: the serializer, packing, dedup, links.
-4. Offsets that don't fit: the repacker (with an honest note about the docs).
+4. Offsets that don’t fit: the repacker (with an honest note about the docs).
 5. Instancing: tents and rebasing, gvar/IVS recompilation, IUP, full vs
    partial, avar2 offset compensation, CFF2 → CFF.
 6. CFF subsetting and charstring specialization.
@@ -752,8 +758,8 @@ closures, cmap maps and especially parsed CFF, for repeated subsets.
   sets `alloc_state = _fuzzing_alloc_state(data, size)`, which disables
   failures for half the inputs (last byte < 0x80) (test/fuzzing/hb-fuzzer.hh:28-37).
   So every allocation-failure path is exercised deterministically per input.
-* "_or_fail" naming: functions that can fail have `_or_fail` variants; since
-  14.2.0 the renderers' `*_glyph()` return void and have `_or_fail` twins.
+* “_or_fail” naming: functions that can fail have `_or_fail` variants; since
+  14.2.0 the renderers’ `*_glyph()` return void and have `_or_fail` twins.
 * `src/check-*.py` scripts check symbols, headers, static initializers,
   libstdc++ linkage (e.g. the 14.2.1 replacement of `std::sort` to avoid
   leaking `std::` symbols).
@@ -796,3 +802,12 @@ closures, cmap maps and especially parsed CFF, for repeated subsets.
 16. **How HarfBuzz is tested** — test suites, fuzzing, failing-alloc, limits. (§6)
 
 (Chapters 2 and 16 could merge; 9 could sit inside 6 or 7.)
+
+
+[Correction from chapter 35: glyf composites and CFF seac closures both run; `_cmap_closure` adds only cmap format 14 variation glyphs (nominal mappings are in `_populate_unicodes_to_retain`); the closure has a name-ID stage and snapshot sets, prunes GPOS lookups in the layout stage, and runs MATH before GSUB.]
+
+
+[Correction from chapter 36: the subsetter’s first repack pass only assigns spaces; GSUB/GPOS splitting and Extension promotion happen only in the retry (`hb-repacker.hh:370`, `:451`). Edge weight is the child’s size plus 2^(8×width) × (space+1), including 2^24 for 24-bit links (`graph/graph.hh:1911`). The error enum is in `graph/graph-result.hh`. `sort_shortest_distance` is Kahn’s algorithm with a priority queue.]
+
+
+[Correction from chapter 37: `cvar` deltas go into `cvt ` whenever the default moves, partial instances included (`hb-subset.cc:347`); `HB_BUDGET_SUBSET_GLYF` applies to any `glyf` instancing, not only full.]

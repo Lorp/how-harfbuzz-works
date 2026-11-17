@@ -1,0 +1,67 @@
+── glyph 7, component 0 (offsets from the start of VARC)
+0bd4  8f 7f           flags = 0xf7f: RESET_UNSPECIFIED_AXES, HAVE_AXES, AXIS_VALUES_HAVE_VARIATION, TRANSFORM_HAS_VARIATION, HAVE_TRANSLATE_X, HAVE_TRANSLATE_Y, HAVE_ROTATION, HAVE_SCALE_X, HAVE_SCALE_Y, HAVE_TCENTER_X, HAVE_TCENTER_Y
+0bd6  00 08           gid = 8
+0bd8  09              axisIndicesIndex = 9 → axes 0000, 0001, 0003, 0004, 0007, 0010, 0013, 0014, 0021
+0bd9  46              axisValues: run of 7 words
+0bda  0e 25 03 44 23 85 36 87 35 e3 16 a8 06 04 axisValues: 3621, 836, 9093, 13959, 13795, 5800, 1540
+0be8  80              axisValues: run of 1 zeros
+0be9  40              axisValues: run of 1 words
+0bea  40 00           axisValues: 16384
+0bec  c3 00 00        axisValuesVarIndex = 196608
+0bef  c3 00 01        transformVarIndex = 196609
+0bf2  fe 38           translateX = -456
+0bf4  02 2e           translateY = 558
+0bf6  eb 77           rotation = -5257 = -1.28345
+0bf8  02 8f           scaleX = 655 = 0.639648
+0bfa  03 cd           scaleY = 973 = 0.950195
+0bfc  03 cd           tCenterX = 973
+0bfe  00 0a           tCenterY = 10
+── glyph 7, component 1 (offsets from the start of VARC)
+0c00  83 7f           flags = 0x37f: RESET_UNSPECIFIED_AXES, HAVE_AXES, AXIS_VALUES_HAVE_VARIATION, TRANSFORM_HAS_VARIATION, HAVE_TRANSLATE_X, HAVE_TRANSLATE_Y, HAVE_ROTATION, HAVE_SCALE_X, HAVE_SCALE_Y
+0c02  00 08           gid = 8
+0c04  0a              axisIndicesIndex = 10 → axes 0000, 0001, 0002, 0006, 0008, 0011, 0013, 0014, 0016, 0018, 0020
+0c05  48              axisValues: run of 9 words
+0c06  0e d9 01 79 1b 02 35 50 33 02 16 e9 04 08 02 2d 40 00 axisValues: 3801, 377, 6914, 13648, 13058, 5865, 1032, 557, 16384
+0c18  80              axisValues: run of 1 zeros
+0c19  40              axisValues: run of 1 words
+0c1a  07 cf           axisValues: 1999
+0c1c  c3 00 02        axisValuesVarIndex = 196610
+0c1f  c3 00 03        transformVarIndex = 196611
+0c22  01 e4           translateX = 484
+0c24  02 43           translateY = 579
+0c26  f4 89           rotation = -2935 = -0.716553
+0c28  02 7b           scaleX = 635 = 0.620117
+0c2a  03 ae           scaleY = 942 = 0.919922
+── glyph 7, component 2 (offsets from the start of VARC)
+0c2c  83 3b           flags = 0x33b: RESET_UNSPECIFIED_AXES, HAVE_AXES, TRANSFORM_HAS_VARIATION, HAVE_TRANSLATE_X, HAVE_TRANSLATE_Y, HAVE_SCALE_X, HAVE_SCALE_Y
+0c2e  00 06           gid = 6
+0c30  00              axisIndicesIndex = 0 → axes 0000
+0c31  40              axisValues: run of 1 words
+0c32  20 00           axisValues: 8192
+0c34  c3 00 04        transformVarIndex = 196612
+0c37  01 d0           translateX = 464
+0c39  02 3a           translateY = 570
+0c3b  00 48           scaleX = 72 = 0.0703125
+0c3d  01 0a           scaleY = 266 = 0.259766
+── glyph 7, component 3 (offsets from the start of VARC)
+0c3f  83 3b           flags = 0x33b: RESET_UNSPECIFIED_AXES, HAVE_AXES, TRANSFORM_HAS_VARIATION, HAVE_TRANSLATE_X, HAVE_TRANSLATE_Y, HAVE_SCALE_X, HAVE_SCALE_Y
+0c41  00 06           gid = 6
+0c43  00              axisIndicesIndex = 0 → axes 0000
+0c44  40              axisValues: run of 1 words
+0c45  20 00           axisValues: 8192
+0c47  c3 00 05        transformVarIndex = 196613
+0c4a  00 4a           translateX = 74
+0c4c  02 2d           translateY = 557
+0c4e  03 66           scaleX = 870 = 0.849609
+0c50  00 48           scaleY = 72 = 0.0703125
+── glyph 7, component 4 (offsets from the start of VARC)
+0c52  83 3f           flags = 0x33f: RESET_UNSPECIFIED_AXES, HAVE_AXES, AXIS_VALUES_HAVE_VARIATION, TRANSFORM_HAS_VARIATION, HAVE_TRANSLATE_X, HAVE_TRANSLATE_Y, HAVE_SCALE_X, HAVE_SCALE_Y
+0c54  00 09           gid = 9
+0c56  0b              axisIndicesIndex = 11 → axes 0000, 0001, 0003, 0004
+0c57  83              axisValues: run of 4 zeros
+0c58  c3 00 06        axisValuesVarIndex = 196614
+0c5b  c3 00 07        transformVarIndex = 196615
+0c5e  01 d0           translateX = 464
+0c60  00 08           translateY = 8
+0c62  00 48           scaleX = 72 = 0.0703125
+0c64  02 9a           scaleY = 666 = 0.650391

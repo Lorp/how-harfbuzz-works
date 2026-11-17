@@ -1,0 +1,10 @@
+{
+ "font": "star.ttf",
+ "sha256": "8f2ba49f06ea2a27c4c38bd5c8deb00d04348366409a514ade4068a0544a1ccf",
+ "lookups": {},
+ "tables": {
+  "hmtx": "<hmtx>\n  <mtx name=\".notdef\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"dot\" width=\"200\" lsb=\"0\"/>\n  <mtx name=\"star\" width=\"1000\" lsb=\"100\"/>\n  <mtx name=\"star.back\" width=\"1000\" lsb=\"100\"/>\n  <mtx name=\"star.ring\" width=\"1000\" lsb=\"200\"/>\n</hmtx>",
+  "COLR": "<COLR>\n  <version value=\"0\"/>\n  <ColorGlyph name=\"star\">\n    <layer colorID=\"0\" name=\"star.back\"/>\n    <layer colorID=\"1\" name=\"star.ring\"/>\n  </ColorGlyph>\n</COLR>",
+  "CPAL": "<CPAL>\n  <version value=\"0\"/>\n  <numPaletteEntries value=\"2\"/>\n  <palette index=\"0\">\n    <color index=\"0\" value=\"#E6331AFF\"/>\n    <color index=\"1\" value=\"#FFD91AFF\"/>\n  </palette>\n</CPAL>"
+ }
+}

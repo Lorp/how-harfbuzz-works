@@ -1,0 +1,68 @@
+# Test font for “Joining scripts”: Arabic, Syriac and Mongolian letters in
+# their joining forms. The features name no script, so feaLib registers
+# them under every language system below; build-fonts.py also builds
+# joining-DFLT.ttf from this file with DFLT alone.
+LANGUAGESYSTEMS
+
+# calt comes first, so its lookup is lookup 0, before rlig's. Only a pause
+# between the two features lets calt see what rlig made.
+feature calt {
+    sub lam_alef by lam_alef.calt;
+    sub lamadh_alaph by lamadh_alaph.calt;
+} calt;
+
+feature fina {
+    sub beh by beh.fina;
+    sub lam by lam.fina;
+    sub alef by alef.fina;
+    sub beth by beth.fina;
+    sub lamadh by lamadh.fina;
+    sub dalath by dalath.fina;
+    sub waw by waw.fina;
+    sub alaph by alaph.fina;
+    sub mongA by mongA.fina;
+} fina;
+
+# Syriac Alaph's three extra forms.
+feature fin2 {
+    sub alaph by alaph.fin2;
+} fin2;
+
+feature fin3 {
+    sub alaph by alaph.fin3;
+} fin3;
+
+feature med2 {
+    sub alaph by alaph.med2;
+} med2;
+
+feature medi {
+    sub beh by beh.medi;
+    sub lam by lam.medi;
+    sub beth by beth.medi;
+    sub lamadh by lamadh.medi;
+    sub mongA by mongA.medi;
+} medi;
+
+feature init {
+    # Mongolian A followed by FVS1 takes a variant initial form. The FVS
+    # must carry init's mask bit for this to match.
+    lookup MONG_FVS {
+        sub mongA fvs1 by mongA.init.fvs1;
+    } MONG_FVS;
+    sub beh by beh.init;
+    sub lam by lam.init;
+    sub beth by beth.init;
+    sub lamadh by lamadh.init;
+    sub mongA by mongA.init;
+} init;
+
+# Lam-alef and lamadh-alaph, required ligatures.
+feature rlig {
+    lookup LIGS {
+        lookupflag IgnoreMarks;
+        sub lam.init alef.fina by lam_alef;
+        sub lam.medi alef.fina by lam_alef.fina;
+        sub lamadh.init alaph.fina by lamadh_alaph;
+    } LIGS;
+} rlig;

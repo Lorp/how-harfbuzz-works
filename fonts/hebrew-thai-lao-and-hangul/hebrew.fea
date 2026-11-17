@@ -1,0 +1,25 @@
+# Test fonts for “Hebrew, Thai, Lao and Hangul”: Hebrew.
+# build-fonts.py adds this to hebrew-old.ttf once for each script tag,
+# writing the tag in place of the placeholder, to make hebrew-mark.ttf
+# (hebr) and hebrew-mark-DFLT.ttf (DFLT). There is no GSUB, only GPOS.
+languagesystem SCRIPT dflt;
+
+table GDEF {
+  GlyphClassDef [alef bet vav het yod lamed shin
+                 yod_hiriq shin_shindot shin_sindot shin_dagesh_shindot
+                 bet_dagesh vav_dagesh vav_holam],
+                ,
+                [sheva hiriq patah qamats holam dagesh meteg shindot sindot etnahta],
+                ;
+} GDEF;
+
+markClass [sheva hiriq patah qamats meteg etnahta] <anchor 0 0> @BELOW;
+markClass [holam shindot sindot] <anchor 0 0> @ABOVE;
+markClass [dagesh] <anchor 0 0> @INSIDE;
+
+feature mark {
+    pos base [alef bet vav het yod lamed shin]
+        <anchor 300 -100> mark @BELOW
+        <anchor 300 650> mark @ABOVE
+        <anchor 300 250> mark @INSIDE;
+} mark;

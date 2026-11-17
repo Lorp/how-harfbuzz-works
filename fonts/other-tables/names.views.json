@@ -1,0 +1,10 @@
+{
+ "font": "names.ttf",
+ "sha256": "3c909fe1e352a9b410fc3a31bb770dcdddb48ac18546179d8fc7bafa70c929ac",
+ "lookups": {},
+ "tables": {
+  "name": "<name>\n  <namerecord nameID=\"257\" platformID=\"0\" platEncID=\"4\" langID=\"0x0\">\n    Name\n  </namerecord>\n  <namerecord nameID=\"257\" platformID=\"0\" platEncID=\"4\" langID=\"0x1\">\n    Ainm\n  </namerecord>\n  <namerecord nameID=\"1\" platformID=\"1\" platEncID=\"0\" langID=\"0x0\" unicode=\"True\">\n    HBBook Names (Mac)\n  </namerecord>\n  <namerecord nameID=\"256\" platformID=\"1\" platEncID=\"0\" langID=\"0x0\" unicode=\"True\">\n    Café\n  </namerecord>\n  <namerecord nameID=\"1\" platformID=\"3\" platEncID=\"1\" langID=\"0x407\">\n    HBBook Namen\n  </namerecord>\n  <namerecord nameID=\"1\" platformID=\"3\" platEncID=\"1\" langID=\"0x409\">\n    HBBook Names\n  </namerecord>\n  <namerecord nameID=\"2\" platformID=\"3\" platEncID=\"1\" langID=\"0x409\">\n    Regular\n  </namerecord>\n  <namerecord nameID=\"1\" platformID=\"3\" platEncID=\"1\" langID=\"0x411\">\n    HBBook 名前\n  </namerecord>\n  <namerecord nameID=\"1\" platformID=\"3\" platEncID=\"1\" langID=\"0x809\">\n    HBBook Names (UK)\n  </namerecord>\n</name>",
+  "ltag": "<ltag>\n  <version value=\"1\"/>\n  <flags value=\"0\"/>\n  <LanguageTag tag=\"en\"/>\n  <LanguageTag tag=\"ga\"/>\n</ltag>",
+  "meta": "<meta>\n  <text tag=\"dlng\">\n    Latn\n  </text>\n  <text tag=\"slng\">\n    Latn, Grek, Cyrl\n  </text>\n</meta>"
+ }
+}

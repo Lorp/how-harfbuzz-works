@@ -1,0 +1,21 @@
+{
+ "font": "demo.ttf",
+ "sha256": "5f8f7144c96f1ed3e7be4c7351c268138aa7ce143f32e4b0be002b98860db502",
+ "lookups": {
+  "0": {
+   "ttx": "<Lookup index=\"0\">\n  <LookupType value=\"4\"/>\n  <LookupFlag value=\"0\"/>\n  <!-- SubTableCount=1 -->\n  <LigatureSubst index=\"0\">\n    <LigatureSet glyph=\"f\">\n      <Ligature components=\"i\" glyph=\"f_i\"/>\n      <Ligature components=\"l\" glyph=\"f_l\"/>\n    </LigatureSet>\n  </LigatureSubst>\n</Lookup>",
+   "spec": "Lookup 0: Ligature substitution (type 4)\n  lookupFlag: none\n  subtable 0: LigatureSubstFormat1\n    coverage: [f]\n    ligatureSet:\n      (f)\n        1. [i] → f_i\n        2. [l] → f_l",
+   "hex": "── Lookup 0 (at 0x002c)\n002c  00 04   lookupType\n002e  00 00   lookupFlag (none)\n0030  00 01   subTableCount\n0032  00 20   subtableOffsets[0] → subtable 0\n── subtable 0: LigatureSubstFormat1 (at 0x004c)\n004c  00 01   substFormat\n004e  00 3c   coverageOffset → Coverage\n0050  00 01   ligatureSetCount\n0052  00 1e   ligatureSetOffsets[0] → LigatureSet 0\n── LigatureSet 0 (at 0x006a)\n006a  00 02   ligatureCount\n006c  00 12   ligatureOffsets[0] → Ligature 0.0\n006e  00 18   ligatureOffsets[1] → Ligature 0.1\n── Ligature 0.0 (at 0x007c)\n007c  00 0c   ligatureGlyph = f_i\n007e  00 02   componentCount (including the first)\n0080  00 07   componentGlyphIDs[0] = i\n── Ligature 0.1 (at 0x0082)\n0082  00 0d   ligatureGlyph = f_l\n0084  00 02   componentCount (including the first)\n0086  00 08   componentGlyphIDs[0] = l\n── Coverage (at 0x0088)\n0088  00 01   format\n008a  00 01   glyphCount\n008c  00 06   glyphArray[0] = f"
+  },
+  "1": {
+   "ttx": "<Lookup index=\"1\">\n  <LookupType value=\"4\"/>\n  <LookupFlag value=\"0\"/>\n  <!-- SubTableCount=1 -->\n  <LigatureSubst index=\"0\">\n    <LigatureSet glyph=\"c\">\n      <Ligature components=\"t\" glyph=\"c_t\"/>\n    </LigatureSet>\n  </LigatureSubst>\n</Lookup>",
+   "spec": "Lookup 1: Ligature substitution (type 4)\n  lookupFlag: none\n  subtable 0: LigatureSubstFormat1\n    coverage: [c]\n    ligatureSet:\n      (c)\n        1. [t] → c_t",
+   "hex": "── Lookup 1 (at 0x0034)\n0034  00 04   lookupType\n0036  00 00   lookupFlag (none)\n0038  00 01   subTableCount\n003a  00 20   subtableOffsets[0] → subtable 0\n── subtable 0: LigatureSubstFormat1 (at 0x0054)\n0054  00 01   substFormat\n0056  00 22   coverageOffset → Coverage\n0058  00 01   ligatureSetCount\n005a  00 12   ligatureSetOffsets[0] → LigatureSet 0\n── LigatureSet 0 (at 0x0066)\n0066  00 01   ligatureCount\n0068  00 0a   ligatureOffsets[0] → Ligature 0.0\n── Ligature 0.0 (at 0x0070)\n0070  00 0e   ligatureGlyph = c_t\n0072  00 02   componentCount (including the first)\n0074  00 09   componentGlyphIDs[0] = t\n── Coverage (at 0x0076)\n0076  00 01   format\n0078  00 01   glyphCount\n007a  00 04   glyphArray[0] = c"
+  }
+ },
+ "tables": {
+  "hmtx": "<hmtx>\n  <mtx name=\".notdef\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"A\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"V\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"acutecomb\" width=\"0\" lsb=\"-100\"/>\n  <mtx name=\"c\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"c_t\" width=\"900\" lsb=\"50\"/>\n  <mtx name=\"dot\" width=\"200\" lsb=\"0\"/>\n  <mtx name=\"e\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"eacute\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"f\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"f_i\" width=\"900\" lsb=\"50\"/>\n  <mtx name=\"f_l\" width=\"900\" lsb=\"50\"/>\n  <mtx name=\"i\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"l\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"parenleft\" width=\"500\" lsb=\"150\"/>\n  <mtx name=\"parenright\" width=\"500\" lsb=\"100\"/>\n  <mtx name=\"space\" width=\"250\" lsb=\"0\"/>\n  <mtx name=\"star\" width=\"1000\" lsb=\"100\"/>\n  <mtx name=\"star.back\" width=\"1000\" lsb=\"100\"/>\n  <mtx name=\"star.ring\" width=\"1000\" lsb=\"200\"/>\n  <mtx name=\"t\" width=\"500\" lsb=\"50\"/>\n</hmtx>",
+  "COLR": "<COLR>\n  <version value=\"0\"/>\n  <ColorGlyph name=\"star\">\n    <layer colorID=\"0\" name=\"star.back\"/>\n    <layer colorID=\"1\" name=\"star.ring\"/>\n  </ColorGlyph>\n</COLR>",
+  "CPAL": "<CPAL>\n  <version value=\"0\"/>\n  <numPaletteEntries value=\"2\"/>\n  <palette index=\"0\">\n    <color index=\"0\" value=\"#E6331AFF\"/>\n    <color index=\"1\" value=\"#FFD91AFF\"/>\n  </palette>\n</CPAL>"
+ }
+}

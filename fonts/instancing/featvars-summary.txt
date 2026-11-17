@@ -1,0 +1,10 @@
+var-rvrn.ttf
+  rvrn: no lookups
+  record 0, when wght 0.400024 to 1: rvrn -> lookup 0
+var-rvrn-wght700.ttf
+  rvrn: lookup 0
+  record 0, when always: rvrn -> lookup 0
+var-rvrn-500-700-900.ttf
+  rvrn: lookup 0
+  record 0, when wght -0.499939 to 1: rvrn -> lookup 0
+  record 1, when always: rvrn -> no lookups

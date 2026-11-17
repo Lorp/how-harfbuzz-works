@@ -2,7 +2,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=Instrument+Sans:wght@500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=Commissioner:wght@500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
 <style>
 /* Layout: one reading column of ~66ch; figures (views, shaping runs, traces)
    break out to a wider measure, because code and buffers need the room. */
@@ -15,10 +15,10 @@
   --accent: #2c48c9;
   --accent-soft: #dfe5fb;
   --hit: #7a4b00;
-  --font-text: "Literata", "Iowan Old Style", Georgia, serif;
-  --font-head: "Instrument Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-text: "Source Serif 4", "Iowan Old Style", Georgia, serif;
+  --font-head: "Commissioner", "Helvetica Neue", Arial, sans-serif;
   --font-code: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
-  --measure: 66ch;
+  --measure: 620px;
   --wide: 58rem;
 }
 @media (prefers-color-scheme: dark) {
@@ -51,8 +51,24 @@ body::before {
 .flow { display: grid; min-width: 0; }
 .flow > * { width: 100%; max-width: var(--measure); justify-self: start; min-width: 0; }
 .flow > .views, .flow > .shape, .flow > .trace, .flow > table { max-width: var(--wide); }
+.flow > .macros { max-width: var(--wide); }
+.macros table { display: table; table-layout: fixed; font-size: .85rem; }
+.macros th:nth-child(1) { width: 25%; }
+.macros th:nth-child(2) { width: 35%; }
+.macros th:nth-child(3) { width: 17%; }
+.macros th:nth-child(4) { width: 23%; }
+.macros td:nth-child(1) code { overflow-wrap: anywhere; }
+.macros td { overflow-wrap: break-word; }
+.flow > .bugs { max-width: var(--wide); }
+.bugs table { display: table; table-layout: fixed; font-size: .85rem; }
+.bugs th:nth-child(1) { width: 4%; }
+.bugs th:nth-child(2) { width: 36%; }
+.bugs th:nth-child(3) { width: 20%; }
+.bugs th:nth-child(4) { width: 9%; }
+.bugs th:nth-child(5) { width: 31%; }
+.bugs td { overflow-wrap: break-word; }
 
-/* Top: the book, then the switch for how lookups are shown. */
+/* Top: the book and the HarfBuzz version. */
 .masthead {
   display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between;
   gap: .5rem 1.5rem; padding-block: 1.5rem .75rem;
@@ -63,29 +79,38 @@ body::before {
 .masthead .book a { color: inherit; text-decoration: none; }
 .masthead .sub { color: var(--muted); font-weight: 500; }
 .masthead .ver { color: var(--muted); font: 400 .8rem var(--font-code); }
-.switch {
-  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
-  background: var(--paper); border-bottom: 1px solid var(--rule);
-  display: flex; flex-wrap: wrap; align-items: center; gap: .25rem .75rem;
-  padding-block: .5rem; font: 500 .85rem var(--font-head);
-}
-.switch .label { color: var(--muted); text-transform: uppercase; letter-spacing: .08em; font-size: .72rem; }
-.switch .opts { display: flex; flex-wrap: wrap; gap: .25rem; }
 button {
   font: inherit; color: var(--ink); background: none; cursor: pointer;
   border: 1px solid var(--rule); border-radius: 4px; padding: .2rem .6rem;
 }
-button[aria-pressed="true"], button[aria-selected="true"] {
+button[aria-selected="true"] {
   background: var(--accent-soft); border-color: var(--accent); color: var(--ink);
 }
 button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 details.contents { padding-block: .75rem 0; font: 500 .9rem var(--font-head); }
 details.contents summary { cursor: pointer; color: var(--muted); }
-details.contents ol { margin: .5rem 0 0; padding-left: 1.4rem; line-height: 1.8; }
+/* The whole contents opens at full length (no inner scroll box), in two
+   columns where there's room, without splitting a part across them. */
+details.contents .toc { padding-bottom: .75rem; columns: 2 20rem; column-gap: 2.5rem; }
+details.contents .toc .toc-section { break-inside: avoid; }
+
+/* Contents: in the header, and in full on the title page */
+.toc .toc-section { margin-top: .9rem; }
+.toc .toc-head { margin: 0 0 .2rem; font: 600 .72rem var(--font-head); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.toc ol { list-style: none; margin: 0; padding: 0; line-height: 1.7; }
+.toc li { display: grid; grid-template-columns: 2.2em 1fr; }
+.toc li > a { grid-column: 2; }
+.toc .num { grid-column: 1; color: var(--muted); font-variant-numeric: tabular-nums; }
+.toc li.planned > a { color: var(--muted); }
+.toc .summary { grid-column: 2; display: block; margin: -.1rem 0 .5rem; color: var(--muted); font: 400 .92rem/1.45 var(--font-text); }
+.toc.full { font: 500 1.05rem var(--font-head); }
+.toc.full .toc-section { margin-top: 1.75rem; }
+.eyebrow { margin: 2.5rem 0 -1.5rem; font: 600 .78rem var(--font-head); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.planned-note { color: var(--muted); font-style: italic; padding: .75rem 1rem; background: var(--well); border-radius: 6px; }
 
 /* Text */
 h1, h2, h3 { font-family: var(--font-head); line-height: 1.2; text-wrap: balance; }
-h1 { font-size: 2.6rem; font-weight: 700; letter-spacing: -.01em; margin: 2.5rem 0 1rem; }
+h1 { font-size: 2.6rem; font-weight: 500; letter-spacing: -.01em; margin: 2.5rem 0 1rem; }
 h2 { font-size: 1.55rem; font-weight: 600; margin: 2.75rem 0 .5rem; padding-top: .75rem; border-top: 1px solid var(--rule); }
 h3 { font-size: 1.15rem; font-weight: 600; margin: 1.75rem 0 .25rem; }
 p, ul, ol { margin: 0 0 1rem; }
@@ -126,16 +151,51 @@ pre code { font-size: .82rem; line-height: 1.55; }
 .trace td.what { font: 400 .78rem var(--font-code); white-space: nowrap; color: var(--ink); }
 .trace tr:last-child td { border-bottom: 0; }
 
+/* Figures: outlines drawn by hb-vector */
+.draw { margin: .5rem 0 1.75rem; border: 1px solid var(--rule); border-radius: 6px; padding: .75rem 1rem .5rem; }
+.draw .frames { display: flex; flex-wrap: wrap; gap: 1rem; }
+.draw.slider .frames { display: block; }
+.draw .frame { flex: 1 1 10rem; min-width: 0; }
+.draw .frame[hidden] { display: none; }
+.draw svg { display: block; width: 100%; height: auto; max-height: 14rem; color: var(--ink); }
+.draw.row svg { max-height: 9rem; }
+.draw .frame-label { font: 600 .75rem var(--font-code); color: var(--muted); margin-top: .35rem; }
+.draw .frame-shape { display: block; background: none; padding: 0; font-size: .78rem; color: var(--hit); font-weight: 600; white-space: nowrap; overflow-x: auto; }
+.draw.slider .frame-label { display: none; }
+.draw .control { display: flex; align-items: center; gap: .75rem; margin-top: .6rem; font: 600 .8rem var(--font-code); }
+.draw .control input { flex: 1; accent-color: var(--accent); }
+.draw .control output { min-width: 3.5em; text-align: right; font-variant-numeric: tabular-nums; }
+.draw figcaption { margin-top: .5rem; color: var(--muted); font: 400 .75rem var(--font-code); }
+.draw figcaption code { background: none; padding: 0; }
+.ttx pre { padding: .9rem 1rem; max-height: 28rem; overflow: auto; }
+.ttx figcaption { padding: .5rem 1rem .6rem; color: var(--muted); font: 400 .78rem var(--font-code); border-top: 1px solid var(--rule); }
+.info td.out pre { margin: 0; }
+.info td.out code { white-space: pre; }
+
 nav.pager { display: flex; justify-content: space-between; gap: 1rem; padding-top: 2rem; margin-top: 2rem; border-top: 1px solid var(--rule); font: 500 .95rem var(--font-head); }
 
 @media (max-width: 600px) {
   body { font-size: 1rem; }
-  .switch .label { display: none; }
   h1 { font-size: 2rem; }
 }
 @media (prefers-reduced-motion: no-preference) {
   html { scroll-behavior: smooth; }
 }
+/* Text for one medium only: the screen hides print-only text, and print
+   (the PDF build, or printing a page) hides screen-only text. */
+.print-only { display: none !important; }
+@media print {
+  .screen-only { display: none !important; }
+  .print-only { display: revert !important; }
+}
+/* The two indexes. */
+.index .index-letter { margin-top: 1.25rem; }
+.index .index-letter h2 { margin: 0 0 .4rem; font-size: 1.1rem; }
+.index ul { list-style: none; margin: 0; padding: 0; columns: 2 16rem; column-gap: 2rem; }
+.index li { break-inside: avoid; margin: 0 0 .2rem; padding-left: 1.2em; text-indent: -1.2em; line-height: 1.4; }
+.index a.loc { font-variant-numeric: tabular-nums; }
+.index a.loc.def { font-weight: 700; }
+.index .term code { font-size: .9em; }
 </style>
 
 <div class="page">
@@ -143,17 +203,7 @@ nav.pager { display: flex; justify-content: space-between; gap: 1rem; padding-to
     <div><span class="book"><a href="title.html">{{book}}</a></span> <span class="sub">{{subtitle}}</span></div>
     <span class="ver">HarfBuzz {{hb_version}}</span>
   </header>
-  <div class="switch" role="group" aria-label="How lookups are shown">
-    <span class="label">Show lookups as</span>
-    <span class="opts">
-      <button type="button" id="view-spec" data-set-view="spec">Spec-like</button>
-      <button type="button" id="view-fea" data-set-view="fea">Feature file</button>
-      <button type="button" id="view-ttx" data-set-view="ttx">TTX</button>
-      <button type="button" id="view-hex" data-set-view="hex">Bytes</button>
-      <button type="button" id="view-cpp" data-set-view="cpp">HarfBuzz C++</button>
-    </span>
-  </div>
-  <details class="contents"><summary>Contents</summary><ol>{{nav}}</ol></details>
+  <details class="contents"><summary>Contents</summary><nav class="toc">{{nav}}</nav></details>
   <main class="flow">
 {{body}}
   </main>
@@ -162,28 +212,34 @@ nav.pager { display: flex; justify-content: space-between; gap: 1rem; padding-to
 
 <script>
 (function () {
-  var KEY = "hbbook-view", view = "spec";
-  try { view = localStorage.getItem(KEY) || "spec"; } catch (e) {}
-  function apply(v) {
-    view = v;
-    document.querySelectorAll("[data-set-view]").forEach(function (b) {
-      b.setAttribute("aria-pressed", String(b.dataset.setView === v));
-    });
-    document.querySelectorAll("figure.views").forEach(function (fig) {
-      var has = fig.querySelector('.pane[data-view="' + v + '"]');
-      var show = has ? v : "spec";
-      fig.querySelectorAll(".pane").forEach(function (p) { p.classList.toggle("on", p.dataset.view === show); });
-      fig.querySelectorAll(".tabs button").forEach(function (b) { b.setAttribute("aria-selected", String(b.dataset.view === show)); });
-    });
-  }
-  function choose(v) {
-    try { localStorage.setItem(KEY, v); } catch (e) {}
-    apply(v);
+  // Each lookup's tabs change only that lookup. Every lookup starts on
+  // the spec-like view.
+  function show(fig, v) {
+    var has = fig.querySelector('.pane[data-view="' + v + '"]');
+    var s = has ? v : "spec";
+    fig.querySelectorAll(".pane").forEach(function (p) { p.classList.toggle("on", p.dataset.view === s); });
+    fig.querySelectorAll(".tabs button").forEach(function (b) { b.setAttribute("aria-selected", String(b.dataset.view === s)); });
   }
   document.addEventListener("click", function (e) {
-    var b = e.target.closest("[data-set-view], .views .tabs button");
-    if (b) choose(b.dataset.setView || b.dataset.view);
+    var tab = e.target.closest(".views .tabs button");
+    if (tab) show(tab.closest("figure.views"), tab.dataset.view);
   });
-  apply(view);
+  document.querySelectorAll("figure.views").forEach(function (fig) { show(fig, "spec"); });
+
+  // Sliders on drawings: every frame was drawn when the book was built, so
+  // moving the slider shows the nearest one.
+  document.querySelectorAll(".draw.slider").forEach(function (fig) {
+    var input = fig.querySelector("input[type=range]");
+    var out = fig.querySelector("output");
+    var frames = Array.prototype.slice.call(fig.querySelectorAll(".frame"));
+    input.addEventListener("input", function () {
+      var v = Number(input.value), best = frames[0];
+      frames.forEach(function (f) {
+        if (Math.abs(f.dataset.value - v) < Math.abs(best.dataset.value - v)) best = f;
+      });
+      frames.forEach(function (f) { f.hidden = f !== best; });
+      out.textContent = best.dataset.value;
+    });
+  });
 })();
 </script>

@@ -1,0 +1,39 @@
+# GPOS for both.ttf. The font keeps kern.ttf's `kern` table as well.
+languagesystem latn dflt;
+languagesystem latn TRK;
+languagesystem dev2 dflt;
+
+markClass acutecomb <anchor 0 600> @TOP;
+
+lookup KERN {
+  pos A V -50;
+} KERN;
+
+lookup MARK {
+  pos base [A T V o] <anchor 300 500> mark @TOP;
+} MARK;
+
+lookup DIST {
+  pos ka ka -30;
+} DIST;
+
+# Latin's default language system has kern and mark; Turkish has mark only.
+feature kern {
+  script latn;
+  language dflt exclude_dflt;
+  lookup KERN;
+} kern;
+
+feature mark {
+  script latn;
+  language dflt;
+  lookup MARK;
+  language TRK;
+} mark;
+
+# Devanagari has no kern feature, only dist.
+feature dist {
+  script dev2;
+  language dflt;
+  lookup DIST;
+} dist;

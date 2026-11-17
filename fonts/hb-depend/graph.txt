@@ -1,0 +1,31 @@
+2 (a):
+  GSUB salt -> a.alt1
+  GSUB salt -> a.alt2
+  GSUB salt -> a.alt3
+
+3 (e):
+  GSUB calt -> e.init  ((space|e.init))
+
+4 (f):
+  GSUB liga -> f_f_i  lig[0]
+    lig[0]: f i
+  GSUB liga -> f_i  lig[0]
+  GSUB liga -> f_l  lig[1]
+    lig[1]: f l
+  GSUB liga -> f_f  lig[2]
+    lig[2]: f
+
+5 (i):
+  GSUB liga -> f_f_i  lig[0]
+  GSUB liga -> f_i  lig[0]
+
+6 (l):
+  GSUB liga -> f_l  lig[1]
+
+7 (x):
+  GSUB ccmp -> f
+  GSUB ccmp -> i
+
+17 (aacute):
+  glyf -> a
+  glyf -> acutecomb

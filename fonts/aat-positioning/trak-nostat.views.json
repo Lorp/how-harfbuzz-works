@@ -1,0 +1,8 @@
+{
+ "font": "trak-nostat.ttf",
+ "sha256": "8b2eabcb646d7bf4fc4dbf521b9038041d0704a8cf18fb1cfd4da19a218b60c7",
+ "lookups": {},
+ "tables": {
+  "trak": "<trak>\n  <version value=\"1.0\"/>\n  <format value=\"0\"/>\n  <horizData>\n    <!-- nTracks=3, nSizes=4 -->\n    <trackEntry value=\"-1.0\" nameIndex=\"257\">\n      <!-- Tight -->\n      <track size=\"6.0\" value=\"20\"/>\n      <track size=\"12.0\" value=\"-30\"/>\n      <track size=\"24.0\" value=\"-50\"/>\n      <track size=\"72.0\" value=\"-70\"/>\n    </trackEntry>\n    <trackEntry value=\"0.0\" nameIndex=\"256\">\n      <!-- Normal -->\n      <track size=\"6.0\" value=\"50\"/>\n      <track size=\"12.0\" value=\"0\"/>\n      <track size=\"24.0\" value=\"-20\"/>\n      <track size=\"72.0\" value=\"-40\"/>\n    </trackEntry>\n    <trackEntry value=\"1.0\" nameIndex=\"258\">\n      <!-- Loose -->\n      <track size=\"6.0\" value=\"80\"/>\n      <track size=\"12.0\" value=\"30\"/>\n      <track size=\"24.0\" value=\"10\"/>\n      <track size=\"72.0\" value=\"-10\"/>\n    </trackEntry>\n  </horizData>\n  <vertData>\n    <!-- nTracks=1, nSizes=1 -->\n    <trackEntry value=\"0.0\" nameIndex=\"256\">\n      <!-- Normal -->\n      <track size=\"12.0\" value=\"100\"/>\n    </trackEntry>\n  </vertData>\n</trak>"
+ }
+}

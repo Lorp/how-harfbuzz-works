@@ -1,0 +1,44 @@
+# Test fonts for “The Universal Shaping Engine”: Devanagari.
+# build-fonts.py writes dev2 or dev3 in place of SCRIPT, so the same
+# lookups are shaped by the Indic shaper or by the USE, and also compiles
+# the file with the half block moved before blwf, or left out.
+languagesystem SCRIPT dflt;
+
+table GDEF {
+  GlyphClassDef [ka ta ra ssa iMatra iMatra.init ka.half ta.half k_ssa
+                 ta_ta dottedcircle nbsp],
+                ,
+                [virama uMatra anusvara reph rakar],
+                ;
+} GDEF;
+
+# RA + virama at the start of a syllable is the reph.
+feature rphf {
+    sub ra virama by reph;
+} rphf;
+
+# KA + virama + SSA is the conjunct K.SSA.
+feature akhn {
+    sub ka virama ssa by k_ssa;
+} akhn;
+
+# Virama + RA is the below-base form of RA.
+feature blwf {
+    sub virama ra by rakar;
+} blwf;
+
+# KA + virama and TA + virama are half forms.
+feature half {
+    sub ka virama by ka.half;
+    sub ta virama by ta.half;
+} half;
+
+# A different vowel sign I in an initial form.
+feature init {
+    sub iMatra by iMatra.init;
+} init;
+
+# TA + TA is a ligature: a presentation form that spans two syllables.
+feature pres {
+    sub ta ta by ta_ta;
+} pres;

@@ -1,0 +1,8 @@
+{
+ "font": "override.ttf",
+ "sha256": "3f8742954cf86d2887e639a4d279516bc4f0265bcc34ede29d57846584295330",
+ "lookups": {},
+ "tables": {
+  "kern": "<kern>\n  <version value=\"0\"/>\n  <kernsubtable coverage=\"1\" format=\"0\">\n    <pair l=\"A\" r=\"V\" v=\"-80\"/>\n    <pair l=\"T\" r=\"o\" v=\"-100\"/>\n    <pair l=\"bet\" r=\"gimel\" v=\"-100\"/>\n    <pair l=\"ka\" r=\"ka\" v=\"-100\"/>\n    <pair l=\"ko\" r=\"ko\" v=\"-100\"/>\n  </kernsubtable>\n  <kernsubtable coverage=\"9\" format=\"0\">\n    <pair l=\"A\" r=\"V\" v=\"-30\"/>\n  </kernsubtable>\n</kern>"
+ }
+}

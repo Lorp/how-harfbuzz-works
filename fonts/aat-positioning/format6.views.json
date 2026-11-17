@@ -1,0 +1,8 @@
+{
+ "font": "format6.ttf",
+ "sha256": "0211971d01efe5a66f052dc54831079bf3234ced013ebff2864231b44ba1e8f3",
+ "lookups": {},
+ "tables": {
+  "kerx": "kerx version 2, 1 subtable\nsubtable 0: format 6, length 74\n  coverage: none\n  tupleCount: 0\n  flags: 0x0, rowCount: 3, columnCount: 3\n  row indices:    A: 3, T: 6\n  column indices: V: 1, o: 2\n  array: [0, 0, 0, 0, -80, 0, 0, 0, -100]"
+ }
+}

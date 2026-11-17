@@ -1,0 +1,27 @@
+# Test fonts for “Choosing a script shaper”: Devanagari.
+# build-fonts.py makes one font from this file for each script tag,
+# writing the tag in place of the placeholder. Nothing else differs.
+languagesystem SCRIPT dflt;
+languagesystem SCRIPT MAR;
+
+table GDEF {
+  GlyphClassDef [ka ssa ra ra.mar iMatra k_ssa dottedcircle], , [virama rakar], ;
+} GDEF;
+
+# Marathi: a different RA (standing in for the eyelash RA).
+feature locl {
+  script SCRIPT;
+  language MAR;
+    sub ra by ra.mar;
+} locl;
+
+# KA + virama + SSA is the conjunct K.SSA.
+feature akhn {
+    sub ka virama ssa by k_ssa;
+} akhn;
+
+# Virama + RA after a consonant is the below-base form, written in the
+# order the new (dev2) model uses: virama first.
+feature blwf {
+    sub virama ra by rakar;
+} blwf;

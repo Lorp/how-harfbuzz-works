@@ -1,0 +1,69 @@
+# Test font for the GPOS chapter. Every glyph is a box; only the glyph
+# names, the cmap, the advances and the layout tables matter.
+# GPOS lookups are numbered in the order feaLib meets them.
+languagesystem DFLT dflt;
+languagesystem latn dflt;
+languagesystem arab dflt;
+
+@MARKS = [acutecomb gravecomb];
+
+table GDEF {
+  GlyphClassDef [A T V a e f i n o beh], [f_i f_f_i], @MARKS, ;
+} GDEF;
+
+# GSUB lookup 0: the ligatures of the GSUB chapter's font
+feature liga {
+  lookupflag IgnoreMarks;
+  sub f f i by f_f_i;
+  sub f i by f_i;
+} liga;
+
+# GPOS lookup 0: moves a, before the marks are attached
+feature ss01 {
+  pos a <40 100 0 0>;
+} ss01;
+
+# GPOS lookup 1: kerning, by glyph and by class
+feature kern {
+  pos A V -80;
+  pos T o -100;
+  pos V e 0;
+  pos [T V] [a e o] -60;
+} kern;
+
+# GPOS lookup 2: a cursive chain that climbs 100 units at every join
+feature curs {
+  pos cursive n <anchor 50 0> <anchor 450 100>;
+  pos cursive beh <anchor 450 0> <anchor 50 100>;
+} curs;
+
+# GPOS lookup 3: the same, with the RightToLeft flag
+feature ss03 {
+  lookupflag RightToLeft;
+  pos cursive n <anchor 50 0> <anchor 450 100>;
+  pos cursive beh <anchor 450 0> <anchor 50 100>;
+} ss03;
+
+# GPOS lookups 4 and 5: marks on bases, and marks on ligature
+# components (feaLib makes a lookup of each type)
+markClass [acutecomb gravecomb] <anchor 0 0> @TOP;
+
+feature mark {
+  pos base [a e o n] <anchor 250 500> mark @TOP;
+  pos base [f i A T V] <anchor 250 700> mark @TOP;
+  pos ligature f_i <anchor 225 700> mark @TOP
+    ligComponent <anchor 675 700> mark @TOP;
+  pos ligature f_f_i <anchor 150 700> mark @TOP
+    ligComponent <anchor 450 700> mark @TOP
+    ligComponent <anchor 750 700> mark @TOP;
+} mark;
+
+# GPOS lookup 6: marks on marks
+feature mkmk {
+  pos mark @MARKS <anchor 0 150> mark @TOP;
+} mkmk;
+
+# GPOS lookup 7: moves a, after the marks are attached
+feature ss02 {
+  pos a <40 100 0 0>;
+} ss02;

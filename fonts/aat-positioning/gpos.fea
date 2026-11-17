@@ -1,0 +1,14 @@
+# GPOS for kerx-gpos.ttf and kerx-gsub-gpos.ttf: kern A V −50, and mark.
+languagesystem DFLT dflt;
+languagesystem latn dflt;
+
+markClass acutecomb <anchor -300 520> @TOP;
+
+feature kern {
+  pos A V -50;
+} kern;
+
+feature mark {
+  pos base [A T V] <anchor 300 600> mark @TOP;
+  pos base o <anchor 250 520> mark @TOP;
+} mark;

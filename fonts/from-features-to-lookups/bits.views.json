@@ -1,0 +1,117 @@
+{
+ "font": "bits.ttf",
+ "sha256": "1f8e5c34f77e125efedfc6e5c092107cc3adc1858b3cb258d87038f19f6fe535",
+ "lookups": {
+  "0": {
+   "ttx": "<Lookup index=\"0\">\n  <LookupType value=\"1\"/>\n  <LookupFlag value=\"0\"/>\n  <!-- SubTableCount=1 -->\n  <SingleSubst index=\"0\">\n    <Substitution in=\"a\" out=\"a.alt\"/>\n  </SingleSubst>\n</Lookup>",
+   "spec": "Lookup 0: Single substitution (type 1)\n  lookupFlag: none\n  subtable 0: SingleSubstFormat1\n    coverage: [a]\n    deltaGlyphID: +27\n    (so: a → a.alt)"
+  },
+  "1": {
+   "ttx": "<Lookup index=\"1\">\n  <LookupType value=\"1\"/>\n  <LookupFlag value=\"0\"/>\n  <!-- SubTableCount=1 -->\n  <SingleSubst index=\"0\">\n    <Substitution in=\"b\" out=\"b.alt\"/>\n  </SingleSubst>\n</Lookup>",
+   "spec": "Lookup 1: Single substitution (type 1)\n  lookupFlag: none\n  subtable 0: SingleSubstFormat1\n    coverage: [b]\n    deltaGlyphID: +27\n    (so: b → b.alt)"
+  },
+  "2": {
+   "ttx": "<Lookup index=\"2\">\n  <LookupType value=\"1\"/>\n  <LookupFlag value=\"0\"/>\n  <!-- SubTableCount=1 -->\n  <SingleSubst index=\"0\">\n    <Substitution in=\"c\" out=\"c.alt\"/>\n  </SingleSubst>\n</Lookup>",
+   "spec": "Lookup 2: Single substitution (type 1)\n  lookupFlag: none\n  subtable 0: SingleSubstFormat1\n    coverage: [c]\n    deltaGlyphID: +27\n    (so: c → c.alt)"
+  },
+  "3": {
+   "ttx": "<Lookup index=\"3\">\n  <LookupType value=\"1\"/>\n  <LookupFlag value=\"0\"/>\n  <!-- SubTableCount=1 -->\n  <SingleSubst index=\"0\">\n    <Substitution in=\"d\" out=\"d.alt\"/>\n  </SingleSubst>\n</Lookup>",
+   "spec": "Lookup 3: Single substitution (type 1)\n  lookupFlag: none\n  subtable 0: SingleSubstFormat1\n    coverage: [d]\n    deltaGlyphID: +27\n    (so: d → d.alt)"
+  },
+  "4": {
+   "ttx": "<Lookup index=\"4\">\n  <LookupType value=\"1\"/>\n  <LookupFlag value=\"0\"/>\n  <!-- SubTableCount=1 -->\n  <SingleSubst index=\"0\">\n    <Substitution in=\"e\" out=\"e.alt\"/>\n  </SingleSubst>\n</Lookup>",
+   "spec": "Lookup 4: Single substitution (type 1)\n  lookupFlag: none\n  subtable 0: SingleSubstFormat1\n    coverage: [e]\n    deltaGlyphID: +27\n    (so: e → e.alt)"
+  },
+  "5": {
+   "ttx": "<Lookup index=\"5\">\n  <LookupType value=\"1\"/>\n  <LookupFlag value=\"0\"/>\n  <!-- SubTableCount=1 -->\n  <SingleSubst index=\"0\">\n    <Substitution in=\"f\" out=\"f.alt\"/>\n  </SingleSubst>\n</Lookup>",
+   "spec": "Lookup 5: Single substitution (type 1)\n  lookupFlag: none\n  subtable 0: SingleSubstFormat1\n    coverage: [f]\n    deltaGlyphID: +27\n    (so: f → f.alt)"
+  },
+  "6": {
+   "ttx": "<Lookup index=\"6\">\n  <LookupType value=\"1\"/>\n  <LookupFlag value=\"0\"/>\n  <!-- SubTableCount=1 -->\n  <SingleSubst index=\"0\">\n    <Substitution in=\"g\" out=\"g.alt\"/>\n  </SingleSubst>\n</Lookup>",
+   "spec": "Lookup 6: Single substitution (type 1)\n  lookupFlag: none\n  subtable 0: SingleSubstFormat1\n    coverage: [g]\n    deltaGlyphID: +27\n    (so: g → g.alt)"
+  },
+  "7": {
+   "ttx": "<Lookup index=\"7\">\n  <LookupType value=\"1\"/>\n  <LookupFlag value=\"0\"/>\n  <!-- SubTableCount=1 -->\n  <SingleSubst index=\"0\">\n    <Substitution in=\"h\" out=\"h.alt\"/>\n  </SingleSubst>\n</Lookup>",
+   "spec": "Lookup 7: Single substitution (type 1)\n  lookupFlag: none\n  subtable 0: SingleSubstFormat1\n    coverage: [h]\n    deltaGlyphID: +27\n    (so: h → h.alt)"
+  },
+  "8": {
+   "ttx": "<Lookup index=\"8\">\n  <LookupType value=\"1\"/>\n  <LookupFlag value=\"0\"/>\n  <!-- SubTableCount=1 -->\n  <SingleSubst index=\"0\">\n    <Substitution in=\"i\" out=\"i.alt\"/>\n  </SingleSubst>\n</Lookup>",
+   "spec": "Lookup 8: Single substitution (type 1)\n  lookupFlag: none\n  subtable 0: SingleSubstFormat1\n    coverage: [i]\n    deltaGlyphID: +27\n    (so: i → i.alt)"
+  },
+  "9": {
+   "ttx": "<Lookup index=\"9\">\n  <LookupType value=\"1\"/>\n  <LookupFlag value=\"0\"/>\n  <!-- SubTableCount=1 -->\n  <SingleSubst index=\"0\">\n    <Substitution in=\"j\" out=\"j.alt\"/>\n  </SingleSubst>\n</Lookup>",
+   "spec": "Lookup 9: Single substitution (type 1)\n  lookupFlag: none\n  subtable 0: SingleSubstFormat1\n    coverage: [j]\n    deltaGlyphID: +27\n    (so: j → j.alt)"
+  },
+  "10": {
+   "ttx": "<Lookup index=\"10\">\n  <LookupType value=\"1\"/>\n  <LookupFlag value=\"0\"/>\n  <!-- SubTableCount=1 -->\n  <SingleSubst index=\"0\">\n    <Substitution in=\"k\" out=\"k.alt\"/>\n  </SingleSubst>\n</Lookup>",
+   "spec": "Lookup 10: Single substitution (type 1)\n  lookupFlag: none\n  subtable 0: SingleSubstFormat1\n    coverage: [k]\n    deltaGlyphID: +27\n    (so: k → k.alt)"
+  },
+  "11": {
+   "ttx": "<Lookup index=\"11\">\n  <LookupType value=\"1\"/>\n  <LookupFlag value=\"0\"/>\n  <!-- SubTableCount=1 -->\n  <SingleSubst index=\"0\">\n    <Substitution in=\"l\" out=\"l.alt\"/>\n  </SingleSubst>\n</Lookup>",
+   "spec": "Lookup 11: Single substitution (type 1)\n  lookupFlag: none\n  subtable 0: SingleSubstFormat1\n    coverage: [l]\n    deltaGlyphID: +27\n    (so: l → l.alt)"
+  },
+  "12": {
+   "ttx": "<Lookup index=\"12\">\n  <LookupType value=\"1\"/>\n  <LookupFlag value=\"0\"/>\n  <!-- SubTableCount=1 -->\n  <SingleSubst index=\"0\">\n    <Substitution in=\"m\" out=\"m.alt\"/>\n  </SingleSubst>\n</Lookup>",
+   "spec": "Lookup 12: Single substitution (type 1)\n  lookupFlag: none\n  subtable 0: SingleSubstFormat1\n    coverage: [m]\n    deltaGlyphID: +27\n    (so: m → m.alt)"
+  },
+  "13": {
+   "ttx": "<Lookup index=\"13\">\n  <LookupType value=\"1\"/>\n  <LookupFlag value=\"0\"/>\n  <!-- SubTableCount=1 -->\n  <SingleSubst index=\"0\">\n    <Substitution in=\"n\" out=\"n.alt\"/>\n  </SingleSubst>\n</Lookup>",
+   "spec": "Lookup 13: Single substitution (type 1)\n  lookupFlag: none\n  subtable 0: SingleSubstFormat1\n    coverage: [n]\n    deltaGlyphID: +27\n    (so: n → n.alt)"
+  },
+  "14": {
+   "ttx": "<Lookup index=\"14\">\n  <LookupType value=\"1\"/>\n  <LookupFlag value=\"0\"/>\n  <!-- SubTableCount=1 -->\n  <SingleSubst index=\"0\">\n    <Substitution in=\"o\" out=\"o.alt\"/>\n  </SingleSubst>\n</Lookup>",
+   "spec": "Lookup 14: Single substitution (type 1)\n  lookupFlag: none\n  subtable 0: SingleSubstFormat1\n    coverage: [o]\n    deltaGlyphID: +27\n    (so: o → o.alt)"
+  },
+  "15": {
+   "ttx": "<Lookup index=\"15\">\n  <LookupType value=\"1\"/>\n  <LookupFlag value=\"0\"/>\n  <!-- SubTableCount=1 -->\n  <SingleSubst index=\"0\">\n    <Substitution in=\"p\" out=\"p.alt\"/>\n  </SingleSubst>\n</Lookup>",
+   "spec": "Lookup 15: Single substitution (type 1)\n  lookupFlag: none\n  subtable 0: SingleSubstFormat1\n    coverage: [p]\n    deltaGlyphID: +27\n    (so: p → p.alt)"
+  },
+  "16": {
+   "ttx": "<Lookup index=\"16\">\n  <LookupType value=\"1\"/>\n  <LookupFlag value=\"0\"/>\n  <!-- SubTableCount=1 -->\n  <SingleSubst index=\"0\">\n    <Substitution in=\"q\" out=\"q.alt\"/>\n  </SingleSubst>\n</Lookup>",
+   "spec": "Lookup 16: Single substitution (type 1)\n  lookupFlag: none\n  subtable 0: SingleSubstFormat1\n    coverage: [q]\n    deltaGlyphID: +27\n    (so: q → q.alt)"
+  },
+  "17": {
+   "ttx": "<Lookup index=\"17\">\n  <LookupType value=\"1\"/>\n  <LookupFlag value=\"0\"/>\n  <!-- SubTableCount=1 -->\n  <SingleSubst index=\"0\">\n    <Substitution in=\"r\" out=\"r.alt\"/>\n  </SingleSubst>\n</Lookup>",
+   "spec": "Lookup 17: Single substitution (type 1)\n  lookupFlag: none\n  subtable 0: SingleSubstFormat1\n    coverage: [r]\n    deltaGlyphID: +27\n    (so: r → r.alt)"
+  },
+  "18": {
+   "ttx": "<Lookup index=\"18\">\n  <LookupType value=\"1\"/>\n  <LookupFlag value=\"0\"/>\n  <!-- SubTableCount=1 -->\n  <SingleSubst index=\"0\">\n    <Substitution in=\"s\" out=\"s.alt\"/>\n  </SingleSubst>\n</Lookup>",
+   "spec": "Lookup 18: Single substitution (type 1)\n  lookupFlag: none\n  subtable 0: SingleSubstFormat1\n    coverage: [s]\n    deltaGlyphID: +27\n    (so: s → s.alt)"
+  },
+  "19": {
+   "ttx": "<Lookup index=\"19\">\n  <LookupType value=\"1\"/>\n  <LookupFlag value=\"0\"/>\n  <!-- SubTableCount=1 -->\n  <SingleSubst index=\"0\">\n    <Substitution in=\"t\" out=\"t.alt\"/>\n  </SingleSubst>\n</Lookup>",
+   "spec": "Lookup 19: Single substitution (type 1)\n  lookupFlag: none\n  subtable 0: SingleSubstFormat1\n    coverage: [t]\n    deltaGlyphID: +27\n    (so: t → t.alt)"
+  },
+  "20": {
+   "ttx": "<Lookup index=\"20\">\n  <LookupType value=\"1\"/>\n  <LookupFlag value=\"0\"/>\n  <!-- SubTableCount=1 -->\n  <SingleSubst index=\"0\">\n    <Substitution in=\"u\" out=\"u.alt\"/>\n  </SingleSubst>\n</Lookup>",
+   "spec": "Lookup 20: Single substitution (type 1)\n  lookupFlag: none\n  subtable 0: SingleSubstFormat1\n    coverage: [u]\n    deltaGlyphID: +27\n    (so: u → u.alt)"
+  },
+  "21": {
+   "ttx": "<Lookup index=\"21\">\n  <LookupType value=\"1\"/>\n  <LookupFlag value=\"0\"/>\n  <!-- SubTableCount=1 -->\n  <SingleSubst index=\"0\">\n    <Substitution in=\"v\" out=\"v.alt\"/>\n  </SingleSubst>\n</Lookup>",
+   "spec": "Lookup 21: Single substitution (type 1)\n  lookupFlag: none\n  subtable 0: SingleSubstFormat1\n    coverage: [v]\n    deltaGlyphID: +27\n    (so: v → v.alt)"
+  },
+  "22": {
+   "ttx": "<Lookup index=\"22\">\n  <LookupType value=\"1\"/>\n  <LookupFlag value=\"0\"/>\n  <!-- SubTableCount=1 -->\n  <SingleSubst index=\"0\">\n    <Substitution in=\"w\" out=\"w.alt\"/>\n  </SingleSubst>\n</Lookup>",
+   "spec": "Lookup 22: Single substitution (type 1)\n  lookupFlag: none\n  subtable 0: SingleSubstFormat1\n    coverage: [w]\n    deltaGlyphID: +27\n    (so: w → w.alt)"
+  },
+  "23": {
+   "ttx": "<Lookup index=\"23\">\n  <LookupType value=\"1\"/>\n  <LookupFlag value=\"0\"/>\n  <!-- SubTableCount=1 -->\n  <SingleSubst index=\"0\">\n    <Substitution in=\"x\" out=\"x.alt\"/>\n  </SingleSubst>\n</Lookup>",
+   "spec": "Lookup 23: Single substitution (type 1)\n  lookupFlag: none\n  subtable 0: SingleSubstFormat1\n    coverage: [x]\n    deltaGlyphID: +27\n    (so: x → x.alt)"
+  },
+  "24": {
+   "ttx": "<Lookup index=\"24\">\n  <LookupType value=\"1\"/>\n  <LookupFlag value=\"0\"/>\n  <!-- SubTableCount=1 -->\n  <SingleSubst index=\"0\">\n    <Substitution in=\"y\" out=\"y.alt\"/>\n  </SingleSubst>\n</Lookup>",
+   "spec": "Lookup 24: Single substitution (type 1)\n  lookupFlag: none\n  subtable 0: SingleSubstFormat1\n    coverage: [y]\n    deltaGlyphID: +27\n    (so: y → y.alt)"
+  },
+  "25": {
+   "ttx": "<Lookup index=\"25\">\n  <LookupType value=\"1\"/>\n  <LookupFlag value=\"0\"/>\n  <!-- SubTableCount=1 -->\n  <SingleSubst index=\"0\">\n    <Substitution in=\"z\" out=\"z.alt\"/>\n  </SingleSubst>\n</Lookup>",
+   "spec": "Lookup 25: Single substitution (type 1)\n  lookupFlag: none\n  subtable 0: SingleSubstFormat1\n    coverage: [z]\n    deltaGlyphID: +27\n    (so: z → z.alt)"
+  },
+  "26": {
+   "ttx": "<Lookup index=\"26\">\n  <LookupType value=\"1\"/>\n  <LookupFlag value=\"0\"/>\n  <!-- SubTableCount=1 -->\n  <SingleSubst index=\"0\">\n    <Substitution in=\"zero\" out=\"zero.alt\"/>\n  </SingleSubst>\n</Lookup>",
+   "spec": "Lookup 26: Single substitution (type 1)\n  lookupFlag: none\n  subtable 0: SingleSubstFormat1\n    coverage: [zero]\n    deltaGlyphID: +27\n    (so: zero → zero.alt)"
+  }
+ },
+ "tables": {
+  "hmtx": "<hmtx>\n  <mtx name=\".notdef\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"a\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"a.alt\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"b\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"b.alt\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"c\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"c.alt\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"d\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"d.alt\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"e\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"e.alt\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"f\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"f.alt\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"g\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"g.alt\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"h\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"h.alt\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"i\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"i.alt\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"j\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"j.alt\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"k\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"k.alt\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"l\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"l.alt\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"m\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"m.alt\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"n\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"n.alt\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"o\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"o.alt\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"p\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"p.alt\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"q\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"q.alt\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"r\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"r.alt\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"s\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"s.alt\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"space\" width=\"250\" lsb=\"50\"/>\n  <mtx name=\"t\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"t.alt\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"u\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"u.alt\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"v\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"v.alt\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"w\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"w.alt\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"x\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"x.alt\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"y\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"y.alt\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"z\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"z.alt\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"zero\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"zero.alt\" width=\"500\" lsb=\"50\"/>\n</hmtx>"
+ }
+}

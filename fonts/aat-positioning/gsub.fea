@@ -1,0 +1,8 @@
+# A GSUB for kerx-gsub-gpos.ttf. Its one feature, salt, is off by default:
+# only the table's presence matters to the plan.
+languagesystem DFLT dflt;
+languagesystem latn dflt;
+
+feature salt {
+  sub A by V;
+} salt;

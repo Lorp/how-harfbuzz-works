@@ -1,0 +1,15 @@
+# GSUB and GPOS for mark-gpos.ttf and mark-gpos-kerx.ttf: GPOS has mark
+# and no kern feature. The GSUB's one feature, salt, is off by default.
+languagesystem DFLT dflt;
+languagesystem latn dflt;
+
+markClass acutecomb <anchor -300 520> @TOP;
+
+feature salt {
+  sub A by V;
+} salt;
+
+feature mark {
+  pos base [A T V] <anchor 300 600> mark @TOP;
+  pos base o <anchor 250 520> mark @TOP;
+} mark;

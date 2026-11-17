@@ -1,0 +1,11 @@
+{
+ "font": "var-kern.ttf",
+ "sha256": "defac71932948cce76e86bfcf4ee6da663eef5124e0846f2e6324c44ffb82979",
+ "lookups": {
+  "0": {
+   "ttx": "<Lookup index=\"0\">\n  <LookupType value=\"2\"/>\n  <LookupFlag value=\"0\"/>\n  <!-- SubTableCount=1 -->\n  <PairPos index=\"0\" Format=\"1\">\n    <Coverage>\n      <Glyph value=\"H\"/>\n    </Coverage>\n    <ValueFormat1 value=\"68\"/>\n    <ValueFormat2 value=\"0\"/>\n    <!-- PairSetCount=1 -->\n    <PairSet index=\"0\">\n      <!-- PairValueCount=1 -->\n      <PairValueRecord index=\"0\">\n        <SecondGlyph value=\"V\"/>\n        <Value1 XAdvance=\"-60\">\n          <XAdvDevice>\n            <StartSize value=\"0\"/>\n            <EndSize value=\"0\"/>\n            <DeltaFormat value=\"32768\"/>\n          </XAdvDevice>\n        </Value1>\n      </PairValueRecord>\n    </PairSet>\n  </PairPos>\n</Lookup>",
+   "spec": "Lookup 0: Pair adjustment (type 2)\n  lookupFlag: none\n  subtable 0: PairPosFormat1\n    coverage: [H]\n    valueFormat[0]: xAdvance xAdvDevice\n    valueFormat[1]: none\n    pairSet:\n      (H)\n        V: <xAdvance -60, xAdvDevice VariationIndex 0:0>"
+  }
+ },
+ "tables": {}
+}

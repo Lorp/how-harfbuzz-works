@@ -1,0 +1,27 @@
+{
+ "font": "ligatures.ttf",
+ "sha256": "030d03d6001bd3a83daed76bb102a8ba99f2e5eadcd65740fb9ce7bb9f2d768f",
+ "lookups": {
+  "0": {
+   "ttx": "<Lookup index=\"0\">\n  <LookupType value=\"4\"/>\n  <LookupFlag value=\"8\"/><!-- ignoreMarks -->\n  <!-- SubTableCount=1 -->\n  <LigatureSubst index=\"0\">\n    <LigatureSet glyph=\"f\">\n      <Ligature components=\"f,i\" glyph=\"f_f_i\"/>\n      <Ligature components=\"i\" glyph=\"f_i\"/>\n      <Ligature components=\"l\" glyph=\"f_l\"/>\n      <Ligature components=\"f\" glyph=\"f_f\"/>\n    </LigatureSet>\n  </LigatureSubst>\n</Lookup>",
+   "spec": "Lookup 0: Ligature substitution (type 4)\n  lookupFlag: IgnoreMarks\n  subtable 0: LigatureSubstFormat1\n    coverage: [f]\n    ligatureSet:\n      (f)\n        1. [f i] → f_f_i\n        2. [i] → f_i\n        3. [l] → f_l\n        4. [f] → f_f",
+   "hex": "── Lookup 0 (at 0x0042)\n0042  00 04   lookupType\n0044  00 08   lookupFlag (IgnoreMarks)\n0046  00 01   subTableCount\n0048  00 46   subtableOffsets[0] → subtable 0\n── subtable 0: LigatureSubstFormat1 (at 0x0088)\n0088  00 01   substFormat\n008a  00 3e   coverageOffset → Coverage\n008c  00 01   ligatureSetCount\n008e  00 5e   ligatureSetOffsets[0] → LigatureSet 0\n── Coverage (at 0x00c6)\n00c6  00 01   format\n00c8  00 01   glyphCount\n00ca  00 04   glyphArray[0] = f\n── LigatureSet 0 (at 0x00e6)\n00e6  00 04   ligatureCount\n00e8  00 24   ligatureOffsets[0] → Ligature 0.0\n00ea  00 12   ligatureOffsets[1] → Ligature 0.1\n00ec  00 18   ligatureOffsets[2] → Ligature 0.2\n00ee  00 1e   ligatureOffsets[3] → Ligature 0.3\n── Ligature 0.1 (at 0x00f8)\n00f8  00 09   ligatureGlyph = f_i\n00fa  00 02   componentCount (including the first)\n00fc  00 05   componentGlyphIDs[0] = i\n── Ligature 0.2 (at 0x00fe)\n00fe  00 0a   ligatureGlyph = f_l\n0100  00 02   componentCount (including the first)\n0102  00 06   componentGlyphIDs[0] = l\n── Ligature 0.3 (at 0x0104)\n0104  00 0b   ligatureGlyph = f_f\n0106  00 02   componentCount (including the first)\n0108  00 04   componentGlyphIDs[0] = f\n── Ligature 0.0 (at 0x010a)\n010a  00 0c   ligatureGlyph = f_f_i\n010c  00 03   componentCount (including the first)\n010e  00 04   componentGlyphIDs[0] = f\n0110  00 05   componentGlyphIDs[1] = i"
+  },
+  "1": {
+   "ttx": "<Lookup index=\"1\">\n  <LookupType value=\"3\"/>\n  <LookupFlag value=\"0\"/>\n  <!-- SubTableCount=1 -->\n  <AlternateSubst index=\"0\">\n    <AlternateSet glyph=\"a\">\n      <Alternate glyph=\"a.alt1\"/>\n      <Alternate glyph=\"a.alt2\"/>\n      <Alternate glyph=\"a.alt3\"/>\n    </AlternateSet>\n  </AlternateSubst>\n</Lookup>",
+   "spec": "Lookup 1: Alternate substitution (type 3)\n  lookupFlag: none\n  subtable 0: AlternateSubstFormat1\n    coverage: [a]\n    alternateSet:\n      a → [a.alt1 a.alt2 a.alt3]"
+  },
+  "2": {
+   "ttx": "<Lookup index=\"2\">\n  <LookupType value=\"1\"/>\n  <LookupFlag value=\"0\"/>\n  <!-- SubTableCount=1 -->\n  <SingleSubst index=\"0\">\n    <Substitution in=\"e\" out=\"e.init\"/>\n  </SingleSubst>\n</Lookup>",
+   "spec": "Lookup 2: Single substitution (type 1)\n  lookupFlag: none\n  subtable 0: SingleSubstFormat1\n    coverage: [e]\n    deltaGlyphID: +13\n    (so: e → e.init)"
+  },
+  "3": {
+   "ttx": "<Lookup index=\"3\">\n  <LookupType value=\"6\"/>\n  <LookupFlag value=\"0\"/>\n  <!-- SubTableCount=1 -->\n  <ChainContextSubst index=\"0\" Format=\"3\">\n    <!-- BacktrackGlyphCount=1 -->\n    <BacktrackCoverage index=\"0\">\n      <Glyph value=\"space\"/>\n      <Glyph value=\"e.init\"/>\n    </BacktrackCoverage>\n    <!-- InputGlyphCount=1 -->\n    <InputCoverage index=\"0\">\n      <Glyph value=\"e\"/>\n    </InputCoverage>\n    <!-- LookAheadGlyphCount=0 -->\n    <!-- SubstCount=1 -->\n    <SubstLookupRecord index=\"0\">\n      <SequenceIndex value=\"0\"/>\n      <LookupListIndex value=\"2\"/>\n    </SubstLookupRecord>\n  </ChainContextSubst>\n</Lookup>",
+   "spec": "Lookup 3: Chained context substitution (type 6)\n  lookupFlag: none\n  subtable 0: ChainContextSubstFormat3\n    backtrack: [space e.init]\n    input:     [e]\n    lookahead: (none)\n    lookupRecord: input[0] → lookup 2"
+  },
+  "4": {
+   "ttx": "<Lookup index=\"4\">\n  <LookupType value=\"2\"/>\n  <LookupFlag value=\"0\"/>\n  <!-- SubTableCount=1 -->\n  <MultipleSubst index=\"0\">\n    <Substitution in=\"x\" out=\"f,i\"/>\n  </MultipleSubst>\n</Lookup>",
+   "spec": "Lookup 4: Multiple substitution (type 2)\n  lookupFlag: none\n  subtable 0: MultipleSubstFormat1\n    coverage: [x]\n    sequence:\n      x → f i"
+  }
+ }
+}

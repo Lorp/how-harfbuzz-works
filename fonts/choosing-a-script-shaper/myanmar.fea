@@ -1,0 +1,10 @@
+# Test fonts for “Choosing a script shaper”: Myanmar.
+# build-fonts.py makes one font from this file for each script tag,
+# writing the tag in place of the placeholder.
+languagesystem SCRIPT dflt;
+
+# One lookup, so that GSUB has the script at all: KA + medial RA, in
+# the order the Myanmar shaper puts them (medial RA first), is a ligature.
+feature pres {
+    sub medialRa mka by ra_mka;
+} pres;

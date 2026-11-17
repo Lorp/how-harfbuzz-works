@@ -1,0 +1,9 @@
+{
+ "font": "trak.ttf",
+ "sha256": "28d61311631f11a14eae683f54f575370b06193e7d5d5b0984383d2196bb2246",
+ "lookups": {},
+ "tables": {
+  "trak": "<trak>\n  <version value=\"1.0\"/>\n  <format value=\"0\"/>\n  <horizData>\n    <!-- nTracks=3, nSizes=4 -->\n    <trackEntry value=\"-1.0\" nameIndex=\"257\">\n      <!-- Tight -->\n      <track size=\"6.0\" value=\"20\"/>\n      <track size=\"12.0\" value=\"-30\"/>\n      <track size=\"24.0\" value=\"-50\"/>\n      <track size=\"72.0\" value=\"-70\"/>\n    </trackEntry>\n    <trackEntry value=\"0.0\" nameIndex=\"256\">\n      <!-- Normal -->\n      <track size=\"6.0\" value=\"50\"/>\n      <track size=\"12.0\" value=\"0\"/>\n      <track size=\"24.0\" value=\"-20\"/>\n      <track size=\"72.0\" value=\"-40\"/>\n    </trackEntry>\n    <trackEntry value=\"1.0\" nameIndex=\"258\">\n      <!-- Loose -->\n      <track size=\"6.0\" value=\"80\"/>\n      <track size=\"12.0\" value=\"30\"/>\n      <track size=\"24.0\" value=\"10\"/>\n      <track size=\"72.0\" value=\"-10\"/>\n    </trackEntry>\n  </horizData>\n  <vertData>\n    <!-- nTracks=1, nSizes=1 -->\n    <trackEntry value=\"0.0\" nameIndex=\"256\">\n      <!-- Normal -->\n      <track size=\"12.0\" value=\"100\"/>\n    </trackEntry>\n  </vertData>\n</trak>",
+  "STAT": "<STAT>\n  <Version value=\"0x00010001\"/>\n  <DesignAxisRecordSize value=\"8\"/>\n  <!-- DesignAxisCount=1 -->\n  <DesignAxisRecord>\n    <Axis index=\"0\">\n      <AxisTag value=\"wght\"/>\n      <AxisNameID value=\"259\"/>  <!-- Weight -->\n      <AxisOrdering value=\"0\"/>\n    </Axis>\n  </DesignAxisRecord>\n  <!-- AxisValueCount=1 -->\n  <AxisValueArray>\n    <AxisValue index=\"0\" Format=\"1\">\n      <AxisIndex value=\"0\"/>\n      <Flags value=\"2\"/>  <!-- ElidableAxisValueName -->\n      <ValueNameID value=\"2\"/>  <!-- Regular -->\n      <Value value=\"400.0\"/>\n    </AxisValue>\n  </AxisValueArray>\n  <ElidedFallbackNameID value=\"2\"/>  <!-- Regular -->\n</STAT>"
+ }
+}

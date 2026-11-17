@@ -1,0 +1,55 @@
+# Test font for the script-by-script cases of “The Indic model”: a few
+# glyphs each of Bengali, Telugu, Kannada and Malayalam, with lookups under
+# the new Indic tags. build-fonts.py compiles it into scripts.ttf.
+languagesystem bng2 dflt;
+languagesystem tel2 dflt;
+languagesystem knd2 dflt;
+languagesystem mlm2 dflt;
+
+table GDEF {
+  GlyphClassDef [bn.ra bn.ya te.ra te.ka kn.ra kn.ka
+                 ml.ka ml.ta ml.na ml.ra ml.la ml.eMatra ml.aaMatra
+                 ml.na.chillu ml.ra.pref dottedcircle],
+                ,
+                [bn.virama bn.reph bn.ya.phalaa te.virama te.reph te.ka.below
+                 kn.virama kn.reph kn.ka.below ml.virama ml.la.below ml.dotReph],
+                ;
+} GDEF;
+
+# Malayalam: LA's below-base form and RA's pre-base-reordering form are
+# made by contextual rules, blocked after KA and after TA respectively.
+lookup ML_LA_BELOW {
+    sub ml.virama ml.la by ml.la.below;
+} ML_LA_BELOW;
+
+lookup ML_RA_PREF {
+    sub ml.virama ml.ra by ml.ra.pref;
+} ML_RA_PREF;
+
+feature rphf {
+    sub bn.ra bn.virama by bn.reph;
+    sub te.ra te.virama by te.reph;
+    sub kn.ra kn.virama by kn.reph;
+} rphf;
+
+feature pref {
+    ignore sub ml.ta ml.virama' ml.ra';
+    sub ml.virama' lookup ML_RA_PREF ml.ra';
+} pref;
+
+feature blwf {
+    sub te.virama te.ka by te.ka.below;
+    sub kn.virama kn.ka by kn.ka.below;
+    ignore sub ml.ka ml.virama' ml.la';
+    sub ml.virama' lookup ML_LA_BELOW ml.la';
+} blwf;
+
+# Malayalam NA + virama is the chillu NN.
+feature half {
+    sub ml.na ml.virama by ml.na.chillu;
+} half;
+
+# Bengali virama + YA is ya-phalaa, a post-base form.
+feature pstf {
+    sub bn.virama bn.ya by bn.ya.phalaa;
+} pstf;

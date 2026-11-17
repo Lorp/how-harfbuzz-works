@@ -1,0 +1,25 @@
+{
+ "font": "arabic.ttf",
+ "sha256": "6bb4be66b631b0017954aad0dc00b6705f59718d7e0bde7904df041cf69430eb",
+ "lookups": {
+  "0": {
+   "ttx": "<Lookup index=\"0\">\n  <LookupType value=\"1\"/>\n  <LookupFlag value=\"0\"/>\n  <!-- SubTableCount=1 -->\n  <SingleSubst index=\"0\">\n    <Substitution in=\"beh.init\" out=\"beh.buzz\"/>\n  </SingleSubst>\n</Lookup>",
+   "spec": "Lookup 0: Single substitution (type 1)\n  lookupFlag: none\n  subtable 0: SingleSubstFormat1\n    coverage: [beh.init]\n    deltaGlyphID: +2\n    (so: beh.init → beh.buzz)"
+  },
+  "1": {
+   "ttx": "<Lookup index=\"1\">\n  <LookupType value=\"1\"/>\n  <LookupFlag value=\"0\"/>\n  <!-- SubTableCount=1 -->\n  <SingleSubst index=\"0\">\n    <Substitution in=\"beh\" out=\"beh.init\"/>\n  </SingleSubst>\n</Lookup>",
+   "spec": "Lookup 1: Single substitution (type 1)\n  lookupFlag: none\n  subtable 0: SingleSubstFormat1\n    coverage: [beh]\n    deltaGlyphID: +2\n    (so: beh → beh.init)"
+  },
+  "2": {
+   "ttx": "<Lookup index=\"2\">\n  <LookupType value=\"1\"/>\n  <LookupFlag value=\"0\"/>\n  <!-- SubTableCount=1 -->\n  <SingleSubst index=\"0\">\n    <Substitution in=\"beh\" out=\"beh.fina\"/>\n  </SingleSubst>\n</Lookup>",
+   "spec": "Lookup 2: Single substitution (type 1)\n  lookupFlag: none\n  subtable 0: SingleSubstFormat1\n    coverage: [beh]\n    deltaGlyphID: +3\n    (so: beh → beh.fina)"
+  },
+  "3": {
+   "ttx": "<Lookup index=\"3\">\n  <LookupType value=\"1\"/>\n  <LookupFlag value=\"0\"/>\n  <!-- SubTableCount=1 -->\n  <SingleSubst index=\"0\">\n    <Substitution in=\"teh\" out=\"beh\"/>\n  </SingleSubst>\n</Lookup>",
+   "spec": "Lookup 3: Single substitution (type 1)\n  lookupFlag: none\n  subtable 0: SingleSubstFormat1\n    coverage: [teh]\n    deltaGlyphID: -1\n    (so: teh → beh)"
+  }
+ },
+ "tables": {
+  "hmtx": "<hmtx>\n  <mtx name=\".notdef\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"beh\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"beh.buzz\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"beh.fina\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"beh.init\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"space\" width=\"250\" lsb=\"50\"/>\n  <mtx name=\"teh\" width=\"500\" lsb=\"50\"/>\n</hmtx>"
+ }
+}

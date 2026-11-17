@@ -1,0 +1,14 @@
+{
+ "font": "if.ttf",
+ "sha256": "c02174b176cdc8542b7d3e461a05daa6db9351fa8dff949b6c65a125be2b3292",
+ "lookups": {
+  "0": {
+   "ttx": "<Lookup index=\"0\">\n  <LookupType value=\"4\"/>\n  <LookupFlag value=\"0\"/>\n  <!-- SubTableCount=1 -->\n  <LigatureSubst index=\"0\">\n    <LigatureSet glyph=\"f\">\n      <Ligature components=\"i\" glyph=\"f_i\"/>\n    </LigatureSet>\n  </LigatureSubst>\n</Lookup>",
+   "spec": "Lookup 0: Ligature substitution (type 4)\n  lookupFlag: none\n  subtable 0: LigatureSubstFormat1\n    coverage: [f]\n    ligatureSet:\n      (f)\n        1. [i] → f_i",
+   "hex": "── Lookup 0 (at 0x0036)\n0036  00 04   lookupType\n0038  00 00   lookupFlag (none)\n003a  00 01   subTableCount\n003c  00 08   subtableOffsets[0] → subtable 0\n── subtable 0: LigatureSubstFormat1 (at 0x003e)\n003e  00 01   substFormat\n0040  00 12   coverageOffset → Coverage\n0042  00 01   ligatureSetCount\n0044  00 08   ligatureSetOffsets[0] → LigatureSet 0\n── LigatureSet 0 (at 0x0046)\n0046  00 01   ligatureCount\n0048  00 04   ligatureOffsets[0] → Ligature 0.0\n── Ligature 0.0 (at 0x004a)\n004a  00 03   ligatureGlyph = f_i\n004c  00 02   componentCount (including the first)\n004e  00 02   componentGlyphIDs[0] = i\n── Coverage (at 0x0050)\n0050  00 01   format\n0052  00 01   glyphCount\n0054  00 01   glyphArray[0] = f"
+  }
+ },
+ "tables": {
+  "hmtx": "<hmtx>\n  <mtx name=\".notdef\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"f\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"f_i\" width=\"900\" lsb=\"50\"/>\n  <mtx name=\"i\" width=\"500\" lsb=\"50\"/>\n</hmtx>"
+ }
+}

@@ -1,0 +1,34 @@
+sixty.ttf: GSUB, 2,432 bytes, 60 lookups
+  kind         count   first starts   last ends
+  LookupList       1            870         992
+  Lookup          60            992       2,416
+  SingleSubst     60          1,000       2,422
+  Coverage        60          1,006       2,432
+  longest 16-bit offset: 1,538 (LookupList to Lookup, lookup 59; 180 offsets of this width)
+forty-subset.ttf: GSUB, 99,758 bytes, 40 lookups
+  kind         count   first starts   last ends
+  LookupList       1             18         100
+  Lookup          40            346         666
+  SingleSubst     40            906      50,850
+  Coverage        40         50,850      99,758
+  longest 16-bit offset: 60,784 (SingleSubst to Coverage, lookup 27; 120 offsets of this width)
+sixty-subset.ttf: GSUB, 152,548 bytes, 60 lookups
+  kind         count   first starts   last ends
+  LookupList       1             18         140
+  Lookup          60            506         986
+  Extension       32          5,310       5,566
+  SingleSubst     60          1,346     149,446
+  Coverage        60          1,352     152,548
+  longest 16-bit offset: 62,574 (Lookup to SingleSubst, lookup 21; 180 offsets of this width)
+  longest 32-bit offset: 142,400 (Extension to SingleSubst, lookup 4; 32 offsets of this width)
+  Extension lookups: 32 of 60: 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 22 24 27 29 39 41 44 48 49 54 55 59
+sixty-small.ttf: GSUB, 5,752 bytes, 60 lookups
+  kind         count   first starts   last ends
+  LookupList       1            870         992
+  Lookup          60            992       5,688
+  Extension       32          1,000       5,566
+  SingleSubst     60          1,008       5,694
+  Coverage        59          1,034       5,752
+  longest 16-bit offset: 4,810 (LookupList to Lookup, lookup 0; 180 offsets of this width)
+  longest 32-bit offset: 8 (Extension to SingleSubst, lookup 1; 32 offsets of this width)
+  Extension lookups: 32 of 60: 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 22 24 27 29 39 41 44 48 49 54 55 59

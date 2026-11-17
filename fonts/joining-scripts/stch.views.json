@@ -1,0 +1,13 @@
+{
+ "font": "stch.ttf",
+ "sha256": "2f61acbaf6cfefaeed03b4e2a0c0438b9a91bf99e4b3c062644cbc08b2a1b93e",
+ "lookups": {
+  "0": {
+   "ttx": "<Lookup index=\"0\">\n  <LookupType value=\"2\"/>\n  <LookupFlag value=\"0\"/>\n  <!-- SubTableCount=1 -->\n  <MultipleSubst index=\"0\">\n    <Substitution in=\"sam\" out=\"sam.end,sam.rep,sam.end\"/>\n  </MultipleSubst>\n</Lookup>",
+   "spec": "Lookup 0: Multiple substitution (type 2)\n  lookupFlag: none\n  subtable 0: MultipleSubstFormat1\n    coverage: [sam]\n    sequence:\n      sam → sam.end sam.rep sam.end"
+  }
+ },
+ "tables": {
+  "hmtx": "<hmtx>\n  <mtx name=\".notdef\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"beth\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"sam\" width=\"0\" lsb=\"50\"/>\n  <mtx name=\"sam.end\" width=\"100\" lsb=\"50\"/>\n  <mtx name=\"sam.rep\" width=\"200\" lsb=\"50\"/>\n  <mtx name=\"space\" width=\"250\" lsb=\"50\"/>\n  <mtx name=\"waw\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"yudh\" width=\"250\" lsb=\"50\"/>\n</hmtx>"
+ }
+}

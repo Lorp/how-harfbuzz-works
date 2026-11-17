@@ -1,0 +1,19 @@
+# Test font for “Normalization”. The cmap does the work here: the only
+# layout is GDEF classes, and a Devanagari script entry so that
+# Devanagari text (and text shaped with --script=deva) gets the Indic
+# shaper. Its one lookup never applies to anything in this chapter.
+languagesystem DFLT dflt;
+languagesystem latn dflt;
+languagesystem dev2 dflt;
+
+table GDEF {
+  GlyphClassDef
+    [A a e o u aacute acircumflex eacute udieresis udieresisgrave
+     odieresismacron Aring angstrom Omega hyphen na nnna aaMatra], ,
+    [gravecomb acutecomb macroncomb dieresiscomb ringcomb dotbelowcomb nukta], ;
+} GDEF;
+
+feature akhn {
+  script dev2;
+    sub na nukta na by nnna;
+} akhn;

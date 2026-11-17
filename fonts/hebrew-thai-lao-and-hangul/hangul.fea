@@ -1,0 +1,28 @@
+# Test fonts for “Hebrew, Thai, Lao and Hangul”: Hangul.
+# hangul.ttf and hangul-no-gak.ttf are built from this file as it is;
+# hangul-koh.ttf from a copy in which the jamo features are registered
+# only for the KOH (Old Hangul) language system (see build-fonts.py).
+languagesystem hang dflt;
+languagesystem hang KOH;
+
+# Each jamo has a form for each of the three jamo features, named after it.
+feature ljmo {
+    #KOH
+    sub [kiyeok hieuh] by [kiyeok.ljmo hieuh.ljmo];
+} ljmo;
+
+feature vjmo {
+    #KOH
+    sub [a araea] by [a.vjmo araea.vjmo];
+} vjmo;
+
+feature tjmo {
+    #KOH
+    sub [kiyeokT nieunT pansiosT] by [kiyeokT.tjmo nieunT.tjmo pansiosT.tjmo];
+} tjmo;
+
+# The first of two KIYEOKs, or of two GA syllables, takes another form.
+feature calt {
+    sub kiyeok' kiyeok by kiyeok.calt;
+    sub ga' ga by ga.calt;
+} calt;

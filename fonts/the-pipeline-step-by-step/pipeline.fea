@@ -1,0 +1,62 @@
+# Test font for “The pipeline, step by step”: Arabic joining forms, a
+# required lam-alef ligature, a mark attached by GPOS, and the numr and
+# dnom features that automatic fractions use.
+languagesystem DFLT dflt;
+languagesystem latn dflt;
+languagesystem arab dflt;
+
+table GDEF {
+  GlyphClassDef [space parenleft parenright beh beh.init beh.medi beh.fina
+                 lam lam.init lam.medi lam.fina alef alef.fina
+                 one two slash fraction one.numr two.dnom],
+                [lam_alef lam_alef.fina], [fatha], ;
+} GDEF;
+
+# The joining forms, which the Arabic shaper's masks choose between.
+feature init {
+  script arab;
+    sub beh by beh.init;
+    sub lam by lam.init;
+} init;
+
+feature medi {
+  script arab;
+    sub beh by beh.medi;
+    sub lam by lam.medi;
+} medi;
+
+feature fina {
+  script arab;
+    sub beh by beh.fina;
+    sub lam by lam.fina;
+    sub alef by alef.fina;
+} fina;
+
+# Lam-alef, the one ligature Arabic requires.
+feature rlig {
+  script arab;
+    lookup LAMALEF {
+      lookupflag IgnoreMarks;
+      sub lam.init alef.fina by lam_alef;
+      sub lam.medi alef.fina by lam_alef.fina;
+    } LAMALEF;
+} rlig;
+
+# The fatha sits on any form of beh.
+markClass fatha <anchor 100 600> @TOP;
+
+feature mark {
+  script arab;
+    pos base [beh beh.init beh.medi beh.fina] <anchor 200 650> mark @TOP;
+} mark;
+
+# Numerators and denominators, for automatic fractions.
+feature numr {
+  script latn;
+    sub one by one.numr;
+} numr;
+
+feature dnom {
+  script latn;
+    sub two by two.dnom;
+} dnom;

@@ -1,0 +1,13 @@
+# Test font for “Fallbacks”: fallback.ttf. A GSUB with two ligatures, so
+# that marks can be seen on ligature components; no GDEF, no GPOS and no
+# kern, so every mark is placed by HarfBuzz's fallback positioner. With
+# no GDEF, IgnoreMarks works from the glyph classes HarfBuzz makes up from
+# the general categories.
+languagesystem DFLT dflt;
+languagesystem latn dflt;
+
+feature liga {
+    lookupflag IgnoreMarks;
+    sub f f i by f_f_i;
+    sub f i by f_i;
+} liga;

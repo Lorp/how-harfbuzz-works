@@ -1,0 +1,22 @@
+# Myanmar test font for “Khmer and Myanmar”. Glyphs are plain boxes.
+languagesystem DFLT dflt;
+languagesystem mym2 dflt;
+
+@CONS = [ka ga nga];
+@MARKS = [kinzi ka.sub asat virama u anusvara i medialwa];
+
+table GDEF {
+    GlyphClassDef , , @MARKS, ;
+} GDEF;
+
+feature rphf {
+    sub nga asat virama by kinzi;
+} rphf;
+
+feature pref {
+    sub medialra' @CONS by medialra.wide;
+} pref;
+
+feature blwf {
+    sub virama ka by ka.sub;
+} blwf;

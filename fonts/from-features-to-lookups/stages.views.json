@@ -1,0 +1,25 @@
+{
+ "font": "stages.ttf",
+ "sha256": "bb2a638fd173ee2730184a9c20609ad83176585db941884d0af662c4b025a590",
+ "lookups": {
+  "0": {
+   "ttx": "<Lookup index=\"0\">\n  <LookupType value=\"1\"/>\n  <LookupFlag value=\"0\"/>\n  <!-- SubTableCount=1 -->\n  <SingleSubst index=\"0\">\n    <Substitution in=\"b\" out=\"c\"/>\n  </SingleSubst>\n</Lookup>",
+   "spec": "Lookup 0: Single substitution (type 1)\n  lookupFlag: none\n  subtable 0: SingleSubstFormat1\n    coverage: [b]\n    deltaGlyphID: +1\n    (so: b → c)"
+  },
+  "1": {
+   "ttx": "<Lookup index=\"1\">\n  <LookupType value=\"1\"/>\n  <LookupFlag value=\"0\"/>\n  <!-- SubTableCount=1 -->\n  <SingleSubst index=\"0\">\n    <Substitution in=\"a\" out=\"b\"/>\n  </SingleSubst>\n</Lookup>",
+   "spec": "Lookup 1: Single substitution (type 1)\n  lookupFlag: none\n  subtable 0: SingleSubstFormat1\n    coverage: [a]\n    deltaGlyphID: +1\n    (so: a → b)"
+  },
+  "2": {
+   "ttx": "<Lookup index=\"2\">\n  <LookupType value=\"1\"/>\n  <LookupFlag value=\"0\"/>\n  <!-- SubTableCount=1 -->\n  <SingleSubst index=\"0\">\n    <Substitution in=\"d\" out=\"b\"/>\n  </SingleSubst>\n</Lookup>",
+   "spec": "Lookup 2: Single substitution (type 1)\n  lookupFlag: none\n  subtable 0: SingleSubstFormat1\n    coverage: [d]\n    deltaGlyphID: -2\n    (so: d → b)"
+  },
+  "3": {
+   "ttx": "<Lookup index=\"3\">\n  <LookupType value=\"1\"/>\n  <LookupFlag value=\"0\"/>\n  <!-- SubTableCount=1 -->\n  <SingleSubst index=\"0\">\n    <Substitution in=\"e\" out=\"e.req\"/>\n  </SingleSubst>\n</Lookup>",
+   "spec": "Lookup 3: Single substitution (type 1)\n  lookupFlag: none\n  subtable 0: SingleSubstFormat1\n    coverage: [e]\n    deltaGlyphID: +1\n    (so: e → e.req)"
+  }
+ },
+ "tables": {
+  "hmtx": "<hmtx>\n  <mtx name=\".notdef\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"a\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"b\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"c\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"d\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"e\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"e.req\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"space\" width=\"250\" lsb=\"50\"/>\n</hmtx>"
+ }
+}

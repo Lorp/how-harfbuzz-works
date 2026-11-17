@@ -1,0 +1,12 @@
+text "xe":
+from the graph: .notdef e f i x f_i f_f f_f_i
+the subsetter: .notdef e f i x f_i f_f f_f_i
+text " e":
+from the graph: .notdef space e e.init
+the subsetter: .notdef space e e.init
+text "á":
+from the graph: .notdef a acutecomb aacute
+the subsetter: .notdef a acutecomb aacute
+text "xe", contexts ignored:
+from the graph: .notdef e f i x f_i f_f f_f_i e.init
+the subsetter: .notdef e f i x f_i f_f f_f_i

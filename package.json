@@ -1,0 +1,13 @@
+{
+  "name": "how-harfbuzz-works",
+  "private": true,
+  "type": "module",
+  "description": "Builds the book How HarfBuzz Works as HTML",
+  "scripts": {
+    "build": "node tools/build-site.mjs",
+    "pdf": "node tools/build-pdf.mjs"
+  },
+  "dependencies": {
+    "markdown-it": "^14.1.0"
+  }
+}

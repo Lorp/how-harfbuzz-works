@@ -1,0 +1,39 @@
+# Test font for “The Indic model”: Devanagari with one lookup for each
+# basic feature that steers the Indic shaper's reordering.
+# build-fonts.py compiles this file whole (full.ttf) and with some feature
+# blocks left out or swapped (see its docstring).
+languagesystem dev2 dflt;
+
+table GDEF {
+  GlyphClassDef [a nbsp ka ta ra ya ssa iMatra ka.half ta.half ya.post ya.pref
+                 iMatra.init dottedcircle],
+                ,
+                [virama uMatra anusvara reph rakar],
+                ;
+} GDEF;
+
+# RA + virama at the start of a syllable is the reph.
+feature rphf {
+    sub ra virama by reph;
+} rphf;
+
+# Virama + RA after the base is the below-base form of RA.
+feature blwf {
+    sub virama ra by rakar;
+} blwf;
+
+# KA + virama and TA + virama before the base are half forms.
+feature half {
+    sub ka virama by ka.half;
+    sub ta virama by ta.half;
+} half;
+
+# Virama + YA after the base is a post-base form of YA.
+feature pstf {
+    sub virama ya by ya.post;
+} pstf;
+
+# A different vowel sign I where it starts a word.
+feature init {
+    sub iMatra by iMatra.init;
+} init;

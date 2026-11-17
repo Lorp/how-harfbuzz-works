@@ -1,0 +1,4 @@
+── item 0:0 (VarIdx 0): 3 numbers for each of 3 regions
+region 0 (wght 0…1…1): [0, -327, 0]
+region 1 (opsz 0…1…1): [1704, 0, 0]
+(and 1 more region, all 0)

@@ -1,0 +1,8 @@
+{
+ "font": "nobase.ttf",
+ "sha256": "48c3ff65ac330b028cc7e23a8d7f3a7ba5038e252ea14b811b459a2f64ea8202",
+ "lookups": {},
+ "tables": {
+  "name": "<name>\n  <namerecord nameID=\"1\" platformID=\"3\" platEncID=\"1\" langID=\"0x409\">\n    HBBook No Base\n  </namerecord>\n  <namerecord nameID=\"2\" platformID=\"3\" platEncID=\"1\" langID=\"0x409\">\n    Regular\n  </namerecord>\n</name>"
+ }
+}

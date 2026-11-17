@@ -1,0 +1,33 @@
+── OpenTypeOffsetTable (at 0x0000 in the file)
+0000  00 01 00 00  sfnt_version (0x00010000: TrueType outlines)
+0004  00 0b        tables.len = 11 (numTables)
+0006  00 80        tables.searchRange = 128
+0008  00 03        tables.entrySelector = 3
+000a  00 30        tables.rangeShift = 48
+000c  47 53 55 42  tables[0].tag = 'GSUB'
+0010  20 e8 25 e8  tables[0].checkSum
+0014  00 00 04 e0  tables[0].offset = 1248
+0018  00 00 00 68  tables[0].length = 104
+001c  4f 53 2f 32  tables[1].tag = 'OS/2'
+002c  63 6d 61 70  tables[2].tag = 'cmap'
+003c  67 6c 79 66  tables[3].tag = 'glyf'
+004c  68 65 61 64  tables[4].tag = 'head'
+005c  68 68 65 61  tables[5].tag = 'hhea'
+006c  68 6d 74 78  tables[6].tag = 'hmtx'
+007c  6c 6f 63 61  tables[7].tag = 'loca'
+008c  6d 61 78 70  tables[8].tag = 'maxp'
+009c  6e 61 6d 65  tables[9].tag = 'name'
+00ac  70 6f 73 74  tables[10].tag = 'post'
+
+── SingleSubstFormat2 (lookup 0's subtable, at 0x0048 in GSUB)
+0048  00 02        format = 2
+004a  00 18        coverage = 0x0018   → Coverage at 0x0060
+004c  00 02        substitute.len = 2
+004e  00 0d        substitute[0] = glyph 13
+0050  00 10        substitute[1] = glyph 16
+
+── CoverageFormat1 (at 0x0060 in GSUB)
+0060  00 01        coverageFormat = 1
+0062  00 02        glyphArray.len = 2
+0064  00 02        glyphArray[0] = glyph 2
+0066  00 03        glyphArray[1] = glyph 3

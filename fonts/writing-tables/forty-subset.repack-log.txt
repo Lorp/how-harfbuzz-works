@@ -1,0 +1,8 @@
+OT::GSUB initial estimated table size: 9824 bytes.
+OT::GSUB ran out of room; reallocating to 20764 bytes.
+OT::GSUB ran out of room; reallocating to 41544 bytes.
+OT::GSUB ran out of room; reallocating to 83104 bytes.
+OT::GSUB ran out of room; reallocating to 166224 bytes.
+Repacking GSUB.
+OT::GSUB final subset table size: 99758 bytes.
+OT::GSUB::subset success

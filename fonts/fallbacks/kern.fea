@@ -1,0 +1,10 @@
+# with-gpos.ttf: fallback.ttf with this added. One kerning pair and nothing
+# else: no mark feature, and still no GDEF.
+languagesystem DFLT dflt;
+languagesystem latn dflt;
+languagesystem hebr dflt;
+languagesystem thai dflt;
+
+feature kern {
+    pos o o -100;
+} kern;

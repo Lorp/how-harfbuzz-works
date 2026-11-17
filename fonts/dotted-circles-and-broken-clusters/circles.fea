@@ -1,0 +1,30 @@
+# Test font for “Dotted circles and broken clusters”. Glyphs are plain boxes.
+# build-fonts.py compiles it into circle.ttf, no-circle.ttf and bare.ttf.
+languagesystem DFLT dflt;
+languagesystem latn dflt;
+languagesystem dev2 dflt;
+languagesystem khmr dflt;
+languagesystem mym2 dflt;
+languagesystem brah dflt;
+
+table GDEF {
+    GlyphClassDef [a ka a.deva i.deva ra nbsp iMatra aaMatra ka.khmr aa.khmr
+                   ka.mymr a.brah dottedcircle],
+                  ,
+                  [acutecomb virama uMatra eMatra reph i.mymr aa.brah],
+                  ;
+} GDEF;
+
+# RA + virama at the start of a syllable is the reph.
+feature rphf {
+    sub ra virama by reph;
+} rphf;
+
+# The acute sits on top, the vowel sign U at the bottom, of any base.
+markClass acutecomb <anchor 0 600> @TOP;
+markClass uMatra <anchor 0 0> @BOTTOM;
+
+feature mark {
+    pos base [a dottedcircle] <anchor 250 600> mark @TOP;
+    pos base [ka dottedcircle] <anchor 300 -100> mark @BOTTOM;
+} mark;

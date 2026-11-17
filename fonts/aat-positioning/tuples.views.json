@@ -1,0 +1,8 @@
+{
+ "font": "tuples.ttf",
+ "sha256": "41d0cfb7238200fd87bf7955ef4cb5fa9f3ccfbd85aa7a02fd54bd0c4364ab28",
+ "lookups": {},
+ "tables": {
+  "kerx": "kerx version 2, 1 subtable\nsubtable 0: format 0, length 88\n  coverage: Variation\n  tupleCount: 3\n  nPairs: 5  (then searchRange, entrySelector, rangeShift)\n    A V: offset 58 → [-80, -160, -240]\n    T o: offset 64 → [-100, -200, -300]\n    ko ko: offset 70 → [-100, -200, -300]\n    ka ka: offset 76 → [-100, -200, -300]\n    bet gimel: offset 82 → [-100, -200, -300]"
+ }
+}

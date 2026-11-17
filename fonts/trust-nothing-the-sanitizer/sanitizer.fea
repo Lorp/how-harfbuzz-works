@@ -1,0 +1,33 @@
+# The test font for the sanitizer chapter. Every glyph is a box; only the
+# layout tables matter. build-fonts.py compiles this into good.ttf, then
+# copies it and breaks one offset in each copy.
+
+languagesystem DFLT dflt;
+languagesystem latn dflt;
+
+table GDEF {
+  GlyphClassDef [a b f i f_i a.alt], , [acutecomb], ;
+} GDEF;
+
+# GSUB lookup 0
+feature liga {
+  sub f i by f_i;
+} liga;
+
+# GSUB lookup 1
+feature calt {
+  sub a' b by a.alt;
+} calt;
+
+# GPOS lookup 0
+feature kern {
+  pos b a -100;
+} kern;
+
+markClass acutecomb <anchor 0 600> @TOP;
+
+# GPOS lookup 1
+feature mark {
+  pos base a <anchor 250 500> mark @TOP;
+  pos base b <anchor 250 700> mark @TOP;
+} mark;

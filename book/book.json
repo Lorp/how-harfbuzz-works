@@ -1,5 +1,7 @@
 {
   "title": "How HarfBuzz Works",
   "subtitle": "From Unicode to positioned glyphs, and everything in between",
+  "author": "Laurence Penney",
+  "with": "Claude",
   "harfbuzz": "15.1.0"
 }

@@ -1,9 +1,95 @@
-# The order of the book. One path per line, relative to book/.
-# A page's name (and its fonts folder, fonts/<name>/) is its file name.
+# The order of the book.
+#
+#   front/title.md        a written page: a path relative to book/
+#   ? Title | summary     a planned page, not written yet: the build makes a
+#                         short page for it from the title and summary
+#   [front]               the sections of the book. Pages in a [part] are
+#   [part] Title          chapters, numbered through the whole book; pages
+#   [appendices]          in [appendices] are lettered A, B, C…
+#   [end]
+#
+# A page's name (and its fonts folder, fonts/<name>/) is its file name, or
+# for a planned page, its title made into a name: “Buffers” is buffers.
+
+[front]
 front/title.md
+front/foreword.md
 front/preface.md
+front/introduction.md
 front/notation.md
+
+[part] Foundations
+chapters/why-shaping-exists.md
+chapters/fonts-as-bytes.md
+chapters/trust-nothing-the-sanitizer.md
+chapters/blobs-faces-and-lazy-tables.md
+chapters/fonts-and-font-functions.md
+chapters/where-metrics-come-from.md
+
+[part] Text in
+chapters/unicode-inside-harfbuzz.md
+chapters/buffers.md
+chapters/hb_shape-and-its-backends.md
+
+[part] Planning
+chapters/shape-plans-and-their-cache.md
+chapters/from-features-to-lookups.md
+chapters/choosing-a-script-shaper.md
+
+[part] The pipeline
+chapters/the-pipeline-step-by-step.md
+chapters/normalization.md
 chapters/gsub.md
+chapters/positioning-glyphs-gpos.md
+chapters/fallbacks.md
+chapters/legacy-kern.md
+chapters/vertical-text.md
+
+[part] Scripts
+chapters/joining-scripts.md
+chapters/hebrew-thai-lao-and-hangul.md
+chapters/the-indic-model.md
+chapters/khmer-and-myanmar.md
+chapters/the-universal-shaping-engine.md
+chapters/dotted-circles-and-broken-clusters.md
+
+[part] Apple Advanced Typography
+chapters/aat-inside-harfbuzz.md
+chapters/aat-positioning.md
+
+[part] Variations
+chapters/design-space.md
+chapters/deltas.md
+chapters/varying-outlines.md
+chapters/variable-components.md
+
+[part] Drawing
+chapters/drawing-outlines.md
+chapters/colour.md
+chapters/rendering.md
+
+[part] Writing fonts
+chapters/subsetting.md
+chapters/writing-tables.md
+chapters/instancing.md
+chapters/hb-depend.md
+
+[part] Around HarfBuzz
+chapters/other-tables.md
+chapters/for-applications.md
+chapters/testing-harfbuzz.md
+chapters/the-family.md
+
+[appendices]
+appendices/reading-harfbuzz-cpp.md
+appendices/compile-time-configuration.md
+appendices/regenerating-the-unicode-and-shaping-tables.md
+appendices/limits.md
+
+[end]
 end/glossary.md
 end/bibliography.md
+end/credits.md
+end/index.md
+end/code-index.md
 end/colophon.md

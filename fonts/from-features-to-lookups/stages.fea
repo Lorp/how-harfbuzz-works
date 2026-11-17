@@ -1,0 +1,23 @@
+# Test font for “From features to lookups”: stages, and a required feature.
+# Lookups are numbered in the order they appear: ccmp is lookup 0, rvrn 1,
+# calt 2, and the required feature xreq 3.
+languagesystem DFLT dflt;
+languagesystem latn dflt;
+
+feature ccmp {
+  sub b by c;
+} ccmp;
+
+feature rvrn {
+  sub a by b;
+} rvrn;
+
+feature calt {
+  sub d by b;
+} calt;
+
+feature xreq {
+  script latn;
+  language dflt required;
+  sub e by e.req;
+} xreq;

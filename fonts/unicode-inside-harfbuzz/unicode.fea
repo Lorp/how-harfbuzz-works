@@ -1,0 +1,18 @@
+# The test font for “Unicode inside HarfBuzz”.
+languagesystem DFLT dflt;
+languagesystem latn dflt;
+
+# One ligature, to see which invisible characters it can see past.
+feature liga {
+    sub f i by f_i;
+} liga;
+
+# A font can draw the soft hyphen itself, by substituting it.
+feature ss01 {
+    sub softhyphen by hyphen;
+} ss01;
+
+# One kerning pair, to see what GPOS can see past.
+feature kern {
+    pos a b -100;
+} kern;

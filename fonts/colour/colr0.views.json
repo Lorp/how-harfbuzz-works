@@ -1,0 +1,10 @@
+{
+ "font": "colr0.ttf",
+ "sha256": "6cb58abf639cf1ff9ecfc5cd50c4344759f762708d335deb6144772cb80cdcfa",
+ "lookups": {},
+ "tables": {
+  "hmtx": "<hmtx>\n  <mtx name=\".notdef\" width=\"1000\" lsb=\"100\"/>\n  <mtx name=\"A\" width=\"1000\" lsb=\"100\"/>\n  <mtx name=\"B\" width=\"1000\" lsb=\"100\"/>\n  <mtx name=\"bar\" width=\"1000\" lsb=\"100\"/>\n  <mtx name=\"disc\" width=\"1000\" lsb=\"175\"/>\n  <mtx name=\"space\" width=\"1000\" lsb=\"0\"/>\n  <mtx name=\"sq\" width=\"1000\" lsb=\"100\"/>\n</hmtx>",
+  "COLR": "<COLR>\n  <version value=\"0\"/>\n  <ColorGlyph name=\"A\">\n    <layer colorID=\"0\" name=\"sq\"/>\n    <layer colorID=\"1\" name=\"disc\"/>\n    <layer colorID=\"65535\" name=\"bar\"/>\n  </ColorGlyph>\n  <ColorGlyph name=\"B\">\n    <layer colorID=\"1\" name=\"disc\"/>\n    <layer colorID=\"65535\" name=\"bar\"/>\n    <layer colorID=\"0\" name=\"sq\"/>\n  </ColorGlyph>\n</COLR>",
+  "CPAL": "<CPAL>\n  <version value=\"1\"/>\n  <numPaletteEntries value=\"2\"/>\n  <palette index=\"0\" label=\"256\" type=\"1\">\n    <!-- Daylight -->\n    <color index=\"0\" value=\"#E8A33DFF\"/>\n    <color index=\"1\" value=\"#2A6FDBFF\"/>\n  </palette>\n  <palette index=\"1\" label=\"257\" type=\"2\">\n    <!-- Night -->\n    <color index=\"0\" value=\"#3B2E5AFF\"/>\n    <color index=\"1\" value=\"#F25C54FF\"/>\n  </palette>\n  <paletteEntryLabels>\n    <label index=\"0\" value=\"258\"/><!-- Ground -->\n    <label index=\"1\" value=\"259\"/><!-- Disc -->\n  </paletteEntryLabels>\n</CPAL>"
+ }
+}

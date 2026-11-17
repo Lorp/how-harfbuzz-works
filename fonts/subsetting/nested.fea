@@ -1,0 +1,24 @@
+languagesystem DFLT dflt;
+lookup L19 { sub s19 by s20; } L19;
+lookup L18 { sub s18 by s19; } L18;
+lookup L17 { sub s17 by s18; } L17;
+lookup L16 { sub s16 by s17; } L16;
+lookup L15 { sub s15 by s16; } L15;
+lookup L14 { sub s14 by s15; } L14;
+lookup L13 { sub s13 by s14; } L13;
+lookup L12 { sub s12 by s13; } L12;
+lookup L11 { sub s11 by s12; } L11;
+lookup L10 { sub s10 by s11; } L10;
+lookup L9 { sub s9 by s10; } L9;
+lookup L8 { sub s8 by s9; } L8;
+lookup L7 { sub s7 by s8; } L7;
+lookup L6 { sub s6 by s7; } L6;
+lookup L5 { sub s5 by s6; } L5;
+lookup L4 { sub s4 by s5; } L4;
+lookup L3 { sub s3 by s4; } L3;
+lookup L2 { sub s2 by s3; } L2;
+lookup L1 { sub s1 by s2; } L1;
+lookup L0 { sub a by s1; } L0;
+feature ccmp {
+  sub a' lookup L0 lookup L1 lookup L2 lookup L3 lookup L4 lookup L5 lookup L6 lookup L7 lookup L8 lookup L9 lookup L10 lookup L11 lookup L12 lookup L13 lookup L14 lookup L15 lookup L16 lookup L17 lookup L18 lookup L19;
+} ccmp;

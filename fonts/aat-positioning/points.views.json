@@ -1,0 +1,8 @@
+{
+ "font": "points.ttf",
+ "sha256": "4a218033f7fc81414bd00aca3759823081340be93dd15a154800216e6b17435b",
+ "lookups": {},
+ "tables": {
+  "kerx": "kerx version 2, 1 subtable\nsubtable 0: format 4, length 94\n  coverage: none\n  tupleCount: 0\n  nClasses: 6\n  classes: A: 4, T: 4, V: 4, o: 4, acutecomb: 5\n  state 0: entries by class [0, 0, 0, 0, 1, 2]\n  state 1: entries by class [0, 0, 0, 0, 1, 2]\n  entry 0: newState 0, no action\n  entry 1: newState 0, Mark, no action\n  entry 2: newState 0, action 0\n  flags: action type 0 (control point actions), actions at 78\n  action 0: marked glyph's point 1, current glyph's point 0"
+ }
+}

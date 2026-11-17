@@ -1,0 +1,35 @@
+# Khmer test font for “Khmer and Myanmar”. Glyphs are plain boxes.
+languagesystem DFLT dflt;
+languagesystem khmr dflt;
+
+@MARKS = [coeng ka.sub ko.sub ko.sub.cfar ngo.sub oe oe.abv];
+
+table GDEF {
+    GlyphClassDef , , @MARKS, ;
+} GDEF;
+
+feature pref {
+    sub coeng ro by ro.pref;
+} pref;
+
+feature blwf {
+    sub coeng ka by ka.sub;
+    sub coeng ko by ko.sub;
+    sub coeng ngo by ngo.sub;
+} blwf;
+
+feature abvf {
+    sub oe by oe.abv;
+} abvf;
+
+feature pstf {
+    sub oo by oo.pst;
+} pstf;
+
+feature cfar {
+    sub ko.sub by ko.sub.cfar;
+} cfar;
+
+feature psts {
+    sub oo.pst' ka by oo.pst.short;
+} psts;

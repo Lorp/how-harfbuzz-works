@@ -1,0 +1,144 @@
+glyph 1, at: all 0
+  component 0: glyph 2
+    axis values (2.14): 0000 3719, 0001 0, 0002 115, 0003 918, 0004 623, 0005 2441, 0009 2163, 0013 16, 0017 1491, 0019 2736, 0020 1819, 0023 1802, 0024 2146, 0025 3539, 0026 5439
+    transform: translateX 198, translateY 234, scaleX 0.900391, scaleY 0.799805
+    glyph 2, at: 0000 0.227, 0002 0.007019, 0003 0.05603, 0004 0.03802, 0005 0.149, 0009 0.132, 0013 0.0009766, 0017 0.091, 0019 0.167, 0020 0.111, 0023 0.11, 0024 0.131, 0025 0.216, 0026 0.332
+      component 0: glyph 3
+        axis-value deltas, region 7 (0004 0…1…1), scalar 0.0380249: [5915, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        axis-value deltas, region 25 (0019 0…1…1), scalar 0.166992: [-2605, 1901, 0, 0, 7242, 0, 3703, 0, 11157, 0, 0, 7668, 16384]
+        axis-value deltas, region 26 (0020 0…1…1), scalar 0.111023: [-9224, 0, 0, 0, 2900, 0, 0, 0, 2572, 0, -246, 0, 0]
+        axis-value deltas, region 29 (0023 0…1…1), scalar 0.109985: [-9404, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        axis-value deltas, region 32 (0025 0…1…1), scalar 0.216003: [-5489, 0, 1147, 0, -999, 1114, 2441, 0, 10944, 0, 0, 2916, 0]
+        axis-value deltas, region 33 (0026 0…1…1), scalar 0.33197: [-6144, 2195, 0, 0, 0, 0, 0, 0, 3686, 0, 0, 0, 0]
+        axis values (2.14): 0000 10240 - 5493.74 = 4746.26 → 4746, 0001 0 + 1046.13 = 1046.13 → 1046, 0002 0 + 247.756 = 247.756 → 248, 0003 3654, 0004 999 + 1315.54 = 2314.54 → 2315, 0005 0 + 240.628 = 240.628 → 241, 0006 0 + 1145.64 = 1145.64 → 1146, 0007 0, 0008 492 + 5736.27 = 6228.27 → 6228, 0009 0, 0010 2163 - 27.3116 = 2135.69 → 2136, 0011 0 + 1910.36 = 1910.36 → 1910, 0012 0 + 2736 = 2736 → 2736
+        transform deltas, region 8 (0005 0…1…1), scalar 0.148987: [400, 0, 0, 0, 0, 0, 0]
+        transform deltas, region 25 (0019 0…1…1), scalar 0.166992: [-38, 58, -22, 92, 10, 0, 0]
+        transform deltas, region 26 (0020 0…1…1), scalar 0.111023: [80, 198, 387, -614, 0, 0, 0]
+        transform deltas, region 29 (0023 0…1…1), scalar 0.109985: [-259, -274, -455, -614, 0, 0, 0]
+        transform deltas, region 32 (0025 0…1…1), scalar 0.216003: [-62, 103, -773, -266, -256, 0, 0]
+        transform deltas, region 33 (0026 0…1…1), scalar 0.33197: [32, -225, 0, -655, -512, 0, 0]
+        transform: translateX -170.125, translateY 574.087, rotation 44.1773°, scaleX 0.413835, scaleY 0.58145, tCenterX 639, tCenterY 38
+        leaf: glyph 3, drawn from glyf at: 0000 0.2897, 0001 0.06384, 0002 0.01514, 0003 0.223, 0004 0.1413, 0005 0.01471, 0006 0.06995, 0008 0.3801, 0010 0.1304, 0011 0.1166, 0012 0.167
+              through the matrix (0.2672, 0.2307, -0.3648, 0.3335) and offset (463.3, 563.5)
+      component 1: glyph 4
+        axis-value deltas, region 3 (0000 0…1…1), scalar 0.22699: [0, 10486, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        axis-value deltas, region 5 (0002 0…1…1), scalar 0.00701904: [-3031, -1343, -9732, -9994, 0, -2588, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        axis-value deltas, region 6 (0003 0…1…1), scalar 0.0560303: [0, 0, 0, 0, 0, 11633, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        axis-value deltas, region 22 (0017 0…1…1), scalar 0.0910034: [-2654, 10486, -901, -17, 0, 8618, 0, 0, 0, 5702, 0, 0, 0, 0, 10060]
+        axis-value deltas, region 31 (0024 0…1…1), scalar 0.130981: [0, 0, 0, 0, 0, 0, 8880, 0, 0, 0, 0, 0, 1639, 0, 0]
+        axis-value deltas, region 32 (0025 0…1…1), scalar 0.216003: [-5652, -655, -3752, 1343, -7537, 1803, -328, 0, 0, 0, 0, 2015, 0, 0, 82]
+        axis-value deltas, region 33 (0026 0…1…1), scalar 0.33197: [-6701, 0, -6275, -6308, -5030, 0, 0, 0, 0, 0, 0, -3113, 0, 0, 0]
+        axis values (2.14): 0000 13189 - 3708.18 = 9480.82 → 9481, 0001 5898 + 3183.57 = 9081.57 → 9082, 0002 12878 - 3043.86 = 9834.14 → 9834, 0003 13730 - 1875.67 = 11854.3 → 11854, 0004 10158 - 3297.83 = 6860.17 → 6860, 0005 4751 + 1807.36 = 6558.36 → 6558, 0006 328 + 1092.27 = 1420.27 → 1420, 0007 0, 0008 0, 0009 0 + 518.901 = 518.901 → 519, 0010 0, 0011 6390 - 598.176 = 5791.82 → 5792, 0012 1638 + 214.679 = 1852.68 → 1853, 0013 1786, 0014 573 + 933.207 = 1506.21 → 1506
+        transform deltas, region 32 (0025 0…1…1), scalar 0.216003: [40, 108, 0, -205]
+        transform deltas, region 33 (0026 0…1…1), scalar 0.33197: [-321, -239, -666, -666]
+        transform: translateX 781.078, translateY 621.987, scaleX 0.78409, scaleY 0.740847
+        leaf: glyph 4, drawn from glyf at: 0000 0.5787, 0001 0.5543, 0002 0.6002, 0003 0.7235, 0004 0.4187, 0005 0.4003, 0006 0.08667, 0009 0.03168, 0011 0.3535, 0012 0.1131, 0013 0.109, 0014 0.09192
+              through the matrix (0.706, 0, 0, 0.5925) and offset (901.3, 731.5)
+      component 2: glyph 3
+        axis-value deltas, region 13 (0009 0…1…1), scalar 0.132019: [-327, 0, 10617, 0, 0, 0, 0, 0, 0, 16384]
+        axis-value deltas, region 32 (0025 0…1…1), scalar 0.216003: [-819, 0, 14631, 0, 3342, -1491, 3932, -426, 10928, 0]
+        axis-value deltas, region 33 (0026 0…1…1), scalar 0.33197: [-999, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        axis values (2.14): 0000 1802 - 551.715 = 1250.28 → 1250, 0003 999, 0004 1753 + 4561.99 = 6314.99 → 6315, 0005 492, 0006 0 + 721.883 = 721.883 → 722, 0008 1491 - 322.061 = 1168.94 → 1169, 0009 0 + 849.325 = 849.325 → 849, 0010 1081 - 92.0175 = 988.983 → 989, 0011 0 + 2360.49 = 2360.49 → 2360, 0012 0 + 2163 = 2163 → 2163
+        transform deltas, region 5 (0002 0…1…1), scalar 0.00701904: [140, 0, 0, 0, 0, 0, 0]
+        transform deltas, region 13 (0009 0…1…1), scalar 0.132019: [16, -2, -91, 41, 0, 0, 0]
+        transform deltas, region 17 (0013 0…1…1), scalar 0.000976562: [-500, 0, 0, 0, 0, 0, 0]
+        transform deltas, region 32 (0025 0…1…1), scalar 0.216003: [-98, 326, 113, -153, -267, 0, 0]
+        transform deltas, region 33 (0026 0…1…1), scalar 0.33197: [-54, 26, -114, -286, -574, 0, 0]
+        transform: translateX 37.512, translateY 385.784, rotation 143.901°, scaleX 0.229903, scaleY 0.617945, tCenterX 467, tCenterY 37
+        leaf: glyph 3, drawn from glyf at: 0000 0.07629, 0003 0.06097, 0004 0.3854, 0005 0.03003, 0006 0.04407, 0008 0.07135, 0009 0.05182, 0010 0.06036, 0011 0.144, 0012 0.132
+              through the matrix (-0.1673, 0.1083, -0.3278, -0.3993) and offset (742.5, 536.3)
+  component 1: glyph 5
+    axis values (2.14): 0000 0, 0001 1278, 0002 541, 0003 360, 0004 770, 0005 16155
+    transform: translateX -287, translateY 160, scaleX 1.21973, scaleY 1.16992
+    glyph 5, at: 0001 0.078, 0002 0.03302, 0003 0.02197, 0004 0.047, 0005 0.986
+      component 0: glyph 6
+        axis values (2.14): 0000 8192
+        transform deltas, region 6 (0003 0…1…1), scalar 0.0219727: [67, 0, 0, 0, 134]
+        transform deltas, region 8 (0005 0…1…1), scalar 0.986023: [-3, 260, 0, -533, -5]
+        transform: translateX 541.514, translateY 186.366, rotation 90°, scaleX 0.387158, scaleY 0.0576311
+        leaf: glyph 6, drawn from glyf at: 0000 0.5
+              through the matrix (2.892e-17, 0.4529, -0.07029, 4.129e-18) and offset (373.5, 378)
+      component 1: glyph 3
+        axis-value deltas, region 7 (0004 0…1…1), scalar 0.0469971: [0, 0, 9257, -3293, 3129, 12894, 8356]
+        axis-value deltas, region 8 (0005 0…1…1), scalar 0.986023: [-1049, 0, -2311, -3293, 0, -1311, 0]
+        axis values (2.14): 0000 2458 - 1034.34 = 1423.66 → 1424, 0003 1409, 0004 3441 - 1843.65 = 1597.35 → 1597, 0008 3293 - 3401.73 = -108.735 → -109, 0009 115 + 147.054 = 262.054 → 262, 0011 3490 - 686.696 = 2803.3 → 2803, 0012 0 + 392.708 = 392.708 → 393
+        transform deltas, region 7 (0004 0…1…1), scalar 0.0469971: [-2, -4, 0, 10, 0, 0, 0]
+        transform deltas, region 8 (0005 0…1…1), scalar 0.986023: [14, 81, -319, -174, -102, 0, 0]
+        transform: translateX -94.2897, translateY 240.68, rotation 31.1774°, scaleX 0.252834, scaleY 0.701588, tCenterX 499, tCenterY 39
+        leaf: glyph 3, drawn from glyf at: 0000 0.08691, 0003 0.086, 0004 0.09747, 0008 -0.006653, 0009 0.01599, 0011 0.1711, 0012 0.02399
+              through the matrix (0.2638, 0.1531, -0.443, 0.7023) and offset (92.25, 383.4)
+      component 2: glyph 3
+        axis-value deltas, region 4 (0001 0…1…1), scalar 0.0780029: [-1082, 0, 0, 0, 0, 0, 0, 0]
+        axis-value deltas, region 5 (0002 0…1…1), scalar 0.03302: [0, 0, 0, 0, 0, 0, 0, 8536]
+        axis-value deltas, region 8 (0005 0…1…1), scalar 0.986023: [-574, 0, 1049, -852, -311, 0, -33, 0]
+        axis values (2.14): 0000 1475 - 650.376 = 824.624 → 825, 0001 0, 0004 2097 + 1034.34 = 3131.34 → 3131, 0006 1245 - 840.092 = 404.908 → 405, 0008 1163 - 306.653 = 856.347 → 856, 0009 115, 0010 492 - 32.5388 = 459.461 → 459, 0012 0 + 281.859 = 281.859 → 282
+        transform deltas, region 4 (0001 0…1…1), scalar 0.0780029: [22, -39, -23, -235, 0, 0, 0]
+        transform deltas, region 8 (0005 0…1…1), scalar 0.986023: [28, -128, 387, -163, -82, 0, 0]
+        transform: translateX -111.675, translateY 419.747, rotation 136.705°, scaleX 0.174753, scaleY 0.720846, tCenterX 499, tCenterY 39
+        leaf: glyph 3, drawn from glyf at: 0000 0.05035, 0004 0.1911, 0006 0.02472, 0008 0.05225, 0009 0.007019, 0010 0.02802, 0012 0.01721
+              through the matrix (-0.1551, 0.1402, -0.6029, -0.6138) and offset (286.4, 650.7)
+  component 2: glyph 7
+    axis values (2.14): 0000 2769, 0003 836, 0005 0, 0007 0, 0011 1081, 0012 672, 0014 4030, 0016 1114, 0017 639, 0018 377, 0019 8094, 0020 262, 0022 3097, 0023 2343
+    transform: translateX 2, translateY -100
+    glyph 7, at: 0000 0.169, 0003 0.05103, 0011 0.06598, 0012 0.04102, 0014 0.246, 0016 0.06799, 0017 0.039, 0018 0.02301, 0019 0.494, 0020 0.01599, 0022 0.189, 0023 0.143
+      component 0: glyph 8
+        axis-value deltas, region 15 (0011 0…1…1), scalar 0.065979: [-2327, 0, 1819, -8945, -3555, -2261, -688, 0, -4932]
+        axis-value deltas, region 20 (0016 0…1…1), scalar 0.0679932: [0, 0, 0, 0, 1639, 0, 0, 0, 0]
+        axis-value deltas, region 23 (0018 0…1…1), scalar 0.0230103: [-1376, 2097, 0, -4915, 115, -1835, 0, 0, 0]
+        axis-value deltas, region 25 (0019 0…1…1), scalar 0.494019: [-885, 0, 0, 0, 0, 0, 0, 0, 0]
+        axis-value deltas, region 26 (0020 0…1…1), scalar 0.0159912: [-2523, 0, 0, -4374, 0, 33, 279, 2933, 0]
+        axis-value deltas, region 28 (0022 0…1…1), scalar 0.189026: [0, 0, 0, 0, 0, -5800, 1393, 2064, 0]
+        axis values (2.14): 0000 3621 - 662.747 = 2958.25 → 2958, 0001 836 + 48.2525 = 884.253 → 884, 0003 9093 + 120.016 = 9213.02 → 9213, 0004 13959 - 773.223 = 13185.8 → 13186, 0007 13795 - 120.468 = 13674.5 → 13675, 0010 5800 - 1287.22 = 4512.78 → 4513, 0013 1540 + 222.381 = 1762.38 → 1762, 0014 0 + 437.052 = 437.052 → 437, 0021 16384 - 325.408 = 16058.6 → 16059
+        transform deltas, region 15 (0011 0…1…1), scalar 0.065979: [10, 10, -91, -348, -31, 0, 0]
+        transform deltas, region 20 (0016 0…1…1), scalar 0.0679932: [84, 23, 0, -20, 0, 0, 0]
+        transform deltas, region 23 (0018 0…1…1), scalar 0.0230103: [-6, 2, 0, 0, 1075, 0, 0]
+        transform deltas, region 25 (0019 0…1…1), scalar 0.494019: [-15, -453, 751, -174, -207, 0, 0]
+        transform deltas, region 26 (0020 0…1…1), scalar 0.0159912: [-11, -137, 23, -518, -563, 0, 0]
+        transform deltas, region 29 (0023 0…1…1), scalar 0.143005: [-14, -7, 228, -51, 0, 0, 0]
+        transform: translateX -459.355, translateY 333.287, rotation -213.531°, scaleX 0.516742, scaleY 0.863697, tCenterX 973, tCenterY 10
+        leaf: glyph 8, drawn from glyf at: 0000 0.1805, 0001 0.05396, 0003 0.5623, 0004 0.8048, 0007 0.8347, 0010 0.2755, 0013 0.1075, 0014 0.02667, 0021 0.9802
+              through the matrix (-0.4307, 0.2854, -0.4771, -0.72) and offset (939.5, -27.25)
+      component 1: glyph 8
+        axis-value deltas, region 6 (0003 0…1…1), scalar 0.0510254: [-2507, 524, 1540, -1753, -9191, -3457, -327, 0, 0, 0, -688]
+        axis-value deltas, region 20 (0016 0…1…1), scalar 0.0679932: [0, 0, 0, 1638, 0, 0, 0, 0, 0, 0, 0]
+        axis-value deltas, region 23 (0018 0…1…1), scalar 0.0230103: [-1802, 2589, 5784, 33, -4899, -1310, 0, 0, 0, 0, 0]
+        axis-value deltas, region 25 (0019 0…1…1), scalar 0.494019: [-1540, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        axis-value deltas, region 26 (0020 0…1…1), scalar 0.0159912: [-2097, 2425, 6767, 541, -4227, 754, 0, 0, 0, 0, 0]
+        axis-value deltas, region 28 (0022 0…1…1), scalar 0.189026: [0, 0, 0, 0, 0, -5865, 0, 0, 0, 2359, 2228]
+        axis values (2.14): 0000 3801 - 963.707 = 2837.29 → 2837, 0001 377 + 125.09 = 502.09 → 502, 0002 6914 + 319.883 = 7233.88 → 7234, 0006 13648 + 31.3359 = 13679.3 → 13679, 0008 13058 - 649.296 = 12408.7 → 12409, 0011 5865 - 1303.12 = 4561.88 → 4562, 0013 1032 - 16.6853 = 1015.31 → 1015, 0014 557, 0016 16384, 0018 0 + 445.912 = 445.912 → 446, 0020 1999 + 386.044 = 2385.04 → 2385
+        transform deltas, region 6 (0003 0…1…1), scalar 0.0510254: [-17, 0, 45, -328, -20]
+        transform deltas, region 20 (0016 0…1…1), scalar 0.0679932: [-84, 30, 0, -21, 0]
+        transform deltas, region 23 (0018 0…1…1), scalar 0.0230103: [-6, 1, 0, 0, 1106]
+        transform deltas, region 25 (0019 0…1…1), scalar 0.494019: [12, -461, -797, -174, -205]
+        transform deltas, region 26 (0020 0…1…1), scalar 0.0159912: [9, -147, 0, -502, -532]
+        transform deltas, region 29 (0023 0…1…1), scalar 0.143005: [20, 2, -205, -31, 0]
+        transform: translateX 486.215, translateY 351.256, rotation -147.47°, scaleX 0.506265, scaleY 0.83657
+        leaf: glyph 8, drawn from glyf at: 0000 0.1732, 0001 0.03064, 0002 0.4415, 0006 0.8349, 0008 0.7574, 0011 0.2784, 0013 0.06195, 0014 0.034, 0016 1, 0018 0.02722, 0020 0.1456
+              through the matrix (-0.4268, -0.2722, 0.4499, -0.7053) and offset (488.2, 251.3)
+      component 2: glyph 6
+        axis values (2.14): 0000 8192
+        transform deltas, region 18 (0014 0…1…1), scalar 0.245972: [0, 0, 0, -184]
+        transform deltas, region 23 (0018 0…1…1), scalar 0.0230103: [-59, 0, 117, 0]
+        transform deltas, region 25 (0019 0…1…1), scalar 0.494019: [1, -463, -2, -164]
+        transform deltas, region 26 (0020 0…1…1), scalar 0.0159912: [20, -150, -35, -215]
+        transform: translateX 463.456, translateY 338.871, scaleX 0.0714301, scaleY 0.13309
+        leaf: glyph 6, drawn from glyf at: 0000 0.5
+              through the matrix (0.07143, 0, 0, 0.1331) and offset (465.5, 238.9)
+      component 3: glyph 6
+        axis values (2.14): 0000 8192
+        transform deltas, region 16 (0012 0…1…1), scalar 0.0410156: [-500, 0, 1024, 0]
+        transform deltas, region 22 (0017 0…1…1), scalar 0.0390015: [0, -70, 0, 82]
+        transform deltas, region 25 (0019 0…1…1), scalar 0.494019: [0, -455, 0, -17]
+        transform deltas, region 26 (0020 0…1…1), scalar 0.0159912: [344, -151, -699, -37]
+        transform: translateX 58.9932, translateY 327.077, scaleX 0.879709, scaleY 0.0646564
+        leaf: glyph 6, drawn from glyf at: 0000 0.5
+              through the matrix (0.8797, 0, 0, 0.06466) and offset (60.99, 227.1)
+      component 4: glyph 9
+        axis values (2.14): 0000 0, 0001 0, 0003 0, 0004 0
+        transform deltas, region 3 (0000 0…1…1), scalar 0.169006: [0, 484, 0, -564]
+        transform deltas, region 23 (0018 0…1…1), scalar 0.0230103: [-59, 0, 117, 0]
+        transform deltas, region 25 (0019 0…1…1), scalar 0.494019: [1, -54, -2, -461]
+        transform deltas, region 26 (0020 0…1…1), scalar 0.0159912: [19, 304, -35, -533]
+        transform: translateX 463.44, translateY 67.9834, scaleX 0.0714301, scaleY 0.326577
+        leaf: glyph 9, drawn from glyf at: all 0
+              through the matrix (0.07143, 0, 0, 0.3266) and offset (465.4, -32.02)

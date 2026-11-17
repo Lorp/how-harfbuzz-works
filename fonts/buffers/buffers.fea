@@ -1,0 +1,57 @@
+# Test font for “Buffers”: a ligature that passes over marks, a
+# multiple substitution, a precomposed letter, a dotted circle,
+# Arabic joining forms with tatweel, and a Devanagari conjunct.
+languagesystem DFLT dflt;
+languagesystem latn dflt;
+languagesystem arab dflt;
+languagesystem dev2 dflt;
+
+@MARKS = [acutecomb virama];
+
+table GDEF {
+  GlyphClassDef [a e f i x aacute dottedcircle beh beh.init beh.medi beh.fina
+                 tatweel ka ssa iMatra k_ssa],
+                [f_i], @MARKS, ;
+} GDEF;
+
+# Latin: an fi ligature that passes over marks.
+feature liga {
+  script latn;
+    lookup FI { lookupflag IgnoreMarks; sub f i by f_i; } FI;
+} liga;
+
+# One character, two glyphs.
+feature ccmp {
+  script latn;
+    sub x by f i;
+} ccmp;
+
+# Arabic: the joining forms of beh.
+feature init {
+  script arab;
+    sub beh by beh.init;
+} init;
+
+feature medi {
+  script arab;
+    sub beh by beh.medi;
+} medi;
+
+feature fina {
+  script arab;
+    sub beh by beh.fina;
+} fina;
+
+# Devanagari: KA + virama + SSA is the conjunct K.SSA.
+feature akhn {
+  script dev2;
+    sub ka virama ssa by k_ssa;
+} akhn;
+
+# A mark-to-base attachment for the acute.
+markClass acutecomb <anchor 0 500> @TOP;
+
+feature mark {
+  script latn;
+    pos base [a e dottedcircle] <anchor 250 650> mark @TOP;
+} mark;

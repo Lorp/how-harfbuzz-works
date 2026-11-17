@@ -1,0 +1,16 @@
+glyph 1, at: wght 0.5
+  component 0: glyph 3
+    glyph 3, at: wght 0.5
+      component 0: glyph 4
+        axis-value deltas, region 0 (wght 0…1…1), scalar 0.5: [0, -327, 0]
+        axis values (2.14): 0000 -4227, 0001 819 - 163.5 = 655.5 → 656, 0002 -8484
+        transform: translateX -10, translateY 24
+        leaf: glyph 4, drawn from glyf at: wght 0.5, 0000 -0.258, 0001 0.04004, 0002 -0.5178
+              through the matrix (1, 0, 0, 1) and offset (-10, 24)
+  component 1: glyph 5
+    glyph 5, at: wght 0.5
+      component 0: glyph 6
+        axis values (2.14): 0002 3537
+        transform: translateX -13
+        leaf: glyph 6, drawn from glyf at: wght 0.5, 0002 0.2159
+              through the matrix (1, 0, 0, 1) and offset (-13, 0)

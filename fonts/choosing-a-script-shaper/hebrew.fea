@@ -1,0 +1,15 @@
+# Test fonts for “Choosing a script shaper”: Hebrew.
+# build-fonts.py makes one font from this file for each script tag,
+# writing the tag in place of the placeholder. There is no GSUB, only GPOS.
+languagesystem SCRIPT dflt;
+
+table GDEF {
+  GlyphClassDef [alef], , [hiriq], ;
+} GDEF;
+
+# The hiriq goes below the alef, near its right-hand edge.
+markClass hiriq <anchor 0 0> @BELOW;
+
+feature mark {
+    pos base alef <anchor 500 -150> mark @BELOW;
+} mark;

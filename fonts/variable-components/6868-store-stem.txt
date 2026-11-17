@@ -1,0 +1,7 @@
+── item 3:7 (VarIdx 196615): 4 numbers for each of 25 regions
+region 3 (0000 0…1…1): [0, 484, 0, -564]
+region 23 (0018 0…1…1): [-59, 0, 117, 0]
+region 25 (0019 0…1…1): [1, -54, -2, -461]
+region 26 (0020 0…1…1): [19, 304, -35, -533]
+region 27 (0021 0…1…1): [280, 0, -5, 41]
+(and 20 more regions, all 0)

@@ -1,0 +1,8 @@
+{
+ "font": "format2.ttf",
+ "sha256": "029a22e91c876ccc45e3c269c14ef51253dfbb491fc5e997a08b2f57d2c18182",
+ "lookups": {},
+ "tables": {
+  "kern": "<kern>\n  <version value=\"0\"/>\n  <kernsubtable format=\"2\">\n    <!-- unknown 'kern' subtable format -->\n    00000030 02010006 000e0016 001e0002\n    00020024 002a0004 00020002 00040000\n    00000000 0000ffb0 00000000 0000ff9c\n  </kernsubtable>\n</kern>"
+ }
+}

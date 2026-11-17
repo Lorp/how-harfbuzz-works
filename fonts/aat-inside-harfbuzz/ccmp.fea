@@ -1,0 +1,8 @@
+# The GSUB of latin-gsub.ttf: a ligature its `morx` doesn’t have, in
+# `ccmp`, which applies in vertical text too.
+languagesystem DFLT dflt;
+languagesystem latn dflt;
+
+feature ccmp {
+  sub f l by f_l;
+} ccmp;

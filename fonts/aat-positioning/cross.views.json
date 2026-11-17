@@ -1,0 +1,8 @@
+{
+ "font": "cross.ttf",
+ "sha256": "73ceffa086e54964b91bea5ec2157af7356836a9094c4f11b9c61e791833d94e",
+ "lookups": {},
+ "tables": {
+  "kerx": "kerx version 2, 2 subtables\nsubtable 0: format 0, length 58\n  coverage: none\n  tupleCount: 0\n  nPairs: 5  (then searchRange, entrySelector, rangeShift)\n    A V: -80\n    T o: -100\n    ko ko: -100\n    ka ka: -100\n    bet gimel: -100\nsubtable 1: format 0, length 40\n  coverage: CrossStream\n  tupleCount: 0\n  nPairs: 2  (then searchRange, entrySelector, rangeShift)\n    A V: 100\n    bet gimel: 100"
+ }
+}

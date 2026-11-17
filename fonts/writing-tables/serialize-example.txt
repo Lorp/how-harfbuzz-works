@@ -1,0 +1,12 @@
+A written              head= 5  tail=32
+B written              head= 8  tail=32
+D packed               head= 8  tail=31
+                       object 1
+B packed               head= 5  tail=28
+                       object 2
+second D packed        head= 8  tail=28
+                       object 1
+C packed               head= 5  tail=25
+                       object 3
+end_serialize          head= 0  tail=20
+result, 12 bytes: 61 00 08 00 05 63 00 06 62 00 03 64

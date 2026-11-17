@@ -1,0 +1,19 @@
+# Test fonts for “Choosing a script shaper”: Arabic and Syriac.
+# build-fonts.py makes one font from this file for each set of script
+# tags, writing its languagesystem lines in place of the placeholder below.
+LANGUAGESYSTEMS
+
+feature init {
+    sub beh by beh.init;
+    sub beth by beth.init;
+} init;
+
+feature medi {
+    sub beh by beh.medi;
+    sub beth by beth.medi;
+} medi;
+
+feature fina {
+    sub beh by beh.fina;
+    sub beth by beth.fina;
+} fina;

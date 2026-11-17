@@ -1,0 +1,8 @@
+{
+ "font": "kerx-gsub-gpos.ttf",
+ "sha256": "f613c78707d7792f8d28d76a769bdaed1b96305ec5ba279db7aba72182cbab78",
+ "lookups": {},
+ "tables": {
+  "kerx": "kerx version 2, 1 subtable\nsubtable 0: format 0, length 58\n  coverage: none\n  tupleCount: 0\n  nPairs: 5  (then searchRange, entrySelector, rangeShift)\n    A V: -80\n    T o: -100\n    ko ko: -100\n    ka ka: -100\n    bet gimel: -100"
+ }
+}

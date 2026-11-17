@@ -1,0 +1,273 @@
+OT::GSUB initial estimated table size: 10624 bytes.
+OT::GSUB ran out of room; reallocating to 31154 bytes.
+OT::GSUB ran out of room; reallocating to 62324 bytes.
+OT::GSUB ran out of room; reallocating to 124664 bytes.
+OT::GSUB ran out of room; reallocating to 249344 bytes.
+Repacking GSUB.
+Applying GSUB/GPOS repacking specializations.
+Assigning spaces to 32 bit subgraphs.
+=== Overflow resolution round 0 ===
+  overflow from   14 (   1 in,    1 out, space  0) =>   13 (   1 in,    1 out, space  0)
+  overflow from   29 (   1 in,    1 out, space  0) =>   28 (   1 in,    1 out, space  0)
+  overflow from   44 (   1 in,    1 out, space  0) =>   43 (   1 in,    1 out, space  0)
+  overflow from   59 (   1 in,    1 out, space  0) =>   58 (   1 in,    1 out, space  0)
+  overflow from   74 (   1 in,    1 out, space  0) =>   73 (   1 in,    1 out, space  0)
+  overflow from   89 (   1 in,    1 out, space  0) =>   88 (   1 in,    1 out, space  0)
+  overflow from  119 (   1 in,    1 out, space  0) =>  118 (   1 in,    1 out, space  0)
+  overflow from    1 (   1 in,    1 out, space  0) =>    0 (   1 in,    0 out, space  0)
+  overflow from  100 (   1 in,    1 out, space  0) =>   99 (   1 in,    0 out, space  0)
+  overflow from  103 (   1 in,    1 out, space  0) =>  102 (   1 in,    0 out, space  0)
+  ... plus 54 more overflows.
+  Raising priority of all children of 58
+  Raising priority of all children of 73
+  Raising priority of all children of 88
+  Raising priority of all children of 118
+  Raising priority of all children of 133
+  Raising priority of all children of 148
+  Raising priority of all children of 163
+  Raising priority of all children of 178
+  Raising priority of all children of 19
+  Raising priority of all children of 40
+  Raising priority of all children of 61
+  Raising priority of all children of 82
+  Raising priority of all children of 124
+  Raising priority of all children of 145
+  Raising priority of all children of 166
+  Raising priority of all children of 7
+  Raising priority of all children of 4
+  Raising priority of all children of 16
+  Raising priority of all children of 10
+  Raising priority of all children of 31
+  Raising priority of all children of 22
+  Raising priority of all children of 25
+  Raising priority of all children of 46
+  Raising priority of all children of 37
+  Raising priority of all children of 52
+  Raising priority of all children of 34
+  Raising priority of all children of 49
+  Raising priority of all children of 67
+  Raising priority of all children of 64
+  Raising priority of all children of 55
+  Raising priority of all children of 76
+  Raising priority of all children of 70
+  Raising priority of all children of 79
+  Raising priority of all children of 91
+  Raising priority of all children of 85
+  Raising priority of all children of 94
+  Raising priority of all children of 97
+  Raising priority of all children of 112
+  Raising priority of all children of 109
+  Raising priority of all children of 121
+  Raising priority of all children of 115
+  Raising priority of all children of 136
+  Raising priority of all children of 127
+  Raising priority of all children of 130
+  Raising priority of all children of 151
+  Raising priority of all children of 142
+  Raising priority of all children of 157
+  Raising priority of all children of 139
+  Raising priority of all children of 154
+  Raising priority of all children of 172
+  Raising priority of all children of 169
+  Raising priority of all children of 160
+  Raising priority of all children of 175
+  Raising priority of all children of 106
+  Raising priority of all children of 103
+  Raising priority of all children of 100
+  Raising priority of all children of 1
+=== Overflow resolution round 1 ===
+  overflow from   14 (   1 in,    1 out, space  0) =>   13 (   1 in,    1 out, space  0)
+  overflow from   29 (   1 in,    1 out, space  0) =>   28 (   1 in,    1 out, space  0)
+  overflow from   44 (   1 in,    1 out, space  0) =>   43 (   1 in,    1 out, space  0)
+  overflow from   59 (   1 in,    1 out, space  0) =>   58 (   1 in,    1 out, space  0)
+  overflow from   74 (   1 in,    1 out, space  0) =>   73 (   1 in,    1 out, space  0)
+  overflow from   89 (   1 in,    1 out, space  0) =>   88 (   1 in,    1 out, space  0)
+  overflow from  119 (   1 in,    1 out, space  0) =>  118 (   1 in,    1 out, space  0)
+  overflow from    1 (   1 in,    1 out, space  0) =>    0 (   1 in,    0 out, space  0)
+  overflow from  100 (   1 in,    1 out, space  0) =>   99 (   1 in,    0 out, space  0)
+  overflow from  103 (   1 in,    1 out, space  0) =>  102 (   1 in,    0 out, space  0)
+  ... plus 57 more overflows.
+  Raising priority of all children of 13
+  Raising priority of all children of 28
+  Raising priority of all children of 43
+  Raising priority of all children of 58
+  Raising priority of all children of 73
+  Raising priority of all children of 88
+  Raising priority of all children of 118
+  Raising priority of all children of 133
+  Raising priority of all children of 148
+  Raising priority of all children of 163
+  Raising priority of all children of 178
+  Raising priority of all children of 19
+  Raising priority of all children of 40
+  Raising priority of all children of 61
+  Raising priority of all children of 82
+  Raising priority of all children of 124
+  Raising priority of all children of 145
+  Raising priority of all children of 166
+  Raising priority of all children of 7
+  Raising priority of all children of 4
+  Raising priority of all children of 16
+  Raising priority of all children of 10
+  Raising priority of all children of 31
+  Raising priority of all children of 22
+  Raising priority of all children of 25
+  Raising priority of all children of 46
+  Raising priority of all children of 37
+  Raising priority of all children of 52
+  Raising priority of all children of 34
+  Raising priority of all children of 49
+  Raising priority of all children of 67
+  Raising priority of all children of 64
+  Raising priority of all children of 55
+  Raising priority of all children of 76
+  Raising priority of all children of 70
+  Raising priority of all children of 79
+  Raising priority of all children of 91
+  Raising priority of all children of 85
+  Raising priority of all children of 94
+  Raising priority of all children of 97
+  Raising priority of all children of 112
+  Raising priority of all children of 109
+  Raising priority of all children of 121
+  Raising priority of all children of 115
+  Raising priority of all children of 136
+  Raising priority of all children of 127
+  Raising priority of all children of 130
+  Raising priority of all children of 151
+  Raising priority of all children of 142
+  Raising priority of all children of 157
+  Raising priority of all children of 139
+  Raising priority of all children of 154
+  Raising priority of all children of 172
+  Raising priority of all children of 169
+  Raising priority of all children of 160
+  Raising priority of all children of 175
+  Raising priority of all children of 106
+  Raising priority of all children of 103
+  Raising priority of all children of 100
+  Raising priority of all children of 1
+=== Overflow resolution round 2 ===
+  overflow from   14 (   1 in,    1 out, space  0) =>   13 (   1 in,    1 out, space  0)
+  overflow from   29 (   1 in,    1 out, space  0) =>   28 (   1 in,    1 out, space  0)
+  overflow from   44 (   1 in,    1 out, space  0) =>   43 (   1 in,    1 out, space  0)
+  overflow from   59 (   1 in,    1 out, space  0) =>   58 (   1 in,    1 out, space  0)
+  overflow from   74 (   1 in,    1 out, space  0) =>   73 (   1 in,    1 out, space  0)
+  overflow from   89 (   1 in,    1 out, space  0) =>   88 (   1 in,    1 out, space  0)
+  overflow from  119 (   1 in,    1 out, space  0) =>  118 (   1 in,    1 out, space  0)
+  overflow from    1 (   1 in,    1 out, space  0) =>    0 (   1 in,    0 out, space  0)
+  overflow from  100 (   1 in,    1 out, space  0) =>   99 (   1 in,    0 out, space  0)
+  overflow from  103 (   1 in,    1 out, space  0) =>  102 (   1 in,    0 out, space  0)
+  ... plus 57 more overflows.
+  Raising priority of all children of 13
+  Raising priority of all children of 28
+  Raising priority of all children of 43
+  Raising priority of all children of 58
+  Raising priority of all children of 73
+  Raising priority of all children of 88
+  Raising priority of all children of 118
+  Raising priority of all children of 133
+  Raising priority of all children of 148
+  Raising priority of all children of 163
+  Raising priority of all children of 178
+  Raising priority of all children of 19
+  Raising priority of all children of 40
+  Raising priority of all children of 61
+  Raising priority of all children of 82
+  Raising priority of all children of 124
+  Raising priority of all children of 145
+  Raising priority of all children of 166
+  Raising priority of all children of 7
+  Raising priority of all children of 4
+  Raising priority of all children of 16
+  Raising priority of all children of 10
+  Raising priority of all children of 31
+  Raising priority of all children of 22
+  Raising priority of all children of 25
+  Raising priority of all children of 46
+  Raising priority of all children of 37
+  Raising priority of all children of 52
+  Raising priority of all children of 34
+  Raising priority of all children of 49
+  Raising priority of all children of 67
+  Raising priority of all children of 64
+  Raising priority of all children of 55
+  Raising priority of all children of 76
+  Raising priority of all children of 70
+  Raising priority of all children of 79
+  Raising priority of all children of 91
+  Raising priority of all children of 85
+  Raising priority of all children of 94
+  Raising priority of all children of 97
+  Raising priority of all children of 112
+  Raising priority of all children of 109
+  Raising priority of all children of 121
+  Raising priority of all children of 115
+  Raising priority of all children of 136
+  Raising priority of all children of 127
+  Raising priority of all children of 130
+  Raising priority of all children of 151
+  Raising priority of all children of 142
+  Raising priority of all children of 157
+  Raising priority of all children of 139
+  Raising priority of all children of 154
+  Raising priority of all children of 172
+  Raising priority of all children of 169
+  Raising priority of all children of 160
+  Raising priority of all children of 175
+  Raising priority of all children of 106
+  Raising priority of all children of 103
+  Raising priority of all children of 100
+  Raising priority of all children of 1
+=== Overflow resolution round 3 ===
+  overflow from    5 (   1 in,    1 out, space  0) =>    4 (   1 in,    1 out, space  0)
+  overflow from    8 (   1 in,    1 out, space  0) =>    7 (   1 in,    1 out, space  0)
+  overflow from   11 (   1 in,    1 out, space  0) =>   10 (   1 in,    1 out, space  0)
+  overflow from   14 (   1 in,    1 out, space  0) =>   13 (   1 in,    1 out, space  0)
+  overflow from   17 (   1 in,    1 out, space  0) =>   16 (   1 in,    1 out, space  0)
+  overflow from   20 (   1 in,    1 out, space  0) =>   19 (   1 in,    1 out, space  0)
+  overflow from   23 (   1 in,    1 out, space  0) =>   22 (   1 in,    1 out, space  0)
+  overflow from   26 (   1 in,    1 out, space  0) =>   25 (   1 in,    1 out, space  0)
+  overflow from   29 (   1 in,    1 out, space  0) =>   28 (   1 in,    1 out, space  0)
+  overflow from   32 (   1 in,    1 out, space  0) =>   31 (   1 in,    1 out, space  0)
+  ... plus 21 more overflows.
+No resolution available :(
+Failed to find a resolution. Re-running with extension promotion and table splitting enabled.
+Repacking GSUB.
+Applying GSUB/GPOS repacking specializations.
+Splitting subtables if needed.
+Promoting lookups to extensions if needed.
+Promoting lookup type 1 (obj 56) to extension.
+Promoting lookup type 1 (obj 68) to extension.
+Promoting lookup type 1 (obj 50) to extension.
+Promoting lookup type 1 (obj 53) to extension.
+Promoting lookup type 1 (obj 35) to extension.
+Promoting lookup type 1 (obj 47) to extension.
+Promoting lookup type 1 (obj 38) to extension.
+Promoting lookup type 1 (obj 26) to extension.
+Promoting lookup type 1 (obj 32) to extension.
+Promoting lookup type 1 (obj 23) to extension.
+Promoting lookup type 1 (obj 17) to extension.
+Promoting lookup type 1 (obj 11) to extension.
+Promoting lookup type 1 (obj 8) to extension.
+Promoting lookup type 1 (obj 5) to extension.
+Promoting lookup type 1 (obj 179) to extension.
+Promoting lookup type 1 (obj 164) to extension.
+Promoting lookup type 1 (obj 149) to extension.
+Promoting lookup type 1 (obj 134) to extension.
+Promoting lookup type 1 (obj 119) to extension.
+Promoting lookup type 1 (obj 89) to extension.
+Promoting lookup type 1 (obj 74) to extension.
+Promoting lookup type 1 (obj 59) to extension.
+Promoting lookup type 1 (obj 44) to extension.
+Promoting lookup type 1 (obj 29) to extension.
+Promoting lookup type 1 (obj 14) to extension.
+Promoting lookup type 1 (obj 167) to extension.
+Promoting lookup type 1 (obj 146) to extension.
+Promoting lookup type 1 (obj 125) to extension.
+Promoting lookup type 1 (obj 83) to extension.
+Promoting lookup type 1 (obj 62) to extension.
+Promoting lookup type 1 (obj 41) to extension.
+Promoting lookup type 1 (obj 20) to extension.
+OT::GSUB final subset table size: 152548 bytes.
+OT::GSUB::subset success
