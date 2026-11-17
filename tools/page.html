@@ -1,0 +1,189 @@
+<title>{{title}} · {{book}}</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=Instrument+Sans:wght@500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one reading column of ~66ch; figures (views, shaping runs, traces)
+   break out to a wider measure, because code and buffers need the room. */
+:root {
+  --paper: #f6f7f9;
+  --ink: #1a1e27;
+  --muted: #5a6373;
+  --rule: #d8dce4;
+  --well: #eceff5;
+  --accent: #2c48c9;
+  --accent-soft: #dfe5fb;
+  --hit: #7a4b00;
+  --font-text: "Literata", "Iowan Old Style", Georgia, serif;
+  --font-head: "Instrument Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-code: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --measure: 66ch;
+  --wide: 58rem;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #13161d; --ink: #e3e6ed; --muted: #9aa2b1; --rule: #2b313d;
+    --well: #1b2029; --accent: #93a6ff; --accent-soft: #252d4a; --hit: #f0c674;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #13161d; --ink: #e3e6ed; --muted: #9aa2b1; --rule: #2b313d;
+  --well: #1b2029; --accent: #93a6ff; --accent-soft: #252d4a; --hit: #f0c674;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--paper); color: var(--ink);
+  font: 400 1.0625rem/1.65 var(--font-text);
+  font-optical-sizing: auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 4rem;
+}
+body::before {
+  content: ""; position: fixed; inset: 0 0 auto;
+  height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--paper);
+}
+.page { max-width: var(--wide); margin: 0 auto; display: grid; }
+.page > * { width: 100%; min-width: 0; }
+.flow { display: grid; min-width: 0; }
+.flow > * { width: 100%; max-width: var(--measure); justify-self: start; min-width: 0; }
+.flow > .views, .flow > .shape, .flow > .trace, .flow > table { max-width: var(--wide); }
+
+/* Top: the book, then the switch for how lookups are shown. */
+.masthead {
+  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between;
+  gap: .5rem 1.5rem; padding-block: 1.5rem .75rem;
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--font-head);
+}
+.masthead .book { font-weight: 700; letter-spacing: .01em; }
+.masthead .book a { color: inherit; text-decoration: none; }
+.masthead .sub { color: var(--muted); font-weight: 500; }
+.masthead .ver { color: var(--muted); font: 400 .8rem var(--font-code); }
+.switch {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+  background: var(--paper); border-bottom: 1px solid var(--rule);
+  display: flex; flex-wrap: wrap; align-items: center; gap: .25rem .75rem;
+  padding-block: .5rem; font: 500 .85rem var(--font-head);
+}
+.switch .label { color: var(--muted); text-transform: uppercase; letter-spacing: .08em; font-size: .72rem; }
+.switch .opts { display: flex; flex-wrap: wrap; gap: .25rem; }
+button {
+  font: inherit; color: var(--ink); background: none; cursor: pointer;
+  border: 1px solid var(--rule); border-radius: 4px; padding: .2rem .6rem;
+}
+button[aria-pressed="true"], button[aria-selected="true"] {
+  background: var(--accent-soft); border-color: var(--accent); color: var(--ink);
+}
+button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+details.contents { padding-block: .75rem 0; font: 500 .9rem var(--font-head); }
+details.contents summary { cursor: pointer; color: var(--muted); }
+details.contents ol { margin: .5rem 0 0; padding-left: 1.4rem; line-height: 1.8; }
+
+/* Text */
+h1, h2, h3 { font-family: var(--font-head); line-height: 1.2; text-wrap: balance; }
+h1 { font-size: 2.6rem; font-weight: 700; letter-spacing: -.01em; margin: 2.5rem 0 1rem; }
+h2 { font-size: 1.55rem; font-weight: 600; margin: 2.75rem 0 .5rem; padding-top: .75rem; border-top: 1px solid var(--rule); }
+h3 { font-size: 1.15rem; font-weight: 600; margin: 1.75rem 0 .25rem; }
+p, ul, ol { margin: 0 0 1rem; }
+a { color: var(--accent); text-underline-offset: .15em; }
+code { font-family: var(--font-code); font-size: .86em; }
+p code, li code, td code { background: var(--well); padding: .05em .3em; border-radius: 3px; }
+blockquote {
+  margin: 1.25rem 0; padding: .25rem 0 .25rem 1.1rem; border-left: 3px solid var(--accent);
+  color: var(--ink);
+}
+blockquote p:last-child { margin-bottom: 0; }
+table { border-collapse: collapse; width: 100%; font-size: .95rem; margin: 0 0 1.25rem; display: block; overflow-x: auto; }
+th, td { text-align: left; vertical-align: top; padding: .35rem .75rem .35rem 0; border-bottom: 1px solid var(--rule); }
+th { font: 600 .78rem var(--font-head); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+pre { margin: 0; overflow-x: auto; }
+pre code { font-size: .82rem; line-height: 1.55; }
+.flow > pre { background: var(--well); padding: .9rem 1rem; border-radius: 6px; margin-bottom: 1.25rem; }
+
+/* Figures: views of a lookup */
+.views { margin: .5rem 0 1.75rem; border: 1px solid var(--rule); border-radius: 6px; background: var(--well); }
+.views .tabs { display: flex; flex-wrap: wrap; gap: .25rem; padding: .5rem; border-bottom: 1px solid var(--rule); font: 500 .8rem var(--font-head); }
+.views .pane { padding: .9rem 1rem; }
+.views .pane:not(.on) { display: none; }
+.views .src { display: inline-block; margin-top: .6rem; font: 400 .78rem var(--font-code); }
+.views figcaption { padding: 0 1rem .6rem; color: var(--muted); font: 400 .78rem var(--font-code); }
+
+/* Figures: shaping runs and traces */
+.shape, .trace { margin: .5rem 0 1.75rem; overflow-x: auto; }
+.shape table, .trace table { display: table; margin: 0; font-size: .85rem; }
+.shape td.font, .shape td.opt { font: 400 .78rem var(--font-code); color: var(--muted); white-space: nowrap; }
+.shape td.in .txt { display: block; font: 400 1.05rem var(--font-code); }
+.shape td.in .cps { display: block; font: 400 .7rem var(--font-code); color: var(--muted); white-space: nowrap; }
+.shape td.out code, .trace td.buf code { background: none; padding: 0; white-space: nowrap; color: var(--hit); font-weight: 600; }
+.trace { border: 1px solid var(--rule); border-radius: 6px; }
+.trace-head { padding: .5rem .75rem; border-bottom: 1px solid var(--rule); background: var(--well); }
+.trace-head code { background: none; font-size: .78rem; color: var(--muted); }
+.trace td { padding: .3rem .75rem; }
+.trace td.what { font: 400 .78rem var(--font-code); white-space: nowrap; color: var(--ink); }
+.trace tr:last-child td { border-bottom: 0; }
+
+nav.pager { display: flex; justify-content: space-between; gap: 1rem; padding-top: 2rem; margin-top: 2rem; border-top: 1px solid var(--rule); font: 500 .95rem var(--font-head); }
+
+@media (max-width: 600px) {
+  body { font-size: 1rem; }
+  .switch .label { display: none; }
+  h1 { font-size: 2rem; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+</style>
+
+<div class="page">
+  <header class="masthead">
+    <div><span class="book"><a href="title.html">{{book}}</a></span> <span class="sub">{{subtitle}}</span></div>
+    <span class="ver">HarfBuzz {{hb_version}}</span>
+  </header>
+  <div class="switch" role="group" aria-label="How lookups are shown">
+    <span class="label">Show lookups as</span>
+    <span class="opts">
+      <button type="button" id="view-spec" data-set-view="spec">Spec-like</button>
+      <button type="button" id="view-fea" data-set-view="fea">Feature file</button>
+      <button type="button" id="view-ttx" data-set-view="ttx">TTX</button>
+      <button type="button" id="view-hex" data-set-view="hex">Bytes</button>
+      <button type="button" id="view-cpp" data-set-view="cpp">HarfBuzz C++</button>
+    </span>
+  </div>
+  <details class="contents"><summary>Contents</summary><ol>{{nav}}</ol></details>
+  <main class="flow">
+{{body}}
+  </main>
+  <nav class="pager">{{prev}}{{next}}</nav>
+</div>
+
+<script>
+(function () {
+  var KEY = "hbbook-view", view = "spec";
+  try { view = localStorage.getItem(KEY) || "spec"; } catch (e) {}
+  function apply(v) {
+    view = v;
+    document.querySelectorAll("[data-set-view]").forEach(function (b) {
+      b.setAttribute("aria-pressed", String(b.dataset.setView === v));
+    });
+    document.querySelectorAll("figure.views").forEach(function (fig) {
+      var has = fig.querySelector('.pane[data-view="' + v + '"]');
+      var show = has ? v : "spec";
+      fig.querySelectorAll(".pane").forEach(function (p) { p.classList.toggle("on", p.dataset.view === show); });
+      fig.querySelectorAll(".tabs button").forEach(function (b) { b.setAttribute("aria-selected", String(b.dataset.view === show)); });
+    });
+  }
+  function choose(v) {
+    try { localStorage.setItem(KEY, v); } catch (e) {}
+    apply(v);
+  }
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest("[data-set-view], .views .tabs button");
+    if (b) choose(b.dataset.setView || b.dataset.view);
+  });
+  apply(view);
+})();
+</script>

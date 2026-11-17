@@ -1,0 +1,9 @@
+# The order of the book. One path per line, relative to book/.
+# A page's name (and its fonts folder, fonts/<name>/) is its file name.
+front/title.md
+front/preface.md
+front/notation.md
+chapters/gsub.md
+end/glossary.md
+end/bibliography.md
+end/colophon.md
