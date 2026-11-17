@@ -11,7 +11,7 @@ A concept with a code name gets an entry in each, pointing at each other: “clu
 
 ## How the indexes are built
 
-`tools/build-site.mjs` builds both indexes (`book/end/index.md`, `book/end/code-index.md`) from the chapters and appendices, using `tools/index-lib.mjs`:
+`tools/build-site.mjs` builds both indexes (`book/end/general-index.md`, `book/end/code-index.md`) from the chapters and appendices, using `tools/index-lib.mjs`:
 
 * Terms are the bold definitions and the code spans that name tags, API, types and files; this file adds variant forms, other names and “see also”s.
 * Every paragraph, heading, list item or table cell that mentions a term is a place it can cite. Each entry cites one place per section: the chapter named for it, its definition (in bold) and headings that name it first, then the sections that mention it most; twelve at most, six for a term found in most chapters. “Where to read the source” and “In short” sections are skipped.

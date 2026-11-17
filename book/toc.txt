@@ -90,6 +90,6 @@ appendices/limits.md
 end/glossary.md
 end/bibliography.md
 end/credits.md
-end/index.md
+end/general-index.md
 end/code-index.md
 end/colophon.md

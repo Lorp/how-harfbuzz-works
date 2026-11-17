@@ -25,7 +25,17 @@ The site is built with Node. Only the test fonts need Python.
 tools/build-harfbuzz.sh   # HarfBuzz 15.1.0 into .cache/harfbuzz (twice: plain, and with detailed traces)
 npm install               # once
 npm run build             # the book as HTML, into site/
+npm run pdf               # the book as a PDF, with its .pages.txt, into site/print/ (needs Chrome)
 ```
+
+## Publishing
+
+```sh
+npm run pdf               # first, if the PDF should be updated too
+npm run publish           # builds the site afresh and pushes it, with site/print/'s PDF, to gh-pages
+```
+
+GitHub Pages serves the `gh-pages` branch at <https://lorp.github.io/how-harfbuzz-works/>. The branch is replaced on each publish by a single commit, so it never grows; `main` holds only the source. `npm run publish` warns if `book/`, `fonts/` or `tools/` have changed since the PDF was made.
 
 `tools/build-harfbuzz.sh` needs `meson`, `ninja` and a C++ compiler (`brew install meson ninja` on a Mac).
 
@@ -39,4 +49,53 @@ Each `FONT.views.json` holds the views made from the compiled font: spec-like, T
 
 ## Writing a chapter
 
-Beside ordinary Markdown, a chapter can use three kinds of fenced block, run against its fonts when the book is built: `views` (the switchable views of a lookup), `shape` (hb-shape runs) and `trace` (hb-shape --trace, cut down). See the top of `tools/build-site.mjs`.
+A chapter is ordinary Markdown, in `book/chapters/`. What makes this book different is that its examples aren’t typed in by hand: you describe what you want to show, and the build runs HarfBuzz to produce it. If HarfBuzz’s behaviour changes, the book changes with it.
+
+Each chapter has its own small test fonts in `fonts/<chapter>/`, named after the chapter’s file (so `gsub.md` uses `fonts/gsub/`). Three kinds of code block use them.
+
+### Show what HarfBuzz does: `shape`
+
+Write one font and one piece of text per line, and the build puts HarfBuzz’s output in the page:
+
+````markdown
+```shape
+ligatures.ttf  ffi
+ligatures.ttf  ffi  --features=-liga
+```
+````
+
+Put **two or more spaces** between the font, the text and any `hb-shape` options. Text can include `\u0301` or `\u{1F600}` for characters that are hard to type.
+
+### Show how it got there: `trace`
+
+This shows HarfBuzz’s own step-by-step log (`hb-shape --trace`) for one run, cut down to the part you’re talking about:
+
+````markdown
+```trace
+font: ligatures.ttf
+text: ffi
+from: start lookup 0
+to: end lookup 0
+```
+````
+
+`from` and `to` are bits of text from the log’s lines. The extract starts at the first line containing `from` and ends at the first line after it containing `to`. Lookups that were skipped are left out; add `skipped: yes` to keep them. Add `options:` for any other `hb-shape` options, such as `options: --script=arab`.
+
+### Show what’s in the font: `views`
+
+This shows one lookup from the compiled font, with tabs to switch between a spec-like table, TTX, and the raw bytes:
+
+````markdown
+```views
+font: ligatures.ttf
+lookup: 0
+fea: ligatures.fea liga
+cpp: LigatureSubstFormat1_2
+```
+````
+
+`fea` names the feature file and the block in it the lookup came from, and `cpp` names the HarfBuzz struct that reads it. In the PDF only one view can be shown; add `print: spec fea` (for example) to choose which. The default is the spec-like table.
+
+These views come from a `FONT.views.json` file next to each font, which the chapter’s `build.sh` writes. So after changing a feature file, rebuild that chapter’s fonts (see above); the site build stops and tells you if you forget.
+
+`tools/build-site.mjs` has the full details at the top.

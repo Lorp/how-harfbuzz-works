@@ -5,7 +5,8 @@
   "description": "Builds the book How HarfBuzz Works as HTML",
   "scripts": {
     "build": "node tools/build-site.mjs",
-    "pdf": "node tools/build-pdf.mjs"
+    "pdf": "node tools/build-pdf.mjs",
+    "publish": "node tools/publish.mjs"
   },
   "dependencies": {
     "markdown-it": "^14.1.0"

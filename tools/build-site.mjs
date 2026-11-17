@@ -716,7 +716,7 @@ function readToc() {
     }
     if (section.kind === "part") page.number = String(++chapter);
     if (section.kind === "appendices") page.number = String.fromCharCode(65 + appendix++);
-    page.eyebrow = section.kind === "part" ? `${section.label} · Chapter ${page.number}`
+    page.eyebrow = section.kind === "part" ? `${section.label} · ${section.title}`
                  : section.kind === "appendices" ? `Appendix ${page.number}` : "";
     page.section = section;
     if (pages.some((p) => p.slug === page.slug)) throw new Error(`toc.txt: two pages are named ${page.slug}`);
@@ -766,6 +766,8 @@ function main(outDir, fragment) {
       .replace("<p>{{index:general}}</p>", () => index.html("general"))
       .replace("<p>{{index:code}}</p>", () => index.html("code"));
     body = linkSources(body);
+    // A chapter is headed “15. Title”, under “Part IV · Name”.
+    if (p.section.kind === "part") body = body.replace(/(<h1[^>]*>)/, `$1${p.number}. `);
     if (p.eyebrow) body = `<p class="eyebrow">${esc(p.eyebrow)}</p>\n` + body;
     const prev = n ? pages[n - 1] : null, next = pages[n + 1];
     const prevLink = prev ? `<a rel="prev" href="${prev.slug}.html">← ${esc(prev.title)}</a>` : "<span></span>";
@@ -787,6 +789,12 @@ function main(outDir, fragment) {
     fs.writeFileSync(path.join(outDir, `${slug}.html`), page);
     console.log(`${slug}.html`);
   });
+  // The site's front door (what https://…/how-harfbuzz-works/ serves): the
+  // title page again, as the links in the header lead there.
+  if (!fragment) {
+    fs.copyFileSync(path.join(outDir, "title.html"), path.join(outDir, "index.html"));
+    console.log("index.html (the title page)");
+  }
 }
 
 const args = process.argv.slice(2);

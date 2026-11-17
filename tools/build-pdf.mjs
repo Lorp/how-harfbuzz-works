@@ -20,6 +20,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { RECORD, sourceHash } from "./source-hash.mjs";
 
 const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const OUT = path.resolve(process.argv[2] || path.join(ROOT, "site", "print", "how-harfbuzz-works.pdf"));
@@ -66,12 +67,8 @@ const head = first.match(/<link rel="preconnect"[\s\S]*?<\/style>/)[0];
 // One page's content, with its ids and links made unique within the book.
 function content(slug) {
   let html = read(slug).match(/<main class="flow">([\s\S]*?)<\/main>/)[1];
-  // A chapter is headed “15. Title”, under “Part IV · Name”.
+  // Chapters come headed “15. Title”, under “Part IV · Name”, from the site.
   const page = pages.find((p) => p.slug === slug);
-  if (page.part) {
-    html = html.replace(/<p class="eyebrow">[\s\S]*?<\/p>/, `<p class="eyebrow">${esc(page.part.label)} &middot; ${esc(page.part.name)}</p>`);
-    html = html.replace(/(<h1[^>]*>)/, `$1${page.number}. `);
-  }
   // Long option strings (feature lists) may break after a comma.
   html = html.replace(/(<td class="opt">)([^<]*)/g, (_, td, opts) => td + opts.replace(/,/g, ",<wbr>"));
   html = html.replace(/\sid="([^"]+)"/g, (_, id) => ` id="${slug}--${id}"`);
@@ -205,7 +202,7 @@ a { color: inherit; text-decoration: none; }
 // the page of each place a link points to, as a named destination. Those
 // pages go into the indexes, which are added for the second, final printing.
 // They come after every page they cite, so adding them moves none of them.
-const INDEXES = new Set(["index", "code-index"]);
+const INDEXES = new Set(["general-index", "code-index"]);
 const doc = (main) => `<!doctype html>
 <html lang="en" data-theme="light">
 <head>
@@ -353,6 +350,12 @@ const q = spawnSync("qpdf", ["--object-streams=generate", OUT, "--pages", coverP
 if (q.status !== 0 && q.status !== 3) { console.error(q.stderr); process.exit(1); }
 fs.renameSync(joined, OUT);
 console.log(labelsFile);
+
+// What this PDF was made from, so that publishing can tell when it's stale.
+if (OUT === path.join(ROOT, "site", "print", "how-harfbuzz-works.pdf")) {
+  fs.mkdirSync(path.join(ROOT, ".cache"), { recursive: true });
+  fs.writeFileSync(path.join(ROOT, RECORD), sourceHash(ROOT) + "\n");
+}
 
 // The PDF's named destinations, as a map from name to page number.
 function destinations(pdf) {
