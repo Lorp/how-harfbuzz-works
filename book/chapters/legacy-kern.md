@@ -153,7 +153,7 @@ both.ttf  A\u0301V  --language=tr
 
 In English, GPOS has a `kern` feature, so the `kern` table is left alone: A V gets GPOS’s −50, and T o isn’t kerned, because GPOS doesn’t kern it. In Turkish, the same text in the same font gets the `kern` table’s values. With an acute, GPOS places the mark and the `kern` table kerns A V across it: the two tables have each done part of the job. The mark stays over the A, though the A’s advance shrank after GPOS had placed it. That’s because `kern` runs before attachments are resolved, and resolving them adds up the advances as they are then ([Resolving attachments](positioning-glyphs-gpos.html#resolving-attachments)).
 
-This is the behaviour since HarfBuzz 2.0.0. Before it, the `kern` table was used only in a font with no GPOS at all. The commit that changed it says why: it applies to “Arial, Times New Roman, etc in Win7”, which have a GPOS without kerning in it, and were “not kerning before” (commit e655fd38, October 2018).
+This is the behavior since HarfBuzz 2.0.0. Before it, the `kern` table was used only in a font with no GPOS at all. The commit that changed it says why: it applies to “Arial, Times New Roman, etc in Win7”, which have a GPOS without kerning in it, and were “not kerning before” (commit e655fd38, October 2018).
 
 ### The kern feature and its mask
 
@@ -271,7 +271,7 @@ A space is a glyph like any other, so A and V either side of one aren’t a pair
 
 **Every glyph starts a pair.** After a pair, the loop moves to its second glyph, which then starts the next: A V A V is tried as A V, V A and A V. Each subtable runs over the whole buffer in its own pass, from `KerxTable::apply` (`hb-aat-layout-kerx-table.hh:1055`).
 
-**Pairs are left and right.** In right-to-left text, `KerxTable::apply` reverses the buffer into visual order before a subtable runs and back afterwards (`:1091`), so the first glyph of a pair is always the left-hand one, as both specifications define it. GPOS works in logical order instead. In the Hebrew example above, the pair is bet then gimel, left to right, so it kerns “גב”, typed gimel first, and not “בג”. A pair moved from a `kern` table to GPOS for a right-to-left script has to be turned round.
+**Pairs are left and right.** In right-to-left text, `KerxTable::apply` reverses the buffer into visual order before a subtable runs and back afterward (`:1091`), so the first glyph of a pair is always the left-hand one, as both specifications define it. GPOS works in logical order instead. In the Hebrew example above, the pair is bet then gimel, left to right, so it kerns “גב”, typed gimel first, and not “בג”. A pair moved from a `kern` table to GPOS for a right-to-left script has to be turned round.
 
 **It marks the buffer.** A kerned pair is unsafe to break from its first glyph to its second. And before any subtable runs, the whole buffer is marked unsafe to concatenate, once in `KerxTable::apply` and again in the kern machine, whether or not anything is kerned:
 

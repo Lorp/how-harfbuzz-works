@@ -16,7 +16,7 @@ A concept with a code name gets an entry in each, pointing at each other: “clu
 * Terms are the bold definitions and the code spans that name tags, API, types and files; this file adds variant forms, other names and “see also”s.
 * Every paragraph, heading, list item or table cell that mentions a term is a place it can cite. Each entry cites one place per section: the chapter named for it, its definition (in bold) and headings that name it first, then the sections that mention it most; twelve at most, six for a term found in most chapters. “Where to read the source” and “In short” sections are skipped.
 * A two- or three-word concept is also filed inverted (“components, variable”), as are other names given here.
-* On screen a place is a link labelled chapter.section; `tools/build-pdf.mjs` prints the book once without the indexes to find each place’s page, then prints it with the page numbers.
+* On screen a place is a link labeled chapter.section; `tools/build-pdf.mjs` prints the book once without the indexes to find each place’s page, then prints it with the page numbers.
 
 To drop a bold run that isn’t a term, add it under “Not index terms”; to merge forms or add cross-references, add it under “Main entries and synonyms”.
 
@@ -139,9 +139,9 @@ One entry, the other forms pointing at it.
 * **joining type** (Joining_Type; D, R, L, C, U, T): see also joining group
 * **modifier combining marks**: see also UTR #53, `reorder_marks`; **`stch`**: see also Syriac abbreviation mark (U+070F), tiles
 * **Alaph**: see also `fin2`, `fin3`, `med2`; **Windows-1256**: see also legacy Arabic fonts; **FVS**: see Mongolian free variation selectors
-* **paint API** (`hb_paint_funcs_t`): see also draw API, font functions; **COLR v0** (colour layers); **COLR v1** (paint graph)
-* **palette**: see CPAL; **foreground colour**: see also `is_foreground`, 0xFFFF; **ClipBox**, ClipList: see also glyph extents, boundedness
-* **colour line**: see also extend mode, gradients; **strike**: see also ppem, sbix, CBDT; **decycler** (`hb_decycler_t`): see also cycles
+* **paint API** (`hb_paint_funcs_t`): see also draw API, font functions; **COLR v0** (color layers); **COLR v1** (paint graph)
+* **palette**: see CPAL; **foreground color**: see also `is_foreground`, 0xFFFF; **ClipBox**, ClipList: see also glyph extents, boundedness
+* **color line**: see also extend mode, gradients; **strike**: see also ppem, sbix, CBDT; **decycler** (`hb_decycler_t`): see also cycles
 * **draw funcs** (`hb_draw_funcs_t`); **point matching** (anchored components): see also anchor points; **implied on-curve point**: see also quadratic curve
 * **cubic glyf**: see GLYF, boring expansion; **seac** (standard encoding accented character); **charstring**: see also CFF, CFF2, subroutines, blend, vsindex
 * **work budget**: see also limits, `HB_BUDGET_GLYPH`

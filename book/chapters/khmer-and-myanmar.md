@@ -188,7 +188,7 @@ khmer.ttf  ក\u17C4ក  --language=km
 khmer.ttf  ក\u17C4ក  --language=km  --show-flags
 ```
 
-The KA is in the next syllable, and the rule still matches. In the Indic shaper, whose presentation features are per syllable, it wouldn’t ([GSUB](gsub.html#skipping-step-by-step)). The second KA is marked unsafe to break (`#1`), as any glyph is whose shaping depended on its neighbour. The comment above the pause gives only an issue number, #3531; `NEWS` for 4.2.1 records “Reinstate a pause after basic features in Khmer shaper, fixing a regression introduced in previous release.” That the two are the same change is inferred.
+The KA is in the next syllable, and the rule still matches. In the Indic shaper, whose presentation features are per syllable, it wouldn’t ([GSUB](gsub.html#skipping-step-by-step)). The second KA is marked unsafe to break (`#1`), as any glyph is whose shaping depended on its neighbor. The comment above the pause gives only an issue number, #3531; `NEWS` for 4.2.1 records “Reinstate a pause after basic features in Khmer shaper, fixing a regression introduced in previous release.” That the two are the same change is inferred.
 
 ### The subscript count
 
@@ -320,7 +320,7 @@ The first KA is the base and the second, after VIRAMA, becomes `blwf`’s subscr
 
 ### The Microsoft specification
 
-Of the shapers in this part of the book, Myanmar follows its Microsoft specification most closely. The categories and the grammar are the specification’s, with the folding of `D`, `D0` and `P` and with Myanmar Text’s and Uniscribe’s behaviour where they differ; the four reordering rules are its four; the features are its features, in its order. The specification ends its reordering section with a “pathological” syllable, which `myanmar.ttf` has glyphs for:
+Of the shapers in this part of the book, Myanmar follows its Microsoft specification most closely. The categories and the grammar are the specification’s, with the folding of `D`, `D0` and `P` and with Myanmar Text’s and Uniscribe’s behavior where they differ; the four reordering rules are its four; the features are its features, in its order. The specification ends its reordering section with a “pathological” syllable, which `myanmar.ttf` has glyphs for:
 
 ```shape
 myanmar.ttf  င\u103A\u1039က\u1039က\u103B\u103C\u103D\u1031\u1031\u102D\u102F\u1036\u102C\u1036  --language=my

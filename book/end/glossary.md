@@ -44,7 +44,7 @@
 
 **COENG.** The Khmer sign, U+17D2, that makes the next consonant a subscript: Khmer’s counterpart of the virama.
 
-**Colour line.** The list of colour stops along a COLR gradient, with an extend mode saying what happens beyond its ends.
+**Color line.** The list of color stops along a COLR gradient, with an extend mode saying what happens beyond its ends.
 
 **Content type.** Whether a buffer holds characters (Unicode), glyph IDs (glyphs), or nothing yet.
 
@@ -112,7 +112,7 @@
 
 **Font segmentation.** Splitting a font into pieces that can be loaded separately, as incremental font transfer does; it needs to know which glyphs depend on which.
 
-**Foreground colour.** The colour of the surrounding text, which a colour glyph asks for with palette entry 0xFFFF.
+**Foreground color.** The color of the surrounding text, which a color glyph asks for with palette entry 0xFFFF.
 
 **Fuzzer.** A program that feeds a library endless mutated inputs, looking for crashes, hangs and runaway memory. HarfBuzz’s run continuously on OSS-Fuzz.
 
@@ -124,7 +124,7 @@
 
 **Glyph closure.** The set of glyphs a font can reach from given characters, through cmap, layout, composites, COLR, MATH and VARC. The subsetter computes it in a fixed order of stages.
 
-**Glyph dependency graph.** A graph of which glyphs a font can turn into or pull in, each edge labelled with the table that causes it: GSUB lookups, composites, COLR, MATH, VARC. HarfBuzz builds it with hb-depend.
+**Glyph dependency graph.** A graph of which glyphs a font can turn into or pull in, each edge labeled with the table that causes it: GSUB lookups, composites, COLR, MATH, VARC. HarfBuzz builds it with hb-depend.
 
 **Glyph extents.** The box around a glyph’s ink, relative to its origin.
 
@@ -136,7 +136,7 @@
 
 **Grade.** Synthetic bold that leaves advances alone, so text doesn’t reflow.
 
-**HarfRust.** The HarfBuzz project’s Rust port of HarfBuzz shaping, reading fonts with fontations’ `read-fonts`; HarfBuzz can call it as its `harfrust` shaper.
+**HarfRust.** The HarfBuzz project’s Rust port of HarfBuzz shaping, reading fonts with Fontations’ `read-fonts`; HarfBuzz can call it as its `harfrust` shaper.
 
 **hb-depend.** HarfBuzz’s experimental API for computing a font’s glyph dependency graph, part of the subset library.
 
@@ -144,7 +144,7 @@
 
 **HB_LEAN, HB_MINI, HB_TINY.** HarfBuzz’s configuration tiers: one macro each that turns off a group of features. `HB_TINY` sets both of the others, and more.
 
-**hb-raster.** HarfBuzz’s library that turns drawn and painted glyphs into pixels: anti-aliased coverage masks for outlines, and colour images for painted glyphs.
+**hb-raster.** HarfBuzz’s library that turns drawn and painted glyphs into pixels: anti-aliased coverage masks for outlines, and color images for painted glyphs.
 
 **hb-vector.** HarfBuzz’s library that writes drawn and painted glyphs as SVG or PDF. The book’s drawings are made with it.
 
@@ -200,6 +200,8 @@
 
 **Math kern.** In MATH, kerning for a glyph’s corners that varies with height, for placing superscripts and subscripts.
 
+**Meson.** The build system HarfBuzz uses. A build is set up with `meson setup`, which reads `meson.build` and the options in `meson_options.txt`, and then run with Ninja ([Building HarfBuzz](building-harfbuzz.html#meson-and-ninja)).
+
 **Min/max extents.** In BASE, the highest and lowest a script’s glyphs reach, for a given language, used to set line spacing.
 
 **Modified combining class.** HarfBuzz’s version of Unicode’s combining class, used to sort marks into the order fonts expect for Hebrew, Arabic, Telugu, Thai and Tibetan.
@@ -215,6 +217,8 @@
 **Native order.** The order a script is read in. HarfBuzz reverses a run into it at the start of shaping if it was given in the other direction, so that lookups see text the way fonts are written for.
 
 **Neutering.** What the sanitizer did before HarfBuzz 12.3: writing zero over a bad offset in the font’s bytes, so that the rest of the table could be kept.
+
+**Ninja.** A small, fast build tool that runs the build steps Meson writes out (`ninja -C build`).
 
 **Nominal glyph.** The glyph a font’s `cmap` gives for a character: where shaping starts.
 
@@ -242,7 +246,7 @@
 
 **Paint graph.** How a COLR version 1 glyph is described: a tree of paints (fills, gradients, transforms, clips, composites, other glyphs) that HarfBuzz walks and hands to the client’s paint functions.
 
-**Palette.** A list of colours in the CPAL table. A colour glyph refers to entries by index, so one font can be shown in several palettes, chosen by the client.
+**Palette.** A list of colors in the CPAL table. A color glyph refers to entries by index, so one font can be shown in several palettes, chosen by the client.
 
 **Pause.** The end of a stage, where a script shaper may run a function of its own before the next stage’s lookups.
 
@@ -254,7 +258,7 @@
 
 **Point matching.** Placing a `glyf` component by making one of its points coincide with one of the glyph’s earlier points, instead of by an offset.
 
-**ppem.** Pixels per em. Read only for hinting Device tables, contour-point anchors and bitmap strikes.
+**ppem.** Pixels per em: the size a font is drawn at on a pixel grid, as the length of its em measured in pixels.
 
 **Presentation form.** A character that encodes a letter already shaped: an Arabic letter in one joining form, or a Hebrew letter with its points. HarfBuzz uses them only for old fonts without layout tables.
 
@@ -334,7 +338,7 @@
 
 **Tent.** A region of the design space along one axis: zero at its start and end, full at its peak. Deltas apply in proportion to how far into the tent a location is.
 
-**Top accent attachment.** In MATH, the horizontal position over a glyph where an accent is centred; HarfBuzz returns half the advance when the font gives none.
+**Top accent attachment.** In MATH, the horizontal position over a glyph where an accent is centered; HarfBuzz returns half the advance when the font gives none.
 
 **Top to bottom (TTB).** HarfBuzz’s direction for vertical text. A bottom-to-top run is turned into it at the start of shaping, and stays in it.
 
@@ -362,7 +366,7 @@
 
 **Vendoring.** Keeping a copy of a library’s source in a project’s own tree and building it with the project, as most of HarfBuzz’s users do.
 
-**Vertical origin.** The point a glyph hangs from in vertical text, usually centred above it.
+**Vertical origin.** The point a glyph hangs from in vertical text, usually centered above it.
 
 **Vertical presentation form.** A character such as U+FE35, a parenthesis drawn for vertical text. HarfBuzz substitutes these itself in vertical runs, but only when the font has no `vert` feature.
 

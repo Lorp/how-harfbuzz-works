@@ -12,7 +12,7 @@ A **character** is the smallest unit of text that Unicode encodes: a letter, a d
 
 Characters are stored in **logical order**: the order in which they are read, and normally typed. That is true whichever way the script runs on the page. The first character of an Arabic word is its rightmost letter, and it comes first in the string.
 
-Unicode encodes characters, not their appearance. There is one code point for beh, though it has four shapes, and one for *a*, whatever the font. Unicode does say a great deal about each character: its general category (letter, mark, number…), its script, whether it is a combining mark and how strongly it binds, how it joins its neighbours, and how it decomposes into other characters. Shaping needs all of that, and HarfBuzz carries its own tables of it, covered in [Unicode inside HarfBuzz](unicode-inside-harfbuzz.html).
+Unicode encodes characters, not their appearance. There is one code point for beh, though it has four shapes, and one for *a*, whatever the font. Unicode does say a great deal about each character: its general category (letter, mark, number…), its script, whether it is a combining mark and how strongly it binds, how it joins its neighbors, and how it decomposes into other characters. Shaping needs all of that, and HarfBuzz carries its own tables of it, covered in [Unicode inside HarfBuzz](unicode-inside-harfbuzz.html).
 
 Unicode does also contain characters that look like glyphs: the *fi* ligature U+FB01, and hundreds of Arabic “presentation forms”, one code point for each joining form of each letter. They exist for compatibility with older character sets. Text isn’t normally written with them, and a shaping engine never needs them to produce those shapes. (HarfBuzz’s Arabic shaper does use them for something: as a fallback, when a font has no `GSUB` but does map the presentation forms in its `cmap`. That is in [Joining scripts](joining-scripts.html).)
 
@@ -20,7 +20,7 @@ Unicode does also contain characters that look like glyphs: the *fi* ligature U+
 
 A **glyph** is a shape in a font. Fonts don’t name their glyphs by character, or by anything else that shaping uses: a glyph is known by its position in the font, its **glyph ID**, a number from 0 up to the number of glyphs in the font, less one. In OpenType that is a 16-bit number, so a font has at most 65,535 glyphs, unless it uses the “beyond 64k” extensions mentioned in the [GSUB chapter](gsub.html). Glyph 0 is always `.notdef`, the glyph drawn for a character the font doesn’t have.
 
-Glyphs can also have names, such as `f_i` or `beh.init`. Names are for people: HarfBuzz doesn’t need them to shape, and a font can leave them out. `hb-shape` prints them when the font has them, and prints glyph IDs if asked:
+Glyphs can also have names, such as `f_i` or `beh.init`. Names are for people: HarfBuzz doesn’t need them to shape, and a font can leave them out. `hb-shape` ([The command-line tools](command-line-tools.html#hb-shape)) prints them when the font has them, and prints glyph IDs if asked:
 
 ```shape
 shaping.ttf  a
@@ -103,11 +103,11 @@ shaping.ttf  fi
 shaping.ttf  fi  --language=tr
 ```
 
-Finding the runs is not HarfBuzz’s job. An application splits a paragraph where the script changes, where the bidirectional algorithm says the direction changes, and where the font changes, because a style changes or because the font lacks a character and another has to be used. What HarfBuzz can be given is a little of the text on either side of a run, its **context**, so that rules looking across the edge of the run still work. The Arabic shaper uses it to decide whether the first and last letters of a run join their neighbours (`arabic_joining`, `hb-ot-shaper-arabic.cc:302`).
+Finding the runs is not HarfBuzz’s job. An application splits a paragraph where the script changes, where the bidirectional algorithm says the direction changes, and where the font changes, because a style changes or because the font lacks a character and another has to be used. What HarfBuzz can be given is a little of the text on either side of a run, its **context**, so that rules looking across the edge of the run still work. The Arabic shaper uses it to decide whether the first and last letters of a run join their neighbors (`arabic_joining`, `hb-ot-shaper-arabic.cc:302`).
 
 ## Features
 
-A font’s layout tables are organised into **features**, each named by a four-letter tag: `liga` for standard ligatures, `kern` for kerning, `init` for initial forms, `smcp` for small capitals. A feature is a list of lookups, the actual rules. The font decides what each feature does. The shaping engine decides which features to apply, to which glyphs, and in what order.
+A font’s layout tables are organized into **features**, each named by a four-letter tag: `liga` for standard ligatures, `kern` for kerning, `init` for initial forms, `smcp` for small capitals. A feature is a list of lookups, the actual rules. The font decides what each feature does. The shaping engine decides which features to apply, to which glyphs, and in what order.
 
 Some features are on by default for every script, like `liga`, `kern` and `mark`. Some are part of a script’s shaping and are applied by its shaper to particular glyphs only, like Arabic’s `init`, `medi` and `fina`. Others are off unless an application asks for them, like `smcp`, or the stylistic alternates the GSUB chapter showed. An application asks with an `hb_feature_t` (`hb-common.h:437`):
 
@@ -157,7 +157,7 @@ shaping.ttf  بب
 shaping.ttf  ببب
 ```
 
-Each character still has one glyph and one cluster, but which glyph depends on its neighbours. Read the clusters to see the right-to-left order: the first glyph printed has the highest cluster number, so it is the last letter of the word.
+Each character still has one glyph and one cluster, but which glyph depends on its neighbors. Read the clusters to see the right-to-left order: the first glyph printed has the highest cluster number, so it is the last letter of the word.
 
 The font can’t work this out alone. Its `fina` lookup in this font says only “replace beh with beh.fina”, which would change every beh in the text. What makes it change only the last one is the Arabic shaper. Before any lookup runs, `arabic_joining` walks through the text with a state machine driven by each character’s Unicode joining type (dual-joining, right-joining, transparent, non-joining), and records for each letter which of the forms it takes. `setup_masks_arabic_plan` (`:391`) then sets that form’s feature bit in the letter’s mask. Each of the features then runs as its own stage, and touches only the glyphs whose masks have its bit (`collect_features_arabic`, `hb-ot-shaper-arabic.cc:186`). The trace shows each lookup changing one glyph:
 
@@ -217,7 +217,7 @@ A font can also turn one glyph into several itself, with a multiple substitution
 
 ## Clusters
 
-Every one of those mismatches leaves a question behind: which glyphs came from which characters? An application needs the answer to put a cursor between letters, to select text, to find which character was clicked, to colour part of a word, or to copy text back out of a PDF. HarfBuzz’s answer is the **cluster**.
+Every one of those mismatches leaves a question behind: which glyphs came from which characters? An application needs the answer to put a cursor between letters, to select text, to find which character was clicked, to color part of a word, or to copy text back out of a PDF. HarfBuzz’s answer is the **cluster**.
 
 When text is added to a buffer, each character’s cluster is set to its position in the caller’s string, counted in the string’s own code units (bytes, for UTF-8). `hb-shape` counts characters instead, unless it is given `--utf8-clusters`. Whenever shaping combines or reorders glyphs, it **merges** their clusters: every glyph in the group is given the smallest cluster value among them (`merge_clusters_impl`, `hb-buffer.cc:569`). A cluster is therefore a group of characters and the glyphs made from them that can’t be split any further. The examples so far show each kind:
 
@@ -262,7 +262,7 @@ There have been three answers to the question of where the second kind should li
 
 **In the font, as a program.** SIL’s Graphite also puts the rules in the font, written in a language of its own and compiled into tables that the Graphite engine runs.
 
-HarfBuzz implements all three. Its OpenType shaping has a script shaper for each family of scripts that needs one, which is what Part V covers. Apple’s tables run inside the same pipeline, in place of `GSUB` and `GPOS`, when a font has them ([AAT inside HarfBuzz](aat-inside-harfbuzz.html)). Graphite runs through a separate backend that uses SIL’s own library, as [hb_shape and its backends](hb_shape-and-its-backends.html) explains.
+HarfBuzz implements all three. Its OpenType shaping has a script shaper for each family of scripts that needs one, which is what Part VI covers. Apple’s tables run inside the same pipeline, in place of `GSUB` and `GPOS`, when a font has them ([AAT inside HarfBuzz](aat-inside-harfbuzz.html)). Graphite runs through a separate backend that uses SIL’s own library, as [hb_shape and its backends](hb_shape-and-its-backends.html) explains.
 
 ## A short history
 
@@ -276,7 +276,7 @@ TrueType began at Apple. Apple’s QuickDraw GX added layout tables to it, in wh
 
 Microsoft took the other road. Its TrueType Open, developed further with Adobe as OpenType, added the `GSUB`, `GPOS` and `GDEF` tables, which describe *what* a font can do but leave *when* to the engine. On Windows, that engine was Uniscribe, the system’s script processor, with a shaping engine for each family of complex scripts, and later DirectWrite.
 
-Because the script knowledge lived in Uniscribe, Uniscribe’s behaviour became, in practice, part of the specification. Fonts were made and tested on Windows, so they worked with what Uniscribe did, including where it differed from what the documents said. Any other engine that wanted those fonts to work had to find out what Uniscribe did, often by testing it. HarfBuzz’s source is full of the results. The Indic shaper corrects a sentence of Microsoft’s Devanagari specification with “Testing, with Windows 7 Uniscribe and Devanagari shows that the behavior is best described as…” (`hb-ot-shaper-indic.cc:1111`). The Khmer shaper applies its basic features without pauses because “testing suggests that Uniscribe does NOT pause between basic features” (`hb-ot-shaper-khmer.cc:110`). The Hangul shaper leaves `calt` off for jamo because Uniscribe does (`hb-ot-shaper-hangul.cc:69`). The [GSUB chapter](gsub.html#multiple-substitution) showed another: a multiple substitution may delete a glyph, though the specification says it can’t, because Uniscribe allows it.
+Because the script knowledge lived in Uniscribe, Uniscribe’s behavior became, in practice, part of the specification. Fonts were made and tested on Windows, so they worked with what Uniscribe did, including where it differed from what the documents said. Any other engine that wanted those fonts to work had to find out what Uniscribe did, often by testing it. HarfBuzz’s source is full of the results. The Indic shaper corrects a sentence of Microsoft’s Devanagari specification with “Testing, with Windows 7 Uniscribe and Devanagari shows that the behavior is best described as…” (`hb-ot-shaper-indic.cc:1111`). The Khmer shaper applies its basic features without pauses because “testing suggests that Uniscribe does NOT pause between basic features” (`hb-ot-shaper-khmer.cc:110`). The Hangul shaper leaves `calt` off for jamo because Uniscribe does (`hb-ot-shaper-hangul.cc:69`). The [GSUB chapter](gsub.html#multiple-substitution) showed another: a multiple substitution may delete a glyph, though the specification says it can’t, because Uniscribe allows it.
 
 Microsoft later added a single engine for many of the scripts its other engines didn’t cover, the Universal Shaping Engine, driven by Unicode character properties instead of rules written for each script. HarfBuzz implemented it in its 1.0.0 release, in July 2015, and its `NEWS` file for that release links to Microsoft’s announcement. It has its own chapter, [The Universal Shaping Engine](the-universal-shaping-engine.html).
 
@@ -300,7 +300,7 @@ From there, HarfBuzz grew in both directions. Version 2.0.0, in October 2018, ad
 
 ## What happens to a run
 
-This chapter has looked at HarfBuzz from outside: text in, glyphs out, and the ways the two differ. The rest of the book looks inside. It follows one run through the library: from the bytes of the font, which the [next chapter](fonts-as-bytes.html) starts with, through the buffer and the shape plan, to the pipeline that maps characters to glyphs, substitutes and positions them, and hands them back with their clusters.
+This chapter has looked at HarfBuzz from outside: text in, glyphs out, and the ways the two differ. The next two chapters are practical: [building HarfBuzz](building-harfbuzz.html) and [the command-line tools](command-line-tools.html) that come with it, which the rest of the book uses to show what HarfBuzz does. After them the book looks inside. It follows one run through the library: from the bytes of the font, which [Fonts as bytes](fonts-as-bytes.html) starts with, through the buffer and the shape plan, to the pipeline that maps characters to glyphs, substitutes and positions them, and hands them back with their clusters.
 
 ## Where to read the source
 
@@ -323,4 +323,4 @@ This chapter has looked at HarfBuzz from outside: text in, glyphs out, and the w
 * HarfBuzz shapes a run with one script, one direction and one language, and returns, for each glyph, its ID, its cluster, an advance and an offset.
 * Characters and glyphs fail to correspond because of ligatures, joining and contextual forms, reordering, marks, and decomposition and composition. Much of the knowledge needed is about the script, not the font, and in OpenType it lives in the engine.
 * A cluster groups characters with the glyphs made from them. Merged clusters take the smallest value. The cluster level sets how much is merged.
-* HarfBuzz grew out of FreeType’s OpenType code as shared by Pango and Qt, was rewritten as harfbuzz-ng, and had to match Uniscribe’s behaviour to work with the fonts made for it. It now runs OpenType, AAT and Graphite.
+* HarfBuzz grew out of FreeType’s OpenType code as shared by Pango and Qt, was rewritten as harfbuzz-ng, and had to match Uniscribe’s behavior to work with the fonts made for it. It now runs OpenType, AAT and Graphite.

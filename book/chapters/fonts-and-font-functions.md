@@ -2,7 +2,7 @@
 
 A face is a font file’s tables, read lazily and shared. It has no size. It can’t say how wide a glyph is at 12 points, or which glyph a character maps to, without someone doing the arithmetic and reading the right table. That is the job of the **font**, `hb_font_t`: a face at a particular scale, with particular variation coordinates and, if asked, synthetic bold and slant. Every question the shaper asks about glyphs goes to the font, not the face.
 
-The font doesn’t answer those questions itself either. It passes each one to a table of callbacks, the **font functions** (“font funcs”). HarfBuzz’s own implementation, *hb-ot*, reads the font’s OpenType tables. Others ask FreeType, Core Text, DirectWrite or the Rust fontations crates. An application can supply its own, or override just one callback and leave the rest alone. The shaper never knows which it is talking to. This split, between asking about glyphs and shaping with the answers, is one of HarfBuzz’s central design choices, and this chapter is about the layer that makes it work: what a font holds, how the callbacks are organised, how a font can delegate to a parent, and where synthetic bold and slant are applied.
+The font doesn’t answer those questions itself either. It passes each one to a table of callbacks, the **font functions** (“font funcs”). HarfBuzz’s own implementation, *hb-ot*, reads the font’s OpenType tables. Others ask FreeType, Core Text, DirectWrite or the Rust Fontations crates. An application can supply its own, or override just one callback and leave the rest alone. The shaper never knows which it is talking to. This split, between asking about glyphs and shaping with the answers, is one of HarfBuzz’s central design choices, and this chapter is about the layer that makes it work: what a font holds, how the callbacks are organized, how a font can delegate to a parent, and where synthetic bold and slant are applied.
 
 How hb-ot actually works out an advance or a bounding box is the subject of the [next chapter](where-metrics-come-from.html). The face underneath, and how its tables are loaded, is the subject of the [previous one](blobs-faces-and-lazy-tables.html). The examples here use a small test font, `funcs.ttf`, built by `fonts/fonts-and-font-functions/build-font.py`. Its em is 1000 units, and its glyphs have deliberately awkward advances: H is 625 units wide and I is 275. It has a GPOS mark rule for a combining acute and one kerning pair, H I, of −25. Every result on this page was produced by HarfBuzz {{hb}} when the page was built.
 
@@ -55,7 +55,7 @@ The fields fall into a few groups: three kinds of size, the synthetic settings, 
 
 HarfBuzz has three separate notions of how big a font is, and they do different things.
 
-**Scale** is the one that matters. `x_scale` and `y_scale` are the number of output units in one em. Every advance, offset and extent HarfBuzz returns is in those units. The documentation for `hb_font_set_scale` (`hb-font.cc:2814`) is clear that HarfBuzz attaches no meaning to them: 20 could be 20 pixels, 20 points or 20 millimetres. A client that wants fractions usually multiplies: `hb_font_set_scale (font, 20 * 64, 20 * 64)` gives a 20-unit font with 6 bits of sub-unit precision, which is what FreeType’s 26.6 numbers expect. A new font’s scale is the face’s units per em, so out of the box HarfBuzz reports positions in font units. `hb-shape` does the same unless it is given `--font-size`, which sets the scale directly:
+**Scale** is the one that matters. `x_scale` and `y_scale` are the number of output units in one em. Every advance, offset and extent HarfBuzz returns is in those units. The documentation for `hb_font_set_scale` (`hb-font.cc:2814`) is clear that HarfBuzz attaches no meaning to them: 20 could be 20 pixels, 20 points or 20 millimeters. A client that wants fractions usually multiplies: `hb_font_set_scale (font, 20 * 64, 20 * 64)` gives a 20-unit font with 6 bits of sub-unit precision, which is what FreeType’s 26.6 numbers expect. A new font’s scale is the face’s units per em, so out of the box HarfBuzz reports positions in font units. `hb-shape` does the same unless it is given `--font-size`, which sets the scale directly:
 
 ```shape
 funcs.ttf  HIH
@@ -119,7 +119,7 @@ There are two multipliers for each direction. `x_mult` is a 16.16 fixed-point nu
 
 Integer metrics such as `hmtx` advances go through `em_scale_x`. Values that are already fractional, such as the result of applying variation deltas, go through `em_scalef_x`. GPOS anchors are scaled to floats with `em_fscale_x` and only rounded when the final offset is worked out, so two anchors don’t each pick up a rounding error.
 
-The fixed-point path has a quirk worth knowing. The multiplier itself is truncated when it is computed: at a scale of 12 and 1000 units per em, the exact multiplier is 786.432/65536 and the stored one is 786/65536. The rounding afterwards is round-half-up. So an advance that should come out at exactly one half can fall just short of it:
+The fixed-point path has a quirk worth knowing. The multiplier itself is truncated when it is computed: at a scale of 12 and 1000 units per em, the exact multiplier is 786.432/65536 and the stored one is 786/65536. The rounding afterward is round-half-up. So an advance that should come out at exactly one half can fall just short of it:
 
 ```shape
 funcs.ttf  H  --font-size=12
@@ -134,7 +134,7 @@ funcs.ttf  H  --font-size=13
 
 `changed()` ends by freeing every shaper’s per-font data and incrementing `serial`. Every setter that alters the font (`hb_font_set_scale`, `set_ppem`, `set_ptem`, `set_synthetic_bold`, `set_synthetic_slant`, `set_funcs`, `set_parent` and the variation setters) checks first whether the value is actually different, and calls `changed()` only if it is. A client whose font data changes behind HarfBuzz’s back can call `hb_font_changed` to bump the serial itself. `hb_font_get_serial` returns it.
 
-The serial is how font funcs know when their caches are stale. hb-ot compares it at the start of each call that uses a cache (`check_serial`, `hb-ot-font.cc:290`). There is a second serial, `serial_coords`, that changes only when the variation coordinates do (`_hb_font_adopt_var_coords`, `hb-font.cc:2166`). hb-ot caches advances in font units, before scaling, so a change of scale needn’t throw them away: those caches are keyed on `serial_coords`, and only the vertical-origin cache, which holds scaled values, is keyed on `serial`. The fontations funcs use the public serial in the same way to decide when to rebuild their Rust-side instance (`rust/font.rs:75`).
+The serial is how font funcs know when their caches are stale. hb-ot compares it at the start of each call that uses a cache (`check_serial`, `hb-ot-font.cc:290`). There is a second serial, `serial_coords`, that changes only when the variation coordinates do (`_hb_font_adopt_var_coords`, `hb-font.cc:2166`). hb-ot caches advances in font units, before scaling, so a change of scale needn’t throw them away: those caches are keyed on `serial_coords`, and only the vertical-origin cache, which holds scaled values, is keyed on `serial`. The `fontations` funcs use the public serial in the same way to decide when to rebuild their Rust-side instance (`rust/font.rs:75`).
 
 Because `changed()` frees shared state, changing a font while another thread is shaping with it isn’t safe. A font can be made immutable with `hb_font_make_immutable`, which also freezes its parents (`hb-font.cc:2357`). After that every setter is a no-op, and the font can be shared between threads freely.
 
@@ -184,7 +184,7 @@ What they answer, in groups:
 | `glyph_extents` | a glyph’s ink bounding box |
 | `glyph_contour_point` | the position of one outline point, for AnchorFormat2 |
 | `glyph_name`, `glyph_from_name` | names to IDs and back |
-| `draw_glyph_or_fail`, `paint_glyph_or_fail` | the outline, or the colour glyph, for the [drawing](drawing-outlines.html) and [colour](colour.html) APIs |
+| `draw_glyph_or_fail`, `paint_glyph_or_fail` | the outline, or the color glyph, for the [drawing](drawing-outlines.html) and [color](color.html) APIs |
 
 Several came later than the rest. The batch forms of the cmap and advance callbacks were added so that a shaper can ask for a whole buffer at once. The batch origin callbacks are from 11.3.0, and the `_or_fail` draw and paint callbacks from 11.2.0, when the earlier `draw_glyph` and `paint_glyph` ones were deprecated (`NEWS`).
 
@@ -264,7 +264,7 @@ funcs.ttf  HIH  --font-size=13
 funcs.ttf  HIH  --font-size=13  --sub-font
 ```
 
-Directly, I is 275 × 13/1000 = 3.575, which rounds to 4. Through the parent, it is 7.15 at a scale of 26, which rounds to 7, and 7 × 13/26 = 3.5 truncates to 3. Outlines and colour glyphs are rescaled in floats instead, by wrapping the client’s draw funcs in an adaptor that multiplies every coordinate (`hb_font_draw_glyph_or_fail_default`), or by pushing a scale transform onto the paint funcs.
+Directly, I is 275 × 13/1000 = 3.575, which rounds to 4. Through the parent, it is 7.15 at a scale of 26, which rounds to 7, and 7 × 13/26 = 3.5 truncates to 3. Outlines and color glyphs are rescaled in floats instead, by wrapping the client’s draw funcs in an adaptor that multiplies every coordinate (`hb_font_draw_glyph_or_fail_default`), or by pushing a scale transform onto the paint funcs.
 
 When a default function delegates, it asks the parent *without* synthetic settings (the `false` in `get_glyph_h_advance (glyph, false)`), and the sub-font’s own wrapper then applies its own. Since 11.2.0 that is the rule for advances, extents, contour points, font extents and outlines, so a sub-font’s synthetic bold and slant are the ones that count, not its parent’s (`NEWS`). HarfBuzz uses this itself: when it paints a COLR glyph for a synthetic font, it makes a sub-font with bold and slant turned off, so that the synthetic settings, already applied to the glyph as a whole, aren’t applied again to each of its layers (`OT/Color/COLR/COLR.hh:115`).
 
@@ -297,7 +297,7 @@ Here is everything synthetic bold touches, from the wrappers in `hb-font.hh`:
 | horizontal advances | + x strength, if not zero (`:361`) | unchanged |
 | vertical advances | + y strength, if not zero (`:378`) | unchanged |
 | glyph origins, when the funcs supply them | moved by the strength (`:452`) | unchanged |
-| glyph extents | wider by x strength, taller by y strength (`:233`) | the same, centred horizontally |
+| glyph extents | wider by x strength, taller by y strength (`:233`) | the same, centered horizontally |
 | contour points | moved right by x strength (`:659`) | unchanged |
 | font h-extents | ascender + y strength (`:286`) | the same |
 | font v-extents | ascender + x strength (`:303`) | split between ascender and descender |
@@ -307,7 +307,7 @@ Here is everything synthetic bold touches, from the wrappers in `hb-font.hh`:
 
 `hb_font_set_synthetic_slant (font, slant)` takes a ratio: 0.2 means x moves right by 0.2 units for every unit of y, about 11.3°. `changed()` stores it as `slant_xy`, adjusted for the ratio of the two scales so that it shears correctly when x and y are scaled differently. Slant never changes an advance. What it does change is spread more widely than bold’s effects:
 
-* **Outlines.** `draw_glyph_or_fail` shears every point (`hb-font.hh:723`). It does so around the glyph’s horizontal origin, which for nearly every font is (0, 0), so the baseline stays put. That has been the rule in the draw API since 12.3.0 (`NEWS`). It slants before it emboldens, which, says a comment, “produces nicer results”. Colour glyphs get the same shear as a paint transform (`:757`).
+* **Outlines.** `draw_glyph_or_fail` shears every point (`hb-font.hh:723`). It does so around the glyph’s horizontal origin, which for nearly every font is (0, 0), so the baseline stays put. That has been the rule in the draw API since 12.3.0 (`NEWS`). It slants before it emboldens, which, says a comment, “produces nicer results”. Color glyphs get the same shear as a paint transform (`:757`).
 * **Extents**, of which more below.
 * **Contour points**, sheared like the outline (`:655`).
 * **Mark positions after GPOS.** At the very end of GPOS, in `GPOS::position_finish_offsets` (`OT/Layout/GPOS/GPOS.hh:189`), which `hb-ot-shape.cc:1082` calls whether or not the font has GPOS, every glyph with a vertical offset in horizontal text has its horizontal offset adjusted to match:
@@ -361,14 +361,14 @@ if (!is_synthetic &&
  * and apply synthetic settings in the last case. */
 ```
 
-Painting and drawing both go through the synthetic wrappers, so the box is measured from the outline as it would actually be drawn. This has been the case since 11.2.0, whose `NEWS` says extents for synthetic fonts “are now accurately calculated”. It costs an outline decode per glyph, which matters to anything that asks for extents often. One thing that does is HarfBuzz’s own fallback mark positioning, used when a font has no GPOS, which centres each mark’s ink box over its base. The same glyphs in `funcs-nogpos.ttf`, which has no GPOS:
+Painting and drawing both go through the synthetic wrappers, so the box is measured from the outline as it would actually be drawn. This has been the case since 11.2.0, whose `NEWS` says extents for synthetic fonts “are now accurately calculated”. It costs an outline decode per glyph, which matters to anything that asks for extents often. One thing that does is HarfBuzz’s own fallback mark positioning, used when a font has no GPOS, which centers each mark’s ink box over its base. The same glyphs in `funcs-nogpos.ttf`, which has no GPOS:
 
 ```shape
 funcs-nogpos.ttf  HÍ
 funcs-nogpos.ttf  HÍ  --font-slant=0.2
 ```
 
-Slanted, the acute’s ink box is measured from the sheared outline. The acute sits high, at 750 to 900 units, so shearing moves its box about 165 units right, and the positioner moves the mark 165 units left to centre it again (12 − 165 = −153). When it is drawn, the shear moves it back.
+Slanted, the acute’s ink box is measured from the sheared outline. The acute sits high, at 750 to 900 units, so shearing moves its box about 165 units right, and the positioner moves the mark 165 units left to center it again (12 − 165 = −153). When it is drawn, the shear moves it back.
 
 ## hb-ot, the default funcs
 
@@ -405,7 +405,7 @@ HarfBuzz {{hb}} has four more implementations of the same list, each optional at
 
 **hb-ft** is the oldest. For a long time it was the usual way to use HarfBuzz, and the `hb-shape` and `hb-view` tools only switched their default from FreeType to `ot` in 4.0.0 (`NEWS`). It sets FreeType’s character size from the font’s scale whenever the serial changes (`hb-ft.cc:255`), and takes a lock around its FreeType calls (`hb-ft.cc:432` and on), since FreeType itself isn’t thread-safe. It is the only implementation that sets `glyph_h_kerning` and `glyph_contour_point` (`hb-ft.cc:1164`), so it is the only one that can feed HarfBuzz’s fallback kerning. That is for kerning HarfBuzz can’t read as a table, such as a Type 1 font’s (`NEWS` 2.5.2): a font with a `kern` table has it applied directly, and the fallback never runs ([Fallbacks](fallbacks.html), [Legacy kern](legacy-kern.html)). It can wrap an `FT_Face` the client already has (`hb_ft_font_create`), or make its own from the face’s blob (`hb_ft_font_set_funcs`, `hb-ft.cc:1918`).
 
-**fontations** is a font-funcs backend, not a shaper. It was added in 11.0.0, along with the Core Text and DirectWrite funcs, whose `NEWS` entry describes all three as “mostly useful for performance and correctness testing”. It wraps the face’s blob in a read-fonts `Font`, draws outlines with skrifa, and implements the cmap, advance, vertical origin, extents, font extents, draw, paint and name callbacks, built into a static funcs object on first use (`rust/font.rs:1395`). Paired with the HarfRust shaper, which is covered in [hb_shape and its backends](hb_shape-and-its-backends.html), it gives an all-Rust path through HarfBuzz.
+**`fontations`** is a font-funcs backend, not a shaper. It was added in 11.0.0, along with the DirectWrite funcs, and `NEWS` for that release announces the Core Text funcs with them, describing all three as “mostly useful for performance and correctness testing” (the Core Text function itself, `hb_coretext_font_set_funcs`, had appeared in 10.1.0: `hb-coretext-font.cc:522`). [Integrations](integrations.html) covers what each of these layers offers an application. It wraps the face’s blob in a read-fonts `Font`, draws outlines with skrifa, and implements the cmap, advance, vertical origin, extents, font extents, draw, paint and name callbacks, built into a static funcs object on first use (`rust/font.rs:1395`). Paired with the HarfRust shaper, which is covered in [hb_shape and its backends](hb_shape-and-its-backends.html), it gives an all-Rust path through HarfBuzz.
 
 **Core Text** and **DirectWrite** funcs ask the platform. Both use the per-font data of the matching *shaper* to get their native font object (`font->data.coretext`, `font->data.directwrite`), which is why Core Text needs `ptem`. One detail shows how much the two layers have to agree: Core Text applies AAT tracking to the advances it reports, and HarfBuzz’s shaper applies `trak` itself, so the Core Text funcs subtract the tracking from Core Text’s advances to stop it being applied twice (`hb-coretext-font.cc:213`).
 

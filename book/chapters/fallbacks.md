@@ -179,7 +179,7 @@ fallback.ttf  o\u034F\u0301  --language=en
 
 The ZWJ has become the space glyph with no advance ([Unicode inside HarfBuzz](unicode-inside-harfbuzz.html#default-ignorables)), and the acute is still over the `o`. A run with no marks is left alone. One with marks is marked unsafe to break from the base to its last mark (`:334`).
 
-Here the mark’s *category* decides what is a mark, not its GDEF class, and its *combining class* decides how it is placed. A mark whose class is 0 isn’t placed at all: it keeps its offset, and its advance counts towards the distance back to the base for the marks after it (`:414`).
+Here the mark’s *category* decides what is a mark, not its GDEF class, and its *combining class* decides how it is placed. A mark whose class is 0 isn’t placed at all: it keeps its offset, and its advance counts toward the distance back to the base for the marks after it (`:414`).
 
 ### The base’s box
 
@@ -194,7 +194,7 @@ base_extents.x_bearing = 0;
 base_extents.width = font->get_glyph_h_advance (buffer->info[base].codepoint);
 ```
 
-(trimmed). So the box a mark is placed against is the base’s ink vertically and its advance horizontally. So a mark goes in the middle of the letter’s space even when its ink is off-centre, and a base with no ink still has a width to centre on. If the base has no extents, its marks are given no advance and left where they are (`:340`).
+(trimmed). So the box a mark is placed against is the base’s ink vertically and its advance horizontally. So a mark goes in the middle of the letter’s space even when its ink is off-center, and a base with no ink still has a width to center on. If the base has no extents, its marks are given no advance and left where they are (`:340`).
 
 ### Each mark, by its class
 
@@ -202,10 +202,10 @@ For each mark, `position_mark` (`:211`) asks for the mark’s own extents, and w
 
 | Classes | The mark’s ink is |
 |---|---|
-| 233 Double_Below, 234 Double_Above | centred on the base’s right edge, in a left-to-right run, or on its left edge, in a right-to-left one, so that it spans two letters; otherwise centred |
+| 233 Double_Below, 234 Double_Above | centered on the base’s right edge, in a left-to-right run, or on its left edge, in a right-to-left one, so that it spans two letters; otherwise centered |
 | 200 Attached_Below_Left, 218 Below_Left, 228 Above_Left | aligned with the left edge |
 | 216 Attached_Above_Right, 222 Below_Right, 232 Above_Right | aligned with the right edge |
-| every other class | centred |
+| every other class | centered |
 
 Vertically, with a **gap** of a sixteenth of the font’s y scale, 62 units in a 1000-unit font at its natural size:
 
@@ -229,7 +229,7 @@ fallback.ttf  o\u031B  --language=en
 fallback.ttf  o\u0361o  --language=en
 ```
 
-The acute moves up 12 units over the `o`, to 562, a gap above its top, and 262 over the taller `l`. The grave belongs at 562 too, 238 units below where it is drawn, and is moved down 119. The dot below is already lower than a gap below the `o`, so it isn’t moved. The cedilla, Attached_Below, goes just below the base, with no gap, which is where it is drawn already. The horn, Attached_Above_Right, goes on top of the `o` at its right edge, which is not where a horn belongs. The double inverted breve is centred on the join between the two `o`s.
+The acute moves up 12 units over the `o`, to 562, a gap above its top, and 262 over the taller `l`. The grave belongs at 562 too, 238 units below where it is drawn, and is moved down 119. The dot below is already lower than a gap below the `o`, so it isn’t moved. The cedilla, Attached_Below, goes just below the base, with no gap, which is where it is drawn already. The horn, Attached_Above_Right, goes on top of the `o` at its right edge, which is not where a horn belongs. The double inverted breve is centered on the join between the two `o`s.
 
 Every placed mark loses its advance, and gets an offset back to its base: in a forward run, the base’s advance plus those of any unplaced glyphs between them (`:411`). A right-to-left run needs no such offset, since after reversal the mark comes before its base.
 
@@ -266,7 +266,7 @@ fallback.ttf  fi\u0301  --language=en
 fallback.ttf  f\u0301f\u0301i\u0301  --language=en
 ```
 
-The acute over the first half of `f_i` is 325 units, half of 650, to the left of the one over the second half. The three on `f_f_i` are a third of 1050 apart. GPOS, with an anchor for each component, can do better, as [Positioning glyphs: GPOS](positioning-glyphs-gpos.html#mark-to-ligature) shows.
+The acute over the first half of `f_i` is 325 units, half of 650, to the left of the one over the second half. The three on `f_f_i` are a third of 1050 apart. GPOS, with an anchor for each component, can do better, as [GPOS: positioning glyphs](positioning-glyphs-gpos.html#mark-to-ligature) shows.
 
 ### Hebrew and Arabic
 
@@ -279,7 +279,7 @@ fallback.ttf  \u05E9\u05C2  --language=he
 fallback.ttf  \u0628\u0651\u0650  --language=ar
 ```
 
-The dagesh keeps its class, so it is centred and left at its drawn height, inside the letter. The hiriq is centred below. The shin dot goes to the right, the sin dot to the left. The shadda goes above and the kasra below the beh, each against the beh’s own box, since their classes differ. Both the shadda and the fatha are drawn higher than they need to be, and are moved down only half way.
+The dagesh keeps its class, so it is centered and left at its drawn height, inside the letter. The hiriq is centered below. The shin dot goes to the right, the sin dot to the left. The shadda goes above and the kasra below the beh, each against the beh’s own box, since their classes differ. Both the shadda and the fatha are drawn higher than they need to be, and are moved down only half way.
 
 ### What it doesn’t take into account
 
@@ -290,16 +290,16 @@ fallback.ttf  oo\u0301  --language=en
 kern-table.ttf  oo\u0301  --language=en
 ```
 
-The second `o` has an advance of 450 and is drawn 50 units left of its pen position, so its ink is centred 200 units from that position. The acute is centred 250 units from it, as if the `o` hadn’t moved. To be centred over the ink it would need an offset of −25, not 25. This looks like a bug.
+The second `o` has an advance of 450 and is drawn 50 units left of its pen position, so its ink is centered 200 units from that position. The acute is centered 250 units from it, as if the `o` hadn’t moved. To be centered over the ink it would need an offset of −25, not 25. This looks like a bug.
 
-**Left and Right.** The comment in `position_mark` says “We don’t position LEFT and RIGHT marks”, but classes 224 and 226 fall into the `default` case of the horizontal switch, which centres the mark, and every placed mark loses its advance. The few characters in those classes are spacing marks, Mc, such as the Hangul tone marks and U+1D16D MUSICAL SYMBOL COMBINING AUGMENTATION DOT, which should follow its note:
+**Left and Right.** The comment in `position_mark` says “We don’t position LEFT and RIGHT marks”, but classes 224 and 226 fall into the `default` case of the horizontal switch, which centers the mark, and every placed mark loses its advance. The few characters in those classes are spacing marks, Mc, such as the Hangul tone marks and U+1D16D MUSICAL SYMBOL COMBINING AUGMENTATION DOT, which should follow its note:
 
 ```shape
 fallback.ttf  o\u{1D16D}  --language=en
 with-gpos.ttf  o\u{1D16D}  --language=en
 ```
 
-Without GPOS the dot is centred on the `o` and loses its 200-unit advance; with GPOS it keeps both. That too looks like a bug, or at least a comment that no longer matches the code.
+Without GPOS the dot is centered on the `o` and loses its 200-unit advance; with GPOS it keeps both. That too looks like a bug, or at least a comment that no longer matches the code.
 
 **Synthetic slant.** Fallback positioning runs after `position_finish_offsets`, which is where a synthetically slanted font has its vertically offset glyphs moved sideways to follow the slant ([Fonts and font functions](fonts-and-font-functions.html#slant)). So a fallback-placed mark doesn’t follow the slant. Its extents are measured from the slanted outline, as [Fonts and font functions](fonts-and-font-functions.html#extents-of-a-synthetic-font) shows, and centring them on the upright advance puts the mark over the middle of the upright letter, not over its slanted top. Synthetic bold, which changes the extents, is taken into account:
 
@@ -375,7 +375,7 @@ Our build has no FreeType, so `hb-shape` has only the `ot` funcs, and this fallb
 
 > For programmers: to give HarfBuzz kerning from your own source, for a font format it can’t read, implement `glyph_h_kerning` in your font funcs (`hb_font_funcs_set_glyph_h_kerning_func`). It is used only when the face has no GPOS, `kerx` or `kern` and the script’s shaper allows fallback positioning, which the Indic, Khmer, Myanmar, Thai and USE shapers don’t. In a build with `HB_DISABLE_DEPRECATED`, which `HB_LEAN` implies, `get_glyph_h_kerning` returns 0 and the fallback is compiled out, though the horizontal callback is no longer deprecated.
 
-> For type designers: a font with no GPOS still gets its marks placed, but only roughly: centred on the advance, a sixteenth of an em from the ink, all ligature components equal. Any GPOS at all, even a lone `kern` feature, switches that off, and marks then sit exactly where their outlines put them. If a font has GPOS, it needs mark attachment too. And draw zero-width marks to the left of the origin, over the glyph before, because that is where they stay when nothing moves them.
+> For type designers: a font with no GPOS still gets its marks placed, but only roughly: centered on the advance, a sixteenth of an em from the ink, all ligature components equal. Any GPOS at all, even a lone `kern` feature, switches that off, and marks then sit exactly where their outlines put them. If a font has GPOS, it needs mark attachment too. And draw zero-width marks to the left of the origin, over the glyph before, because that is where they stay when nothing moves them.
 
 ## Configuration
 
@@ -401,6 +401,6 @@ Our build has no FreeType, so `hb-shape` has only the `ot` funcs, and this fallb
 * Shapers zero marks by GDEF class, or by classes made up from Mn. Without GPOS, a zeroed mark in a forward run is moved back by its old advance.
 * Recategorizing turns script-specific combining classes into positional ones, after normalization and before glyph mapping. Its Thai, Lao and Tibetan rows are rarely reached.
 * The positioner places each mark from extents: against the base’s ink vertically and its advance horizontally, by class, a sixteenth of an em away, stacking marks of the same class, dividing ligatures equally.
-* It ignores the base’s horizontal offset, centres Left and Right marks, and doesn’t follow synthetic slant.
+* It ignores the base’s horizontal offset, centers Left and Right marks, and doesn’t follow synthetic slant.
 * Missing space characters get widths from their kind: fractions of an em, a digit’s or full stop’s advance, or half a space.
 * Fallback kerning asks the font funcs; only hb-ft implements it, for fonts like Type 1 whose kerning isn’t in a table HarfBuzz reads.

@@ -1,4 +1,4 @@
-# Substituting glyphs: GSUB
+# GSUB: substituting glyphs
 
 By the time HarfBuzz opens a font’s GSUB table, the hard questions about *characters* have been answered. The text has been segmented, its script and direction are known, and it has been [normalized](normalization.html), which is where every character was mapped to a glyph through `cmap`. [The pipeline, step by step](the-pipeline-step-by-step.html#substituting) shows where GSUB comes in the whole of shaping. What arrives here is a buffer of glyph IDs, each still carrying the cluster number of the character it came from and a set of Unicode properties.
 
@@ -294,7 +294,7 @@ The trace says “ligating glyphs at 0,2”: the components were found at positi
 2. It writes the ligature glyph in place of the first component and removes the others. The glyphs that were passed over aren’t removed: they are kept, in order, *after* the ligature.
 3. It gives the ligature a new **ligature ID**, and records its number of components. Each passed-over mark gets the same ligature ID and the number of the component it followed.
 
-That last step is what lets a mark find the right part of a ligature later on. GPOS’s mark-to-ligature attachment uses it to choose which of the ligature’s anchors to use. This font has no GPOS, so HarfBuzz positions the mark with its fallback positioner ([Fallbacks](fallbacks.html)), which divides the ligature into equal parts, one for each component. Even so, the effect shows (and [Positioning glyphs: GPOS](positioning-glyphs-gpos.html) shows it with real anchors):
+That last step is what lets a mark find the right part of a ligature later on. GPOS’s mark-to-ligature attachment uses it to choose which of the ligature’s anchors to use. This font has no GPOS, so HarfBuzz positions the mark with its fallback positioner ([Fallbacks](fallbacks.html)), which divides the ligature into equal parts, one for each component. Even so, the effect shows (and [GPOS: positioning glyphs](positioning-glyphs-gpos.html) shows it with real anchors):
 
 ```shape
 ligatures.ttf  f\u0301i

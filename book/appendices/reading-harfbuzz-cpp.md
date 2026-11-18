@@ -51,14 +51,14 @@ All three containers are here. The set is checked before it is used, the vector�
 | `push (v)` | appends; returns a pointer to the new element |
 | `push_or_fail (v)` | the same, returning `false` on failure |
 | `alloc (n)`, `alloc_exact (n)` | reserves room without changing `length` |
-| `resize (n)`, `resize_exact (n)`, `resize_dirty (n)` | changes `length`; the dirty form leaves new elements uninitialised |
+| `resize (n)`, `resize_exact (n)`, `resize_dirty (n)` | changes `length`; the dirty form leaves new elements uninitialized |
 | `pop ()`, `shrink (n)`, `remove_ordered (i)`, `remove_unordered (i)`, `clear ()` | removes |
 | `tail ()` | the last element |
 | `as_array ()`, `iter ()` | an `hb_array_t` view, which is also an iterator |
 | `qsort ()`, `lsearch (x)`, `lfind (x)` | sorting and linear search |
 | `in_error ()`, `reset ()` | the error state, and the way out of it |
 
-Three behaviours catch readers out.
+Three behaviors catch readers out.
 
 **Indexing never crashes.** `v[i]` with `i` past the end returns `Crap (Type)`, a writable scratch object, or `Null (Type)` from a `const` vector (`hb-vector.hh:263`). No assertion fires. [Fonts as bytes](fonts-as-bytes.html#null-objects) explains both objects.
 
@@ -163,7 +163,7 @@ if (count && features)
 return featureNameCount;
 ```
 
-It takes a slice of the table’s array, maps each record to its type by calling a member function, and writes each result into the caller’s array. The `+` at the front is the iterator’s unary plus, which returns a copy of the iterator and nothing more (`hb-iter.hh:76`). It lets every line of the pipe begin with an operator, which seems to be all it is for at the head of a pipe (inferred). The lone `;` on the last line is the same habit: lines can be added and removed without touching their neighbours.
+It takes a slice of the table’s array, maps each record to its type by calling a member function, and writes each result into the caller’s array. The `+` at the front is the iterator’s unary plus, which returns a copy of the iterator and nothing more (`hb-iter.hh:76`). It lets every line of the pipe begin with an operator, which seems to be all it is for at the head of a pipe (inferred). The lone `;` on the last line is the same habit: lines can be added and removed without touching their neighbors.
 
 The vocabulary:
 
@@ -271,7 +271,7 @@ A good pipe to read next is in [the Universal Shaping Engine](the-universal-shap
 
 ## Small idioms
 
-**`likely (x)` and `unlikely (x)`** (`hb.hh:267`) tell the compiler which way a test usually goes, with `__builtin_expect`, when optimising. They don’t change what the test means. When reading, `unlikely` marks an error path, and a function can usually be understood first by skipping every branch that starts with it.
+**`likely (x)` and `unlikely (x)`** (`hb.hh:267`) tell the compiler which way a test usually goes, with `__builtin_expect`, when optimizing. They don’t change what the test means. When reading, `unlikely` marks an error path, and a function can usually be understood first by skipping every branch that starts with it.
 
 **`HB_INTERNAL`** (`hb.hh:296`) gives a declaration hidden visibility, so it isn’t exported from the shared library. It marks functions and data that cross files inside HarfBuzz but are not API.
 

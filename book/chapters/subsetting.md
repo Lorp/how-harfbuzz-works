@@ -6,7 +6,7 @@ HarfBuzz’s subsetter is a separate library, `harfbuzz-subset`, with its own he
 
 It works in two phases. First it makes a **plan**: everything that can be decided before a byte is written, above all which glyphs to keep. Then it executes the plan, table by table. The heart of the plan is the glyph closure: a fixed sequence of stages, each run once, with a bounded loop only inside GSUB. That is usually enough, and this chapter shows where it isn’t.
 
-The examples use small fonts made by `fonts/subsetting/build-subsetting-fonts.py`, and subsets of them cut by HarfBuzz’s own `hb-subset` tool in `fonts/subsetting/build.sh` when the fonts are built. Every block on this page reads them with `hb-info` and `hb-shape` from HarfBuzz {{hb}}. Each subset was made with `--glyph-names`, so that glyph names survive: by default they don’t.
+The examples use small fonts made by `fonts/subsetting/build-subsetting-fonts.py`, and subsets of them cut by HarfBuzz’s own [`hb-subset` tool](command-line-tools.html#hb-subset) in `fonts/subsetting/build.sh` when the fonts are built. Every block on this page reads them with `hb-info` and `hb-shape` from HarfBuzz {{hb}}. Each subset was made with `--glyph-names`, so that glyph names survive: by default they don’t.
 
 ## Four calls
 
@@ -145,13 +145,13 @@ Each stage reads the set the stages before it built, adds to it, and is never ru
 | `.notdef`, `cmap` | glyph 0, the characters’ glyphs (found earlier), and `cmap` format 14 variation glyphs | `_glyphset_cmaped` | MATH’s glyph variants |
 | MATH | size variants and assembly parts of those glyphs | `_glyphset_mathed` | MATH’s glyph info |
 | layout | glyphs GSUB can produce | `_glyphset_gsub` | GSUB, GPOS, GDEF |
-| COLR | COLRv0 layers and every glyph a COLRv1 paint graph uses ([Colour](colour.html)) | `_glyphset_colred` | COLR |
+| COLR | COLRv0 layers and every glyph a COLRv1 paint graph uses ([Color](color.html)) | `_glyphset_colred` | COLR |
 | VARC | the components of [variable composites](variable-components.html) | `_glyphset_varced` | VARC |
 | glyf, CFF | composite components; the two glyphs of a CFF `seac` accent | `_glyphset` | everything else |
 
 The `name` stage in the middle collects no glyphs: it keeps the `name` IDs that STAT, fvar, CPAL and the kept GSUB and GPOS features refer to.
 
-The order follows how a glyph reaches each table. Text becomes glyphs through `cmap`; MATH comes next, so that GSUB is closed over its size variants too (in the math font below, the mirrored display-size integral is kept only because of that). After GSUB, the stages add glyphs that are only *drawn*: a colour layer, a component, an accent CFF builds from two glyphs. None is ever in a buffer, so none goes back to GSUB, and GSUB, GPOS and GDEF are subset against `_glyphset_gsub`, without them: a kerning pair only a COLR layer could use is dropped (inferred from the snapshots; no comment states the reason).
+The order follows how a glyph reaches each table. Text becomes glyphs through `cmap`; MATH comes next, so that GSUB is closed over its size variants too (in the math font below, the mirrored display-size integral is kept only because of that). After GSUB, the stages add glyphs that are only *drawn*: a color layer, a component, an accent CFF builds from two glyphs. None is ever in a buffer, so none goes back to GSUB, and GSUB, GPOS and GDEF are subset against `_glyphset_gsub`, without them: a kerning pair only a COLR layer could use is dropped (inferred from the snapshots; no comment states the reason).
 
 The demo font’s ★ is a COLRv0 glyph with two layers. The second, `star.ring`, is a glyf composite of two copies of `dot`. Cutting a subset for ★ runs three stages: `cmap` finds `star`, COLR adds the two layers, and glyf adds `dot`, which COLR has never heard of:
 
@@ -255,11 +255,11 @@ The second reason is in `SubstLookup.hh:209`, where a contextual lookup calls a 
 //c->flush ();
 ```
 
-The limit is a defence against hostile fonts as much as a shortcut: a closure run to a fixpoint could be made to run for a very long time (8.1.0 reverted an optimization that “could cause timeout during subsetting with malicious fonts”). [hb-depend](hb-depend.html) takes the other side: its closure follows edges “to a fixed point”, while “the subsetter’s iterative closure (`HB_CLOSURE_MAX_STAGES`) truncates these chains” (`docs/depend-for-closure.md`).
+The limit is a defense against hostile fonts as much as a shortcut: a closure run to a fixpoint could be made to run for a very long time (8.1.0 reverted an optimization that “could cause timeout during subsetting with malicious fonts”). [hb-depend](hb-depend.html) takes the other side: its closure follows edges “to a fixed point”, while “the subsetter’s iterative closure (`HB_CLOSURE_MAX_STAGES`) truncates these chains” (`docs/depend-for-closure.md`).
 
 ### Where the fixed order misses
 
-“Enough for every realistic font” is a judgement, and it can be tested. `nested.ttf` has one contextual rule in `ccmp` that applies twenty single substitutions to the same glyph, one after another, `a` → `s1` → `s2` … → `s20`. Its feature file (`fonts/subsetting/nested.fea`) defines the twenty lookups `L19` down to `L0`, and then:
+“Enough for every realistic font” is a judgment, and it can be tested. `nested.ttf` has one contextual rule in `ccmp` that applies twenty single substitutions to the same glyph, one after another, `a` → `s1` → `s2` … → `s20`. Its feature file (`fonts/subsetting/nested.fea`) defines the twenty lookups `L19` down to `L0`, and then:
 
 ```
 feature ccmp {
@@ -394,7 +394,7 @@ Each table’s `subset` keeps what refers to kept glyphs, characters, lookups or
 | GDEF | classes, attachment points and carets of `_glyphset_gsub`; only the mark glyph sets still used, renumbered; the lowest version that holds what is left | `OT/Layout/GDEF/GDEF.hh` |
 | BASE | records of kept scripts; reference glyphs renumbered | `hb-ot-layout-base-table.hh` |
 | MATH | against the early snapshots, as above | `hb-ot-math-table.hh` |
-| COLR, CPAL | records, layers and paints of kept glyphs; every palette, but only the colour entries still used, renumbered | `OT/Color/COLR/COLR.hh`, `OT/Color/CPAL/CPAL.hh` |
+| COLR, CPAL | records, layers and paints of kept glyphs; every palette, but only the color entries still used, renumbered | `OT/Color/COLR/COLR.hh`, `OT/Color/CPAL/CPAL.hh` |
 | CBLC, CBDT, `sbix` | each strike’s bitmaps for the kept glyphs | `OT/Color/CBDT/CBDT.hh`, `OT/Color/sbix/sbix.hh` |
 | CFF, CFF2 | charstrings of the kept glyphs; the subroutines they still call, renumbered, or none with `DESUBROUTINIZE`; hints dropped with `NO_HINTING` | `hb-subset-cff1.cc`, `hb-subset-cff2.cc`, `hb-subset-cff-common.hh` |
 | VARC | records of kept glyphs with the conditions, axis lists and variation data they use | `OT/Var/VARC/VARC-subset.hh` |

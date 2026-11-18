@@ -9,11 +9,11 @@ What a writer of one chapter is given, whether that’s a person or an agent. Th
 * `book/front/introduction.md` and `book/front/notation.md`. Build on them; don’t repeat them.
 * The chapters this one depends on (see `writing-order.md`), in their current drafts. Link back to them instead of explaining again.
 * `notes/outline.md`, and the parts of `notes/survey/` that cover the chapter.
-* The block types in `tools/build-site.mjs`: `views`, `shape` and `trace` (header comment), and `draw`, `info` and `table` (comments above `blockDraw`, `blockInfo` and `blockTable`).
+* The block types in `tools/build-site.mjs`: `views`, `shape`, `trace` and `raster` (header comment), and `draw`, `info` and `table` (comments above `blockDraw`, `blockInfo` and `blockTable`).
 
 ## Sources, and how claims are checked
 
-The HarfBuzz version the book describes (`book/book.json`) is checked out at `.cache/harfbuzz/`, built by `tools/build-harfbuzz.sh` (`build/`, and `build-msg/` with `HB_BUFFER_MESSAGE_MORE`). FreeType, ICU, cairo and the tests are off in that build.
+The HarfBuzz version the book describes (`book/book.json`) is checked out at `.cache/harfbuzz/`, built by `tools/build-harfbuzz.sh`: `build/` (FreeType, ICU, cairo and the tests off), `build-msg/` with `HB_BUFFER_MESSAGE_MORE`, and `build-ft/` with FreeType, for comparing FreeType’s hinted outlines and metrics.
 
 * **Claims about HarfBuzz** are checked against that code, and cite file and line (`hb-ot-map.cc:389` in prose, `src/...` in the “Where to read the source” table). The survey notes are a guide: where they disagree with the code, the code wins, and the disagreement is reported.
 * **Claims about HarfBuzz’s history** come from `NEWS`, `README.md`, `AUTHORS`, `docs/` and source comments. `docs/usermanual-*.xml` is the hand-written manual, and the doc comments in `src/*.cc` (with their `Since:` versions) are the API reference. The manual says what was intended; the code says what happens.
@@ -23,18 +23,18 @@ The HarfBuzz version the book describes (`book/book.json`) is checked out at `.c
 ## Style
 
 * Plain, direct, short sentences. Explain, don’t sell. Present tense. A short opening like the GSUB chapter’s, no throat-clearing.
-* British spelling (colour, neighbour, behaviour, spelt), but HarfBuzz’s own words keep their spelling: normalization, sanitizer.
+* American spelling (color, neighbor, behavior, center, gray, toward, spelled). Quotations keep their source’s spelling, and punctuation stays outside closing quotes unless it belongs to the quotation.
 * Typographic quotes and apostrophes in prose (“ ” ‘ ’ ’); straight ones only in code, URLs and attributes.
-* Colons and full stops rather than em dashes.
+* Colons and periods rather than em dashes.
 * `{{hb}}` for the HarfBuzz version in prose about the build.
 * Structure like gsub.md: `# Title` exactly as in `book/toc.txt`; an opening of two or three paragraphs; `##` sections; short, trimmed source excerpts (say they’re trimmed); tables where they help; occasional `> For type designers:` or `> For programmers:` callouts; then `## Where to read the source` (a table) and `## In short` (bullets).
 * Headings say plainly what the section is about (“The three libraries”, “Dispatch contexts”). No formulas or wordplay: not “One X, many Y”, “Three libraries, one shape”, “X: the Y”. Avoid “shape” and “shaping” except for text shaping.
 * Bold marks a term where it is defined, and nothing else: the book’s index and glossary are gathered from bold terms (`tools/index-terms.mjs`). A bold label on a paragraph or list item ends with its full stop inside the bold (“**In the font.**”).
-* Length: as long as the subject needs, and no longer. There is no target: a small subject makes a short chapter, and 1,500 words is fine if that covers it. Never pad, restate or add sections to reach a length. 4,000 words of prose (not counting code and blocks) is a ceiling, not an aim; if a subject won’t fit under it, say what was left out in the report, and it can become a section of another chapter or a chapter of its own.
+* Length: as long as the subject needs, and no longer. There is no target: a small subject makes a short chapter, and 1,500 words is fine if that covers it. Never pad, restate or add sections to reach a length. There is no hard limit either: around 4,000 words of prose (not counting code and blocks) is only a point to ask whether some of it belongs in another chapter, or in a chapter of its own. A subject that needs more can have more; say in the report if a chapter has grown well past that.
 
 ## Live examples
 
-Anything shown as HarfBuzz’s output is a live block, run when the book is built; anything else is labelled as hand-written or as another tool’s output.
+Anything shown as HarfBuzz’s output is a live block, run when the book is built; anything else is labeled as hand-written or as another tool’s output.
 
 * Blocks run against the fonts in `fonts/<slug>/`: a `build.sh` that uses `${PYTHON:-python3}`, feature files, and if needed a builder script in that folder. Prefer deriving fonts from existing ones (as `fonts/blobs-faces-and-lazy-tables/` does) to writing yet another builder. `fonts/variations/` holds shared variable fonts.
 * fontTools: the default `python3` here may lack it; Homebrew’s Python 3.10 has fontTools 4.38.

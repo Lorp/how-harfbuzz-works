@@ -19,7 +19,7 @@ vertical.ttf  ab  --direction=ttb  --language=en
 vertical.ttf  ab  --direction=ltr  --language=en
 ```
 
-Set vertically, `a` and `b` are stacked, upright and centred, with no ligature and no kerning. Set horizontally, the font’s `liga` turns them into `a_b`, which an application could then rotate.
+Set vertically, `a` and `b` are stacked, upright and centered, with no ligature and no kerning. Set horizontally, the font’s `liga` turns them into `a_b`, which an application could then rotate.
 
 ## Direction
 
@@ -218,7 +218,7 @@ A font with a `morx` table is shaped with it in vertical text only if it has no 
 
 ### Advances and origins
 
-In step 15 each glyph gets its vertical advance and an offset that is its vertical origin, negated (`hb-ot-shape.cc:1019`): `0,-1000` and −500, −880 for every full-width glyph in the test fonts, −250, −880 for the 500-unit `a`. From then on, offsets carry the origin with them. GPOS works on top of these offsets, not in place of them. Nothing adds the origins back afterwards, so an application draws each glyph at the pen position plus its offset, just as in horizontal text, and moves the pen down by the advance.
+In step 15 each glyph gets its vertical advance and an offset that is its vertical origin, negated (`hb-ot-shape.cc:1019`): `0,-1000` and −500, −880 for every full-width glyph in the test fonts, −250, −880 for the 500-unit `a`. From then on, offsets carry the origin with them. GPOS works on top of these offsets, not in place of them. Nothing adds the origins back afterward, so an application draws each glyph at the pen position plus its offset, just as in horizontal text, and moves the pen down by the advance.
 
 ### Value records
 

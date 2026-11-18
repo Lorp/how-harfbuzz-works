@@ -2,72 +2,25 @@
 
 The rest of this book has looked inside one program. This chapter looks around it: at the Rust port that the HarfBuzz project now maintains next to the C++ library, at a few smaller relatives, and at how some of the best-known programs that use HarfBuzz actually call it.
 
-Everything here is about software other than HarfBuzz {{hb}}, so none of it can be checked against the code in `.cache/harfbuzz/` or shown live: the book’s build doesn’t include the `harfrust` backend, and it can’t run a browser. Each claim is taken from the other project’s own repository, documentation or announcement, linked where it is made, and read in November 2026. Repositories move on, so a version number given here is the one that was there when it was read.
+Everything here is about software other than HarfBuzz {{hb}}, so none of it can be checked against the code in `.cache/harfbuzz/` or shown live: the book’s build can’t run a browser. (HarfRust, which the book does build, has a chapter of its own: [HarfRust](harfrust.html).) Each claim is taken from the other project’s own repository, documentation or announcement, linked where it is made, and read in November 2026. Repositories move on, so a version number given here is the one that was there when it was read.
 
 ## HarfRust
 
-**HarfRust** is, in its [README](https://github.com/harfbuzz/harfrust)’s words, “a Rust port of HarfBuzz text shaping engine”. It is a library of its own, published as the `harfrust` crate, and also one of HarfBuzz’s optional backends ([hb_shape and its backends](hb_shape-and-its-backends.html) covers the backend).
-
-### Where it came from
-
-Behdad Esfahbod’s study [Introducing HarfRust](https://docs.google.com/document/d/1aH_waagdEM5UhslQxCeFEb82ECBhPlZjy5_MwLNLBYo/preview), dated 10 June 2025, gives the history. It lists earlier attempts at shaping in Rust: harfbuzz_rs, a safe Rust interface to the C++ library rather than a port; Allsorts, a separate implementation by YesLogic; swash; and RustyBuzz.
-
-**rustybuzz** was a port of HarfBuzz to Rust by Yevhenii Reizner, built on his own font parser, ttf-parser, and “initially written to fulfill a need by resvg”, his SVG renderer. The study quotes him giving the project up in August 2023, and says Laurenz Stampfl then brought it from HarfBuzz 2.7.1 up to 10.1.0. Its [README](https://github.com/harfbuzz/rustybuzz) now begins: “This project is not developed further, unmaintained, and archived”, and recommends HarfRust instead.
-
-Google Fonts wanted the same port to read fonts with its own Rust crates, [fontations](https://github.com/googlefonts/fontations), so that programs using its font reader **Skrifa** would not carry two implementations of font parsing (the HarfRust README says this, and points to [fontations issue 956](https://github.com/googlefonts/fontations/issues/956)). The study says that when no agreement was reached with rustybuzz’s author in 2024, Chad Brokaw started a fork, first called HarfRuzz, and that it was renamed HarfRust because the earlier name looked too much like HarfBuzz. Behdad Esfahbod started contributing in May 2025 and brought it up to date with HarfBuzz 11.2.1, and the fork dropped ttf-parser for fontations’ `read-fonts`. The study ends: “HarfRust is an official HarfBuzz project”, developed by Chad Brokaw of the Google Fonts team with Behdad Esfahbod’s contributions, then under contract with Google Fonts.
-
-The name is a pun, as HarfBuzz’s is. The study explains *rāst* (راست) as Persian for “true”, “right” or “honest”: “Type–True”, a nod to TrueType, beside HarfBuzz’s “Type–Open”.
-
-### Keeping up with HarfBuzz
-
-The study is clear about which project leads: “Until further notice, all development will primarily happen in HarfBuzz, with the intention to quickly bring HarfRust up to date with each and every HarfBuzz release.” The [changelog](https://github.com/harfbuzz/harfrust/blob/main/CHANGELOG.md) shows that happening. Every release names the HarfBuzz release it matches:
-
-| HarfRust | Released | Matches HarfBuzz |
-|---|---|---|
-| 0.1.0 | 10 June 2025 | 11.2.1 |
-| 0.5.0 | 7 January 2026 | 12.3.0 |
-| 0.13.3 | 25 August 2026 | 14.3.1 |
-| 0.15.0 | 21 October 2026 | 15.0.0 |
-| 0.16.0 | 11 November 2026 | 15.1.0 |
-
-HarfBuzz 15.1.0 was released on 4 November 2026 (`NEWS`), so HarfRust caught up a week later. The two projects also share their generated data: HarfBuzz’s table generators have a `--rust` mode that writes HarfRust’s copy of the same tables ([The Universal Shaping Engine](the-universal-shaping-engine.html), [Dotted circles and broken clusters](dotted-circles-and-broken-clusters.html)).
-
-The changelog also shows the differences being closed one by one. rustybuzz’s README lists things it never did: no `mort` table, and no Arabic fallback shaping, because building lookups on the fly needs “serialization code that is associated with subsetting”. HarfRust 0.13.3 added both: “Add support for shaping legacy AAT `mort` tables” and “Synthesize Arabic fallback GSUB lookups” ([Joining scripts](joining-scripts.html#shaping-without-gsub) describes what HarfBuzz does there). 0.15.0 added fonts with more than 65,535 glyphs.
-
-### What it covers
-
-The README divides HarfBuzz into six parts and says what became of each in HarfRust:
-
-1. shaping, ported;
-2. Unicode routines, ported;
-3. font parsing, done by `read-fonts`;
-4. subsetting, done by skera, the fontations subsetter;
-5. HarfBuzz’s own containers and utilities, reimplemented in fontations where needed;
-6. glue for system and third-party libraries, not ported.
-
-So HarfRust has no FreeType, Core Text, DirectWrite, ICU or GLib integration, and no Graphite. It has no font size either: “Shaping is always using UnitsPerEm. You should scale the result manually.” A malformed font is an error, where HarfBuzz would shape anyway. And, the README says, “Experimental HarfBuzz features like most of the boring-expansion-spec are not supported yet.”
-
-How close it is comes from [HARFBUZZ.md](https://github.com/harfbuzz/harfrust/blob/main/HARFBUZZ.md), which runs HarfBuzz’s own test suites through the backend with `HB_SHAPER_LIST=harfrust`. On 24 August 2026 that gave 800 of 800 AOTS tests, 437 of 437 text-rendering-tests and 5,012 of 5,021 in-house tests, the nine failures all Arabic fallback shaping, which 0.13.3 added the next day. On speed, the README says that “HarfRust is less than 25% slower than HarfBuzz on most common fonts”. A year earlier the study had it “over 3x slower than HarfBuzz for major workloads”, with a plan to port HarfBuzz’s caches. On safety: “There are no `unsafe` in this library and in most of its dependencies (excluding `bytemuck`).”
-
-> For programmers: HARFBUZZ.md says HarfBuzz builds HarfRust from its git `main` branch. In 15.1.0 that line is commented out, and `src/rust/Cargo.toml` asks for the published crate, `harfrust = { version = "0.15.0" }`. That release matches HarfBuzz 15.0.0, not 15.1.0.
-
-### A C API
-
-Since 0.14.0, HarfRust also has a C library, [`harfrust_capi`](https://github.com/harfbuzz/harfrust/blob/main/harfrust_capi/README.md). It mirrors the shaping half of HarfBuzz’s API with an `hr_` prefix: “Every type, function, enumerator and constant is named and numbered to match its HarfBuzz counterpart, so C code can usually be ported by renaming `hb_` to `hr_`.” A header, `hr-hb.h`, maps HarfBuzz’s own names onto HarfRust’s, so that HarfBuzz shaping code can build against HarfRust unchanged. Later releases added drawing and painting backed by Skrifa, and subsetting backed by skera. The README lists what is left out, including custom Unicode funcs, buffer message callbacks and `hb_buffer_diff`, and one deliberate difference: “Allocation failure aborts” instead of being reported. Through this header, `HB_VERSION_STRING` gives the HarfBuzz release HarfRust matches, currently 15.1.0, though the README warns that this “does not imply that every API from that HarfBuzz release is available”.
+HarfRust is, in its [README](https://github.com/harfbuzz/harfrust)’s words, “a Rust port of HarfBuzz text shaping engine”: the HarfBuzz project’s own port of shaping, which began as a fork of rustybuzz and reads fonts with Fontations’ `read-fonts` crate. Each release names the HarfBuzz release it matches, and HarfBuzz can call it as its `harfrust` shaper. [HarfRust](harfrust.html) covers its history, how it is kept in step, its APIs, the Fontations crates, and every example in this book run through it.
 
 ## Other relatives
 
-`fontations` is the font-funcs backend that reads fonts with fontations’ Rust crates ([Fonts and font functions](fonts-and-font-functions.html#the-other-funcs)). The crates are a project of their own at Google Fonts. Their [README](https://github.com/googlefonts/fontations) describes `read-fonts` as “intended to be a high performance parser, suitable for shaping”, one that “performs no allocation and no copying”, which is HarfBuzz’s own approach ([Fonts as bytes](fonts-as-bytes.html)), and says of Skrifa: “It’s primary purpose is to replace FreeType in Google applications.” The HarfBuzz README sends readers who need hinting to “FreeType or Skrifa”.
+`fontations` is the font-funcs backend that reads fonts with Fontations’ Rust crates ([Fonts and font functions](fonts-and-font-functions.html#the-other-funcs)). The crates are a project of their own at Google Fonts. Their [README](https://github.com/googlefonts/fontations) describes `read-fonts` as “intended to be a high performance parser, suitable for shaping”, one that “performs no allocation and no copying”, which is HarfBuzz’s own approach ([Fonts as bytes](fonts-as-bytes.html)), and says of Skrifa: “It’s primary purpose is to replace FreeType in Google applications.” The HarfBuzz README sends readers who need hinting to “FreeType or Skrifa”.
 
-Several bindings live in the HarfBuzz organization on GitHub:
+Several bindings live in the HarfBuzz organization on GitHub ([Integrations](integrations.html#other-language-bindings) covers bindings as a way to use HarfBuzz):
 
 * **harfbuzzjs** offers “HarfBuzz shaping library for client/server side JavaScript projects” ([README](https://github.com/harfbuzz/harfbuzzjs)). It is HarfBuzz compiled to WebAssembly with Emscripten, published on npm, and its API keeps HarfBuzz’s objects: blob, face, font, buffer, `shape`.
 * **uharfbuzz** is “Streamlined Cython bindings for the HarfBuzz shaping engine” for Python ([README](https://github.com/harfbuzz/uharfbuzz)). It normally builds its own copy of HarfBuzz, and with `USE_SYSTEM_LIBS=1` uses the system’s. The HarfBuzz README points Python users to it, and to GObject introspection (`README.python.md`). This book’s tools read fonts with fontTools and run `hb-shape` itself, not uharfbuzz.
-* **harfbuzz_rs** is the Rust interface over the C++ library mentioned above. HarfRust uses it to benchmark against HarfBuzz (HARFBUZZ.md).
+* **harfbuzz_rs** is a Rust interface over HarfBuzz’s C library, as opposed to a port of it like [HarfRust](harfrust.html). HarfRust uses it to benchmark against HarfBuzz (HARFBUZZ.md).
 
 ## How applications call HarfBuzz
 
-HarfBuzz’s README lists users from Android and Chrome to car displays. What follows is eight of them, and only what their source shows: whether they keep their own copy of HarfBuzz (**vendoring**: copying its source into their tree and building it with their own code), which version that was, which font funcs they give it, which shapers they ask for, and which [cluster level](buffers.html#the-four-cluster-levels) they set.
+HarfBuzz’s README lists users from Android and Chrome to car displays (`README.md:174`). Among them are some of the most widely used programs for setting type: Adobe Photoshop, Illustrator and InDesign, QuarkXPress and Scribus, as well as Microsoft Edge, Figma, Canva, Amazon’s Kindle, the PlayStation, Flutter and the Unreal game engine. Most of those are closed source, so how they call HarfBuzz can’t be examined. What follows is the open-source ones whose code could be read, and only what their source shows: whether they keep their own copy of HarfBuzz (**vendoring**: copying its source into their tree and building it with their own code), which version that was, which font funcs they give it, which shapers they ask for, and which [cluster level](buffers.html#the-four-cluster-levels) they set.
 
 | Project | Copy of HarfBuzz | Version read | Font funcs | Shapers asked for | Cluster level |
 |---|---|---|---|---|---|
@@ -119,7 +72,7 @@ Firefox keeps HarfBuzz in `gfx/harfbuzz`. Its [moz.yaml](https://github.com/mozi
 
 Android’s copy is `external/harfbuzz_ng`. In AOSP’s public main branch its [METADATA](https://android.googlesource.com/platform/external/harfbuzz_ng/+/refs/heads/main/METADATA) gives version 10.2.0, last upgraded in January 2025, and its [README.android](https://android.googlesource.com/platform/external/harfbuzz_ng/+/refs/heads/main/README.android) notes that “Chromium updates Harfbuzz more frequently”.
 
-The text layout library minikin calls it in [LayoutCore.cpp](https://android.googlesource.com/platform/frameworks/minikin/+/refs/heads/main/libs/minikin/LayoutCore.cpp). For each font it makes a sub-font, because “We override some functions which are not thread safe.” The funcs on it supply advances and origins from Skia, for a stated reason: “we can’t use HarfBuzz’s implemenation. It may return the wrong value if the font uses hinting aggressively.” Colour bitmap fonts (those with `CBDT`) get funcs that keep HarfBuzz’s own advances, “for performance reasons”.
+The text layout library minikin calls it in [LayoutCore.cpp](https://android.googlesource.com/platform/frameworks/minikin/+/refs/heads/main/libs/minikin/LayoutCore.cpp). For each font it makes a sub-font, because “We override some functions which are not thread safe.” The funcs on it supply advances and origins from Skia, for a stated reason: “we can’t use HarfBuzz’s implemenation. It may return the wrong value if the font uses hinting aggressively.” Color bitmap fonts (those with `CBDT`) get funcs that keep HarfBuzz’s own advances, “for performance reasons”.
 
 ### Pango and GNOME
 
@@ -149,7 +102,7 @@ The Godot game engine vendors HarfBuzz in `thirdparty/harfbuzz`. Its [thirdparty
 
 ### What they have in common
 
-Most of these programs let HarfBuzz read the layout tables but answer some of its questions about glyphs themselves, from the code that also renders them: Skia, Android and LibreOffice with a sub-font over hb-ot ([Fonts and font functions](fonts-and-font-functions.html#parents-and-sub-fonts)), Firefox, Qt and OpenJDK with whole sets of funcs. Android’s comment gives one reason, hinted advances; keeping shaping and drawing in agreement is the general one (inferred). The platform backends hardly appear: Chromium stopped building Core Text in favour of HarfBuzz’s own AAT code, Firefox leaves the Core Text and DirectWrite files out, and Qt and LibreOffice name only cross-platform shapers. And while Chromium builds HarfRust in and tests with it, Firefox and Godot leave `hb-harfrust.cc` out of their copies.
+Most of these programs let HarfBuzz read the layout tables but answer some of its questions about glyphs themselves, from the code that also renders them: Skia, Android and LibreOffice with a sub-font over hb-ot ([Fonts and font functions](fonts-and-font-functions.html#parents-and-sub-fonts)), Firefox, Qt and OpenJDK with whole sets of funcs. Android’s comment gives one reason, hinted advances; keeping shaping and drawing in agreement is the general one (inferred). The platform backends hardly appear: Chromium stopped building Core Text in favor of HarfBuzz’s own AAT code, Firefox leaves the Core Text and DirectWrite files out, and Qt and LibreOffice name only cross-platform shapers. And while Chromium builds HarfRust in and tests with it, Firefox and Godot leave `hb-harfrust.cc` out of their copies.
 
 ## Where to read the source
 
@@ -169,9 +122,9 @@ Most of these programs let HarfBuzz read the layout tables but answer some of it
 
 ## In short
 
-* HarfRust is the HarfBuzz project’s Rust port of shaping. It began as a fork of rustybuzz that reads fonts with fontations instead of ttf-parser, and is now developed with Google Fonts.
+* HarfRust is the HarfBuzz project’s Rust port of shaping. It began as a fork of rustybuzz that reads fonts with Fontations instead of ttf-parser, and is now developed with Google Fonts.
 * HarfBuzz leads and HarfRust follows: each HarfRust release names the HarfBuzz release it matches, and 0.16.0 matches 15.1.0. HarfBuzz 15.1.0 itself builds HarfRust 0.15.
-* HarfRust ports shaping and Unicode, and leaves font parsing, subsetting and drawing to the fontations crates. It has no font size, no platform integrations and no Graphite, and it now has a C API with HarfBuzz’s names.
+* HarfRust ports shaping and Unicode, and leaves font parsing, subsetting and drawing to the Fontations crates. It has no ppem (it scales with `ShaperFont::set_scale`), no platform integrations and no Graphite, and it now has a C API with HarfBuzz’s names.
 * Most large users vendor HarfBuzz: Chromium follows its main branch, and Firefox, Qt and LibreOffice were on 15.1.0 when read. Pango takes it as an ordinary dependency.
 * Most of them give HarfBuzz font funcs that answer from their own rendering code, often on a sub-font over hb-ot, and shape with `ot`. Chromium builds the `harfrust` backend but uses it only in tests.
 

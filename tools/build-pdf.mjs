@@ -115,7 +115,7 @@ const backCover = fs.existsSync(path.join(ROOT, "book", "cover-back.png")) ? png
 
 const print = `
 <style>
-/* Print: a 6 × 9 inch book, light colours, one state of every figure. */
+/* Print: a 6 × 9 inch book, light colors, one state of every figure. */
 @page {
   size: 6in 9in;
   margin: 0.7in 0.6in 0.75in;

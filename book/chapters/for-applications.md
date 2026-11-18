@@ -1,6 +1,6 @@
 # For applications
 
-HarfBuzz turns one run of text into one row of positioned glyphs, on a line of no particular length. Everything else an application does with text happens on either side of that call: splitting a paragraph into runs before it, and afterwards putting a cursor between letters, finding the character under a click, breaking the row into lines, justifying them, and keeping all of it up to date while someone types. The user manual is blunt about where the line is drawn: “HarfBuzz won’t help you with line breaking, hyphenation, or justification” (`docs/usermanual-what-is-harfbuzz.xml:402`).
+HarfBuzz turns one run of text into one row of positioned glyphs, on a line of no particular length. Everything else an application does with text happens on either side of that call: splitting a paragraph into runs before it, and afterward putting a cursor between letters, finding the character under a click, breaking the row into lines, justifying them, and keeping all of it up to date while someone types. The user manual is blunt about where the line is drawn: “HarfBuzz won’t help you with line breaking, hyphenation, or justification” (`docs/usermanual-what-is-harfbuzz.xml:402`).
 
 What HarfBuzz does give back for that work is in each `hb_glyph_info_t`: the cluster, which ties glyphs to the text, and three glyph flags, which say where the result can be cut and joined without shaping again. [Buffers](buffers.html) explains how both are made inside the library. This chapter is about using them: what they promise, how a line breaker uses them, where the promise has gaps, and what the application has to do itself.
 
@@ -15,7 +15,7 @@ apps.ttf  office  --language=en
 apps.ttf  ببب  --language=ar
 ```
 
-In *office* the ligature has cluster 1 and the *c* after it 4, so the ligature covers characters 1, 2 and 3. In right-to-left text the glyphs come out in visual order, so the clusters fall along the buffer instead of rising: the first glyph is the last beh. An application that goes from text to glyphs (to colour a range, or to find where a selection starts) looks for the cluster that contains the character; one that goes from glyphs to text (to find what was clicked) takes the glyph’s cluster and the next one.
+In *office* the ligature has cluster 1 and the *c* after it 4, so the ligature covers characters 1, 2 and 3. In right-to-left text the glyphs come out in visual order, so the clusters fall along the buffer instead of rising: the first glyph is the last beh. An application that goes from text to glyphs (to color a range, or to find where a selection starts) looks for the cluster that contains the character; one that goes from glyphs to text (to find what was clicked) takes the glyph’s cluster and the next one.
 
 Cursor positions come from the same arithmetic. A boundary between two clusters is a place a cursor can go, and its position is the sum of the advances before it. Inside a cluster of several characters, HarfBuzz gives no position. For a ligature, the font may: GDEF can hold **ligature carets**, and `hb_ot_layout_get_ligature_carets` (`hb-ot-layout.cc:397`) returns them, one fewer than the ligature has components. The test font gives *ffi* carets at 300 and 600. The documentation warns that the positions are “unshaped”, so kerning applied to the ligature has to be added by the caller, and the function reads only GDEF, not the AAT `lcar` table. A font without carets leaves the application to divide the ligature itself, for example into equal parts (a common choice, not something HarfBuzz does).
 
@@ -107,7 +107,7 @@ The ligature splits into an *f* on one line and an *fi* on the next. The flags e
 apps.ttf  a fine non-Toxic office  --language=en  --verify  --unsafe-to-concat
 ```
 
-Two things about the test matter to an application. The pieces are cut from the text with `hb_buffer_append`, which since 2.9.1 copies the neighbouring characters as pre- and post-context (`hb-buffer.cc:2139`–`2154`). So the promise that is checked is about pieces shaped *with* their context, and an application should supply it too. And all three checks are skipped at cluster levels 2 and 3 (`hb-buffer-verify.cc:65`), so flags made at those levels are never tested, and [one of the ways flags are set at level 3](buffers.html#the-four-cluster-levels) treats it as ordered when it isn’t.
+Two things about the test matter to an application. The pieces are cut from the text with `hb_buffer_append`, which since 2.9.1 copies the neighboring characters as pre- and post-context (`hb-buffer.cc:2139`–`2154`). So the promise that is checked is about pieces shaped *with* their context, and an application should supply it too. And all three checks are skipped at cluster levels 2 and 3 (`hb-buffer-verify.cc:65`), so flags made at those levels are never tested, and [one of the ways flags are set at level 3](buffers.html#the-four-cluster-levels) treats it as ordered when it isn’t.
 
 `--verify` doesn’t fail for the examples in most chapters of this book, but it does for some, and each failure is a break the flags call safe that isn’t. Run over every `shape` example in the book, it fails on three kinds of text. The book’s build stops when `hb-shape` fails, so the failures are shown here by shaping the pieces by hand.
 
@@ -146,7 +146,7 @@ apps.ttf  بب  --show-flags  --unsafe-to-concat  --text-before=ب
 apps.ttf  i  --language=en  --text-before=f
 ```
 
-With a beh before it as context, the first beh of the run takes its medial form. The *i* after an *f* stays an *i*. An application that splits runs only to change colour or underline, within one font, loses ligatures and kerning at every split. Splitting only where the font or the segment properties change, and colouring by cluster afterwards, avoids it, with the caveat that a ligature’s cluster can’t be coloured in part.
+With a beh before it as context, the first beh of the run takes its medial form. The *i* after an *f* stays an *i*. An application that splits runs only to change color or underline, within one font, loses ligatures and kerning at every split. Splitting only where the font or the segment properties change, and coloring by cluster afterward, avoids it, with the caveat that a ligature’s cluster can’t be colored in part.
 
 ## Reshaping after an edit
 

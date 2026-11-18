@@ -1,4 +1,4 @@
-# Positioning glyphs: GPOS
+# GPOS: positioning glyphs
 
 When GPOS starts, the glyphs are settled. GSUB has chosen them, and the positions array has been cleared and filled with each glyph’s advance from the font ([The pipeline, step by step](the-pipeline-step-by-step.html#advances)). GPOS never changes which glyphs there are. It changes four numbers per glyph, the advance and the offset in each direction, and it records which glyph is attached to which, so that the attachments can be worked out once all its lookups have run.
 
@@ -206,7 +206,7 @@ if  (!(c->lookup_props & LookupFlag::RightToLeft))
 }
 ```
 
-`i` is the earlier glyph, in logical order. Without the flag the later glyph is the child, so a chain’s first glyph stays on the baseline and each later one hangs from the one before. With it, the *last* glyph stays on the baseline, as a Nastaliq font wants: an Urdu word ends on the baseline and climbs towards its start. Lookup 3 is lookup 2 with the flag set:
+`i` is the earlier glyph, in logical order. Without the flag the later glyph is the child, so a chain’s first glyph stays on the baseline and each later one hangs from the one before. With it, the *last* glyph stays on the baseline, as a Nastaliq font wants: an Urdu word ends on the baseline and climbs toward its start. Lookup 3 is lookup 2 with the flag set:
 
 ```shape
 gpos.ttf  ببب  --language=ar
@@ -350,7 +350,7 @@ Each link is cleared as it is resolved, so nothing is added twice. In the trace 
 
 ### A limit on the depth
 
-The recursion is bounded by `HB_MAX_NESTING_LEVEL`, 64, and the glyphs are visited in the buffer’s direction: from the start in left-to-right text, from the end in right-to-left (`GPOS.hh:177`). That order came from `kerx`, whose cross-stream kerning links every glyph to its neighbour and was losing a link every 64 glyphs (HarfBuzz issue #5514): visited in order, each parent is resolved before its child, and the recursion stays shallow.
+The recursion is bounded by `HB_MAX_NESTING_LEVEL`, 64, and the glyphs are visited in the buffer’s direction: from the start in left-to-right text, from the end in right-to-left (`GPOS.hh:177`). That order came from `kerx`, whose cross-stream kerning links every glyph to its neighbor and was losing a link every 64 glyphs (HarfBuzz issue #5514): visited in order, each parent is resolved before its child, and the recursion stays shallow.
 
 A cursive chain can point the other way. In left-to-right text with the RightToLeft flag, every glyph’s parent comes after it, so resolving the first glyph recurses down the whole chain, and gives up at depth 64. In right-to-left text it is a chain *without* the flag, the usual kind in Arabic, that does this. Here are 67 `n`s with the flag set:
 

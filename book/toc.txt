@@ -18,8 +18,12 @@ front/preface.md
 front/introduction.md
 front/notation.md
 
-[part] Foundations
+[part] Getting started
 chapters/why-shaping-exists.md
+chapters/building-harfbuzz.md
+chapters/command-line-tools.md
+
+[part] Foundations
 chapters/fonts-as-bytes.md
 chapters/trust-nothing-the-sanitizer.md
 chapters/blobs-faces-and-lazy-tables.md
@@ -65,8 +69,10 @@ chapters/variable-components.md
 
 [part] Drawing
 chapters/drawing-outlines.md
-chapters/colour.md
-chapters/rendering.md
+chapters/color.md
+chapters/hb-raster.md
+chapters/hb-vector.md
+chapters/hb-gpu.md
 
 [part] Writing fonts
 chapters/subsetting.md
@@ -74,10 +80,14 @@ chapters/writing-tables.md
 chapters/instancing.md
 chapters/hb-depend.md
 
-[part] Around HarfBuzz
-chapters/other-tables.md
+[part] Using HarfBuzz
 chapters/for-applications.md
+chapters/integrations.md
+chapters/other-tables.md
+
+[part] HarfBuzz and its relatives
 chapters/testing-harfbuzz.md
+chapters/harfrust.md
 chapters/the-family.md
 
 [appendices]

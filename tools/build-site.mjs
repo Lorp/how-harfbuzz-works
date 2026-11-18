@@ -34,6 +34,12 @@
 //   to: end lookup 0
 //   ```
 //
+//   ```raster                hb-raster's PNG, one image per line, enlarged
+//   zoom: 8                  (optional; default 8). Lines as in `shape`;
+//   hb:test/…/Roboto-Regular.ttf  Hamburgefonts  --font-size=11
+//   hb:test/…/Roboto-Regular.ttf  Hamburgefonts  --font-size=11 --font-funcs=ft --ft-load-flags=0
+//   ```                      --font-funcs=ft uses the FreeType build (build-ft/)
+//
 // The spec-like, TTX and bytes views are read from FONT.views.json beside each
 // font. Those are written by tools/font-views.py (Python, with fontTools) when
 // a chapter's fonts are built, and committed, so this build needs no Python.
@@ -53,6 +59,10 @@ const HB_SHAPE = path.join(HB_BUILD, "build", "util", "hb-shape");
 const HB_SHAPE_MSG = path.join(HB_BUILD, "build-msg", "util", "hb-shape");
 const HB_VECTOR = path.join(HB_BUILD, "build", "util", "hb-vector");
 const HB_INFO = path.join(HB_BUILD, "build", "util", "hb-info");
+const HB_RASTER = path.join(HB_BUILD, "build", "util", "hb-raster");
+// With FreeType, for `raster` blocks that ask for --font-funcs=ft (FreeType's
+// outlines, which it can hint).
+const HB_RASTER_FT = path.join(HB_BUILD, "build-ft", "util", "hb-raster");
 
 // Where a font named in a block is. A plain name is in the chapter's own
 // fonts folder; a name with a folder in it, like variations/var.ttf, is
@@ -65,11 +75,11 @@ function fontPath(name, fonts) {
 }
 
 // Runs one of the HarfBuzz tools, failing the build if it fails.
-function runTool(exe, args) {
+function runTool(exe, args, encoding = "utf8") {
   if (!fs.existsSync(exe)) throw new Error(`${exe} not found: run tools/build-harfbuzz.sh`);
   // A fixed locale: hb-shape takes the default language from it.
   const env = { ...process.env, LC_ALL: "C.UTF-8" };
-  const r = spawnSync(exe, args, { encoding: "utf8", maxBuffer: 64 << 20, env });
+  const r = spawnSync(exe, args, { encoding, maxBuffer: 64 << 20, env });
   if (r.status !== 0) throw new Error(`${path.basename(exe)} ${args.join(" ")} failed:\n${r.stderr}`);
   return r;
 }
@@ -221,6 +231,31 @@ function blockShape(body, fonts) {
   return '<div class="shape"><table><thead><tr><th>Font</th><th>Text</th>' +
          "<th>Options</th><th>hb-shape output</th></tr></thead><tbody>" +
          rows.join("") + "</tbody></table></div>";
+}
+
+// hb-raster's PNG output, one image per line, enlarged so its pixels show.
+// Lines are like a shape block's: font, text and hb-raster options,
+// separated by two or more spaces. A first line `zoom: N` sets the
+// enlargement (default 8). The margin is 2 pixels unless an option sets it.
+function blockRaster(body, fonts) {
+  let lines = body.trim().split("\n");
+  let zoom = 8;
+  if (/^zoom:/.test(lines[0])) zoom = Number(lines.shift().slice(5));
+  const rows = lines.map((line) => {
+    const [font, rawText, ...opts] = line.trim().split(/\s{2,}/);
+    const text = decode(rawText);
+    const args = opts.flatMap((o) => o.split(/\s+/));
+    if (!args.some((a) => a.startsWith("--margin"))) args.push("--margin=2");
+    const exe = args.includes("--font-funcs=ft") ? HB_RASTER_FT : HB_RASTER;
+    const png = runTool(exe, [fontPath(font, fonts), text, "--output-format=png", ...args], "buffer").stdout;
+    const [w, h] = [png.readUInt32BE(16), png.readUInt32BE(20)];
+    const shownFont = font.startsWith("hb:") ? path.basename(font) : font;
+    return `<figure class="raster"><img src="data:image/png;base64,${png.toString("base64")}" ` +
+           `width="${w * zoom}" height="${h * zoom}" alt="${esc(shown(text))}, rendered by hb-raster">` +
+           `<figcaption><code>hb-raster ${esc(shownFont)} ${esc(shown(text))} ${esc(opts.join(" "))}</code>` +
+           ` (${w} × ${h} pixels, shown ${zoom} times larger)</figcaption></figure>`;
+  });
+  return `<div class="rasters">${rows.join("")}</div>`;
 }
 
 function blockTrace(body, fonts) {
@@ -427,7 +462,7 @@ function blockTable(body, fonts) {
 }
 
 const BLOCKS = { views: blockViews, shape: blockShape, trace: blockTrace,
-                 draw: blockDraw, info: blockInfo, table: blockTable };
+                 draw: blockDraw, info: blockInfo, table: blockTable, raster: blockRaster };
 
 // Heading ids, made the way Python-Markdown's toc extension made them, so
 // links to sections keep working: "The mask" → "the-mask".

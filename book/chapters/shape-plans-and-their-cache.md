@@ -128,7 +128,7 @@ gsub/ligatures.ttf  fifi  --language=en  --features=-liga[2:4]
 
 (That they share it can’t be seen from `hb-shape`, which shapes once and exits. A small C program, not part of the book’s build, which asks `hb_shape_plan_create_cached2` for both and compares the pointers, confirms it.) [Buffers](buffers.html#the-mask) shows how `set_masks` compares ranges with clusters.
 
-The value counts even for a feature with a range, because it decides how many bits the feature gets: `hb_bit_storage (max_value)`, at most eight (`hb-ot-map.cc:290`). An alternate substitution reads its alternate’s number from those bits, as [Substituting glyphs: GSUB](gsub.html#the-mask) shows. The comparison is exact, not by the number of bits, so `salt=2` and `salt=3` over the same cluster get separate plans, though each needs two bits:
+The value counts even for a feature with a range, because it decides how many bits the feature gets: `hb_bit_storage (max_value)`, at most eight (`hb-ot-map.cc:290`). An alternate substitution reads its alternate’s number from those bits, as [GSUB: substituting glyphs](gsub.html#the-mask) shows. The comparison is exact, not by the number of bits, so `salt=2` and `salt=3` over the same cluster get separate plans, though each needs two bits:
 
 ```shape
 gsub/ligatures.ttf  aaa  --language=en  --features=salt[1]=2

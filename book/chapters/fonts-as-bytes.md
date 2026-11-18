@@ -112,7 +112,7 @@ The number inside a `NumType` is a plain array of bytes (`HBInt`, `hb-algs.hh:13
 
 There is an unsigned 24-bit type but no signed one. A comment at `hb-open-type.hh:123` explains why: the conversion relies on the compiler to extend the sign, and C++ has no 24-bit type to extend it from.
 
-A few types add behaviour to a plain number. `Tag` converts to a `const char *` pointing at its own four bytes, which are *not* followed by a NUL, so the code prints tags with `"%.4s"`. `Index` (a 16-bit index into a list of scripts, features or languages) and `VarIdx` (a 32-bit index into an item variation store) each have a value that means “none”, `0xFFFF` and `0xFFFFFFFF`, which matters for Null objects below. The fixed-point types (`HBFixed`, `hb-open-type.hh:247`) refuse to convert to an integer, so an `F2DOT14` can’t be used as one by accident.
+A few types add behavior to a plain number. `Tag` converts to a `const char *` pointing at its own four bytes, which are *not* followed by a NUL, so the code prints tags with `"%.4s"`. `Index` (a 16-bit index into a list of scripts, features or languages) and `VarIdx` (a 32-bit index into an item variation store) each have a value that means “none”, `0xFFFF` and `0xFFFFFFFF`, which matters for Null objects below. The fixed-point types (`HBFixed`, `hb-open-type.hh:247`) refuse to convert to an integer, so an `F2DOT14` can’t be used as one by accident.
 
 None of these structs can be made on its own. The array types declare `HB_DELETE_CREATE_COPY_ASSIGN` (`hb-meta.hh:221`), which deletes their default constructor and copying, and so does any struct that holds one. There is no way to make a Coverage table except by pointing at bytes that hold one.
 
@@ -342,7 +342,7 @@ Made to lookup 0, a format 2 subtable, the change switched off one lookup. Made 
 
 ### Crap: Null’s writable twin
 
-`Null (T)` is `const`. Code with a *writable* struct, such as the subsetter, sometimes follows an offset or an index that isn’t there, and needs something writable back. It gets `Crap (T)` (`hb-null.hh:174`–`188`): a second 640-byte pool, into which the Null object’s bytes are copied each time. The name is spelt out in a comment, “Common Region for Access Protection”: writing there only stops a bug from doing damage elsewhere. Nothing correct relies on what is in it, which is why threads can share it without a lock. `CrapOrNull (T)` picks whichever fits the constness, and `hb_nonnull_ptr_t<T>` (`hb-null.hh:205`) is a pointer that reads as `Null (T)` when it is null; `hb_blob_ptr_t`, which holds a loaded table, keeps its blob in one.
+`Null (T)` is `const`. Code with a *writable* struct, such as the subsetter, sometimes follows an offset or an index that isn’t there, and needs something writable back. It gets `Crap (T)` (`hb-null.hh:174`–`188`): a second 640-byte pool, into which the Null object’s bytes are copied each time. The name is spelled out in a comment, “Common Region for Access Protection”: writing there only stops a bug from doing damage elsewhere. Nothing correct relies on what is in it, which is why threads can share it without a lock. `CrapOrNull (T)` picks whichever fits the constness, and `hb_nonnull_ptr_t<T>` (`hb-null.hh:205`) is a pointer that reads as `Null (T)` when it is null; `hb_blob_ptr_t`, which holds a loaded table, keeps its blob in one.
 
 ## Dispatch contexts
 

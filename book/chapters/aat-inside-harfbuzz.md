@@ -369,7 +369,7 @@ hb:test/shape/data/in-house/fonts/882a555639995ed746c7575416acb689ecb9549d.ttf  
 
 ## Clusters and safe breaking
 
-Ligatures merge the clusters of their components, rearrangement those of its whole stretch, and an inserted glyph takes the cluster of the glyph it was inserted at. Deleted glyphs, when they are finally removed, hand their clusters to a neighbour (`hb-buffer.cc:694`).
+Ligatures merge the clusters of their components, rearrangement those of its whole stretch, and an inserted glyph takes the cluster of the glyph it was inserted at. Deleted glyphs, when they are finally removed, hand their clusters to a neighbor (`hb-buffer.cc:694`).
 
 For safe breaking, `morx` is careless in one way and careful in another. Before it runs anything, `mortmorx::apply` marks the whole buffer unsafe to concatenate (`hb-aat-layout-morx-table.hh:1465`). A GSUB font marks only the glyphs a lookup looked at:
 

@@ -1,6 +1,6 @@
 # Hebrew, Thai, Lao and Hangul
 
-Hebrew, Thai, Lao and Korean need no syllable machine and no reordering of letters. A font’s own GSUB and GPOS can do nearly everything their text needs, and HarfBuzz’s shapers for them are small: three files, none of them 500 lines long, licence included. Each exists for a job the font can’t do on its own, either because it has to be done to the characters before they become glyphs, or because it depends on what the font has.
+Hebrew, Thai, Lao and Korean need no syllable machine and no reordering of letters. A font’s own GSUB and GPOS can do nearly everything their text needs, and HarfBuzz’s shapers for them are small: three files, none of them 500 lines long, license included. Each exists for a job the font can’t do on its own, either because it has to be done to the characters before they become glyphs, or because it depends on what the font has.
 
 | Shaper | Scripts | Hooks it fills | Its job |
 |---|---|---|---|
@@ -286,7 +286,7 @@ The two jamo are left alone. The syllables, including the ones composed from jam
 
 ### Tone marks
 
-Middle Korean marked pitch with dots beside the syllable, encoded as U+302E HANGUL SINGLE DOT TONE MARK and U+302F HANGUL DOUBLE DOT TONE MARK. They follow the syllable in the text but are written before it, to its left. The shaper moves a **tone mark** that follows a syllable it has just recognised to the front of it, and merges their clusters, unless the font gives the tone mark zero advance, in which case “we leave it untouched, assuming it’s designed to overstrike” (`:174`). In `hangul.ttf` the single dot has an advance and the double dot doesn’t:
+Middle Korean marked pitch with dots beside the syllable, encoded as U+302E HANGUL SINGLE DOT TONE MARK and U+302F HANGUL DOUBLE DOT TONE MARK. They follow the syllable in the text but are written before it, to its left. The shaper moves a **tone mark** that follows a syllable it has just recognized to the front of it, and merges their clusters, unless the font gives the tone mark zero advance, in which case “we leave it untouched, assuming it’s designed to overstrike” (`:174`). In `hangul.ttf` the single dot has an advance and the double dot doesn’t:
 
 ```shape
 hangul.ttf  가\u302E  --language=ko
@@ -294,9 +294,9 @@ hangul.ttf  ᄒᆞᆫ\u302E  --language=ko
 hangul.ttf  가\u302F  --language=ko
 ```
 
-The double dot stays where it was typed, and since the font has no GPOS, HarfBuzz’s fallback positioner centres it over the syllable, as it does any mark of its class ([Fallbacks](fallbacks.html#what-it-doesnt-take-into-account)).
+The double dot stays where it was typed, and since the font has no GPOS, HarfBuzz’s fallback positioner centers it over the syllable, as it does any mark of its class ([Fallbacks](fallbacks.html#what-it-doesnt-take-into-account)).
 
-A tone mark that doesn’t follow a recognised syllable gets a dotted circle, unless the buffer says not to or the font has none. It is the Hangul shaper’s own way of inserting one, one of four in HarfBuzz ([Dotted circles and broken clusters](dotted-circles-and-broken-clusters.html)). A tone mark with an advance goes before the circle, and a zero-width one after it. Two things about it look like bugs:
+A tone mark that doesn’t follow a recognized syllable gets a dotted circle, unless the buffer says not to or the font has none. It is the Hangul shaper’s own way of inserting one, one of four in HarfBuzz ([Dotted circles and broken clusters](dotted-circles-and-broken-clusters.html)). A tone mark with an advance goes before the circle, and a zero-width one after it. Two things about it look like bugs:
 
 ```shape
 hangul.ttf  \u302E  --language=ko

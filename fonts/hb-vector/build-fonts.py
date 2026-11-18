@@ -1,7 +1,7 @@
-"""Builds modes.ttf, the Rendering chapter's test font.
+"""Builds modes.ttf, the hb-vector chapter’s test font.
 
-It reuses the shapes, palette and helpers of the Colour chapter's builder
-(fonts/colour/build-colour-fonts.py). Each letter is the same pair of
+It reuses the shapes, palette and helpers of the Color chapter's builder
+(fonts/color/build-color-fonts.py). Each letter is the same pair of
 discs, a blue backdrop on the left and a red source on the right, joined
 by a PaintComposite with one compositing mode:
 
@@ -9,11 +9,11 @@ by a PaintComposite with one compositing mode:
     I  SRC_IN       (only the part of the red disc over the blue one)
     O  DEST_OUT     (a blue crescent)
     X  XOR          (both discs, minus their overlap)
-    P  PLUS         (the overlap is the sum of the two colours)
+    P  PLUS         (the overlap is the sum of the two colors)
     S  SCREEN
     D  DIFFERENCE
 
-Each letter also has the Colour chapter's fallback outline, a square with
+Each letter also has the Color chapter's fallback outline, a square with
 one corner cut off.
 """
 
@@ -23,9 +23,9 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 spec = importlib.util.spec_from_file_location(
-    "colour", os.path.join(HERE, "..", "colour", "build-colour-fonts.py"))
-colour = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(colour)
+    "color", os.path.join(HERE, "..", "color", "build-color-fonts.py"))
+color = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(color)
 
 from fontTools.colorLib.builder import buildCOLR, buildCPAL  # noqa: E402
 
@@ -42,13 +42,13 @@ MODES = {
 
 def modes(out):
     base = list(MODES)
-    fb = colour.make_font(base, ["discL", "discR"], "Rendering Test Modes")
+    fb = color.make_font(base, ["discL", "discR"], "hb-vector Test Modes")
     font = fb.font
-    paints = {g: colour.composite(m) for g, m in MODES.items()}
+    paints = {g: color.composite(m) for g, m in MODES.items()}
     clips = {g: (100, 0, 900, 800) for g in base}
     font["COLR"] = buildCOLR(paints, version=1, glyphMap=font.getReverseGlyphMap(),
                              clipBoxes=clips)
-    font["CPAL"] = buildCPAL([colour.V1_PALETTE])
+    font["CPAL"] = buildCPAL([color.V1_PALETTE])
     font.save(out)
 
 

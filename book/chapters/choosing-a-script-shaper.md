@@ -20,7 +20,7 @@ HarfBuzz’s scripts are ISO 15924 codes (`Deva`, `Arab`), as [Why shaping exist
 
 The nine Indic scripts have three generations of tag. The old tags, such as `deva`, go with the shaping model of the first OpenType Indic specifications, and the `2` tags with a later model that changed the order of glyphs some lookups see (more on that below). A `3` tag isn’t a third Indic model: as `NEWS` for 2.0.0 says, “Indic3 tags (‘dev3’, etc) are passed to USE shaper.” Myanmar has no `mym3` (`:166`). The old tags are made by lowercasing, with a switch for the exceptions (`hb_ot_old_tag_from_script`, `:37`). Text with no script of its own, such as digits alone, has the script `HB_SCRIPT_INVALID`, which gets no tags. At most three tags are kept (`HB_OT_MAX_TAGS_PER_SCRIPT`, `hb-ot-layout.h:99`).
 
-`hb-shape --script` takes an ISO 15924 code. `hb_script_from_iso15924_tag` (`hb-common.cc:445`) fixes its case, so `--script=deva` is Devanagari, but `--script=dev2` is no code at all and becomes `HB_SCRIPT_UNKNOWN`.
+`hb-shape --script` takes an ISO 15924 code ([The command-line tools](command-line-tools.html#direction-script-and-language)). `hb_script_from_iso15924_tag` (`hb-common.cc:445`) fixes its case, so `--script=deva` is Devanagari, but `--script=dev2` is no code at all and becomes `HB_SCRIPT_UNKNOWN`.
 
 ## From a language to language system tags
 
@@ -50,7 +50,7 @@ indic-dev2.ttf  र  --language=xyz
 
 ## Naming the tags directly
 
-An application that knows exactly which tags it wants can say so with two **private-use subtags** in the language (`parse_private_use_subtag`, `hb-ot-tag.cc:444`). After an `x-` singleton, `-hbsc` followed by a tag forces the script tag, and `-hbot` followed by a tag forces the language system tag. `hi-x-hbscdev2` is Hindi with the script tag `dev2`. `x-hbotMAR` is the language system `MAR`. A tag that can’t be spelt in letters and digits can be given in hex: `-hbsc-64657632` is `dev2` too.
+An application that knows exactly which tags it wants can say so with two **private-use subtags** in the language (`parse_private_use_subtag`, `hb-ot-tag.cc:444`). After an `x-` singleton, `-hbsc` followed by a tag forces the script tag, and `-hbot` followed by a tag forces the language system tag. `hi-x-hbscdev2` is Hindi with the script tag `dev2`. `x-hbotMAR` is the language system `MAR`. A tag that can’t be spelled in letters and digits can be given in hex: `-hbsc-64657632` is `dev2` too.
 
 A forced tag replaces the whole list, so only that tag is tried (and then the fallbacks of the next section). The case is normalized: script tags to lower case, language tags to upper case. That would turn the two default tags into each other’s spelling, so there is one exception: `-hbscdflt` gives `DFLT`, and `-hbotdflt` gives `dflt` (`:483`).
 
@@ -283,7 +283,7 @@ hebrew-hebr.ttf  אִ  --language=he
 hebrew-DFLT.ttf  אִ  --language=he
 ```
 
-Under `DFLT` the anchor is ignored, and fallback mark positioning centres the hiriq. Under `hebr` GPOS runs, though its trace line names GSUB’s chosen script, which here is none:
+Under `DFLT` the anchor is ignored, and fallback mark positioning centers the hiriq. Under `hebr` GPOS runs, though its trace line names GSUB’s chosen script, which here is none:
 
 ```trace
 font: hebrew-hebr.ttf

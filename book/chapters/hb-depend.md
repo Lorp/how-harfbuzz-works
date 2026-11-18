@@ -1,8 +1,8 @@
-# hb-depend
+# hb-depend: the glyph dependency graph
 
 When HarfBuzz subsets a font, it works out which glyphs the subset must keep: the glyphs the requested characters map to, and everything those glyphs can turn into or are built from. [Subsetting](subsetting.html) describes that glyph closure. It is computed for one request, from one set of characters, and thrown away when the subset is written.
 
-**hb-depend** computes the relationships themselves, once, as a graph. Each node is a glyph. Each edge says that one glyph can lead to another: through a substitution, as a component, as a colour layer, or as a mathematical variant. With the graph in hand, a program can compute a closure for any set of characters by walking it, without running the subsetter at all. The API arrived in HarfBuzz 14.3.0 and is still experimental: it is compiled only when HarfBuzz is built with `-Dexperimental_api=true`.
+**hb-depend** computes the relationships themselves, once, as a graph. Each node is a glyph. Each edge says that one glyph can lead to another: through a substitution, as a component, as a color layer, or as a mathematical variant. With the graph in hand, a program can compute a closure for any set of characters by walking it, without running the subsetter at all. The API arrived in HarfBuzz 14.3.0 and is still experimental: it is compiled only when HarfBuzz is built with `-Dexperimental_api=true`.
 
 This chapter covers what the graph holds, how HarfBuzz builds it, how a closure is computed from it, and where that closure differs from the subsetter’s. The book’s own HarfBuzz build doesn’t enable experimental APIs, so nothing on this page is a live block except one shaping result. The graph and closures shown were produced by a small program, `fonts/hb-depend/depend-graph.cc`, compiled against the same HarfBuzz {{hb}} source with the API switched on.
 
@@ -45,7 +45,7 @@ The edge runs from the glyph asked about to `dependent`. What “leads to” mea
 | `GSUB` | a glyph a lookup can act on → a glyph it can produce | `OT/Layout/GSUB/*.hh`, `hb-ot-layout-gsubgpos.hh` |
 | `glyf` (or `GLYF`) | a composite glyph → each of its components | `OT/glyf/glyf.hh:273` |
 | `CFF ` | a glyph drawn with the `seac` operator → its base and accent | `hb-ot-cff1-table.hh:1566` |
-| `COLR` | a colour glyph → each v0 layer glyph, each glyph a v1 `PaintGlyph` fills, and each glyph a `PaintColrGlyph` reuses | `OT/Color/COLR/COLR.hh:2698`, `colrv1-depend.hh` |
+| `COLR` | a color glyph → each v0 layer glyph, each glyph a v1 `PaintGlyph` fills, and each glyph a `PaintColrGlyph` reuses | `OT/Color/COLR/COLR.hh:2698`, `colrv1-depend.hh` |
 | `MATH` | a glyph → its size variants and the parts of its assembly | `hb-ot-math-table.hh:1216` |
 | `VARC` | a glyph → each of its variable components | `OT/Var/VARC/VARC.cc:194` |
 
@@ -202,7 +202,7 @@ The two agree on every text. For “xe”, `x` brings `f` and `i`, and with both
 
 ## Where the graph is approximate
 
-Two kinds of edge can’t be modelled exactly by a graph built once from the font’s structure, and HarfBuzz flags them so that a program comparing its closure with the subsetter’s can tell an expected difference from a bug (`hb-subset-depend.h`, `hb-ot-layout-gsubgpos.hh:2641`):
+Two kinds of edge can’t be modeled exactly by a graph built once from the font’s structure, and HarfBuzz flags them so that a program comparing its closure with the subsetter’s can tell an expected difference from a bug (`hb-subset-depend.h`, `hb-ot-layout-gsubgpos.hh:2641`):
 
 * **`FROM_CONTEXT_POSITION`.** The edge comes from a contextual rule with more than one input position. The graph assumes each position can hold anything its coverage allows. In shaping, an earlier lookup in the rule may already have changed the glyph there.
 * **`FROM_NESTED_CONTEXT`.** The edge comes from a contextual rule called from inside another contextual rule. It carries the inner rule’s context, but the outer rule’s is lost.
@@ -228,7 +228,7 @@ The last two rows are where differences could appear. The subsetter runs its MAT
 
 ## Status and limits
 
-The API is experimental. `hb-config.hh:38` defines `HB_NO_SUBSET_DEPEND` unless `HB_EXPERIMENTAL_API` is defined, and the meson option `experimental_api` (off by default) defines it. Only the public functions are guarded: the `depend()` methods are compiled into `libharfbuzz-subset` either way, and the book’s build has them, but not the functions that call them. The command-line `hb-subset-depend` utility (`util/hb-subset-depend.cc`) is built only with the same option. The documentation warns that the API “may change significantly in future releases”. In 14.4.0, NEWS records only “faster extraction of the experimental glyph dependency graph”. The code’s copyright line is Adobe’s, 2024, with Skef Iterum as author.
+The API is experimental. `hb-config.hh:38` defines `HB_NO_SUBSET_DEPEND` unless `HB_EXPERIMENTAL_API` is defined, and the Meson option `experimental_api` (off by default; [Building HarfBuzz](building-harfbuzz.html#a-build-for-development)) defines it. Only the public functions are guarded: the `depend()` methods are compiled into `libharfbuzz-subset` either way, and the book’s build has them, but not the functions that call them. The command-line `hb-subset-depend` utility (`util/hb-subset-depend.cc`) is built only with the same option. The documentation warns that the API “may change significantly in future releases”. In 14.4.0, NEWS records only “faster extraction of the experimental glyph dependency graph”. The code’s copyright line is Adobe’s, 2024, with Skef Iterum as author.
 
 What the graph leaves out:
 

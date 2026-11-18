@@ -1,10 +1,14 @@
 # Draft bug reports for HarfBuzz
 
-Sixty-five possible bugs found while writing the book, drafted for the HarfBuzz issue tracker. None has been filed. Each was reproduced on HarfBuzz 15.1.0 (commit `3df40d9b`), built by `tools/build-harfbuzz.sh` (meson, with FreeType, ICU and cairo off), on macOS. Repros use `test/subset/data/fonts/Roboto-Regular.ttf` from HarfBuzz’s own repository where they can, so they need nothing from this book.
+Eighty-one possible bugs found while writing the book, drafted for the HarfBuzz issue tracker. None has been filed. Each report carries a tag naming the batch it was sent in, to go with it when it’s filed: 1–65 are `hhw-20261117`, the batch shown to Behdad Esfahbod on 17 November 2026. 66–81, found later, have no tag yet. Each was reproduced on HarfBuzz 15.1.0 (commit `3df40d9b`), built by `tools/build-harfbuzz.sh` (meson, with FreeType, ICU and cairo off), on macOS. Repros use `test/subset/data/fonts/Roboto-Regular.ttf` from HarfBuzz’s own repository where they can, so they need nothing from this book.
+
+Since 17 November many of them have been fixed on HarfBuzz’s `main` branch, and others have open pull requests. On 18 November 2026 every report was rechecked against `main` at commit `454f9c49c` (17 November 2026), built with the same options, by rerunning its repro or, for those read from the code, reading the code again. Each report ends with the result, under **On main.**: fixed (with the commit and pull request), changed, in progress (with the open pull request and its branch), or still present.
 
 ---
 
 ## 1. A null or unknown-format Coverage in SingleSubst/SinglePos format 1 makes the sanitizer reject the whole GSUB/GPOS
+
+**Tag:** `hhw-20261117`
 
 **Summary.** `Coverage::get_population ()` returns `NOT_COVERED` (`0xFFFFFFFF`) for a format it doesn’t know (`src/OT/Layout/Common/Coverage.hh:138`), and so for the Null Coverage, whose format is 0. `SingleSubstFormat1_3::sanitize` passes half the population to `check_ops` (`src/OT/Layout/GSUB/SingleSubstFormat1.hh:125`), and so does `SinglePosFormat1::sanitize` (`src/OT/Layout/GPOS/SinglePosFormat1.hh:39`). With a null coverage offset, or a coverage of unknown format, that charges about 2 billion ops, `max_ops` runs out, and the whole table fails to sanitize.
 
@@ -62,9 +66,13 @@ $ hb-shape null-coverage-f1.ttf acx
 
 Real fonts are unlikely to have null coverage offsets, so the impact is small. But a coverage format from a future OpenType version would have the same effect, which seems contrary to the sanitizer’s policy of letting unknown formats pass.
 
+**On main.** Fixed on 17 November 2026 by `6426ee4ca` (pull request #6696), which makes `get_population ()` return 0 for an unknown format. `null-coverage-f1.ttf` now gives `[b=0+500|a=1+500|x=2+500]`.
+
 ---
 
 ## 2. The “start/end table GPOS” trace messages print GSUB’s chosen script
+
+**Tag:** `hhw-20261117`
 
 **Summary.** `hb_ot_map_t::position` (`src/hb-ot-layout.cc:2149`) formats its trace messages with `chosen_script[0]`, the script chosen for GSUB. GPOS’s is `chosen_script[1]` (`hb-ot-map.cc:80` fills them per table index). The code looks copied from `hb_ot_map_t::substitute` just above it.
 
@@ -84,9 +92,13 @@ trace: end table GPOS script tag ''     buffer: [gid37=0+1249|gid58=1+1303]
 
 **Possible fix.** `hb_tag_to_string (chosen_script[1], tag);` in `hb_ot_map_t::position`. Only the debug messages are affected.
 
+**On main.** Fixed on 17 November 2026 by `24795efd3` (#6686). The GPOS lines of the trace now say `script tag 'latn'`.
+
 ---
 
 ## 3. A synthetic font reports extents `<0,-1,-1,1>` for an empty glyph
+
+**Tag:** `hhw-20261117`
 
 **Summary.** With any synthetic setting (bold, grade or slant), `hb_font_t::get_glyph_extents` measures the glyph by painting or drawing it (`src/hb-font.hh:586`–`630`). For a glyph with no outline, such as space, nothing is drawn, so the `hb_extents_t` stays in its initial, *void* state: `xmin = 0, ymin = 0, xmax = -1, ymax = -1` (`src/hb-geometry.hh:121`–`124`). `draw_glyph_or_fail` still succeeds, and `hb_extents_t::to_glyph_extents` (`hb-geometry.hh:100`) converts the void box as if it were real, giving x_bearing 0, y_bearing −1, width −1 and height 1.
 
@@ -114,9 +126,13 @@ if (unlikely (is_void ()))
 
 or check `is_void ()` in the two callers in `get_glyph_extents` (`hb-font.hh:617`, `:627`). The COLR caller (`OT/Color/COLR/COLR.hh:3168`) may want the same. `src/test-geometry.cc` would be the place for a test.
 
+**On main.** Fixed on 17 November 2026 by `46ab0d095` (#6685), which returns zero extents for a void box. With `--font-bold=0.02` or `--font-slant=0.2` the space now has `<0,0,0,0>`.
+
 ---
 
 ## 4. Scaled glyph extents are rounded inwards vertically
+
+**Tag:** `hhw-20261117`
 
 **Summary.** `hb_font_t::scale_glyph_extents` (`src/hb-font.hh:201`) takes the floor of `x1` and `y1` and the ceiling of `x2` and `y2`. Across, `x1` is the left edge and `x2` the right, so the box grows outwards. Up and down it’s the other way round: `y1` is `y_bearing`, the *top* edge, and `y2 = y1 + height` (height being negative) is the bottom. Taking the floor of the top moves it down, and the ceiling of the bottom moves it up, so the box shrinks vertically. NEWS for 14.2.1 says extents are now scaled “so the reported box always covers the glyph”. It does across, but not up and down.
 
@@ -133,7 +149,7 @@ Scaled exactly, the ink runs from y = 6.995 (1102 × 13/2048) down to y = −2.6
 
 **Expected.** y_bearing 7, height −10 (top 7, bottom −3).
 
-**Possible fix.** Round each edge away from the box’s centre, whichever way the axes point. For example, round `hb_min (y1, y2)` down and `hb_max (y1, y2)` up, then put them back as top and bottom, and the same for x, which would also keep it right for negative scales. A sketch, not tested:
+**Possible fix.** Round each edge away from the box’s center, whichever way the axes point. For example, round `hb_min (y1, y2)` down and `hb_max (y1, y2)` up, then put them back as top and bottom, and the same for x, which would also keep it right for negative scales. A sketch, not tested:
 
 ```c++
 float xlo = floorf (hb_min (x1, x2)), xhi = ceilf (hb_max (x1, x2));
@@ -146,9 +162,13 @@ extents->height    = hb_clamp_to<hb_position_t> (y1 >= y2 ? (double) ylo - yhi :
 
 Expected outputs in `test/shape/` and `test/api/` that print scaled extents would change.
 
+**On main.** Fixed on 17 November 2026 by `f5e925cd2` (#6707). `p` at a scale of 13 is now `<0,7,7,-10>`.
+
 ---
 
 ## 5. Glyph-flag ranges treat cluster level 3 (GRAPHEMES) as monotone
+
+**Tag:** `hhw-20261117`
 
 *Found by reading the code; not yet reproduced in shaping output.*
 
@@ -170,9 +190,13 @@ if (!HB_BUFFER_CLUSTER_LEVEL_IS_MONOTONE (cluster_level) || …)
 
 **Before filing.** Try to construct a level-3 example whose flags differ from level 2’s in a way the scan would correct, for instance an Indic syllable whose reordering leaves its smallest cluster in the middle of a flagged range, and include it.
 
+**On main.** Fixed on 17 November 2026 by `7f0fe3561` (#6706): both functions now test `HB_BUFFER_CLUSTER_LEVEL_IS_MONOTONE` (`hb-buffer.hh:677`, `:707` on `main`). Checked in the code; there was no example to rerun.
+
 ---
 
 ## 6. Small slips in `hb-shape-plan.cc`
+
+**Tag:** `hhw-20261117`
 
 *Found by reading the code. None changes shaping results today.* Three separate one-line issues, which could go in one report.
 
@@ -182,9 +206,13 @@ if (!HB_BUFFER_CLUSTER_LEVEL_IS_MONOTONE (cluster_level) || …)
 
 **Possible fixes.** `features[i]` in the loop; move the `!props` test above the direction test; give `create_cached2` the same null-face handling as `create2`.
 
+**On main.** All three fixed on 17 November 2026: `caf12a809` (#6693) indexes `features[i]`, and `93d26d851` (#6698) tests `props` before using it and gives `create_cached2` the empty face for a null one. Checked in the code.
+
 ---
 
 ## 7. FeatureVariations minor version 1 means different things to HarfBuzz and to the ISO draft
+
+**Tag:** `hhw-20261117`
 
 *A question about the standard as much as a bug. Raise it as a discussion before filing as a bug.*
 
@@ -198,9 +226,13 @@ A FeatureVariations table that fails to sanitize makes the whole GSUB (or GPOS) 
 
 **Before raising it.** Check the current state of the ISO draft and of HarfBuzz’s “beyond 64k” / lookup-variations proposal, which may already have been reconciled, and quote the draft’s exact wording.
 
+**On main.** Still present. The FeatureVariations code is unchanged, and `varliga-minor1.ttf` (the book’s font with minorVersion 1) still loses its GSUB: `I` at weight 800 stays `I`, where `varliga.ttf` gives `V`.
+
 ---
 
 ## 8. A ranged request followed by a global one for the same feature clears the global bit
+
+**Tag:** `hhw-20261117`
 
 **Summary.** When the same tag is requested twice, `hb_ot_map_builder_t::compile` merges the requests (`src/hb-ot-map.cc:238`), and a later global request makes the feature global. With value 1 it then shares the global bit (bit 31). But the earlier ranged request is still in the user features passed to the run, and `hb_ot_shape_setup_masks` (`src/hb-ot-shape.cc:760`) applies its range with the feature’s mask, which is now the global bit. The range clears bit 31 on those clusters, which turns off *every* global feature there, not just the one named.
 
@@ -221,9 +253,13 @@ $ hb-shape ligatures.ttf ' eee' --language=en --features=liga,-liga[2:3]
 
 **Possible fix.** In `hb_ot_shape_setup_masks`, skip a ranged feature whose mask is the global mask, or have the merge record that a later global request superseded earlier ranged ones so `setup_masks` can ignore them.
 
+**On main.** Fixed on 17 November 2026 by `5d9dfde25` (#6704). `--features=-liga[2:3],liga` now gives `e.init` on all three `e`s.
+
 ---
 
 ## 9. Mask bit 30 is never handed out
+
+**Tag:** `hhw-20261117`
 
 **Summary.** `compile` gives a feature bits only if `next_bit + bits_needed >= global_bit_shift` is false (`src/hb-ot-map.cc:292`). With `global_bit_shift` 31, a one-bit feature starting at bit 30 fails the test, so the usable bits are 4–29: 26, not the 27 between the glyph flags and the global bit. Off by one.
 
@@ -231,9 +267,13 @@ $ hb-shape ligatures.ttf ' eee' --language=en --features=liga,-liga[2:3]
 
 **Possible fix.** `>` for `>=`. Low impact, but features dropped for lack of bits are dropped silently, so each bit counts.
 
+**On main.** Fixed on 17 November 2026 by `ec9476415` (#6697). All 27 ranged features of `bits.ttf` now apply: the last glyph is `zero.alt`.
+
 ---
 
 ## 10. In `COMPOSED_DIACRITICS_NO_SHORT_CIRCUIT` mode, text without marks is decomposed but never recomposed
+
+**Tag:** `hhw-20261117`
 
 **Summary.** The Indic, Khmer, Myanmar and USE shapers normalize in `HB_OT_SHAPE_NORMALIZATION_MODE_COMPOSED_DIACRITICS_NO_SHORT_CIRCUIT`, documented as “Always fully decomposes and then recompose back” (`src/hb-ot-shape-normalize.hh:43`). Round 1 does fully decompose every character in this mode. But rounds 2 and 3 are skipped when `all_simple` is true, that is, when the input had no marks (`src/hb-ot-shape-normalize.cc:324`, `:356`, `:374`, `:422`). So whether a character is recomposed depends on whether *some other* character in the buffer is a mark.
 
@@ -254,9 +294,13 @@ $ hb-shape norm.ttf $'\u00E9a\u0301' --script=deva
 
 **Possible fix.** In this mode, don’t let `all_simple` skip round 3 when round 1 decomposed anything (or track “decomposed something” separately from “had marks”).
 
+**On main.** Fixed on 17 November 2026 by `bc7dff9a5` (#6705). U+0929 alone now gives `[nnna=0+600]`, and é under `--script=deva` gives `[eacute=0+500]`.
+
 ---
 
 ## 11. The not-found glyph is ignored in variation-selector clusters
+
+**Tag:** `hhw-20261117`
 
 **Summary.** `handle_variation_selector_cluster` maps the base with `set_glyph` (`src/hb-ot-shape-normalize.cc:79`), which calls `get_nominal_glyph` without falling back to `buffer->not_found`. Everywhere else, a character the font lacks gets the not-found glyph set with `hb_buffer_set_not_found_glyph`; here it gets glyph 0.
 
@@ -273,9 +317,13 @@ $ hb-shape norm.ttf $'x\uFE00' --not-found-glyph=27
 
 **Possible fix.** Fall back to `buffer->not_found` in `set_glyph`’s callers in the variation-selector path, as `decompose_current_character` does.
 
+**On main.** Fixed on 17 November 2026 by `97d879446` (#6699): the second run now gives `[missing=0+500|space=0+0]`. An open pull request, #6719 (`codex/upstream-report-11-restore-backends`), only restores a test.
+
 ---
 
 ## 12. Mark-to-base and mark-to-ligature pass over a base that lacks the lookup’s mask bit
+
+**Tag:** `hhw-20261117`
 
 **Summary.** When a mark-to-base or mark-to-ligature lookup looks back for the mark’s base, it treats a glyph without the lookup’s mask bit as if it were something to skip (`src/OT/Layout/GPOS/MarkBasePosFormat1.hh:113`–`127`, `MarkLigPosFormat1.hh:102`–`116`). So turning `mark` off on a base doesn’t stop marks attaching to it: it makes them attach to an *earlier* base instead.
 
@@ -292,9 +340,13 @@ $ hb-shape gpos.ttf $'ae\u0301' --cluster-level=1 --features='mark[1:2]=0'
 
 **Possible fix.** In the base search, stop at (rather than skip) a non-mark glyph that lacks the mask bit, and decline to attach.
 
+**On main.** In progress: pull request #6736 (branch `codex/upstream-report-12`, “Stop mark base searches at non-matching glyphs”), not merged. On `main` the acute still moves to −750.
+
 ---
 
 ## 13. The nesting limit still breaks long cursive chains that run against the buffer’s direction
+
+**Tag:** `hhw-20261117`
 
 **Summary.** `propagate_attachment_offsets` resolves attachment chains with a depth limit of `HB_MAX_NESTING_LEVEL`, 64 (`src/OT/Layout/GPOS/GPOS.hh:93`). Issue #5514 changed the loop order (`:177`) so that chains in the buffer’s direction resolve in one pass, but chains that run against it still recurse, and past 64 links the offsets stop accumulating. That covers LTR text with the RightToLeft lookup flag, and RTL text without it, which is the usual case for Arabic cursive joining.
 
@@ -308,9 +360,13 @@ The offsets step by 100 until glyph 65, where two consecutive glyphs have the sa
 
 **Expected.** Chains of any length resolve correctly, or a limit high enough that real text never reaches it. Long cursive chains do occur in Arabic, Nastaliq especially.
 
+**On main.** Still present. The output is unchanged: glyphs 64 and 65 are both at −100.
+
 ---
 
 ## 14. With `HB_NO_HINTING`, y Device tables fall through to the variation branch
+
+**Tag:** `hhw-20261117`
 
 *Found by reading the code; not testable in the book’s build.*
 
@@ -318,9 +374,13 @@ The offsets step by 100 until glyph 65, where two consecutive glyphs have the sa
 
 **Possible fix.** Move the case labels inside the `#ifndef HB_NO_HINTING` block, as in `get_x_delta`.
 
+**On main.** Fixed on 17 November 2026 by `489157f82` (#6694). Checked in the code.
+
 ---
 
 ## 15. A cross-stream `kern` value of 0x8000 isn’t treated as a reset
+
+**Tag:** `hhw-20261117`
 
 **Summary.** The `kern` specification says “The value 0x8000 in the kerning data resets the cross-stream kerning back to 0.” Only the format 1 state machine checks for it (`src/hb-aat-layout-kerx-table.hh:360`). The kern machine, which runs formats 0, 2 and 3 (`src/hb-kern.hh`), takes 0x8000 as −32,768.
 
@@ -333,11 +393,15 @@ $ hb-shape cross.ttf AVTo --language=en
 
 **Expected.** The `o` back on the line (y offset 0).
 
+**On main.** In progress: pull request #6732 (branch `codex/upstream-report-15`, “Honor cross-stream pair reset values”), not merged. On `main` the `o` is still at −32,668.
+
 ---
 
 ## 16. Fallback mark positioning ignores the base’s x offset
 
-**Summary.** The fallback positioner (`src/hb-ot-shape-fallback.cc`) builds the base’s box from its advance and ink and adds the base’s y offset, but not its x offset. After kerning that splits a value between two glyphs (the `kern` table, or fallback kerning), the second glyph has an x offset, and a mark on it is placed off-centre by that amount.
+**Tag:** `hhw-20261117`
+
+**Summary.** The fallback positioner (`src/hb-ot-shape-fallback.cc`) builds the base’s box from its advance and ink and adds the base’s y offset, but not its x offset. After kerning that splits a value between two glyphs (the `kern` table, or fallback kerning), the second glyph has an x offset, and a mark on it is placed off-center by that amount.
 
 **Repro.** `kern-table.ttf` (no GPOS, a `kern` table with o o −50) against `fallback.ttf` (the same without `kern`):
 
@@ -348,13 +412,17 @@ $ hb-shape kern-table.ttf $'o\u00F3' --language=en
 [o=0+450|o=1@-50,0+450|acutecomb=1@25,12+0]
 ```
 
-**Expected.** The acute centred over the kerned `o`, as it is over the unkerned one.
+**Expected.** The acute centered over the kerned `o`, as it is over the unkerned one.
+
+**On main.** Fixed on 17 November 2026 by `641971dd1` (#6701). Over the kerned `o` the acute is now at −25, as over the unkerned one.
 
 ---
 
-## 17. Fallback positioning centres LEFT and RIGHT marks, contrary to its comment
+## 17. Fallback positioning centers LEFT and RIGHT marks, contrary to its comment
 
-**Summary.** `position_mark` in `src/hb-ot-shape-fallback.cc` says “We don’t position LEFT and RIGHT marks” (`:228`), but the switch has no cases for `HB_UNICODE_COMBINING_CLASS_LEFT` (224) and `RIGHT` (226), so they fall into `default` and are centred on the base, and lose their advance like every placed mark.
+**Tag:** `hhw-20261117`
+
+**Summary.** `position_mark` in `src/hb-ot-shape-fallback.cc` says “We don’t position LEFT and RIGHT marks” (`:228`), but the switch has no cases for `HB_UNICODE_COMBINING_CLASS_LEFT` (224) and `RIGHT` (226), so they fall into `default` and are centered on the base, and lose their advance like every placed mark.
 
 **Repro.** U+1D16D MUSICAL SYMBOL COMBINING AUGMENTATION DOT (class 226) after `o`, in a font without GPOS:
 
@@ -365,9 +433,13 @@ $ hb-shape fallback.ttf $'o\U0001D16D' --language=en
 
 **Expected.** Either leave such marks where they are (as the comment says), or place them to the left or right of the base.
 
+**On main.** In progress, as documentation: pull request #6742 (branch `codex/upstream-report-17-fallback-docs`) rewrites the comment as “Classes without dedicated placement are centered horizontally”, keeping the centering, which it says commit `e1ba62811a` added on purpose. Not merged; `main` is unchanged.
+
 ---
 
 ## 18. Vertical `kern` subtables can never apply
+
+**Tag:** `hhw-20261117`
 
 **Summary.** In vertical text the plan’s kerning mask is `vkrn`’s (`src/hb-ot-shape.cc:127`). `vkrn` isn’t on by default, and unlike `kern` it has no `F_HAS_FALLBACK`, so when GPOS lacks it the feature isn’t kept and its mask is 0. Subtables of the `kern` table marked for vertical text therefore never run, even with `--features=vkrn`.
 
@@ -375,9 +447,13 @@ $ hb-shape fallback.ttf $'o\U0001D16D' --language=en
 
 **Possible fix.** Give `vkrn` `F_HAS_FALLBACK` when it is requested, or consult the vertical `kern` subtables under `vert`’s default kerning, whichever matches the intended policy.
 
+**On main.** In progress: pull request #6734 (branch `codex/upstream-report-18`, “Keep fallback masks for requested vertical kerning”), not merged. The code on `main` is unchanged (not rerun: the book has no font for it).
+
 ---
 
 ## 19. The Hangul shaper’s dotted circle copies the tone mark’s properties
+
+**Tag:** `hhw-20261117`
 
 **Summary.** For a tone mark that doesn’t follow a syllable, `preprocess_text_hangul` inserts a dotted circle with `replace_glyphs` (`src/hb-ot-shaper-hangul.cc:245`), which copies the tone mark’s buffer entry, Unicode properties included. The circle is then a spacing mark (Mc, class 224), so after a base the fallback positioner zeroes its advance and places it over the base. The generic dotted circle gets U+25CC’s own properties (`src/hb-ot-shape.cc:567`).
 
@@ -390,11 +466,15 @@ $ hb-shape hangul.ttf $'\u1100\u302E'
 
 **Expected.** The dotted circle as a base with its own advance, carrying the tone mark.
 
+**On main.** Fixed on 17 November 2026 by `2831a8a45` (#6711). The circle now keeps its own advance: `[kiyeok=0+500|singledot=0@-350,0+0|dottedcircle=0+500]`.
+
 ---
 
 ## 20. Two dotted circles before a Hangul tone mark at the start of text
 
-**Summary.** With `HB_BUFFER_FLAG_BOT`, the generic dotted circle is inserted before a leading mark (`src/hb-ot-shape.cc:567`). The Hangul shaper doesn’t recognise that circle as a syllable, so it inserts a second one.
+**Tag:** `hhw-20261117`
+
+**Summary.** With `HB_BUFFER_FLAG_BOT`, the generic dotted circle is inserted before a leading mark (`src/hb-ot-shape.cc:567`). The Hangul shaper doesn’t recognize that circle as a syllable, so it inserts a second one.
 
 **Repro.**
 
@@ -405,9 +485,13 @@ $ hb-shape hangul.ttf $'\u302E' --bot
 
 **Expected.** One dotted circle.
 
+**On main.** Fixed on 17 November 2026 by `59fa8f0c2` (#6712), which accepts a dotted circle as the tone mark’s base. There is now one circle: `[singledot=0+200|dottedcircle=0+500]`, the spacing tone mark moved before its base as the Hangul shaper does with any spacing tone mark.
+
 ---
 
 ## 21. Hebrew: `has_gpos_mark` and `gpos_tag` disagree about a `mark` feature under `DFLT`
+
+**Tag:** `hhw-20261117`
 
 **Summary.** The Hebrew shaper composes presentation forms only when the plan has no `mark` feature (`has_gpos_mark`, `src/hb-ot-shape.cc:196`; `hb-ot-shaper-hebrew.cc:81`). Its `gpos_tag` makes GPOS apply only when GPOS chose `hebr`. In a font whose `mark` feature is under `DFLT` only, `has_gpos_mark` is true, so presentation forms aren’t composed, but GPOS is ignored because of `gpos_tag`. The points fall to fallback positioning though the font has presentation-form glyphs that would serve better.
 
@@ -415,9 +499,13 @@ $ hb-shape hangul.ttf $'\u302E' --bot
 
 **Possible fix.** Compute `has_gpos_mark` from the GPOS the plan will actually apply (after the `gpos_tag` test).
 
+**On main.** In progress: pull request #6738 (branch `codex/upstream-report-21`, “Ignore unused GPOS mark features for fallback”), not merged. On `main`, `hebrew-mark-DFLT.ttf` still gives three glyphs placed by the fallback positioner.
+
 ---
 
 ## 22. Indic `init` ignores pre-context
+
+**Tag:** `hhw-20261117`
 
 **Summary.** The Indic shaper applies `init` to a pre-base matra at the start of a word, testing for a word start only inside the buffer (`src/hb-ot-shaper-indic.cc:1431`). With the previous consonant supplied as pre-context, the syllable still gets the word-initial form.
 
@@ -434,9 +522,13 @@ $ hb-shape full.ttf $'\u0915\u0915\u093F'
 
 **Expected.** With a letter before it in the pre-context, the matra isn’t word-initial, as when the text is shaped whole.
 
+**On main.** Fixed on 17 November 2026 by `5795f8699` (#6713). With KA as pre-context the matra is now `iMatra`.
+
 ---
 
 ## 23. Syllables longer than 64 glyphs are cut into pieces
+
+**Tag:** `hhw-20261117`
 
 *Seen by the book’s writer; not yet in the book.*
 
@@ -444,9 +536,13 @@ $ hb-shape full.ttf $'\u0915\u0915\u093F'
 
 **Before filing.** Reproduce with a real Devanagari font and confirm the cut is the cause; a limit is reasonable, but splitting silently mid-syllable might be worse than treating the whole run as broken.
 
+**On main.** Changed, not fixed. Commit `fd5702517` (#6558, 10 November 2026) cuts the syllable into the same pieces in every pass and makes the run one cluster, but the reordering still goes wrong at the cut. With `test/subset/data/fonts/NotoSansDevanagari-Regular.ttf`, 32 TA + virama followed by KA + I gives the same glyphs on `main` as on 15.1.0, all now in cluster 0: the last TA keeps a visible virama, and the I matra stands just before KA rather than at the start of the syllable.
+
 ---
 
 ## 24. `stch` tiles are shifted when they fit the word exactly
+
+**Tag:** `hhw-20261117`
 
 **Summary.** In `apply_stch` (`src/hb-ot-shaper-arabic.cc:625`), the first tile starts at `x_offset = w_remaining / 2`. `w_remaining` is set to zero only on the path that adds an extra, overlapping repeat (`:598`). When the repeating tiles fill the word exactly, or the word is narrower than the fixed tiles plus one repeat, the whole line is shifted by half of what remains.
 
@@ -461,23 +557,35 @@ The tiles run from −600 to 400, extending 400 units past the word, where −10
 
 **Possible fix.** Zero `w_remaining` whenever the tiles fill the word, not only on the overlap path.
 
+**On main.** In progress: pull request #6733 (branch `codex/upstream-report-24`, “Align exact-fit stretch tiles”), not merged. On `main` the tiles still run from −600.
+
 ---
 
 ## 25. CBDT format 19 images are never painted
+
+**Tag:** `hhw-20261117`
 
 *Found by reading the code; not shown live.*
 
 **Summary.** `CBDT::paint_glyph` needs the image’s pixel extents, but for format 19 (PNG with metrics in the CBLC index) they come from `IndexSubtable::get_extents`, which is a TODO that always returns false (`src/OT/Color/CBDT/CBDT.hh:334`). So a format 19 glyph can be fetched with `hb_ot_color_glyph_reference_png` but is never painted. Only index subtable formats 1 and 3 are read (`:345`).
 
+**On main.** Still present: `IndexSubtable::get_extents` still handles only formats 1 and 3, with the TODO for the rest (`CBDT.hh:334` on `main`). Checked in the code.
+
 ---
 
 ## 26. The bitmap tables are tried in different orders for different purposes
 
+**Tag:** `hhw-20261117`
+
 **Summary.** `hb_ot_color_glyph_reference_png` tries `sbix` before CBDT (`src/hb-ot-color.cc:417`), and so do glyph extents, but painting tries CBDT first. For a glyph in both tables, a client can get one table’s image from one call and the other’s from another. Low impact (fonts rarely have both), but the order should be one.
+
+**On main.** Fixed on 17 November 2026 by `7e97cd8a1` (#6723): painting now tries `sbix` before CBDT, like the other two. Checked in the code.
 
 ---
 
 ## 27. Point matching in nested composites counts from the wrong start
+
+**Tag:** `hhw-20261117`
 
 *Shown in a drawing in the book; the expected position not yet worked out independently.*
 
@@ -487,9 +595,13 @@ The tiles run from −600 to 400, extending 400 units past the word, where −10
 
 **Before filing.** Confirm the expected position against FreeType or fontTools’ pen output, and reduce the font to the smallest case.
 
+**On main.** Still present. `Glyph.hh` is unchanged, and `x` has the same extents.
+
 ---
 
 ## 28. A CFF charstring with no `endchar` runs to the operation limit
+
+**Tag:** `hhw-20261117`
 
 **Summary.** In CFF1, running off the end of a charstring isn’t treated as an error: `fetch_op` returns `OpCode_Invalid`, which only clears the arguments, and the interpreter loops until `HB_CFF_MAX_OPS` (200,000). The outline so far is emitted to the client, then `hb_font_draw_glyph_or_fail` returns false, and the glyph has no extents. Each such glyph uses 200,000 of the shared drawing budget, so a few of them stop later glyphs from being drawn at all.
 
@@ -497,9 +609,13 @@ The tiles run from −600 to 400, extending 400 units past the word, where −10
 
 **Expected.** Running off the end ends the charstring (as an implied `endchar`, or as an error) at once.
 
+**On main.** In progress: pull request #6737 (branch `codex/upstream-report-28`, “Fail promptly when opcode bytes are missing”), which makes `fetch_op` set an error when the charstring runs out. Not merged; not rerun.
+
 ---
 
 ## 29. Khmer moves a second COENG + RO in front of the first
+
+**Tag:** `hhw-20261117`
 
 **Summary.** In Khmer initial reordering (`src/hb-ot-shaper-khmer.cc:239`), the test `num_coengs <= 2` is checked before the counter is incremented, so a third COENG still passes; and `num_coengs = 2; /* Done. */` after moving a COENG + RO doesn’t stop the loop. So a second COENG + RO in the same syllable is also moved before the base, in front of the first. Microsoft’s Khmer specification says the move applies while the “subscript count is less than two”.
 
@@ -514,9 +630,13 @@ $ hb-shape khmer.ttf $'\u1780\u17D2\u179A\u17D2\u179A'
 
 **Possible fix.** `break` after moving the COENG + RO, and test `num_coengs < 2`.
 
+**On main.** In progress: pull request #6735 (branch `codex/upstream-report-29`, “Stop reordering coengs at the subscript limit”), not merged. On `main` both ROs still move.
+
 ---
 
 ## 30. USE: a mark after a space attaches to the space
+
+**Tag:** `hhw-20261117`
 
 **Summary.** In the USE grammar, `symbol_cluster = (O | GB | SB) tail?` (`src/hb-ot-shaper-use-machine.rl`) lets a space (category `O`) take any marks after it. A vowel sign typed after a space is then reordered before the space, with no dotted circle. Microsoft’s specification lets an independent cluster of category `O` take only a variation selector.
 
@@ -529,9 +649,13 @@ $ hb-shape deva2.ttf $'\u0915 \u093F'
 [ka=0+600|space=1+250|iMatra.init=1+250|dottedcircle=1+500]
 ```
 
+**On main.** Still present: the output is unchanged.
+
 ---
 
 ## 31. USE: a space doesn’t end a word for topographical forms
+
+**Tag:** `hhw-20261117`
 
 **Summary.** HarfBuzz gives non-joining USE scripts its own topographical forms (`isol`/`init`/`medi`/`fina`), which Microsoft’s specification says aren’t implemented for them at all. A space is a symbol cluster, and symbol clusters join, so a syllable after a space isn’t word-initial and one before it isn’t final. ZWNJ doesn’t break the chain either; only a non-cluster such as WORD JOINER does.
 
@@ -544,9 +668,13 @@ $ hb-shape deva3.ttf $'\u0915\u093F \u0915\u093F'
 
 The second कि, after a space, doesn’t get `init`.
 
+**On main.** Still present: the output is unchanged.
+
 ---
 
 ## 32. USE: ZWNJ after a virama doesn’t stop a half form
+
+**Tag:** `hhw-20261117`
 
 **Summary.** Under the Indic shaper, ZWNJ after a virama stops a half form (`F_MANUAL_ZWNJ` on the basic features). USE’s features lack `F_MANUAL_ZWNJ`, so the lookup passes over the ZWNJ and the half form is made.
 
@@ -563,9 +691,13 @@ $ hb-shape deva2.ttf $'\u0915\u094D\u200C\u0930'
 
 **Also noticed, not a bug report:** `hb-ot-shaper-use-table.hh` records `DerivedCoreProperties-17.0.0` while every other input is 18.0.0, apparently because `update-unicode-tables.make` leaves that file out of `SOURCES`.
 
+**On main.** Still present: the output is unchanged. For the note above: `update-unicode-tables.make` now lists `DerivedCoreProperties.txt` (report 53), but the USE table hasn’t been regenerated, and its header still records `DerivedCoreProperties-17.0.0`.
+
 ---
 
 ## 33. Indic: a broken cluster starting with RA + virama loses its reph
+
+**Tag:** `hhw-20261117`
 
 **Summary.** When the Indic syllable machine finds a broken cluster, `hb_syllabic_insert_dotted_circles` (`src/hb-ot-shaper-syllabic.cc`) inserts the circle after any leading *repha character*, but the Indic shaper passes only the category `Repha`, which in the Indic table is just U+0D4E. So RA + virama + a vowel sign gets its circle *before* the RA: the reph never forms, and a visible virama follows the circle.
 
@@ -580,9 +712,13 @@ $ hb-shape circle.ttf $'\u0930\u094D\u25CC\u093F'
 
 **Expected.** The circle after RA + virama, as when it is typed, so that a reph forms on it.
 
+**On main.** Still present: the output is unchanged.
+
 ---
 
 ## 34. A ZWJ defeats the vowel constraints
+
+**Tag:** `hhw-20261117`
 
 **Summary.** The vowel constraints (`src/hb-ot-shaper-vowel-constraints.cc`, generated from Microsoft’s `IndicShapingInvalidCluster.txt`) match only adjacent code points. Putting a ZWJ between an independent vowel and a vowel sign avoids the dotted circle, which defeats the anti-spoofing purpose (issue #1019).
 
@@ -597,9 +733,13 @@ $ hb-shape circle.ttf $'\u0905\u200D\u093E'
 
 **Expected.** A circle in both, or a documented reason why ZWJ is allowed through.
 
+**On main.** Still present: the output is unchanged.
+
 ---
 
 ## 35. The vowel-constraint dotted circle copies the next character’s properties
+
+**Tag:** `hhw-20261117`
 
 **Summary.** The circle is inserted with `output_glyph`, which copies `cur()` (`src/hb-buffer.hh:313`), so it takes the following vowel sign’s Unicode properties: general category Mn. In a font without GDEF, synthesized classes then make it a mark, and USE zeroes its advance and moves it back over the letter. Compare report 19 (the Hangul circle copying the tone mark). The circles from the other paths are inserted with U+25CC’s own properties (generic) or with zero properties (syllabic).
 
@@ -607,27 +747,39 @@ $ hb-shape circle.ttf $'\u0905\u200D\u093E'
 
 **Possible fix.** Give every inserted dotted circle U+25CC’s own Unicode properties, in one helper used by all four paths.
 
+**On main.** Fixed on 17 November 2026 by `74fc8c86c` (#6710). With `--unicodes=U+11005,U+11038`, `bare.ttf` now gives `[a.brah=0+600|dottedcircle=0+500|aa.brah=0+0]`: the circle keeps its advance.
+
 ---
 
 ## 36. hb-vector’s PDF output drops PNG alpha
 
-**Summary.** In `src/hb-vector-paint-pdf.cc:305`, `(void) has_alpha;`: RGBA and grey+alpha PNGs are embedded as `/DeviceRGB` or `/DeviceGray` images with `/Colors 4` or `2` and no `/SMask`. The alpha channel is read as colour, and the image renders as stripes.
+**Tag:** `hhw-20261117`
+
+**Summary.** In `src/hb-vector-paint-pdf.cc:305`, `(void) has_alpha;`: RGBA and gray+alpha PNGs are embedded as `/DeviceRGB` or `/DeviceGray` images with `/Colors 4` or `2` and no `/SMask`. The alpha channel is read as color, and the image renders as stripes.
 
 **Repro.** A font with an RGBA PNG bitmap glyph (`images.ttf` in the book’s test fonts): `hb-vector images.ttf P -O pdf`, rendered with `pdftoppm`.
 
 **Expected.** The alpha channel split into an `/SMask` image, as PDF requires.
 
+**On main.** Still present: `(void) has_alpha;` is still at `hb-vector-paint-pdf.cc:305`. Checked in the code.
+
 ---
 
 ## 37. Smaller hb-vector and hb-gpu inconsistencies
+
+**Tag:** `hhw-20261117`
 
 * PDF: linear and radial gradients with REPEAT or REFLECT extend modes only pad (`hb-vector-paint-pdf.cc:1099`, `:1200`), so they lose their repeats. Possibly a deliberate limitation; worth documenting if so.
 * Stale comments and docs: `hb-vector-paint-pdf.cc:49` says sweeps are “approximated via solid fallback” (they are Coons-patch meshes); the `hb-gpu.cc` docs example calls `hb_gpu_draw_encode (draw)` without the `extents` argument added in 14.2.0; `README.md` says the vector library is “currently SVG”; the `HB_VECTOR_MAX_DOCUMENT_SIZE` comment in `hb-limits.hh` says “one glyph per context”.
 * API: `hb_vector_paint_set_palette` takes `int` where the raster and GPU versions take `unsigned`, and `hb_vector_paint_set_custom_palette_color` returns `void` where theirs return `hb_bool_t`.
 
+**On main.** Partly fixed. `24fe9f0e2` (#6691, 17 November 2026) corrects the sweep comment, the `hb-gpu.cc` example, `README.md` and the `hb-limits.hh` comment. `aa3cd40bc` (#6730) documents that PDF linear and radial gradients support only PAD, in `hb-vector.cc` and the PDF backend’s list, so the first item is now a documented limitation. The API differences are still present (`hb-vector.h:281`, `:288` on `main`).
+
 ---
 
 ## 38. A font with GSUB, GPOS and `kerx` never applies `kerx`, and stops zeroing marks
+
+**Tag:** `hhw-20261117`
 
 **Summary.** When a font has GSUB and GPOS, and GPOS has no `kern` feature in the language system it chose, and the font also has `kerx`, the planner sets both `apply_gpos` and `apply_kerx` (`src/hb-ot-shape.cc:167`–`195`). `hb_ot_shape_plan_t::position` runs only GPOS, so `kerx` never kerns. And because the plan thinks `kerx` is in use, marks are no longer zeroed.
 
@@ -642,9 +794,13 @@ $ hb-shape mark-gpos-kerx.ttf $'a\u0301AV' --language=en
 
 **Expected.** Either `kerx` applies after GPOS (A V −40) or the plan doesn’t claim it; and marks zeroed as before.
 
+**On main.** Still present: the output is unchanged.
+
 ---
 
 ## 39. `trak` vertical tracking is added with the wrong sign
+
+**Tag:** `hhw-20261117`
 
 **Summary.** `trak` adds its vertical value to `y_advance` without negating it (`src/hb-aat-layout-trak-table.hh:242`). Vertical advances are negative in HarfBuzz, so positive tracking, which should loosen a column, tightens it. GPOS negates in the same situation.
 
@@ -657,17 +813,25 @@ $ hb-shape trak.ttf AV --direction=ttb --font-ptem=12
 
 Without `trak` the advance is −1000; with +100 tracking it should be −1100.
 
+**On main.** Fixed on 17 November 2026 by `45c7759a0` (#6700), with a follow-up for the Core Text font functions, `1e2cf5daf` (#6716). The advances are now −1,100.
+
 ---
 
 ## 40. `kerx` format 4 control-point attachment does nothing with the default font functions
+
+**Tag:** `hhw-20261117`
 
 **Summary.** Format 4’s control-point actions (type 0) ask the font functions for contour points, which hb-ot doesn’t implement (`glyph_contour_point` is commented out in `hb-ot-font.cc`). Unlike GPOS anchor format 2, there is no fallback to coordinates, so nothing is attached. Also `HB_DIRECTION_LTR /*XXX*/` at `hb-aat-layout-kerx-table.hh:628`.
 
 **Repro.** `points.ttf` in the book’s test fonts: the marked glyph stays unattached with the default `ot` funcs.
 
+**On main.** Still present: the output is unchanged, and `HB_DIRECTION_LTR /*XXX*/` is still there (`hb-aat-layout-kerx-table.hh:661`, `:665` on `main`).
+
 ---
 
 ## 41. In AAT, the first of two requests for one feature wins
+
+**Tag:** `hhw-20261117`
 
 **Summary.** For `morx` fonts, the AAT map sorts requested features by type, selector pair and then sequence, and keeps the first (`src/hb-aat-map.cc:139`–`155`). The OpenType map lets the later request win (`hb-ot-map.cc:238`). So the same feature list does opposite things in the two kinds of font.
 
@@ -682,9 +846,13 @@ $ hb-shape ligatures.ttf fi --features=-liga,liga
 
 **Expected.** The later request wins in both, as `hb_shape`’s documentation of feature lists implies.
 
+**On main.** Fixed on 17 November 2026 by `f346ea17a` (#6714). `latin.ttf` with `--features=-liga,liga` now gives `[f_i=0+900]`.
+
 ---
 
 ## 42. hb-depend: documentation errors and loose ends
+
+**Tag:** `hhw-20261117`
 
 * `src/hb-subset-depend.h:90` documents `layout_tag` as 0 for edges not from GSUB; it is `HB_CODEPOINT_INVALID` (0xFFFFFFFF), as a program built against the API shows.
 * `docs/depend-implementation.md`: says an edge takes only the first feature using its lookup (the code makes one edge per feature, `hb-depend-data.hh:559`); names the header `hb-depend.h`; calls the utility “TODO” though `util/hb-subset-depend.cc` exists; shows `lookup_features[256]`; gives the closure of {f} under `f i → f_i` as {f, fi}, where `Ligature.hh:35` gives {f}.
@@ -692,9 +860,13 @@ $ hb-shape ligatures.ttf fi --features=-liga,liga
 * `test/fuzzing/README.md:18` asks for `-Ddepend_api=true`; the option is `experimental_api`.
 * The closure parity test (`hb-depend-closure-parity.cc:27`, `:326`) says it mirrors the subsetter’s order but runs GSUB before MATH; the subsetter runs MATH first (`hb-subset-plan.cc:467`). A GSUB output with math variants could make the two disagree (inferred, not tried).
 
+**On main.** Partly fixed. `88bb79a40` (#6703, 17 November 2026) corrects the `layout_tag` documentation and `docs/depend-implementation.md`, and `202b3e2c2` (#6692) the fuzzing README’s option (adding the GPU fuzzer to its list too, the note at the end of this file). Removing the undefined `get_gsub_dependencies` and the unused fields is in progress: pull request #6744 (branch `codex/upstream-report-42-unused-builder`), not merged. The closure parity test’s order is still present: its comment (`hb-depend-closure-parity.cc:27`) still says GSUB before MATH.
+
 ---
 
 ## 43. The subsetter’s GSUB closure cuts long nested chains
+
+**Tag:** `hhw-20261117`
 
 **Summary.** `hb_ot_layout_lookups_substitute_closure` runs at most `HB_CLOSURE_MAX_STAGES` + 2 = 14 passes, and glyphs produced by nested lookups aren’t flushed until the next pass (`SubstLookup.hh:209`). A context rule that applies many lookups in a row at one position loses the glyphs after the fourteenth.
 
@@ -710,29 +882,45 @@ $ hb-shape nested-a.ttf a
 
 **Expected.** The subset shapes as the original does.
 
+**On main.** Changed, not fixed. `0209ec286` (#6725, 17 November 2026, for report 44) raises `HB_CLOSURE_MAX_STAGES` to 16, so the closure runs 18 passes: `nested-a.ttf` cut by `main` now shapes `a` as `s18`, still short of `s20`.
+
 ---
 
 ## 44. `HB_CLOSURE_MAX_STAGES` is smaller than its own comment requires
 
+**Tag:** `hhw-20261117`
+
 **Summary.** `hb-limits.hh:68` says the limit “must be larger than the number of times add_gsub_pause() is called in a collect_features call of any shaper”. It is 12; `collect_features_indic` makes 14 such calls (three named pauses plus one after each of the eleven basic features, `hb-ot-shaper-indic.cc:249`–`265`).
+
+**On main.** Fixed on 17 November 2026 by `0209ec286` (#6725), which raises `HB_CLOSURE_MAX_STAGES` to 16.
 
 ---
 
 ## 45. MATH data is lost for glyphs that only GSUB produces
 
+**Tag:** `hhw-20261117`
+
 **Summary.** The closure runs MATH before GSUB, and MathVariants is subset against `_glyphset_cmaped`, MathGlyphInfo against `_glyphset_mathed` (`hb-ot-math-table.hh:232`, `:1064`). Glyphs reached only through GSUB (`rtlm`, `ssty`, stylistic sets) keep their outlines but lose their size variants and italics corrections.
 
 **Repro.** `math.ttf` in the book’s test fonts, subset with its `rtlm` forms; and HarfBuzz’s own `STIXTwoMath-Regular.ttf` with `ss08` kept: `uni222B.up` loses its variants and italics correction. Requesting the glyphs explicitly (`math-rtlm.ttf`) works around it.
+
+**On main.** In progress: pull request #6745 (branch `codex/upstream-report-45-math-closure`, “Preserve MATH data on GSUB outputs”), not merged.
 
 ---
 
 ## 46. `hb_set_invert`’s “Since” is wrong
 
+**Tag:** `hhw-20261117`
+
 **Summary.** `src/hb-set.cc:505` documents `hb_set_invert` as “Since: 3.0.0”. `NEWS` has it deprecated in 1.6.1 and undeprecated in 2.9.1, so it has existed since before 1.6.1. Documentation only.
+
+**On main.** Fixed on 17 November 2026 by `72e4cf3a3` (#6690): now “Since: 0.9.10”, with a note of the deprecation in 1.6.1 and the restoration in 2.9.1.
 
 ---
 
 ## 47. The sanitizer drops a whole valid GSUB whose SingleSubst lookups cover many glyphs
+
+**Tag:** `hhw-20261117`
 
 **Summary.** `SingleSubstFormat1::sanitize` charges the operation budget half its Coverage population (`src/OT/Layout/GSUB/SingleSubstFormat1.hh:125`), and the budget is max(`HB_SANITIZE_MAX_OPS_MIN` 16384, `HB_SANITIZE_MAX_OPS_FACTOR` 64 × table length). Range-based Coverage makes such lookups tiny, so a small table with a few of them exceeds the budget, and the whole GSUB is rejected.
 
@@ -740,24 +928,36 @@ $ hb-shape nested-a.ttf a
 
 **Expected.** A valid table accepted; a budget charge proportional to work the sanitizer actually does, or at least only the offending lookup dropped. Large CJK fonts with whole-repertoire stylistic sets could hit this.
 
+**On main.** Still present: the sanitizer’s charge is unchanged (`SingleSubstFormat1.hh:126` on `main`). Checked in the code; the fonts weren’t rebuilt.
+
 ---
 
 ## 48. The subsetter’s 256× buffer cap can make a valid subset fail
+
+**Tag:** `hhw-20261117`
 
 **Summary.** The subsetter retries a table with a doubled buffer up to 256 × the source table’s size (`src/hb-subset-table.hh:61`). A tiny source table whose subset legitimately grows larger (a SingleSubst format 1 over a range becoming format 2 once glyphs are dropped) hits the cap, and `hb-subset` fails with “Operation failed. Probably a bug.”
 
 **Repro.** A 72-byte GSUB, one SingleSubst format 1 over 20,000 glyphs, subset with `--no-layout-closure` dropping glyphs whose IDs are multiples of 5 or 7 (checked by script in the chapter 36 work, not in the book).
 
+**On main.** Still present: the cap is unchanged (`hb-subset-table.hh:62` on `main`). Checked in the code.
+
 ---
 
 ## 49. `docs/serializer.md` and `docs/repacker.md` are out of date
 
+**Tag:** `hhw-20261117`
+
 * `docs/serializer.md`’s example pushes the root, `pop_pack`s it, then calls `end_serialize`, which returns early because nothing is current (`hb-serialize.hh:310`), so its links are never resolved.
 * `docs/repacker.md` says plain Kahn sorting is tried first (there is only the shortest-distance sort, itself Kahn’s algorithm with a priority queue); that only GPOS subtables can be split (GSUB LigatureSubst can be, `graph/gsubgpos-graph.hh:383`); and that spaces add n × 2^32 to a link’s weight (the code multiplies it by space + 1, `graph/graph.hh:1911`).
+
+**On main.** Fixed on 17 November 2026 by `4d41c69d4` (#6702), which corrects both documents.
 
 ---
 
 ## 50. A reordering custom glyph map breaks PairPos and ClassDef in the subset
+
+**Tag:** `hhw-20261117`
 
 **Summary.** The API allows any old→new glyph map, but several layout subsetters write records in old-glyph order and assume the new IDs keep it (`hb_map_retains_sorting`): PairPos format 1’s PairSet (`src/OT/Layout/GPOS/PairSet.hh:255`) comes out unsorted by second glyph, so its binary search fails; `ClassDef_remap_and_serialize` (`hb-ot-layout-common.hh:1500`) pushes unsorted pairs into an `hb_sorted_vector_t`, and the ClassDef loses glyphs. SingleSubst survives in HarfBuzz but writes Coverage indices out of order (fontTools warns “Coverage is not sorted by glyph ids”).
 
@@ -765,25 +965,37 @@ $ hb-shape nested-a.ttf a
 
 **Expected.** Records sorted by new glyph ID, so the subset kerns as the original does.
 
+**On main.** Still present: `kern-map.ttf` cut by `main` still kerns only `A Q`.
+
 ---
 
 ## 51. Subsetting a symbol font drops its only `cmap` subtable
+
+**Tag:** `hhw-20261117`
 
 **Summary.** `cmap` subsetting keeps only (0,3), (0,4), (3,1), (3,10) and variation-selector subtables (`src/hb-ot-cmap-table.hh:2502`). A font whose only subtable is (3,0), as symbol fonts have, comes out with no `cmap`, though its glyphs are kept. fontTools drops (3,0) by default too but has `--symbol-cmap`; HarfBuzz has no option. Related, from the code only: a (3,1) subtable in a format other than 4 or 12 is skipped silently.
 
 **Repro.** `symbol.ttf` (a (3,0)-only `cmap`) in the book’s test fonts, subset to `symbol-a.ttf`: `hb-info --list-tables` shows no `cmap`.
 
+**On main.** Still present: `symbol-a.ttf` cut by `main` still has no `cmap`.
+
 ---
 
 ## 52. `HB_SUBSET_FLAGS_NOTDEF_OUTLINE` is ignored for CFF
+
+**Tag:** `hhw-20261117`
 
 **Summary.** Only the glyf and gvar subsetters read the flag (`Glyph.hh:265`), so a CFF font’s `.notdef` keeps its outline whether or not the flag is set. fontTools empties it in both.
 
 **Repro.** `cff-o.otf` in the book’s test fonts, subset without `--notdef-outline`: `hb-shape --show-extents` shows `.notdef` with its original extents.
 
+**On main.** Still present: `cff-o.otf` cut by `main` still has `.notdef` with its outline.
+
 ---
 
 ## 53. Small faults in the data generators
+
+**Tag:** `hhw-20261117`
 
 None affects the generated tables.
 
@@ -796,11 +1008,15 @@ None affects the generated tables.
 * `src/gen-indic-table.py`: the `Consonant_Killer: 'M'` entry, commented “U+17CD only”, decides nothing, since U+17CD is overridden to `Xgroup`.
 * `gen-tag-table.py` and `gen-os2-unicode-ranges.py` cite `docs.microsoft.com` URLs, and the ISO 639 table cites `www-01.sil.org`.
 
+**On main.** Partly fixed, on 17 November 2026: `ebfcf19c7` (#6688) fixes the version regex, `c66b1a505` (#6689) the Ragel argument check, and `b873113f4` (#6715) the `SOURCES` list (the USE table hasn’t been regenerated since, and still records DerivedCoreProperties 17.0.0). The rest are in progress, in two open pull requests: #6739 (branch `codex/upstream-report-53-arabic-cleanup`: the unused `Blocks.txt` dictionary and the duplicate U+F2EE) and #6740 (branch `codex/upstream-report-53-generator-docs`: the usage string, the emoji header comment, the `Consonant_Killer` comment and the Microsoft URLs). Neither changes the `www-01.sil.org` citation.
+
 ---
 
 ## 54. Texts of 524,289 to 1,048,575 characters go almost unshaped: the operation budget starts negative
 
-**Summary.** `hb_buffer_t::enter` computes the operation budget as `int limit = (int) hb_max (mul, (unsigned) HB_BUFFER_MAX_OPS_MIN)` with `mul = len × HB_BUFFER_MAX_OPS_FACTOR` (4096) unsigned (`src/hb-buffer.cc:345`). For lengths from 524,289 to 1,048,575 the cast gives a negative `max_ops`, so the budget is spent before shaping starts and most lookups don’t run. At exactly 524,288 it is `INT_MIN`, and the next decrement is signed overflow, undefined behaviour. From 1,048,576 the unsigned multiply overflows, the `if` is skipped, and the default budget applies again. Nothing reports it: `hb-shape` doesn’t check `hb_buffer_allocation_successful`.
+**Tag:** `hhw-20261117`
+
+**Summary.** `hb_buffer_t::enter` computes the operation budget as `int limit = (int) hb_max (mul, (unsigned) HB_BUFFER_MAX_OPS_MIN)` with `mul = len × HB_BUFFER_MAX_OPS_FACTOR` (4096) unsigned (`src/hb-buffer.cc:345`). For lengths from 524,289 to 1,048,575 the cast gives a negative `max_ops`, so the budget is spent before shaping starts and most lookups don’t run. At exactly 524,288 it is `INT_MIN`, and the next decrement is signed overflow, undefined behavior. From 1,048,576 the unsigned multiply overflows, the `if` is skipped, and the default budget applies again. Nothing reports it: `hb-shape` doesn’t check `hb_buffer_allocation_successful`.
 
 **Repro.** `ligatures.ttf` in the book’s test fonts, with `fi` repeated:
 
@@ -813,29 +1029,45 @@ None affects the generated tables.
 
 **Expected.** The budget clamped to `INT_MAX` (or computed in a wider type), so long texts shape fully.
 
+**On main.** Changed, still present. On `main` the budget still starts negative, and texts from 524,300 to 1,048,575 characters get no ligature at all, not even the first. The report’s 524,290 characters now shape fully, probably because the first charge takes the budget past `INT_MIN` and it wraps around to a large positive value: the undefined behavior the summary mentions.
+
 ---
 
 ## 55. `HB_LEAN` removes drawing and painting in every Meson build
 
+**Tag:** `hhw-20261117`
+
 **Summary.** `hb-config.hh:85` keeps drawing and painting under `HB_LEAN` only if `HB_HAS_CAIRO`, `HB_HAS_RASTER`, `HB_HAS_VECTOR` or `HB_HAS_GPU` is defined. Those come only from `hb-features.h`, which no library source includes (only `harfbuzz-world.cc` does, when `HB_FEATURES_H` is set); Meson’s `config.h` has `HAVE_RASTER` and so on instead. Checked with the preprocessor against a build with raster and vector on: `-DHB_LEAN` still defines `HB_NO_DRAW`.
+
+**On main.** Fixed on 17 November 2026 by `c90000dd8` (#6724), which makes `hb-config.hh` accept the `HAVE_*` renderer macros too. With the same preprocessor check against the `main` build, `-DHB_LEAN` now leaves drawing on.
 
 ---
 
 ## 56. `hb-features.h` never defines `HB_HAS_GPU` or `HB_HAS_GRAPHITE`
 
+**Tag:** `hhw-20261117`
+
 **Summary.** `src/meson.build:587` maps `HAVE_GPU` and `HAVE_GRAPHITE` to `HB_HAS_*`, but Meson sets `HAVE_GRAPHITE2`, and the `gpu` option sets no `HAVE_` macro. The book’s build has `#undef HB_HAS_GPU` in `hb-features.h` though `libharfbuzz-gpu` was built. (The graphite half is from reading the Meson files.)
+
+**On main.** Fixed on 17 November 2026 by `2b873b805` (#6721) and `506cc943b` (#6722). The `main` build’s `hb-features.h` now has `#define HB_HAS_GPU 1`, and `meson.build:253` sets `HAVE_GRAPHITE`, the name the list looks up, so a build with graphite2 defines `HB_HAS_GRAPHITE` (read from the Meson files; the book’s build has no graphite2). The chapter on integrations found the graphite half independently on 15.1.0: a graphite2-enabled build lists `graphite2` in `hb-shape --list-shapers` but has `#undef HB_HAS_GRAPHITE`. It is the same bug, so it is recorded here rather than as a new report.
 
 ---
 
 ## 57. Unused and undocumented configuration and limits
 
+**Tag:** `hhw-20261117`
+
 * `HB_MINIMIZE_MEMORY_USAGE_VAL` (`hb-config.hh:205`), `HB_SVG_MAX_PATH_SEGMENTS` and `HB_SANITIZE_MAX_EDITS` are defined but never used.
 * `CONFIG.md` describes `HB_MINI` as dropping AAT and legacy shaping, but it also sets `HB_NO_BEYOND_64K` and `HB_NO_CUBIC_GLYF`; it doesn’t mention `HB_CONFIG_OVERRIDE_LAST_H`, nor about 70 other `HB_NO_*` macros.
 * A composite component dropped by the subsetter’s nesting or operation limit keeps its old glyph ID when written (`SubsetGlyph.hh:55`), so it may point at the wrong glyph in the subset (inferred).
 
+**On main.** Partly fixed. `91722141b` (#6728, 17 November 2026) removes the three unused definitions, and `9e6b1a989` (#6727) removes `HB_NO_CUBIC_GLYF` and adds `HB_MINI`’s exclusions and `HB_CONFIG_OVERRIDE_LAST_H` to `CONFIG.md`. Still present: `CONFIG.md` still names only seven `HB_NO_*` macros, and the composite component in `SubsetGlyph.hh:55` is unchanged.
+
 ---
 
 ## 58. Cross-stream kerning breaks the unsafe-to-break promise
+
+**Tag:** `hhw-20261117`
 
 **Summary.** In legacy `kern` and `kerx`, a cross-stream value raises every later glyph, but only the pair is marked unsafe to break. A line broken later in the run shapes differently.
 
@@ -846,61 +1078,364 @@ $ hb-shape cross.ttf AVAT --verify
 harfbuzz buffer verify error: unsafe-to-break test failed.
 ```
 
+**On main.** Still present: `--verify` still fails.
+
 ---
 
 ## 59. Hangul at cluster level 1 breaks the unsafe-to-break promise
+
+**Tag:** `hhw-20261117`
 
 **Summary.** `hb-ot-shaper-hangul.cc:385` calls `merge_out_grapheme_clusters`, which at levels other than 0 neither merges nor flags, so a trailing jamo keeps its own cluster, unflagged, though it shapes with the syllable before it.
 
 **Repro.** `hangul-koh.ttf` in the book’s test fonts: `hb-shape hangul-koh.ttf $'\uAC00\u11EB' --cluster-level=1 --verify` fails the unsafe-to-break test.
 
+**On main.** Fixed on 17 November 2026 by `8e6c16eef` (#6709). The repro now passes `--verify`: `[kiyeok=0+500|a=0+500|pansiosT=1+500]`.
+
 ---
 
 ## 60. `hb-shape --text-before` echoes its value to stderr
 
+**Tag:** `hhw-20261117`
+
 **Summary.** A leftover debugging line, `fprintf(stderr, "%s\n", opts->text_before);`, at `util/text-options.hh:224`.
+
+**On main.** Fixed on 17 November 2026 by `55ecd750d` (#6687).
 
 ---
 
 ## 61. Small instancing differences from fontTools
 
+**Tag:** `hhw-20261117`
+
 * After limiting an axis, `SegmentMaps::subset` maps the new range back through `avar` instead of using the quantized limit (its comment: “unmap_axis_range needs to be killed”), and the `avar` map can be one 2.14 unit off. In `var-avar.ttf` limited to wght 400–800, `I` at wght 570 has advance 370 where the original has 369 (fontTools matches the original).
 * Pinning an axis that VARC uses is refused by design (`VARC-subset.hh:101`), but `hb-subset` reports “Operation failed. Probably a bug. File github issue.”
 * With `avar` 2 and weight pinned, one unreachable region stays in `MVAR`.
+
+**On main.** Still present: `var-avar.ttf` limited to wght 400–800 by `main` still gives `I` at 570 an advance of 370. The other two items weren’t rerun.
 
 ---
 
 ## 62. `hb_style_get_value (opsz)` returns OS/2 optical sizes in twentieths of a point
 
+**Tag:** `hhw-20261117`
+
 **Summary.** OS/2 version 5’s `usLowerOpticalPointSize` and `usUpperOpticalPointSize` are in TWIPs (1/20 pt). `OS2V5Tail::get_optical_size` (`src/hb-ot-os2-table.hh:86`) returns them unconverted, and `hb_style_get_value` (`hb-style.cc:101`) averages them as points.
 
 **Repro.** `style-size.ttf` in the book’s test fonts, with an optical range of 8–24 pt (160–480 TWIPs): `hb_style_get_value (font, HB_STYLE_TAG_OPTICAL_SIZE)` returns 320, not 16.
+
+**On main.** Fixed on 17 November 2026 by `b14a94e52` (#6695). `hb-info --get-style=opsz` on the book’s font with the 8–24 pt range (`style.ttf`) now gives 16.
 
 ---
 
 ## 63. BASE min/max: missing values read as 0
 
+**Tag:** `hhw-20261117`
+
 **Summary.** For a script with language-system MinMax records but no `DefaultMinMax`, `get_min_max` returns true with ascender and descender 0 for every other language (`src/hb-ot-layout-base-table.hh:482`). A null Min or Max coord is also read as 0 rather than reported missing. And a script record with MinMax but no BaseValues hides `DFLT`’s baselines from that script.
 
 **Repro.** `base.ttf` in the book’s test fonts, queried with the chapter’s `query.c`.
+
+**On main.** Still present: `hb-ot-layout-base-table.hh` is unchanged. Checked in the code.
 
 ---
 
 ## 64. `STAT::get_value` takes the first axis value, and STAT suppresses synthetic slant
 
+**Tag:** `hhw-20261117`
+
 **Summary.** `STAT::get_value` returns the first axis value record for the axis, which need not be the font’s own (weight 300 in a bold font); format 4 records are never matched. Because STAT (or `fvar`) is consulted before `post`, a STAT `slnt` value also stops `hb_style_get_value` adding synthetic slant (`hb-style.cc:114` is reached only in the `post` fallback).
 
 **Repro.** `style-stat.ttf` in the book’s test fonts.
 
+**On main.** The synthetic slant is in progress: pull request #6743 (branch `codex/upstream-report-64-synthetic-slant`, “Apply synthetic slant to fvar and STAT values”), not merged. The first-axis-value half is still present: `style-stat.ttf` still reports weight 300.
+
 ---
 
 ## 65. Smaller things in `name`, BASE and MATH
+
+**Tag:** `hhw-20261117`
 
 * `hb-info --list-names` prints each entry in the command-line language, not the entry’s own, so the same string repeats.
 * `minConnectorOverlap` (uint16) goes through `em_scale_dir (int16_t)` (`hb-font.hh:169`), so values ≥ 32768 come back negative (read from the code).
 * For Unicode-platform name records, `name` calls `ltag::get_language`, which interns strings with `hb_language_from_string`: the quadratic risk `hb-aat-ltag-table.hh:77` says `morx` avoids (read from the code).
 * `choose_base_tags` keeps the last script tag (`deva`), so a BASE keyed `dev2` is missed and `DFLT` used.
 
+**On main.** Partly fixed. The `minConnectorOverlap` sign is fixed on 17 November 2026 by `eaf004a2c` (#6708). `hb-info --list-names` is in progress: pull request #6741 (branch `codex/upstream-report-65-name-list`), not merged. The other two are still present: `name` still calls `ltag::get_language` (`OT/name/name.hh:111` on `main`; the 9 November change to `ltag`, `488e98dd8`, avoids interning only for `morx`), and the BASE tags are still the last script tag (the function is now `choose_layout_tags`).
+
 ---
 
-Note from chapter 41: `test/fuzzing/README.md:13` lists the fuzzers without the gpu fuzzer (add to draft 42 if filed). Upstream checks so far: draft 23 is addressed after 15.1.0 by commit `fd57025` (PR #6558), not yet retested; draft 43 is related to the closed issue #5993.
+## Found while writing the chapters on building, the tools and the renderers, November 2026
+
+These were found after the batch tagged `hhw-20261117`: 66–78 while writing the chapters on hb-raster, hb-vector, hb-gpu, building HarfBuzz and the command-line tools, and 79–81 while writing the chapter on integrations. Each was reproduced on HarfBuzz 15.1.0 (commit `3df40d9b`), or is marked as read from the code, and checked against `main` at commit `454f9c49c` (17 November 2026), built with the same options. On 18 November `main` was still at that commit, and no open pull request addresses any of them. File and line references are to 15.1.0. They have no tag yet: one is added when the batch is sent.
+
+---
+
+## 66. `hb_color_lerp` reverses a color’s bytes, so every PDF sweep gradient has the wrong colors
+
+**Summary.** `hb_color_lerp` (`src/hb-paint.hh:292`) interpolates each byte of two `hb_color_t`s and returns `HB_COLOR (lerp (0), lerp (8), lerp (16), lerp (24))`. But `HB_COLOR` takes its arguments as blue, green, red, alpha (`hb-common.h:497`), and `lerp (0)` is alpha, so the result has its four bytes in reverse order: red becomes green, green becomes red, alpha becomes blue and blue becomes alpha.
+
+The PDF sweep writer calls it for both ends of every Coons patch, even when `t` is 0 (`hb-vector-paint-pdf.cc:1348`), so every PDF sweep is painted in the wrong colors. `hb_paint_sweep_gradient_tiles` (`hb-paint.cc:1113`, `:1181`, `:1200`, `:1285`, `:1291`) calls it where a sweep crosses 0° or 360°, so SVG sweeps that do are wrong at those tiles too, and so are cairo’s, which use the same tiles (`hb-cairo-utils.cc:581`; cairo is read from the code, not run).
+
+**Repro.** `colr1.ttf` in the book’s test fonts (`fonts/color/`), whose `S` is a sweep through red, amber, green and blue, all opaque:
+
+```
+$ hb-vector colr1.ttf S -O pdf -o s.pdf && pdftoppm -png s.pdf s
+```
+
+poppler and Ghostscript both draw it in cyan, pale blue and purple. The first patch’s colors in the mesh stream are `26 D7 FF`, where the first stop is red, `D7 26 3D`. `hb-raster colr1.ttf S` draws the right colors.
+
+For SVG, a font with a pad sweep from −90° to 270° between red and blue: `hb-vector` writes a fan whose colors go from `#42A8FE` to blue, with no red at all, where at 0° the color should be three quarters red, about `#A84266`.
+
+**Expected.** `HB_COLOR (lerp (24), lerp (16), lerp (8), lerp (0))`.
+
+**On main.** Still present.
+
+---
+
+## 67. hb-vector’s PDF sweeps leave a square hole at their center
+
+**Summary.** A PDF sweep is a mesh of Coons patches, each running from 0.5 to 32,767 units from the center (`hb-vector-paint-pdf.cc:1335–1336`). Its points are written as 16-bit numbers over a `Decode` range 65,536 units wide (`:1291`, `:1513`), so they land on a grid of one unit. In `hb-vector`’s output, the mesh is painted under a 64× scale (`64 0 0 64 cm` before `sh`), so a grid step is 64 font units. The inner ends of the patches, half a unit from the center, are rounded onto the corners of one grid square, and that square is never painted.
+
+**Repro.** `colr1.ttf` in the book’s test fonts:
+
+```
+$ hb-vector colr1.ttf S -O pdf -o s.pdf && pdftoppm -png s.pdf s
+```
+
+poppler and Ghostscript both leave a white square 64 units on a side beside the center (500, 400). Decoded, the four inner corners of the patches are (8.3, 6.8), (7.3, 6.8), (7.3, 5.7) and (8.3, 5.7) in the mesh’s units.
+
+**Expected.** No hole: a `Decode` range sized to the glyph, or the inner ends brought to the center, or more bits per coordinate.
+
+**On main.** Still present.
+
+---
+
+## 68. hb-vector’s PDF output ignores custom palette colors
+
+**Summary.** The PDF paint funcs don’t set `custom_palette_color` (`hb-vector-paint-pdf.cc:1650`), so `hb_vector_paint_set_custom_palette_color` has no effect on PDF. The SVG funcs do (`hb-vector-paint-svg.cc:292`).
+
+**Repro.** `colr0.ttf` in the book’s test fonts, whose `A` has a disc in palette entry 1:
+
+```
+$ hb-vector colr0.ttf A --custom-palette=1=#2E8B57 -o a.svg
+$ hb-vector colr0.ttf A --custom-palette=1=#2E8B57 -O pdf -o a.pdf
+```
+
+The SVG fills the disc with `#2E8B57`; the PDF with `0.1647 0.4353 0.8588 rg`, the palette’s own blue.
+
+**Expected.** The same colors in both.
+
+**On main.** Still present.
+
+---
+
+## 69. hb-vector’s PDF compositing isn’t isolated
+
+**Summary.** `hb_pdf_paint_push_group_for` (`hb-vector-paint-pdf.cc:1607`) writes `q` and an ExtGState with the blend mode, and the group’s content follows in the page’s own content stream. There is no transparency group, so the source is blended with everything already on the page, the white background included, not only with the backdrop the COLR graph composites it onto.
+
+**Repro.** `modes.ttf` in the book’s test fonts (`fonts/hb-vector/`): each letter is a blue disc and a red disc joined by one PaintComposite.
+
+```
+$ hb-vector modes.ttf S -O pdf -o s.pdf && pdftoppm s.pdf s
+$ hb-vector modes.ttf D -O pdf -o d.pdf && pdftoppm d.pdf d
+```
+
+In `S` (SCREEN), the part of the red disc outside the blue one disappears: red screened on white is white. In `D` (DIFFERENCE), it turns cyan (`#28D9C2`). poppler and Ghostscript agree. `hb-raster` draws both parts red, as COLR requires: outside the backdrop, the source is drawn as it is.
+
+**Expected.** Each `push_group` written as a transparency group (a form XObject with `/Group << /S /Transparency /I true >>`), painted with the blend mode on `pop_group`.
+
+**On main.** Still present.
+
+---
+
+## 70. hb-gpu drops a fill whose only clip is a rectangle
+
+**Summary.** The paint encoder ignores rectangle clips, and its comment says the result is merely bigger: “the encoder simply ignores the rectangle (output is bigger than it should be, but renders)” (`hb-gpu-paint.cc:1074`). But a layer is emitted only inside a glyph or path clip (`if (unlikely (c->clip_depth == 0)) return;`, `:673`, and the same in the gradient emitters), so a fill clipped only by a ClipBox or PaintClipBox is dropped, and a glyph made of one encodes as the empty blob.
+
+**Repro.** `colr1.ttf` in the book’s test fonts, whose `C` is a PaintSolid inside its ClipBox. With `fonts/hb-gpu/dump-gpu-blob.c` (a few lines around `hb_gpu_paint_glyph` and `hb_gpu_paint_encode`):
+
+```
+$ dump-gpu-blob colr1.ttf C paint
+C: 0 bytes, 0 texels
+$ dump-gpu-blob colr1.ttf L paint
+L: 488 bytes, 61 texels
+```
+
+`hb-raster colr1.ttf C` paints a green square.
+
+**Expected.** The rectangle encoded as a clip (or, as the comment says, ignored, with the fill painted unclipped).
+
+**On main.** Still present (`:665`, `:1066`).
+
+---
+
+## 71. hb-gpu’s stem darkening is documented with pixels per unit for its ppem (inferred, from reading the code)
+
+**Summary.** `hb_gpu_stem_darken (coverage, brightness, ppem)` fades out between 8 and 48 pixels per em (`hb-gpu-fragment.glsl:344`). Its documentation computes `ppem` as `1.0 / max (fwidth (v_texcoord).x, fwidth (v_texcoord).y)` (`hb-gpu.cc:349`, and the examples at `:357`, `:374` and `:511`), and so does the `hb-gpu` viewer (`util/gpu/demo-fragment.glsl:35`). The documentation sets texture coordinates up in font units, so that is pixels per font unit, smaller than pixels per em by the font’s scale: for a 1,000-unit font the darkening never fades out. `hb_gpu_ppem (renderCoord, glyphLoc)` (`:167`) divides by the scale stored in the blob and gives the right figure.
+
+Not run: the book’s build has no GPU.
+
+**Expected.** The documentation and the viewer calling `hb_gpu_ppem`.
+
+**On main.** Still present (`hb-gpu.cc:350`).
+
+---
+
+## 72. `HB_FEATURES_H` is both `harfbuzz-world.cc`’s header name and `hb-features.h`’s include guard
+
+**Summary.** `harfbuzz-world.cc` starts with `#ifdef HB_FEATURES_H` / `#include HB_FEATURES_H` (`src/harfbuzz-world.cc.in:1–3`), so that a project can name its own features header. `hb-features.h` uses the same macro as its include guard (`hb-features.h.in:25`). Naming the `hb-features.h` that Meson writes, or a copy of it, therefore includes a file whose whole body is skipped, and none of its `HB_HAS_*` macros is defined.
+
+**Repro.** With the preprocessor, against a Meson build with raster on (its `hb-features.h` has `#define HB_HAS_RASTER 1`):
+
+```
+$ printf '#include HB_FEATURES_H\n#ifdef HB_HAS_RASTER\nON\n#else\nOFF\n#endif\n' > t.cc
+$ c++ -E -P t.cc -I src -I build/src -DHB_FEATURES_H='"hb-features.h"' | tail -1
+OFF
+```
+
+**Expected.** Different names for the two, for example `HB_FEATURES_H_IN` for the guard, so that Meson’s own header can be passed to `harfbuzz-world.cc`.
+
+**On main.** Still present.
+
+---
+
+## 73. `hb-shape -v` turns on `--ned` as well as `--verbose`
+
+**Summary.** `--verbose` and `--ned` both have the short name `v` (`util/shape-format.hh:187`, `:199`). GLib runs both callbacks for `-v`, so the clusters and advances disappear. The help lists `-v` only for `--verbose`.
+
+**Repro.**
+
+```
+$ hb-shape Roboto-Regular.ttf ab --verbose
+1: (ab)
+1: <U+0061=0|U+0062=1>
+1: [gid69=0+1114|gid70=1+1149]
+$ hb-shape Roboto-Regular.ttf ab -v
+1: (ab)
+1: <U+0061=0|U+0062=1>
+1: [gid69|gid70@1114,0]
+```
+
+**Expected.** `--ned` with no short name (`0`), or a different letter.
+
+**On main.** Still present.
+
+---
+
+## 74. `--features` and `--variations` split at spaces, so the CSS forms their help offers don’t work
+
+**Summary.** The help for `--features` says “All valid CSS font-feature-settings values other than 'normal'” are accepted, and `--variations` says the same of `font-variation-settings`. `hb_feature_from_string` and `hb_variation_from_string` do accept `"liga" 0` and `wght 900`. But the tools split the argument at spaces as well as commas before parsing (`strpbrk (p, ", ")`, `util/shape-options.hh:339`, `:352`; `util/font-options.hh:179`, `:192`), so `"liga" 0` becomes `"liga"`, which turns the feature on, and `0`, which doesn’t parse and is dropped silently.
+
+**Repro.** With Roboto and `var.ttf` from the book’s test fonts (`fonts/variations/`):
+
+```
+$ hb-shape Roboto-Regular.ttf a
+[gid69=0+1114]
+$ hb-shape Roboto-Regular.ttf a --features='"smcp" 0'
+[gid563=0+1157]
+$ hb-shape var.ttf I --variations='wght=900'
+[I=0+410]
+$ hb-shape var.ttf I --variations='wght 900'
+[I=0+260]
+```
+
+Asking for small caps off turns them on, and the weight is ignored with no message.
+
+**Expected.** The CSS forms parsed as the help says (splitting at commas only, as CSS does), or the help changed and a value that doesn’t parse reported.
+
+**On main.** Still present (`font-options.hh:181`, `:194`).
+
+---
+
+## 75. `hb-vector --show-extents` draws each box after the first at twice its pen position
+
+**Summary.** `hb-vector` sets the glyph’s transform to the pen position (`util/vector-output.hh:265`, `:288`), then draws the extents overlay through it with the pen position added again (`:273`, `:296`; `util/helper-extents-overlay.hh:66`). The first glyph’s pen position is 0, so only the boxes after it are misplaced. `hb-raster` draws them in the right place.
+
+**Repro.** `var.ttf` in the book’s test fonts, whose `I` has an advance of 260 and a stem from 80 to 180:
+
+```
+$ hb-vector var.ttf III --show-extents
+```
+
+The second `I` is drawn at x 340–440, but its box at 599–701 and its origin dot at 520; the third `I` at 600–700, its box at 1119–1221. The boxes also fall outside the picture’s `viewBox`.
+
+**Expected.** The overlay drawn at the glyph’s origin within the transform, or without the transform.
+
+**On main.** Still present.
+
+---
+
+## 76. Smaller things in hb-raster, hb-vector and hb-gpu
+
+* hb-raster computes luminosity for the HSL composite modes with the weights 0.299, 0.587 and 0.114 (`hb-raster-image.cc:297`). COLR takes its modes from the W3C Compositing and Blending specification, whose `Lum` uses 0.3, 0.59 and 0.11. Red over blue in HSL_LUMINOSITY comes out as `(0, 122, 192)` where the specification gives `(0, 123, 193)`.
+* The documentation of `hb_vector_paint_set_custom_palette_color` (`hb-vector-paint.cc:453`) says the overrides are consulted by “SVG glyph content using `var(--colorN)`”; nothing in HarfBuzz reads `var(--colorN)` (read from the code).
+* The documentation of `hb_gpu_draw_recycle_blob` (`hb-gpu-draw.cc:1160`) says that it “simply destroys the blob”; it keeps it and the next encode reuses its memory (`hb-blob.hh:220`).
+* The documentation of `hb_gpu_draw_encode` (`hb-gpu-draw.cc:436`) says the context is cleared “On success”; a scope guard clears it on every return (`:457`).
+* The design notes in `hb-gpu-paint.hh:37–238` describe an earlier blob layout: one-texel operations, 16.16 transforms, palette indices in color stops, and a sentinel `custom_palette_color` callback. The encoder writes three-texel layer operations and resolved colors (read from the code).
+* The paint shader’s comment (`hb-gpu-paint-fragment.glsl:28`) and the documentation of `hb_gpu_paint_shader_source` (`hb-gpu-paint.cc:1750`) say the draw shader source must be prepended, because the interpreter calls `hb_gpu_draw ()`. It doesn’t: it calls `_hb_gpu_slug` from the shared helpers, and the draw source defines only `hb_gpu_draw` (read from the code).
+
+**On main.** All still present. (Three stale comments in report 37, in `hb-vector-paint-pdf.cc:49`, `hb-limits.hh` and `README.md`, are fixed on main by `24fe9f0e2`.)
+
+---
+
+## 77. Smaller things in the build files and build documentation
+
+* `harfbuzz-world.cc` maps `HB_HAS_GRAPHITE` to `HAVE_GRAPHITE` (`src/harfbuzz-world.cc.in:20–22`), but the Graphite code tests `HAVE_GRAPHITE2` (`hb-graphite2.cc:31`, `hb-shaper-list.hh:41`), so the single-file build can’t include the Graphite backend. Preprocessing `harfbuzz-world.cc` with a features header that defines `HB_HAS_GRAPHITE` gives no Graphite code. **Fixed on main** by `506cc943b`, which renames `HAVE_GRAPHITE2` to `HAVE_GRAPHITE` throughout (the follow-up to report 56).
+* The `libs` alias target (`meson.build:449–459`) lists the core, subset, raster and vector libraries but not `libharfbuzz-gpu`: `ninja -C build -t query libs` doesn’t list it, though it is built by default. Still present on main (`:463`).
+* `BUILD.md:38` and `:42` and `TESTING.md:4` and `:36` use `meson build`, without `setup`; Meson 1.12 warns that this form is “ambiguous and deprecated”. Still present on main.
+* The single-file `hb-shape` build in `BUILD.md:57` warns `'HAVE_ISATTY' is not defined, evaluates to 0 [-Wundef]` at `util/output-options.hh:102`, because only Meson’s `config.h` defines it. Still present on main.
+
+---
+
+## 78. Smaller things in the command-line tools
+
+* `--font-size` is described as “1/2 integers or 'upem'” (`util/font-options.hh:319`), but is parsed with `%lf` (`:214`) and used as a fraction. Its error message says “one or two space-separated numbers” (`:219`), but a comma separates them too: `--font-size=500,250` works.
+* `output_options_t::refuse_tty` (`util/output-options.hh:124`) is tested (`:103`) but never set, so no tool refuses to write binary output to a terminal through it (read from the code).
+* `hb-fc-list`’s usage text without long options says `-V` displays the “HarfBuzz version” (`util/hb-fc-list.c:93`), but it prints fontconfig’s (`:131`); the long-options text (`:87`) is right. No Meson file builds `hb-fc-list.c` or `hb-fc.cc` (read from the code).
+
+**On main.** All still present.
+
+---
+
+## 79. `hb_directwrite_font_set_funcs` leaks a reference to the DirectWrite font face
+
+*Found by reading the code; Windows only, not run.*
+
+**Summary.** `hb_directwrite_font_set_funcs` (`src/hb-directwrite-font.cc:392`) takes the `IDWriteFontFace` from the font’s DirectWrite data, calls `dw_face->AddRef ()` (`:403`), and installs the DirectWrite font funcs with `nullptr` for both the font data and its destroy callback (`:404`–`:406`). Nothing releases that reference. The funcs don’t use it: each callback reads the face from `font->data.directwrite` again (`:67`, `:105`, …), which holds its own reference, taken by `hb_directwrite_font_create` (`hb-directwrite.cc:433`) or made by `_hb_directwrite_shaper_font_data_create` (`hb-directwrite-shape.cc:66`), and released by `_hb_directwrite_shaper_font_data_destroy` (`hb-directwrite-shape.cc:113`) when the font is destroyed. So each call leaves the font face with one reference too many, and it is never freed.
+
+`hb_coretext_font_set_funcs` (`hb-coretext-font.cc:525`), its Core Text counterpart, takes no extra reference.
+
+**Expected.** No `AddRef`, as in the Core Text version; or the face passed as the font data with a destroy callback that releases it.
+
+**On main.** Still present (`hb-directwrite-font.cc:403`).
+
+---
+
+## 80. `_hb_gdi_reference_table` leaks the screen DC when `SelectObject` fails
+
+*Found by reading the code; Windows only, not run.*
+
+**Summary.** `_hb_gdi_reference_table` (`src/hb-gdi.cc:42`), the table loader behind `hb_gdi_face_create`, gets the screen’s device context with `GetDC (nullptr)` and selects the font into it. If `SelectObject` fails, it returns at once (`:48`–`:49`), before the `HB_SCOPE_GUARD (ReleaseDC (nullptr, hdc))` on the next line (`:50`), so the DC is never released. The loader runs once for each table HarfBuzz asks for, so a font whose `HFONT` can’t be selected leaks a DC each time.
+
+**Expected.** The guard set up before the `SelectObject` test, as it is for the later early return when `GetFontData` fails (`:53`).
+
+**On main.** Still present.
+
+---
+
+## 81. Smaller things in the integration documentation
+
+*Found by reading the code and the documentation.*
+
+* `hb_ft_font_set_funcs`’s documentation (`src/hb-ft.cc:1908`–`:1910`) still says that after changing the font “you need to call hb_ft_hb_font_changed() to update the underlying FT_Face”. The documentation of that function (`:1566`) says that since 11.0.0 calling it isn’t necessary, as HarfBuzz notices the change itself.
+* `hb_cairo_glyphs_from_buffer`’s documentation has the descriptions of its two scale factors swapped: “@x_scale_factor: scale factor to divide #hb_position_t Y values by” and “@y_scale_factor: scale factor to divide #hb_position_t X values by” (`src/hb-cairo.cc:1056`–`:1057`). The code divides x positions by `x_scale_factor` (`:1159`, `:1166`).
+* `hb_icu_script_to_script` and `hb_icu_script_from_script` (`src/hb-icu.cc:68`, `:88`) and `hb_uniscribe_font_get_logfontw` and `hb_uniscribe_font_get_hfont` (`src/hb-uniscribe.cc:550`, `:567`) have no `Since:` line. `hb_uniscribe_font_get_hfont`’s return value is “the HFONT retreieved”.
+* `NEWS` for 11.0.0 presents Core Text font functions and `hb_ft_face_create_from_file_or_fail` and `hb_coretext_face_create_from_file_or_fail` as new in that release (“`hb-coretext` has gained one”, and the list of new face loaders). All three came in 10.1.0, whose `NEWS` lists them, and whose version their doc comments give (`hb-coretext-font.cc:522`, `hb-ft.cc:1772`, `hb-coretext.cc:431`). The 11.0.0 “New API” list itself is right.
+* `docs/usermanual-integration.xml`: the FreeType example calls `hb_ft_font_create(face)` (`:216`) with one argument, where the function takes a destroy callback as well (`hb-ft.h:109`), as the paragraph after the example says; it names `hb_ft_font_get_face()` (`:259`), deprecated since 10.4.0 for `hb_ft_font_get_ft_face`; it gives the autotools option `--with-icu=builtin` (`:609`), where the Meson build has `-Dicu_builtin=true` (`meson.options:61`); and it says the Python bindings “support Python 2 and Python 3” (`:630`).
+
+**On main.** All still present (`hb-ft.cc:1918`, `hb-cairo.cc:936`).
+
+---
+
+Note from chapter 41: `test/fuzzing/README.md:13` lists the fuzzers without the gpu fuzzer (add to draft 42 if filed). Fixed on `main` by `202b3e2c2` (#6692), with report 42’s README item. Draft 43 is related to the closed issue #5993.

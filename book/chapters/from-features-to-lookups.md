@@ -184,7 +184,7 @@ The planner itself uses few bits (`frac`, `numr`, `dnom`, `rtlm`, eight for `ran
 
 ## Stages and pauses
 
-A **pause** ends a stage. `add_gsub_pause` and `add_gpos_pause` push a stage boundary, optionally with a **pause function**, and move the builder on to the next stage (`hb-ot-map.cc:198`); every feature added after it is in the new stage. `compile` adds one last pause to each table (`:353`). When the map runs, the pause function is called after the stage’s lookups, and if it returns true, because it may have added glyphs, the buffer’s digest is refreshed (`hb-ot-layout.cc:2122`). [Substituting glyphs: GSUB](gsub.html#the-order-lookups-run-in) explains why stages matter: within one, lookups run in LookupList order, whatever their features; across them, the stage order wins.
+A **pause** ends a stage. `add_gsub_pause` and `add_gpos_pause` push a stage boundary, optionally with a **pause function**, and move the builder on to the next stage (`hb-ot-map.cc:198`); every feature added after it is in the new stage. `compile` adds one last pause to each table (`:353`). When the map runs, the pause function is called after the stage’s lookups, and if it returns true, because it may have added glyphs, the buffer’s digest is refreshed (`hb-ot-layout.cc:2122`). [GSUB: substituting glyphs](gsub.html#the-order-lookups-run-in) explains why stages matter: within one, lookups run in LookupList order, whatever their features; across them, the stage order wins.
 
 The default shaper adds no pauses, so after `rvrn` every feature is in one stage. The others use pauses for two reasons. Some need to do work between features: the Indic shaper finds syllables before any lookup and reorders after the basic forms (`hb-ot-shaper-indic.cc:249`–`:265`), and USE, Khmer and Myanmar do the same. Others need features applied one at a time: the Arabic shaper puts a pause after each joining feature (`hb-ot-shaper-arabic.cc:219`), following what Uniscribe was found to do. The script chapters describe each.
 
@@ -299,7 +299,7 @@ The same lookup in two stages is two entries, and runs twice.
 
 ## Running the map
 
-`hb_ot_map_t::apply` (`hb-ot-layout.cc:2069`) loops over the stages and their lookups. For each lookup it checks digests, sets the lookup’s mask and flags, and runs it; after each stage, it calls the pause function. `substitute` runs it for GSUB, `position` for GPOS. What happens inside one lookup is the subject of [Substituting glyphs: GSUB](gsub.html#running-one-lookup), and where in the pipeline the two calls come is in [The pipeline, step by step](the-pipeline-step-by-step.html).
+`hb_ot_map_t::apply` (`hb-ot-layout.cc:2069`) loops over the stages and their lookups. For each lookup it checks digests, sets the lookup’s mask and flags, and runs it; after each stage, it calls the pause function. `substitute` runs it for GSUB, `position` for GPOS. What happens inside one lookup is the subject of [GSUB: substituting glyphs](gsub.html#running-one-lookup), and where in the pipeline the two calls come is in [The pipeline, step by step](the-pipeline-step-by-step.html).
 
 ## Where to read the source
 

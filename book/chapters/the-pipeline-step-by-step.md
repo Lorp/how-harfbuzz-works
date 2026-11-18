@@ -4,7 +4,7 @@ When `hb_shape` reaches the `ot` backend, the expensive decisions have been made
 
 That is the job of one short function, `hb_ot_shape_internal` (`hb-ot-shape.cc:1171`). Everything the `ot` shaper does to a buffer happens inside it, in a fixed order, and most of the rest of this part of the book is about one step or another of it. This chapter goes through the whole function once, in order: what each step does, why it comes where it does, which fields of the buffer it reads and writes, and where the step is explained in depth.
 
-It follows one run all the way, using `hb-shape --trace`. The test font, `pipeline.ttf`, is built from `fonts/the-pipeline-step-by-step/pipeline.fea`. It has Arabic beh, lam and alef in their joining forms, the lam-alef ligature, a fatha that GPOS attaches to beh, a pair of parentheses, and the digits and fraction slash for an automatic fraction. Its glyphs are boxes. Every result and trace on this page was produced by running HarfBuzz {{hb}} on it when the page was built.
+It follows one run all the way, using `hb-shape --trace` ([The command-line tools](command-line-tools.html#traces)). The test font, `pipeline.ttf`, is built from `fonts/the-pipeline-step-by-step/pipeline.fea`. It has Arabic beh, lam and alef in their joining forms, the lam-alef ligature, a fatha that GPOS attaches to beh, a pair of parentheses, and the digits and fraction slash for an automatic fraction. Its glyphs are boxes. Every result and trace on this page was produced by running HarfBuzz {{hb}} on it when the page was built.
 
 ## The whole function
 
@@ -79,7 +79,7 @@ Line numbers are in `hb-ot-shape.cc` unless another file is named; where there a
 | 13 | GSUB, with the shaper’s pauses; or `morx` | :931, :916 | glyphs, clusters | [GSUB](gsub.html), [AAT inside HarfBuzz](aat-inside-harfbuzz.html) |
 | 14 | `clear_positions` | :1096 | `pos` becomes positions | [Buffers](buffers.html#the-buffers-three-arrays) |
 | 15 | default advances; origins; space widths | :1098, :1002 | advances, offsets | [Where metrics come from](where-metrics-come-from.html), [Fallbacks](fallbacks.html) |
-| 16 | `position_start`; zero marks early | :1049, :1055 | `attach_chain`, `attach_type`; advances | [Positioning glyphs: GPOS](positioning-glyphs-gpos.html) |
+| 16 | `position_start`; zero marks early | :1049, :1055 | `attach_chain`, `attach_type`; advances | [GPOS: positioning glyphs](positioning-glyphs-gpos.html) |
 | 17 | GPOS, or `kerx`; `kern` or fallback kerning; `trak` | :1064, :271 | advances, offsets | GPOS, [Legacy kern](legacy-kern.html), [AAT positioning](aat-positioning.html) |
 | 18 | zero marks late | :1070 | advances | GPOS |
 | 19 | finish advances; zero default ignorables; finish offsets | :1080–:1082 | advances, offsets | GPOS, [Fonts and font functions](fonts-and-font-functions.html#slant) |

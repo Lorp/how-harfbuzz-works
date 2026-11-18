@@ -1,6 +1,6 @@
 # Joining scripts
 
-In a joining script, a letter’s shape depends on whether it connects to its neighbours. [Why shaping exists](why-shaping-exists.html#one-character-many-shapes-joining-and-contextual-forms) showed beh taking four forms, and [The pipeline, step by step](the-pipeline-step-by-step.html#masks) showed where the decision is made: in the Arabic shaper’s `setup_masks` hook, before any glyph exists, a state machine reads each character’s joining type and sets one feature bit in its mask. This chapter takes that machine apart, then covers the rest of the Arabic shaper: its feature order, Syriac Alaph, mark reordering, `stch`, and shaping from presentation forms when a font has no Arabic `GSUB`.
+In a joining script, a letter’s shape depends on whether it connects to its neighbors. [Why shaping exists](why-shaping-exists.html#one-character-many-shapes-joining-and-contextual-forms) showed beh taking four forms, and [The pipeline, step by step](the-pipeline-step-by-step.html#masks) showed where the decision is made: in the Arabic shaper’s `setup_masks` hook, before any glyph exists, a state machine reads each character’s joining type and sets one feature bit in its mask. This chapter takes that machine apart, then covers the rest of the Arabic shaper: its feature order, Syriac Alaph, mark reordering, `stch`, and shaping from presentation forms when a font has no Arabic `GSUB`.
 
 Only Arabic and Syriac get the Arabic shaper ([Choosing a script shaper](choosing-a-script-shaper.html#arabic-and-syriac)). Mongolian, N’Ko and the other joining scripts go to the Universal Shaping Engine, which borrows the same state machine; the last section is about that.
 
@@ -8,7 +8,7 @@ The test fonts are built by `fonts/joining-scripts/build-fonts.py`: `joining.ttf
 
 ## Joining types
 
-Each character has a **joining type**, from Unicode’s `ArabicShaping.txt`: **dual-joining** (D) letters join on both sides, **right-joining** (R) letters only to the letter before them, **left-joining** (L) letters only to the letter after, **join-causing** (C) characters such as the tatweel and ZWJ make their neighbours join without having forms of their own, **non-joining** (U) characters join nothing, and **transparent** (T) characters, mostly marks, are passed over as though they weren’t there. “Right” and “left” are named for right-to-left text: an R letter joins the letter before it in logical order.
+Each character has a **joining type**, from Unicode’s `ArabicShaping.txt`: **dual-joining** (D) letters join on both sides, **right-joining** (R) letters only to the letter before them, **left-joining** (L) letters only to the letter after, **join-causing** (C) characters such as the tatweel and ZWJ make their neighbors join without having forms of their own, **non-joining** (U) characters join nothing, and **transparent** (T) characters, mostly marks, are passed over as though they weren’t there. “Right” and “left” are named for right-to-left text: an R letter joins the letter before it in logical order.
 
 `gen-arabic-table.py` packs the file into a table with eight values (`hb-ot-shaper-arabic.cc:73`):
 
@@ -28,7 +28,7 @@ enum hb_arabic_joining_type_t {
 };
 ```
 
-Three things in it differ from the file. C is folded into D: for the machine, a join-causing character is a letter that joins both ways and has no forms. Two Syriac joining groups replace the joining type of their letters: Alaph, and Dalath and Rish, are R letters with special behaviour, so the generator writes their group instead (`gen-arabic-table.py`, `print_joining_table`). And characters the file doesn’t list get X, which `get_joining_type` (`:89`) turns at run time into T for non-spacing and enclosing marks and format characters, and into U for everything else.
+Three things in it differ from the file. C is folded into D: for the machine, a join-causing character is a letter that joins both ways and has no forms. Two Syriac joining groups replace the joining type of their letters: Alaph, and Dalath and Rish, are R letters with special behavior, so the generator writes their group instead (`gen-arabic-table.py`, `print_joining_table`). And characters the file doesn’t list get X, which `get_joining_type` (`:89`) turns at run time into T for non-spacing and enclosing marks and format characters, and into U for everything else.
 
 The table was made from `ArabicShaping-18.0.0.txt` and covers every script that file covers, which is how the same code serves the joining scripts under USE. The generator also reads `Blocks.txt`, but nothing it prints uses it (read from the code).
 
@@ -65,7 +65,7 @@ joining.ttf  بـب  --language=ar
 joining.ttf  ب\u064Eب  --language=ar
 ```
 
-Read each result from the right. Alef, an R letter, ends the first word, so the beh after it starts again as initial. Hamza (U) breaks the chain: the beh before it is final, the one after isolated. The tatweel (C) joins its neighbours like a letter. The fatha (T) is skipped, so the behs on either side of it join.
+Read each result from the right. Alef, an R letter, ends the first word, so the beh after it starts again as initial. Hamza (U) breaks the chain: the beh before it is final, the one after isolated. The tatweel (C) joins its neighbors like a letter. The fatha (T) is skipped, so the behs on either side of it join.
 
 The actions are stored in a byte of each glyph’s scratch space, `arabic_shaping_action()` ([Buffers](buffers.html#eight-bytes-of-scratch-space)). A transparent character gets NONE (`:326`), and is otherwise skipped: neither `prev` nor the state changes. Then `setup_masks_arabic_plan` (`:391`) ORs each glyph’s mask with `mask_array[action]`, the one-bit mask of the feature of the same number. `mask_array[NONE]` is zero, so marks and non-joining characters get no joining feature at all.
 
@@ -204,7 +204,7 @@ font: stch.ttf
 text: \u070Fܒܒ \u070Fܒ
 ```
 
-In the drawing, the word on the right has one beth, and its line fits it. The word on the left has two, and its line is moved 400 units right, across the space and into the other word. This looks like a bug: the exact fit is the one case where the result is worse than an approximate one. When the word is narrower than the two ends and a bar, the line is also off centre, by half the width left after the ends.
+In the drawing, the word on the right has one beth, and its line fits it. The word on the left has two, and its line is moved 400 units right, across the space and into the other word. This looks like a bug: the exact fit is the one case where the result is worse than an approximate one. When the word is narrower than the two ends and a bar, the line is also off center, by half the width left after the ends.
 
 Two limits keep a hostile font from making the buffer huge. A run of tiles is never repeated past 256 glyphs in all (`STCH_MAX_GLYPHS`, `:572`), and the arithmetic uses 64-bit integers and saturating additions; NEWS records fixes for overflows here in 13.1.0 and 13.1.1.
 

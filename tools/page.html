@@ -144,6 +144,7 @@ pre code { font-size: .82rem; line-height: 1.55; }
 .shape td.in .txt { display: block; font: 400 1.05rem var(--font-code); }
 .shape td.in .cps { display: block; font: 400 .7rem var(--font-code); color: var(--muted); white-space: nowrap; }
 .shape td.out code, .trace td.buf code { background: none; padding: 0; white-space: nowrap; color: var(--hit); font-weight: 600; }
+.shape td.out code { white-space: pre; }
 .trace { border: 1px solid var(--rule); border-radius: 6px; }
 .trace-head { padding: .5rem .75rem; border-bottom: 1px solid var(--rule); background: var(--well); }
 .trace-head code { background: none; font-size: .78rem; color: var(--muted); }
@@ -152,6 +153,10 @@ pre code { font-size: .82rem; line-height: 1.55; }
 .trace tr:last-child td { border-bottom: 0; }
 
 /* Figures: outlines drawn by hb-vector */
+.rasters { margin: .5rem 0 1.75rem; }
+.raster { margin: 0 0 .75rem; }
+.raster img { display: block; max-width: 100%; height: auto; image-rendering: pixelated; border: 1px solid var(--rule); }
+.raster figcaption { font-size: .78rem; color: var(--muted); margin-top: .25rem; }
 .draw { margin: .5rem 0 1.75rem; border: 1px solid var(--rule); border-radius: 6px; padding: .75rem 1rem .5rem; }
 .draw .frames { display: flex; flex-wrap: wrap; gap: 1rem; }
 .draw.slider .frames { display: block; }

@@ -372,7 +372,7 @@ The vowel sign is sorted to the front, its cluster not yet merged; the final reo
 
 ## Final reordering
 
-`final_reordering_indic` (`:1444`) runs after `cjct`, on glyphs the basic features have changed. Positions still match the glyph order, but categories may no longer fit, so `final_reordering_syllable_indic` (`:999`) first repairs one sure case: the virama glyph, ligated and then multiplied, gets category `H` back. Afterwards `indic_category` and `indic_position` are released.
+`final_reordering_indic` (`:1444`) runs after `cjct`, on glyphs the basic features have changed. Positions still match the glyph order, but categories may no longer fit, so `final_reordering_syllable_indic` (`:999`) first repairs one sure case: the virama glyph, ligated and then multiplied, gets category `H` back. Afterward `indic_category` and `indic_position` are released.
 
 ### The base again
 
@@ -482,7 +482,7 @@ full.ttf  \u0020क\u093F  --language=hi
 full.ttf  क\u093F  --language=hi  --text-before=क
 ```
 
-After KA it isn’t initial, and the two syllables become unsafe to break between. In the last line the earlier KA is given as pre-context, and the vowel sign is initial again: the test looks only inside the buffer. An application that splits a word into two runs, for a change of colour say, gets the initial form mid-word even if it passes the first as context. That may be unintended (inferred: the source gives no reason, and the Arabic shaper’s joining does read context).
+After KA it isn’t initial, and the two syllables become unsafe to break between. In the last line the earlier KA is given as pre-context, and the vowel sign is initial again: the test looks only inside the buffer. An application that splits a word into two runs, for a change of color say, gets the initial form mid-word even if it passes the first as context. That may be unintended (inferred: the source gives no reason, and the Arabic shaper’s joining does read context).
 
 ## The old model
 
@@ -510,7 +510,7 @@ Microsoft’s specifications say what Uniscribe was meant to do; fonts were test
 
 | Where | What HarfBuzz does, and why |
 |---|---|
-| `consonant_position_from_face`, `:367` | asks the probes in both orders, because Uniscribe honours old-order lookups in new-model fonts |
+| `consonant_position_from_face`, `:367` | asks the probes in both orders, because Uniscribe honors old-order lookups in new-model fonts |
 | `data_create_indic`, `:331` | uses zero-context probes except for Malayalam and the old model, from testing what Windows does |
 | initial reordering, `:641` | moves the old model’s virama unconditionally, except in Kannada, where “Uniscribe does this only if there is *not* a Halant after last consonant already” |
 | initial reordering, `:701` | doesn’t move a virama with a left vowel sign: “Uniscribe doesn’t move the Halant with Left Matra” |

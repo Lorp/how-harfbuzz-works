@@ -136,14 +136,14 @@ Drawing and painting have the most limits, because outlines, paint graphs and re
 
 A composite that contains itself is not a limit but a cycle, and only the component that closes the cycle is skipped. Every other outline limit fails the whole glyph, which then draws as nothing while its extents still come from its header; `hb-shape` and layout see an ordinary glyph.
 
-### Colour
+### Color
 
 | Limit | Value | What it bounds | When reached | Chapter |
 |---|---|---|---|---|
-| `HB_MAX_NESTING_LEVEL` | 64 | depth of a COLR v1 paint graph while painting | deeper paints are not painted | [Colour](colour.html#guards) |
-| `HB_MAX_GRAPH_EDGE_COUNT` | 16,384 | Paints visited for one glyph | no more are painted | [Colour](colour.html#guards) |
-| `HB_PAINT_MAX_SWEEP_TILES` | 4,096 | tiles one repeating or reflecting sweep gradient is cut into | below an angle of 2π/4,096 per repeat, the circle is filled with the average colour; beyond 4,096 tiles, tiling stops (`hb-paint.cc:1220`, `:1280`) | |
-| `dupe` chain | 8 | `sbix` records that point at another glyph’s image | the image isn’t found (`sbix.hh:121`) | [Colour](colour.html#bitmaps-sbix-and-cbdt) |
+| `HB_MAX_NESTING_LEVEL` | 64 | depth of a COLR v1 paint graph while painting | deeper paints are not painted | [Color](color.html#guards) |
+| `HB_MAX_GRAPH_EDGE_COUNT` | 16,384 | Paints visited for one glyph | no more are painted | [Color](color.html#guards) |
+| `HB_PAINT_MAX_SWEEP_TILES` | 4,096 | tiles one repeating or reflecting sweep gradient is cut into | below an angle of 2π/4,096 per repeat, the circle is filled with the average color; beyond 4,096 tiles, tiling stops (`hb-paint.cc:1220`, `:1280`) | |
+| `dupe` chain | 8 | `sbix` records that point at another glyph’s image | the image isn’t found (`sbix.hh:121`) | [Color](color.html#bitmaps-sbix-and-cbdt) |
 | `HB_SVG_MAX_DOCUMENT_SIZE` | 16 MiB | one SVG document, after decompression | the document isn’t returned (`svg.hh:63`, `:78`) | |
 | `MAX_DEPTH` | 128 | elements nested in an SVG document, when HarfBuzz indexes it by glyph | the document isn’t indexed (`svg.hh:590`), so (inferred) its glyphs aren’t found | |
 
@@ -151,16 +151,16 @@ A composite that contains itself is not a limit but a cycle, and only the compon
 
 | Limit | Value | What it bounds | When reached | Chapter |
 |---|---|---|---|---|
-| `HB_RASTER_MAX_DRAW_EDGES` | 2²⁰ | edges in one hb-raster draw session | drawing stops | [Rendering](rendering.html#limits) |
-| `HB_RASTER_MAX_AUTO_DIMENSION` | 4,096 | pixels a side, when the size comes from the font, including a PNG’s header | the surface is clamped; the PNG isn’t decoded | [Rendering](rendering.html#limits) |
-| `HB_RASTER_MAX_BUFFER_SIZE` | 1 GiB | one image’s or clip’s buffer | it isn’t allocated | [Rendering](rendering.html#limits) |
-| `HB_BUDGET_RASTER_PIXELS`, `_PAINT_PASSES` | 2²⁶, 4 | pixel work: the larger of the first and that many passes over the surface | the image is left blank | [Rendering](rendering.html#limits) |
-| `HB_VECTOR_MAX_DOCUMENT_SIZE` | 16 MiB | one SVG or PDF document from hb-vector | the buffer stops growing and drawing stops | [Rendering](rendering.html#limits_1) |
-| transform depth | 64 | transforms nested in hb-vector’s SVG output | further ones are ignored (`hb-vector-paint-svg.cc:372`) | [Rendering](rendering.html#limits_1) |
-| `HB_GPU_DRAW_MAX_CURVES` | 65,536 | curves in one hb-gpu glyph | the encoding fails (`hb-gpu-draw.cc:58`) | [Rendering](rendering.html#encoding-outlines) |
-| `HB_GPU_CU2QU_MAX_DEPTH` | 10 | subdivisions of a cubic into quadratics | the last piece is used as it is (`hb-gpu-cu2qu.hh:187`) | [Rendering](rendering.html#encoding-outlines) |
-| `HB_GPU_PAINT_MAX_OPS`, `_GROUP_DEPTH`, `_CLIP_DEPTH`, `_SUB_BLOBS` | 32,767, 4, 3, 1,024 | an hb-gpu colour glyph’s operations, nested groups, clips per layer, clip blobs | the encoder returns `NULL` (`hb-gpu-paint.cc:51`) | [Rendering](rendering.html#colour-glyphs) |
-| `HB_GPU_PAINT_MAX_SUB_BYTES` | 64 MiB | bytes of clip outlines and colour stops in one hb-gpu paint | the same (`hb-gpu-paint.hh:276`) | [Rendering](rendering.html#colour-glyphs) |
+| `HB_RASTER_MAX_DRAW_EDGES` | 2²⁰ | edges in one hb-raster draw session | drawing stops | [hb-raster](hb-raster.html#limits) |
+| `HB_RASTER_MAX_AUTO_DIMENSION` | 4,096 | pixels a side, when the size comes from the font, including a PNG’s header | the surface is clamped; the PNG isn’t decoded | [hb-raster](hb-raster.html#limits) |
+| `HB_RASTER_MAX_BUFFER_SIZE` | 1 GiB | one image’s or clip’s buffer | it isn’t allocated | [hb-raster](hb-raster.html#limits) |
+| `HB_BUDGET_RASTER_PIXELS`, `_PAINT_PASSES` | 2²⁶, 4 | pixel work: the larger of the first and that many passes over the surface | the image is left blank | [hb-raster](hb-raster.html#the-pixel-budget) |
+| `HB_VECTOR_MAX_DOCUMENT_SIZE` | 16 MiB | one SVG or PDF document from hb-vector | the buffer stops growing and drawing stops | [hb-vector](hb-vector.html#limits) |
+| transform depth | 64 | transforms nested in hb-vector’s SVG output | further ones are ignored (`hb-vector-paint-svg.cc:372`) | [hb-vector](hb-vector.html#limits-for-color-glyphs) |
+| `HB_GPU_DRAW_MAX_CURVES` | 65,536 | curves in one hb-gpu glyph | the encoding fails (`hb-gpu-draw.cc:58`) | [hb-gpu](hb-gpu.html#limits-on-outlines) |
+| `HB_GPU_CU2QU_MAX_DEPTH` | 10 | subdivisions of a cubic into quadratics | the last piece is used as it is (`hb-gpu-cu2qu.hh:187`) | [hb-gpu](hb-gpu.html#limits-on-outlines) |
+| `HB_GPU_PAINT_MAX_OPS`, `_GROUP_DEPTH`, `_CLIP_DEPTH`, `_SUB_BLOBS` | 32,767, 4, 3, 1,024 | an hb-gpu color glyph’s operations, nested groups, clips per layer, clip blobs | the encoder returns `NULL` (`hb-gpu-paint.cc:51`) | [hb-gpu](hb-gpu.html#limits-on-color-glyphs) |
+| `HB_GPU_PAINT_MAX_SUB_BYTES` | 64 MiB | bytes of clip outlines and color stops in one hb-gpu paint | the same (`hb-gpu-paint.hh:276`) | [hb-gpu](hb-gpu.html#limits-on-color-glyphs) |
 
 The rule that runs through the renderers is in a comment on `HB_RASTER_MAX_AUTO_DIMENSION`: sizes that come from the font are capped, but sizes the client sets with `hb_raster_draw_set_extents` aren’t. The font is the attacker; the client is trusted with its own allocations.
 
@@ -210,7 +210,7 @@ Most limits have grown over the years as real fonts reached them. `NEWS` records
 | `src/hb-ot-layout.cc` | the GSUB closure loop, and the script and language-system counts |
 | `src/hb-aat-layout-common.hh`, `src/hb-aat-layout-morx-table.hh` | the AAT driver’s charges, and the subtable limit |
 | `src/OT/glyf/Glyph.hh`, `src/hb-cff-interp-cs-common.hh` | the outline limits |
-| `src/hb-paint.cc`, `src/OT/Color/COLR/COLR.hh`, `src/OT/Color/svg/svg.hh` | the colour limits |
+| `src/hb-paint.cc`, `src/OT/Color/COLR/COLR.hh`, `src/OT/Color/svg/svg.hh` | the color limits |
 | `src/hb-raster-*.cc`, `src/hb-vector-*.cc`, `src/hb-gpu-*.cc` | the renderers’ limits |
 | `src/hb-subset-plan.cc`, `src/hb-subset-table.hh`, `src/graph/graph.hh` | the subsetter’s and repacker’s limits |
 | `src/hb-common.h`, `src/hb-draw.h`, `src/hb-paint.h` | `HB_BUDGET_DEFAULT`, `HB_BUDGET_UNLIMITED` and the budget API |

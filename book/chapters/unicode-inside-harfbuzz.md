@@ -77,7 +77,7 @@ So with nil functions every character is a letter, nothing is a mark, and nothin
 
 ### Three implementations
 
-Which implementation is the default is decided when HarfBuzz is compiled (`hb_unicode_funcs_get_default`, `hb-unicode.cc:152`):
+Which implementation is the default is decided when HarfBuzz is compiled (`hb_unicode_funcs_get_default`, `hb-unicode.cc:152`; [Integrations](integrations.html#unicode-from-icu-or-glib-hb-icu-and-hb-glib) covers the ICU and GLib layers):
 
 ```c++
 #if !defined(HB_NO_UNICODE_FUNCS) && !defined(HB_NO_UCD)
@@ -147,7 +147,7 @@ The header holds three complete sets of these arrays, and the build chooses one:
 | compact | `HB_OPTIMIZE_SIZE` | 37,735 bytes | 46,137 bytes |
 | sloppy | `HB_OPTIMIZE_SIZE` and `HB_NO_UCD_UNASSIGNED` | 26,427 bytes | 34,829 bytes |
 
-The sizes are worked out from the array lengths. The compact set holds the same data as the default, packed harder, with deeper lookups. The sloppy one doesn’t: for it, `gen-ucd-table.py:257` first gives every unassigned code point the general category and script of its neighbour, within each block of 128. Identical values pack better, and an unassigned code point gets a plausible answer instead of Cn and Unknown. `HB_TINY` turns on both macros (`hb-config.hh`); see [Compile-time configuration](compile-time-configuration.html).
+The sizes are worked out from the array lengths. The compact set holds the same data as the default, packed harder, with deeper lookups. The sloppy one doesn’t: for it, `gen-ucd-table.py:257` first gives every unassigned code point the general category and script of its neighbor, within each block of 128. Identical values pack better, and an unassigned code point gets a plausible answer instead of Cn and Unknown. `HB_TINY` turns on both macros (`hb-config.hh`); see [Compile-time configuration](compile-time-configuration.html).
 
 ### Decomposition and composition
 

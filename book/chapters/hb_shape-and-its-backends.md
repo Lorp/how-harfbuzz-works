@@ -72,7 +72,7 @@ The buffer has to be ready before any of this. `_hb_shape_plan_execute_internal`
 
 ## The shaper list
 
-Every backend HarfBuzz knows about is named once, in `hb-shaper-list.hh`. Without its licence header, the whole file is this:
+Every backend HarfBuzz knows about is named once, in `hb-shaper-list.hh`. Without its license header, the whole file is this:
 
 ```c++
 #ifndef HB_NO_SHAPER
@@ -132,7 +132,7 @@ The file has no header guard of its own (its guard lines are marked “Dummy hea
 
 So adding a backend means adding one line here, writing its shape function and its four data functions, and nothing else. The order of the lines is the order of preference, which is why the comment says “in the right place”.
 
-Each line is guarded by a build option, and only two are on by default. In `meson_options.txt` the options `wasm`, `graphite2`, `harfrust`, `kbts`, `coretext`, `directwrite` and `gdi` (which brings Uniscribe) are all `disabled` unless asked for, while `ot` and `fallback` are left out only by the compile-time macros `HB_NO_OT_SHAPE` (implied by `HB_NO_SHAPER` and `HB_NO_OT`) and `HB_NO_FALLBACK_SHAPE` (implied by `HB_NO_LEGACY`), in `hb-config.hh:125–175`. A build with every backend compiled out fails to compile, on purpose: “No shaper enabled.” (`hb-shaper.cc:38`).
+Each line is guarded by a build option, and only two are on by default. HarfBuzz is built with [Meson](building-harfbuzz.html#meson-and-ninja), which reads its options from `meson_options.txt`. There the options `wasm`, `graphite2`, `harfrust`, `kbts`, `coretext`, `directwrite` and `gdi` (which brings Uniscribe) are all `disabled` unless asked for, while `ot` and `fallback` are left out only by the compile-time macros `HB_NO_OT_SHAPE` (implied by `HB_NO_SHAPER` and `HB_NO_OT`) and `HB_NO_FALLBACK_SHAPE` (implied by `HB_NO_LEGACY`), in `hb-config.hh:125–175`. A build with every backend compiled out fails to compile, on purpose: “No shaper enabled.” (`hb-shaper.cc:38`).
 
 `hb_shape_list_shapers` returns the names in order (`hb-shape.cc:101`), and `hb-shape --list-shapers` prints them. The book’s build has the default two:
 
@@ -184,7 +184,7 @@ Only *face* data is asked for here. The backend’s *font* data, which depends o
 
 ### Why `ot` always wins
 
-Now the list and the test together explain the behaviour. Here is what each backend’s face data needs:
+Now the list and the test together explain the behavior. Here is what each backend’s face data needs:
 
 | Order | Backend | Its face data is created if… | Where |
 |---|---|---|---|
@@ -263,7 +263,7 @@ The second way changes the default list itself. The first time HarfBuzz needs th
 
 The variable reorders the list; it doesn’t replace it. `HB_SHAPER_LIST=fallback` gives the list `fallback, ot`, in which `fallback` takes every font, while `HB_SHAPER_LIST=coretext` on a Mac build gives `coretext` followed by the rest in their usual order, in which Core Text takes every font it can read, and `ot` still takes the rest. The reordered list is also what `hb_shape_list_shapers` returns, and so what `hb-shape --list-shapers` prints.
 
-The list is made once per process, by a lazy loader, and freed at exit (`hb-shaper.cc:43–90`). Changing the variable afterwards has no effect. Builds with `HB_NO_GETENV`, which `HB_LEAN` and `HB_TINY` imply, don’t read it at all (`hb.hh:440`). It exists for testing: running a whole program, or a whole test suite, through another backend without changing a line of it. `hb-shape`’s own option code describes it as the variable that “Overrides the default shaper list” (`util/shape-options.hh:470`).
+The list is made once per process, by a lazy loader, and freed at exit (`hb-shaper.cc:43–90`). Changing the variable afterward has no effect. Builds with `HB_NO_GETENV`, which `HB_LEAN` and `HB_TINY` imply, don’t read it at all (`hb.hh:440`). It exists for testing: running a whole program, or a whole test suite, through another backend without changing a line of it. `hb-shape`’s own option code describes it as the variable that “Overrides the default shaper list” (`util/shape-options.hh:470`).
 
 ## Running the plan, and failing
 
@@ -408,7 +408,7 @@ The backend trusts the module with the buffer. A comment after the call says “
 
 ### `harfrust`
 
-HarfRust is a port of HarfBuzz’s shaping to Rust, from the HarfBuzz project itself. `NEWS` for 11.2.1 introduced the backend as “harfruzz”, “an ongoing Rust port of HarfBuzz shaping… mainly used for testing the output of the Rust implementation”, and 11.3.0 renamed it after the upstream rename. It is built with `-Dharfrust=enabled`, and this release uses HarfRust 0.15 (`src/rust/Cargo.toml`). [The family](the-family.html) is about HarfRust itself.
+HarfRust is a port of HarfBuzz’s shaping to Rust, from the HarfBuzz project itself. `NEWS` for 11.2.1 introduced the backend as “harfruzz”, “an ongoing Rust port of HarfBuzz shaping… mainly used for testing the output of the Rust implementation”, and 11.3.0 renamed it after the upstream rename. It is built with `-Dharfrust=enabled`, and this release uses HarfRust 0.15 (`src/rust/Cargo.toml`). [HarfRust](harfrust.html) is about HarfRust itself.
 
 The glue is in `hb-harfrust.cc` and `rust/shape.rs`. Face data is a HarfRust `Font` that fetches tables from the HarfBuzz face (`shape.rs:74`). Font data is an instance of it at the font’s normalized coordinates, with its scale and point size (`:220`). HarfRust’s own plan is cached in the HarfBuzz plan, in a field that exists only for it (`hb_shape_plan_t::harfrust_data`, `hb-shape-plan.hh`). For each run, the buffer’s code points, clusters, flags, cluster level and pre- and post-context are copied into a HarfRust buffer, shaped, and the glyphs and positions copied back (`shape.rs:336`).
 
@@ -422,7 +422,7 @@ Its face data is the whole font file, read by kb_text_shape (`hb-kbts.cc:173`), 
 
 ### The platform backends: `coretext`, `directwrite`, `uniscribe`
 
-These three hand the text to the operating system’s own shaping engine. The Uniscribe and Core Text backends came with 0.9.2, whose `NEWS` calls both “primarily for testing”, and DirectWrite later. Their purpose is comparison: HarfBuzz has to match what these engines do with the same fonts, and the quickest way to find out is to ask them.
+These three hand the text to the operating system’s own shaping engine. (The faces and font funcs that wrap the same platform libraries are another matter: [Integrations](integrations.html#the-platforms-core-text-directwrite-gdi-and-uniscribe).) The Uniscribe and Core Text backends came with 0.9.2, whose `NEWS` calls both “primarily for testing”, and DirectWrite later. Their purpose is comparison: HarfBuzz has to match what these engines do with the same fonts, and the quickest way to find out is to ask them.
 
 * **`coretext`** (Apple platforms, `-Dcoretext=enabled`) makes a `CGFont` from the face’s file, or reuses the one a Core Text face was made from (`hb-coretext.cc:261`). It can’t open any face of a collection but the first: “TTC index %u not supported” (`:222`). Its font data is a `CTFont` at the font’s `ptem` size, or 12 points if none is set (`HB_CORETEXT_DEFAULT_FONT_SIZE`, `hb-aat-layout.hh:36`), with the font’s variation coordinates. OpenType feature tags are translated into AAT feature types and selectors where a mapping exists (`hb-coretext-shape.cc:220`).
 * **`directwrite`** (Windows, `-Ddirectwrite=enabled`) makes an `IDWriteFontFace` from the face’s file. It supports variations and user features since 11.0.0, when `NEWS` says it “graduated from experimental”.

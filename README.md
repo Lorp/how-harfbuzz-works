@@ -19,7 +19,7 @@ Every shaping result and trace in the book is made by running HarfBuzz on small 
 * `book/cover.png`, `book/cover-back.png`: the front and back covers, for the PDF
 * `fonts/<page>/`: each chapter’s feature files, the fonts built from them, and `build.sh`
 * `tools/`: building HarfBuzz (`build-harfbuzz.sh`), the site (`build-site.mjs`, Node), and the test fonts and their views (`build-test-font.py`, `font-views.py`, Python)
-* `notes/`: research towards the book, such as the survey of the source
+* `notes/`: research toward the book, such as the survey of the source
 
 ## Building
 
@@ -53,7 +53,7 @@ Each `FONT.views.json` holds the views made from the compiled font: spec-like, T
 
 ## Writing a chapter
 
-A chapter is ordinary Markdown, in `book/chapters/`. What makes this book different is that its examples aren’t typed in by hand: you describe what you want to show, and the build runs HarfBuzz to produce it. If HarfBuzz’s behaviour changes, the book changes with it.
+A chapter is ordinary Markdown, in `book/chapters/`. What makes this book different is that its examples aren’t typed in by hand: you describe what you want to show, and the build runs HarfBuzz to produce it. If HarfBuzz’s behavior changes, the book changes with it.
 
 Each chapter has its own small test fonts in `fonts/<chapter>/`, named after the chapter’s file (so `gsub.md` uses `fonts/gsub/`). Three kinds of code block use them.
 

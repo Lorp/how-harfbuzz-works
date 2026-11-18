@@ -18,7 +18,7 @@ The functions follow the table’s three parts:
 |---|---|---|
 | `MathConstants` | `hb_ot_math_get_constant` | one constant, scaled, or a percentage |
 | `MathGlyphInfo` | `hb_ot_math_get_glyph_italics_correction` | a glyph’s italics correction, or 0 |
-| | `hb_ot_math_get_glyph_top_accent_attachment` | where an accent centres over a glyph, or half its advance |
+| | `hb_ot_math_get_glyph_top_accent_attachment` | where an accent centers over a glyph, or half its advance |
 | | `hb_ot_math_is_glyph_extended_shape` | whether the glyph is in the extended-shape coverage |
 | | `hb_ot_math_get_glyph_kerning`, `hb_ot_math_get_glyph_kernings` | the cut-in at one corner of a glyph, at a height or as the whole list |
 | `MathVariants` | `hb_ot_math_get_glyph_variants` | larger versions of a glyph in one direction |
@@ -33,13 +33,13 @@ Every constant is read through one switch, `MathConstants::get_value`. Most are 
 
 In `math.ttf` the axis height is 250 and the script scale-down 70. At the default scale, 1,000 units per em, HarfBuzz returns 250 and 70; at a scale of 2,000, it returns 500 for the axis height and still 70 for the percentage (from `query.c`).
 
-One font gets special treatment. HarfBuzz issue #4653 found that Cambria Math has the values of `displayOperatorMinHeight` and `delimitedSubFormulaMinHeight` the wrong way round, and that Microsoft’s implementation swaps them. `hb_ot_math_get_constant` does the same when `is_bad_cambria` recognises the font: a `MATH` table 25,722 bytes long with those two fields at 2,500 and 3,000 (`hb-ot-math-table.hh:1266`, comparing three known `cambria.ttc` files). 11.4.3 fixed the detection for fonts at other scales.
+One font gets special treatment. HarfBuzz issue #4653 found that Cambria Math has the values of `displayOperatorMinHeight` and `delimitedSubFormulaMinHeight` the wrong way round, and that Microsoft’s implementation swaps them. `hb_ot_math_get_constant` does the same when `is_bad_cambria` recognizes the font: a `MATH` table 25,722 bytes long with those two fields at 2,500 and 3,000 (`hb-ot-math-table.hh:1266`, comparing three known `cambria.ttc` files). 11.4.3 fixed the detection for fonts at other scales.
 
 ### Glyph info
 
 An **italics correction** is the extra space a slanted glyph needs after it before an upright one, or where a superscript goes. `f` in `math.ttf` has one of 120 units. A glyph outside the coverage table gets 0.
 
-The **top accent attachment** is the horizontal position over which an accent is centred. It is the one value in the table that HarfBuzz makes up when the font doesn’t give it: a glyph not in the coverage gets half its advance (`hb-ot-math-table.hh:331`). In `math.ttf`, `a` has 300 and `x`, not covered, gets 250, half of its 500.
+The **top accent attachment** is the horizontal position over which an accent is centered. It is the one value in the table that HarfBuzz makes up when the font doesn’t give it: a glyph not in the coverage gets half its advance (`hb-ot-math-table.hh:331`). In `math.ttf`, `a` has 300 and `x`, not covered, gets 250, half of its 500.
 
 A **math kern** is a cut-in at one corner of a glyph: how far a superscript or subscript may tuck under or over it, as a step function of height. Each corner has *n* heights and *n* + 1 kern values. `MathKern::get_value` (`:391`) chooses the value whose range contains the height asked for, by binary search, as `std::upper_bound` would: “the index chosen for kern value should be i such that correctionHeight[i-1] <= correction_height < correctionHeight[i]”. A height exactly on a boundary takes the value above it. The top-right corner of `f` has heights 300 and 600 and values −50, 0 and 40; at heights 0, 150, 300, 600 and 900 HarfBuzz returns −50, −50, 0, 40 and 40. The heights are compared after scaling. HarfBuzz 8.3.1’s `NEWS` says it changed this function “to match updated ‘MATH’ table spec”.
 
@@ -230,7 +230,7 @@ names.ttf  --get-name=1  --language=en-GB
 names.ttf  --get-name=1  --language=fr
 ```
 
-`hb-info --list-names` has a slip of its own. It lists every entry from `hb_ot_name_list_names`, but fetches each one’s string in the language given on the command line, not in the entry’s language, so a name in three languages is printed three times in one of them:
+`hb-info --list-names` ([The command-line tools](command-line-tools.html#hb-info)) has a slip of its own. It lists every entry from `hb_ot_name_list_names`, but fetches each one’s string in the language given on the command line, not in the entry’s language, so a name in three languages is printed three times in one of them:
 
 ```info
 names.ttf  --list-names  --language=de
@@ -262,7 +262,7 @@ HarfBuzz doesn’t parse the lists. `dlng` and `slng` are text for the client to
 
 ## Other readers for applications
 
-Two more functions read GPOS and GSUB for applications. `hb_ot_layout_get_size_params` reads the `size` feature: a design size in decipoints, a subfamily ID and name ID, and a range of sizes. `hb_ot_layout_feature_get_name_ids` reads a stylistic set’s UI label, or a character variant’s label, tooltip, sample text and parameter names; `hb-info --list-features` shows the labels. Like `STAT`, `fvar` and `CPAL`, these give name IDs, whose strings come from `hb_ot_name_get_utf8`. The other readers are in their own chapters: `hb_ot_color_*` in [Colour](colour.html), `hb_ot_var_*` in [Design space](design-space.html), and `hb_ot_metrics_get_position` in [Where metrics come from](where-metrics-come-from.html).
+Two more functions read GPOS and GSUB for applications. `hb_ot_layout_get_size_params` reads the `size` feature: a design size in decipoints, a subfamily ID and name ID, and a range of sizes. `hb_ot_layout_feature_get_name_ids` reads a stylistic set’s UI label, or a character variant’s label, tooltip, sample text and parameter names; `hb-info --list-features` shows the labels. Like `STAT`, `fvar` and `CPAL`, these give name IDs, whose strings come from `hb_ot_name_get_utf8`. The other readers are in their own chapters: `hb_ot_color_*` in [Color](color.html), `hb_ot_var_*` in [Design space](design-space.html), and `hb_ot_metrics_get_position` in [Where metrics come from](where-metrics-come-from.html).
 
 ## Where to read the source
 

@@ -58,7 +58,7 @@ Each generated file begins with the command that made it and the first lines of 
 
 ### gen-ucd-table.py
 
-Reads the XML database through `packTab.ucdxml` and writes five properties for every code point: general category, canonical combining class, script, the Bidi mirroring glyph (as a difference) and the canonical decomposition. [Unicode inside HarfBuzz](unicode-inside-harfbuzz.html#the-built-in-tables) explains the encoding. Its second input is `hb-script-list.h`, a hand-written public header: the generator numbers the scripts in the order of the `HB_SCRIPT_*` lines there (`gen-ucd-table.py:147`), so a script Unicode adds must be added to that header before the table can be regenerated. Hangul syllables are left out of the decompositions on purpose, since `hb-ucd.cc` computes them (`:63`). The only change it makes to the data is the “sloppy” variant, which fills unassigned code points from their neighbours (`:257`).
+Reads the XML database through `packTab.ucdxml` and writes five properties for every code point: general category, canonical combining class, script, the Bidi mirroring glyph (as a difference) and the canonical decomposition. [Unicode inside HarfBuzz](unicode-inside-harfbuzz.html#the-built-in-tables) explains the encoding. Its second input is `hb-script-list.h`, a hand-written public header: the generator numbers the scripts in the order of the `HB_SCRIPT_*` lines there (`gen-ucd-table.py:147`), so a script Unicode adds must be added to that header before the table can be regenerated. Hangul syllables are left out of the decompositions on purpose, since `hb-ucd.cc` computes them (`:63`). The only change it makes to the data is the “sloppy” variant, which fills unassigned code points from their neighbors (`:257`).
 
 The usage line names `ucd.nounihan.grouped.xml`, and the makefile passes the `.zip`; `packTab.ucdxml` reads either (inferred from the makefile working).
 
@@ -135,9 +135,9 @@ These run in every meson build, from `src/meson.build`, and read nothing outside
 | the seven Ragel headers | `gen-ragel-artifacts.py` | `*.rl` | only if Ragel is found; [below](#the-ragel-machines) |
 | `hb-version.h` | `gen-hb-version.py` | `hb-version.h.in` and the project version | |
 | `harfbuzz.cc`, `harfbuzz-subset.cc` | `gen-harfbuzzcc.py` | meson’s source lists | one `#include` per `.cc` file; copied into `src/` if it changed |
-| `harfbuzz-world.cc` | `gen-harfbuzz-world.py` | `harfbuzz-world.cc.in` and tagged source lists | every library in one file ([Rendering](rendering.html#building-them)) |
+| `harfbuzz-world.cc` | `gen-harfbuzz-world.py` | `harfbuzz-world.cc.in` and tagged source lists | every library in one file ([Building HarfBuzz](building-harfbuzz.html#single-file-builds)) |
 | `harfbuzz*.def` | `gen-def.py` | the public headers | the Windows export list; leaves out eleven experimental functions unless `-Dexperimental_api=true` |
-| `hb-gpu-*-{glsl,wgsl,msl,hlsl}.hh` | `gen-gpu-shader-artifacts.py` | the shader sources | each shader as a C string ([Rendering](rendering.html#the-shaders)) |
+| `hb-gpu-*-{glsl,wgsl,msl,hlsl}.hh` | `gen-gpu-shader-artifacts.py` | the shader sources | each shader as a C string ([hb-gpu](hb-gpu.html#what-the-application-supplies)) |
 
 The helpers that write into `src/` do it so that the committed copies stay current. `gen-ragel-artifacts.py`, `gen-gpu-shader-artifacts.py` and `gen-harfbuzz-world.py` also handle a read-only source tree: they compare instead, and stop with “out of date; regenerate with a writable source tree” if the committed file differs.
 
@@ -196,7 +196,7 @@ Read from the code, none affecting the output in {{hb}}:
 | `src/gen-arabic-table.py`, `src/gen-arabic-joining-list.py`, `src/gen-arabic-pua.py` | joining types, presentation forms, fallback ligatures, the joining scripts, the PUA maps |
 | `src/gen-indic-table.py` | the Indic, Khmer and Myanmar categories, with their overrides |
 | `src/gen-use-table.py` | the USE predicates and HarfBuzz’s corrections |
-| `src/ms-use/` | Microsoft’s files, under the MIT licence |
+| `src/ms-use/` | Microsoft’s files, under the MIT license |
 | `src/gen-vowel-constraints.py` | the vowel constraint function |
 | `src/gen-tag-table.py` | the language tag mapping and its manual corrections |
 | `src/gen-ragel-artifacts.py`, `src/meson.build:455` | how Ragel is found and run |
@@ -208,6 +208,6 @@ Read from the code, none affecting the output in {{hb}}:
 
 * Generated tables are committed; a build never downloads data. `update-unicode-tables.make`, run by hand from `src/`, fetches the latest UCD, emoji data and language registries and runs nine generators, most through packTab.
 * Every generated header records its command and its inputs’ versions: in {{hb}}, Unicode 18.0.0 throughout, except `DerivedCoreProperties.txt` at 17.0.0 in the USE table.
-* The corrections that shape HarfBuzz’s behaviour are in the generators: `category_overrides` in `gen-indic-table.py`, the predicates and `map_to_use` in `gen-use-table.py`, and the manual block in `gen-tag-table.py`. Microsoft’s `ms-use/` files correct Unicode for USE before HarfBuzz does.
+* The corrections that shape HarfBuzz’s behavior are in the generators: `category_overrides` in `gen-indic-table.py`, the predicates and `map_to_use` in `gen-use-table.py`, and the manual block in `gen-tag-table.py`. Microsoft’s `ms-use/` files correct Unicode for USE before HarfBuzz does.
 * Seven Ragel grammars are compiled to committed headers when meson finds Ragel 6.10. The headers name no version.
-* A Unicode update has come in a September release since 2021. It also means new scripts in `hb-script-list.h` first, and hand-kept script lists afterwards.
+* A Unicode update has come in a September release since 2021. It also means new scripts in `hb-script-list.h` first, and hand-kept script lists afterward.

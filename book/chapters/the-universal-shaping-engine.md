@@ -122,7 +122,7 @@ broken_cluster = R? (tail | number_joiner_terminated_cluster_tail | numeral_clus
 symbol_cluster = (O | GB | SB) tail?;
 ```
 
-(Line breaks are trimmed.) Where the Indic grammar is built around how Indic syllables are spelt, this one is a single template, the specification’s “maximal cluster scheme”: an optional repha, a base, consonants joined to it by viramas or subjoined, then one medial in each place, vowel signs in the order pre, above, below, post, vowel modifiers in the same order, final consonants, and a final modifier. Each group is optional, and their order is fixed. A visible virama counts as a vowel sign, “Treat visible viramas like dependent vowels” (`NEWS` for 4.1.0), so a syllable can end in one. Every syllable may end in a ZWNJ (`:173`).
+(Line breaks are trimmed.) Where the Indic grammar is built around how Indic syllables are spelled, this one is a single template, the specification’s “maximal cluster scheme”: an optional repha, a base, consonants joined to it by viramas or subjoined, then one medial in each place, vowel signs in the order pre, above, below, post, vowel modifiers in the same order, final consonants, and a final modifier. Each group is optional, and their order is fixed. A visible virama counts as a vowel sign, “Treat visible viramas like dependent vowels” (`NEWS` for 4.1.0), so a syllable can end in one. Every syllable may end in a ZWNJ (`:173`).
 
 The syllable types, and what HarfBuzz does with each:
 
@@ -171,7 +171,7 @@ auto p =
   ;
 ```
 
-The first filter drops every `CGJ`, so CGJ, ZWJ and the variation selectors can stand anywhere: the specification says CGJ “may occur anywhere in a cluster with no effect”. The second drops a ZWNJ that is followed, past any of those, by a mark: such a ZWNJ continues the cluster instead of ending it, as the specification says it should. The syllable types are then written back over the ranges of original indices, so the hidden characters get the syllable of their neighbours. A ZWNJ between KA and suku doesn’t leave the suku without a base:
+The first filter drops every `CGJ`, so CGJ, ZWJ and the variation selectors can stand anywhere: the specification says CGJ “may occur anywhere in a cluster with no effect”. The second drops a ZWNJ that is followed, past any of those, by a mark: such a ZWNJ continues the cluster instead of ending it, as the specification says it should. The syllable types are then written back over the ranges of original indices, so the hidden characters get the syllable of their neighbors. A ZWNJ between KA and suku doesn’t leave the suku without a base:
 
 ```shape
 balinese.ttf  ᬓ\u1B38  --language=ban
@@ -350,7 +350,7 @@ deva2.ttf  र\u094D\u200Dक  --language=hi
 deva3.ttf  र\u094D\u200Dक  --language=hi
 ```
 
-KA, virama, ZWNJ is how a visible virama is written inside a word. The Indic shaper honours it: ZWNJ clears the `half` mask. USE has no `half` mask, the ZWNJ comes after the two glyphs the half form needs, and the half form forms. A font can’t stop it with a lookahead either, since USE’s lookups pass over ZWNJ in their context (read from the code; not tried with a font). RA, virama, ZWJ asks for an eyelash RA rather than a reph. The Indic shaper won’t make a reph when a joiner follows the virama; USE doesn’t look, and makes one. Both look like differences a `dev3` font can’t easily work round (inferred), and Microsoft’s specification doesn’t say how its engine treats them.
+KA, virama, ZWNJ is how a visible virama is written inside a word. The Indic shaper honors it: ZWNJ clears the `half` mask. USE has no `half` mask, the ZWNJ comes after the two glyphs the half form needs, and the half form forms. A font can’t stop it with a lookahead either, since USE’s lookups pass over ZWNJ in their context (read from the code; not tried with a font). RA, virama, ZWJ asks for an eyelash RA rather than a reph. The Indic shaper won’t make a reph when a joiner follows the virama; USE doesn’t look, and makes one. Both look like differences a `dev3` font can’t easily work round (inferred), and Microsoft’s specification doesn’t say how its engine treats them.
 
 Everything the Indic chapter’s [Script by script](the-indic-model.html#script-by-script) table lists is absent under `3` tags, as are the reph positions, the `blwf` modes and the Uniscribe heuristics. A Malayalam dot reph is an `R` and moves like any other reph.
 

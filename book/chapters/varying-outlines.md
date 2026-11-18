@@ -1,6 +1,6 @@
 # Varying outlines
 
-The outlines of a TrueType variable font vary in their own table, `gvar`, which doesn’t use the item variation stores of [the previous chapter](deltas.html). It has to store far more deltas than any other table, two for every point of every glyph at every master, and it is built to keep them small: deltas can be left out and worked out from their neighbours, tuples can share their positions, and runs of small numbers are packed into bytes. This chapter follows HarfBuzz from a request to draw a glyph at some position to the points it draws, and then looks at the two other kinds of variable outline data, CFF2’s blends and `cvar`, which HarfBuzz reads differently or not at all.
+The outlines of a TrueType variable font vary in their own table, `gvar`, which doesn’t use the item variation stores of [the previous chapter](deltas.html). It has to store far more deltas than any other table, two for every point of every glyph at every master, and it is built to keep them small: deltas can be left out and worked out from their neighbors, tuples can share their positions, and runs of small numbers are packed into bytes. This chapter follows HarfBuzz from a request to draw a glyph at some position to the points it draws, and then looks at the two other kinds of variable outline data, CFF2’s blends and `cvar`, which HarfBuzz reads differently or not at all.
 
 ## A glyph’s points, and four more
 
@@ -97,7 +97,7 @@ slider: wght 100 900 25
 start: 400
 ```
 
-Towards the heavy end, varLib *did* list every point, even though the middle ones lie on a straight line and IUP could have found them: their deltas grow evenly down the edge, 300, 262, 225, 188, 150. It chooses whichever encoding is smaller, and listing which points are present costs bytes too. A font can’t be told from its outlines whether IUP was used.
+Toward the heavy end, varLib *did* list every point, even though the middle ones lie on a straight line and IUP could have found them: their deltas grow evenly down the edge, 300, 262, 225, 188, 150. It chooses whichever encoding is smaller, and listing which points are present costs bytes too. A font can’t be told from its outlines whether IUP was used.
 
 HarfBuzz runs IUP on each contour separately. It stops at the last contour’s end, so the phantom points are never inferred: a phantom that isn’t listed gets no delta, which is what the specification intends. A contour with no listed points is left alone; a contour with only one listed point moves as a whole, since every other point takes that point’s delta. And the inference is made against the glyph’s *default* points, not points already moved by earlier tuples, which is right, and which shapes the fast path below.
 
@@ -165,7 +165,7 @@ CFF2 outlines vary differently. There are no stored deltas per point. Instead, a
 ## In short
 
 * gvar varies every point, including four phantom points for the metrics. Without HVAR, advances come from the phantoms.
-* Points a tuple doesn’t list are inferred per contour from their neighbours, against the default outline. Phantom points are never inferred.
+* Points a tuple doesn’t list are inferred per contour from their neighbors, against the default outline. Phantom points are never inferred.
 * Shared peaks have cached scalars. In 15.1.0, tuples with their own intermediate regions stopped using that cache, which fixed wrong outlines.
 * A component of a composite glyph moves as one point.
 * Outlines are drawn unrounded; extents and advances are rounded in font units.

@@ -127,7 +127,7 @@ Pause callbacks return `bool`. Returning true means “buffer content changed, r
 ## 6. Thai and Lao
 
 `hb-ot-shaper-thai.cc`.
-- **Sara Am** (`preprocess_text_thai` :265-369): this runs whether or not the font has OpenType tables. U+0E33/U+0EB3 is decomposed to NIKHAHIT + SARA AA, and the nikhahit is moved **backwards over preceding above-base marks**. The nikhahit is relabelled Mn so it’s zeroed as a mark, and clusters are merged with the previous grapheme. The same code handles Lao by masking bit 0x80 (`IS_SARA_AM(x) (((x) & ~0x0080u) == 0x0E33u)`). This follows Uniscribe (per the comment, which cites Eric Muller), not the MS spec. Test file: `test/shape/data/in-house/tests/sara-am.tests`.
+- **Sara Am** (`preprocess_text_thai` :265-369): this runs whether or not the font has OpenType tables. U+0E33/U+0EB3 is decomposed to NIKHAHIT + SARA AA, and the nikhahit is moved **backwards over preceding above-base marks**. The nikhahit is relabeled Mn so it’s zeroed as a mark, and clusters are merged with the previous grapheme. The same code handles Lao by masking bit 0x80 (`IS_SARA_AM(x) (((x) & ~0x0080u) == 0x0E33u)`). This follows Uniscribe (per the comment, which cites Eric Muller), not the MS spec. Test file: `test/shape/data/in-house/tests/sara-am.tests`.
 - **PUA fallback** (`do_thai_pua_shaping` :221-262, `thai_pua_shape` :98-152): **Thai only (not Lao)**, and only if the font has **no Thai GSUB script** (`!plan->map.found_script[0]`). Two small state machines (above: T0–T3, below: B0–B2) classify consonants (NC/AC/RC/DC) and marks (AV/BV/T) and choose SD/SL/SDL/RD actions. These rewrite codepoints, **before cmap**, to Windows PUA (U+F700…) or, if the font lacks those, Mac PUA (U+F88x) variants: shifted tone marks, and YO YING or THO THAN without their descender. Reference: linux.thai.net/~thep/th-otf/shaping.html.
 - The U+0E3A ccc tweak lives in `unicode->modified_combining_class` (comment :295-300), not in the shaper.
 - `fallback_position = false`: so **since 12.2.0 a Thai font with only a legacy `kern` table gets no kerning** in HarfBuzz.
@@ -171,7 +171,7 @@ Pause callbacks return `bool`. Returning true means “buffer content changed, r
   - pause(`final_reordering_indic`), then `init pres abvs blws psts haln` applied together
   - `override_features_indic` disables `liga` and appends pause(`hb_syllabic_clear_var`).
   - Every one of these is `F_PER_SYLLABLE`.
-- **Font-probing to classify consonants** (`consonant_position_from_face` :361-394, `update_consonant_positions_indic` :437-460). Whether a consonant is “below-base”, “post-base” or “base” is decided by asking the font: `would_substitute` on {virama, C} and {C, virama} against the `blwf`/`vatu`, `pstf` and `pref` lookups. Both orders are tried because broken fonts such as FreeSans copied old-spec lookups into new-spec scripts and Uniscribe honours them. Reph detection also probes `rphf` (`:504-529`). A zero-context vs context heuristic is commented “DON’T TOUCH OTHERWISE” (`:327-336`). This is the main thing a type designer should understand: **the font’s own lookups steer the reordering**.
+- **Font-probing to classify consonants** (`consonant_position_from_face` :361-394, `update_consonant_positions_indic` :437-460). Whether a consonant is “below-base”, “post-base” or “base” is decided by asking the font: `would_substitute` on {virama, C} and {C, virama} against the `blwf`/`vatu`, `pstf` and `pref` lookups. Both orders are tried because broken fonts such as FreeSans copied old-spec lookups into new-spec scripts and Uniscribe honors them. Reph detection also probes `rphf` (`:504-529`). A zero-context vs context heuristic is commented “DON’T TOUCH OTHERWISE” (`:327-336`). This is the main thing a type designer should understand: **the font’s own lookups steer the reordering**.
 - **Initial reordering** (`initial_reordering_consonant_syllable` :463-934) follows the MS Devanagari spec steps:
   1. find the base, scanning backwards and skipping below/post-base consonants, ZWJ after halant stopping the search
   2. mark the reph (`POS_RA_TO_BECOME_REPH`)
@@ -184,7 +184,7 @@ Pause callbacks return `bool`. Returning true means “buffer content changed, r
   Kannada `Ra,H,ZWJ` is treated as `Ra,ZWJ,H` (:474-482). Vowel syllables and placeholder or dotted-circle clusters reuse the consonant logic (“We treat Vowels and placeholders as if they were consonants”, :60-66).
 - **Final reordering** (`final_reordering_syllable_indic` :999-1441): this runs on glyphs after the basic features. Pre-base matras move to before the first half form. Reph moves according to the reph position, through numbered steps 1–6 from the spec, with the comment “This is our take on what step 4 is trying to say (and failing, BADLY)” (:291). Pre-base-reordering Ra (pref) is moved only if a substitution actually happened. `init` is applied to a left matra at word start.
 - `decompose_indic` keeps some letters precomposed (U+0931, U+09DC, U+09DD, U+0B94). `compose_indic` refuses to recompose split matras and recomposes U+09AF+U+09BC to U+09DF.
-- **NEWS 12.2.0, a behaviour change older books would get wrong**: in per-syllable features, the **backtrack and lookahead of (Chain)Context rules are now confined to the syllable**, as in DirectWrite. Earlier, HarfBuzz deliberately allowed crossing syllables, but buggily. The mechanism is the matcher’s `per_syllable`/`syllable` check, GSUB only (`hb-ot-layout-gsubgpos.hh:850-872`).
+- **NEWS 12.2.0, a behavior change older books would get wrong**: in per-syllable features, the **backtrack and lookahead of (Chain)Context rules are now confined to the syllable**, as in DirectWrite. Earlier, HarfBuzz deliberately allowed crossing syllables, but buggily. The mechanism is the matcher’s `per_syllable`/`syllable` check, GSUB only (`hb-ot-layout-gsubgpos.hh:850-872`).
 - NEWS 12.x also removed the “uniscribe-bug-compatible” mode from Indic and Khmer.
 
 ### 8.4 Khmer (`hb-ot-shaper-khmer.cc`)
@@ -239,7 +239,7 @@ Example: `hb-shape NotoSansDevanagari-Regular.ttf -u U+0905,U+093E` gives `[adev
   - “Standard typographic presentation”: `abvs blws haln pres psts`
 - **Recording what the font did**: after `rphf`, the first *substituted* glyph under the rphf mask is recategorized as `R` (repha). After `pref`, the first substituted glyph becomes `VPre` (`:311-358`). So reordering follows the font’s substitutions, not just the characters.
 - `reorder_syllable_use` (`:362-446`): a repha moves forward to just before the first post-base glyph (or to the end). VPre/VMPre move back to after the last halant, and only the first component of a MultipleSubst moves (`lig_comp == 0`).
-- **Joining in USE**: `data_create_use` makes an embedded Arabic plan for scripts in `has_arabic_joining()` (generated by `gen-arabic-joining-list.py` from ArabicShaping+Scripts: Adlam, Arabic, Chorasmian, Hanifi Rohingya, Mandaic, Manichaean, Mongolian, N’Ko, Old Uyghur, Phags-pa, Psalter Pahlavi, Sogdian, Syriac). These use the **Arabic joining state machine** for `isol/init/medi/fina` masks. Other USE scripts get **syllable-level** topographical forms (`setup_topographical_masks` :232-295): each *cluster* is isol/init/medi/fina according to its neighbours, with non-clusters and hieroglyph clusters breaking the chain. NEWS 2.8.0: joining scripts other than Arabic and Syriac moved from the Arabic shaper to USE.
+- **Joining in USE**: `data_create_use` makes an embedded Arabic plan for scripts in `has_arabic_joining()` (generated by `gen-arabic-joining-list.py` from ArabicShaping+Scripts: Adlam, Arabic, Chorasmian, Hanifi Rohingya, Mandaic, Manichaean, Mongolian, N’Ko, Old Uyghur, Phags-pa, Psalter Pahlavi, Sogdian, Syriac). These use the **Arabic joining state machine** for `isol/init/medi/fina` masks. Other USE scripts get **syllable-level** topographical forms (`setup_topographical_masks` :232-295): each *cluster* is isol/init/medi/fina according to its neighbors, with non-clusters and hieroglyph clusters breaking the chain. NEWS 2.8.0: joining scripts other than Arabic and Syriac moved from the Arabic shaper to USE.
 - Sinhala moved from Indic to USE in 4.4.0.
 
 ---
@@ -333,7 +333,7 @@ Consequences:
 - **Blocklist**: `morx::is_blocklisted` (`hb-aat-layout.cc:214-232`) drops the morx of one known-broken font (AALMAGHRIBI.ttf, identified by morx/GSUB/GDEF lengths; 10.3.0).
 - **Subtable types**:
   - **Rearrangement** (:49-196): MarkFirst/MarkLast/DontAdvance and a 4-bit verb. The `map[16]` table encodes the 15 verbs (Ax→xA … ABxCD→DCxBA) as “move l from start, r from end, maybe flip”. It merges clusters over the range and is limited to `HB_MAX_CONTEXT_LENGTH`.
-  - **Contextual** (:198-384): SetMark and DontAdvance. Each entry can substitute the **marked** glyph and/or the **current** glyph through per-entry lookup indices (morx) or a shared offset array (mort). The comment “Looks like CoreText applies neither mark nor current substitution for end-of-text if mark was not explicitly set” (:251-253) is behaviour reverse-engineered from CoreText. 14.2.1 fixed legacy mort contextual offsets that could produce out-of-font glyph IDs.
+  - **Contextual** (:198-384): SetMark and DontAdvance. Each entry can substitute the **marked** glyph and/or the **current** glyph through per-entry lookup indices (morx) or a shared offset array (mort). The comment “Looks like CoreText applies neither mark nor current substitution for end-of-text if mark was not explicitly set” (:251-253) is behavior reverse-engineered from CoreText. 14.2.1 fixed legacy mort contextual offsets that could produce out-of-font glyph IDs.
   - **Ligature** (:449-640): SetComponent pushes the glyph’s output position onto a **ring-buffer stack** (`match_positions[HB_MAX_CONTEXT_LENGTH]`). PerformAction walks the ligature action list: each action adds `component[glyph + offset]` (a sign-extended 30-bit offset) to an accumulating ligature index, and Store/Last emits `ligature[idx]`. The ligature replaces the glyph at the cursor, the **other components become DELETED_GLYPH** (kept in the buffer and marked), and clusters are merged.
   - **Noncontextual** (:641-701): a plain lookup-table substitution in place, with its own copy of the range-flag check (“Keep in sync”).
   - **Insertion** (:703-913): marked and current insert lists, each up to 31 glyphs, inserted before or after. **The Kashida-like vs split-vowel-like flags are ignored** (“TODO We ignore KashidaLike setting”, :817, :843). The position after insertion follows the DontAdvance reading in issue #1224. 14.3.1 fixed insertion at end of text.
@@ -352,7 +352,7 @@ Consequences:
   - Variation subtables are skipped for the obsolete (kern) types.
   - Direction must match the Vertical bit.
   - The Backwards flag drives buffer reversal.
-  - On the **first cross-stream subtable**, every glyph is set to `ATTACH_TYPE_CURSIVE` with a chain to its neighbour. This makes cross-stream offsets accumulate along the line, using GPOS’s own attachment post-processing. The scratch flag is intentionally not set.
+  - On the **first cross-stream subtable**, every glyph is set to `ATTACH_TYPE_CURSIVE` with a chain to its neighbor. This makes cross-stream offsets accumulate along the line, using GPOS’s own attachment post-processing. The scratch flag is intentionally not set.
 - **Formats**:
   - 0: sorted pairs.
   - 1: state machine with a value stack (Push flag). In cross-stream, the value `-0x8000` resets. “CoreText doesn’t do crossStream kerning in vertical. We do.” (:383).
@@ -371,7 +371,7 @@ Consequences:
 - `hb_ot_layout_has_machine_kerning` / `has_cross_kerning` (`hb-ot-layout.cc:88-127`) feed the zero-marks and mark-adjust decisions (`hb-ot-shape.cc:189-208`).
 - NEWS 15.1.0 fixed ignored kern/mort tables whose state machines don’t start at the first state (“non-first initial state”). I didn’t locate the exact change.
 - **`hb_kern_machine_t::kern`** (`hb-kern.hh:40-140`):
-  - It skips marks (`IgnoreMarks`) using the GPOS skippy iterator and honours the `kern` feature mask.
+  - It skips marks (`IgnoreMarks`) using the GPOS skippy iterator and honors the `kern` feature mask.
   - It **splits each kern value in two**: `kern1 = kern >> 1` is added to the first glyph’s advance, and `kern2` to the second glyph’s advance *and* x_offset. The visual spacing equals the full kern, while the split keeps cluster boundaries sensible (matching the GPOS pair-positioning split described in NEWS 4.x [corrected: in 15.1.0 GPOS doesn’t split kerning; that code is behind `HB_SPLIT_KERN`, off by default (#3408)]).
   - Cross-stream values go into y_offset (x_offset in vertical).
 
@@ -383,7 +383,7 @@ Consequences:
   - 10.0/10.3 “brought closer to Core Text”: sizes not in the table are now interpolated.
   - `get_tracking` also refuses to track without STAT.
 - **ankr**: per-glyph anchor point arrays through a lookup table (`hb-aat-layout-ankr-table.hh:59-90`). Used only by kerx format 4.
-- **feat**: the feature-name and selector catalogue (`hb-aat-layout-feat-table.hh`). Exclusive flag. Used for the gate in 13.3 and the public APIs `hb_aat_layout_get_feature_types`, `hb_aat_layout_feature_type_get_name_id` and `hb_aat_layout_feature_type_get_selector_infos` (`hb-aat-layout.h:726-770`).
+- **feat**: the feature-name and selector catalog (`hb-aat-layout-feat-table.hh`). Exclusive flag. Used for the gate in 13.3 and the public APIs `hb_aat_layout_get_feature_types`, `hb_aat_layout_feature_type_get_name_id` and `hb_aat_layout_feature_type_get_selector_infos` (`hb-aat-layout.h:726-770`).
 - **ltag**: language-tag strings for morx’s Language Tag feature (`hb-aat-ltag-table.hh:63-100`). “Rudimentary language matching” (`morx` :1165).
 - `bsln`, `just` and `opbd` headers exist but are only `#include`d “so we compile it; unused otherwise” (`hb-aat-layout.cc:32,34`; `hb-ot-layout.cc:55`). `opbd` is commented out of the face table list (`hb-ot-face-table-list.hh:126`). AAT justification and baselines aren’t implemented in shaping.
 - **Face accelerators**: morx, mort and kerx are accelerated (per-chain lazily created accelerators with glyph sets and class caches; `mortmorx::accelerator_t` :1358-1420). ankr, trak, ltag and feat are plain tables (`hb-ot-face-table-list.hh:117-125`).

@@ -160,7 +160,7 @@ The same store, read the same way, serves almost every other variable table:
 | GDEF | GPOS value records and anchors, ligature carets, through device tables; also MATH’s values, since MATH has no store of its own |
 | GSUB and GPOS FeatureVariations, version 1.1 | the values that conditions are compared with, through GDEF’s store |
 | BASE | baseline values |
-| COLR version 1 | colours, positions, and transforms of paints |
+| COLR version 1 | colors, positions, and transforms of paints |
 | avar version 2 | the axes themselves (see [Design space](design-space.html)) |
 | CFF2 | blends in outlines, which use only the store’s region scalars, not its deltas |
 

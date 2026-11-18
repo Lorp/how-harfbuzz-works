@@ -1,6 +1,6 @@
 # Survey: reading, writing and rendering font data (HarfBuzz 15.1.0)
 
-Scope: table-reading machinery, variations, outlines and colour, the output
+Scope: table-reading machinery, variations, outlines and color, the output
 libraries (raster/vector/GPU), subsetting/instancing/repacking/depend, and
 testing/robustness. GSUB/GPOS lookups, the shaping pipeline, script shapers and
 AAT are excluded.
@@ -354,7 +354,7 @@ fully instancing, deltas are applied into `cvt ` (hb-subset.cc:349-356,
 
 ---
 
-## 3. Outlines and colour
+## 3. Outlines and color
 
 ### Key files
 
@@ -372,7 +372,7 @@ fully instancing, deltas are applied into `cvt ` (hb-subset.cc:349-356,
   (seac: `process_seac` .cc:528), `hb-ot-cff2-table.{hh,cc}` (`get_path_at` .cc:228).
 * Paint API: `hb-paint.h`, `hb-paint.hh` (callback list 33-55), `hb-paint.cc`,
   `hb-paint-extents.{hh,cc}`, `hb-paint-bounded.{hh,cc}`.
-* Colour tables: `OT/Color/COLR/COLR.hh` (3402 lines; `COLR` 2542),
+* Color tables: `OT/Color/COLR/COLR.hh` (3402 lines; `COLR` 2542),
   `colrv1-closure.hh`, `colrv1-depend.hh`, `CPAL/CPAL.hh`, `CBDT/CBDT.hh`,
   `sbix/sbix.hh`, `svg/svg.hh`; public `hb-ot-color.h`.
 * Synthetic emboldening/slant: `hb-outline.{hh,cc}`; `hb-font.hh:690-748`.
@@ -439,12 +439,12 @@ fully instancing, deltas are applied into `cvt ` (hb-subset.cc:349-356,
   same interpreter (inferred). Partially instancing or desubroutinizing CFF2
   with nested blends now *fails* rather than changing outlines (15.1.0).
 
-### hb-paint and colour
+### hb-paint and color
 
 * Paint callbacks (hb-paint.hh:33-55): transforms, clips (glyph, rectangle,
   and since 14.2.0 arbitrary path via `push_clip_path_start/_end`), color,
   image, linear/radial/sweep gradients, groups (`push_group_for` new),
-  custom palette colours, `fill_glyph` (14.3.0), and budgets.
+  custom palette colors, `fill_glyph` (14.3.0), and budgets.
 * `fill_glyph`’s default decomposes into push_clip_glyph + color + pop_clip
   (hb-paint.cc:63-75); backends override it to fill a glyph outline directly.
 * Glyph source order (`hb_ot_paint_glyph_or_fail`, hb-ot-font.cc:939-957):
@@ -502,7 +502,7 @@ instance (const) since 14.2.0.
   absolute value (inferred from the formula). NEON/SSE2 paths (30-39).
   Curves outside a clip box collapse to their chord (exact for coverage, 332).
 * Paint: a compositing stack of surfaces with clips as alpha masks;
-  gradients; images (PNG/BGRA only); bitmap colour glyphs since 13.1.0.
+  gradients; images (PNG/BGRA only); bitmap color glyphs since 13.1.0.
 * Limits: `HB_RASTER_MAX_DRAW_EDGES` 2^20, `HB_RASTER_MAX_AUTO_DIMENSION` 4096
   for extents derived from font data, `HB_RASTER_MAX_BUFFER_SIZE` 1 GiB, pixel
   budgets (hb-limits.hh:184-262).
@@ -553,7 +553,7 @@ instance (const) since 14.2.0.
 
 1. The renderer pattern: a renderer is just draw/paint funcs + state.
 2. hb-raster: flattening, analytic coverage, compositing COLR.
-3. hb-vector: SVG and PDF output; colour fonts as resolution-independent artwork.
+3. hb-vector: SVG and PDF output; color fonts as resolution-independent artwork.
 4. hb-gpu: Slug, bands, quadratic-only encoding, cu2qu, the paint VM.
 5. Budgets and limits: why renderers share one work counter with font code.
 
@@ -792,7 +792,7 @@ closures, cmap maps and especially parsed CFF, for repeated subsets.
    cubic GLYF. (§3)
 8. **Drawing PostScript outlines** — CFF/CFF2 interpreters, subrs, seac, blend. (§3)
 9. **Variable components** — VARC. (§2, §3)
-10. **Colour** — the paint API, COLR/CPAL, CBDT/sbix/SVG, fallbacks. (§3)
+10. **Color** — the paint API, COLR/CPAL, CBDT/sbix/SVG, fallbacks. (§3)
 11. **Rendering in HarfBuzz** — hb-raster, hb-vector (SVG/PDF), hb-gpu
     (Slug), budgets. (§4)
 12. **Subsetting** — inputs, plan and closures, table scheduling. (§5)

@@ -1,6 +1,6 @@
 # Where metrics come from
 
-A shaper moves glyphs about, but it doesn’t know how big they are. When HarfBuzz needs to know how far a glyph advances, where its origin is in vertical text, or how far its ink reaches, it asks the font object, and the font object passes the question to its font functions. The [previous chapter](fonts-and-font-functions.html) is about that arrangement: the vtable, its tiers, and the choice of implementation. This chapter is about the answers. It follows the functions HarfBuzz installs by default, the **hb-ot** font functions in `hb-ot-font.cc`, as they read `hmtx`, `HVAR`, `gvar`, `VORG`, `glyf`, `CFF`, the colour and bitmap tables, `hhea`, `OS/2` and `MVAR`.
+A shaper moves glyphs about, but it doesn’t know how big they are. When HarfBuzz needs to know how far a glyph advances, where its origin is in vertical text, or how far its ink reaches, it asks the font object, and the font object passes the question to its font functions. The [previous chapter](fonts-and-font-functions.html) is about that arrangement: the vtable, its tiers, and the choice of implementation. This chapter is about the answers. It follows the functions HarfBuzz installs by default, the **hb-ot** font functions in `hb-ot-font.cc`, as they read `hmtx`, `HVAR`, `gvar`, `VORG`, `glyf`, `CFF`, the color and bitmap tables, `hhea`, `OS/2` and `MVAR`.
 
 Most of what follows is a chain of fallbacks. For each question there is a table that should answer it, then something that can stand in for that table, then a guess. Which link of the chain answers decides the numbers an application sees, so it’s worth knowing where each chain starts and what it falls back to. Type designers will find here which of the font’s numbers HarfBuzz actually reads, and which it ignores.
 
@@ -14,7 +14,7 @@ These are the font functions hb-ot answers about metrics, and where it looks for
 |---|---|---|
 | horizontal advance | `glyph_h_advances` | `hmtx`; at a non-default location also `HVAR`, or else `gvar`’s phantom points; with no `hmtx`, half an em |
 | vertical advance | `glyph_v_advances` | `vmtx`; at a non-default location also `VVAR`, or else `gvar`; with no `vmtx`, the font’s line height |
-| vertical origin | `glyph_v_origins` | `VORG` (and `VVAR`); else `vmtx` with `glyf`; else centred from the glyph’s extents |
+| vertical origin | `glyph_v_origins` | `VORG` (and `VVAR`); else `vmtx` with `glyf`; else centered from the glyph’s extents |
 | glyph extents | `glyph_extents` | `sbix`, `CBDT`, `COLR`, `VARC`, `glyf`, `CFF2`, `CFF `: the first that knows the glyph |
 | font extents | `font_h_extents`, `font_v_extents` | `OS/2` typo metrics if `USE_TYPO_METRICS` is set, else `hhea`; `vhea`; plus `MVAR` |
 
@@ -142,7 +142,7 @@ font: metrics-cff.otf
 text: HLx
 ```
 
-(The third glyph differs too: in `metrics.ttf`, `x` is a colour glyph, which comes up under glyph extents.)
+(The third glyph differs too: in `metrics.ttf`, `x` is a color glyph, which comes up under glyph extents.)
 
 This also explains the zero x-bearings in `metrics-short.ttf` and `metrics-nohmtx.ttf`. A glyph with no side bearing in `hmtx` is given a bearing of 0 (`hb-ot-hmtx-table.hh:315`), so its outline is moved to start at x = 0. Extents and drawing agree with each other, which is the point: whatever HarfBuzz reports as the ink is where it draws the ink.
 
@@ -205,7 +205,7 @@ Variable advances are cached, per font object and per direction, in an **advance
 
 Beside it are two caches for the variation data: a **varStore cache**, which holds the scalar of each of the item variation store’s regions at the current location, so that each is worked out once, and a **gvar cache**, which does the same for `gvar`’s shared tuples. Advances are cached in font units, before scaling. So changing the font’s size doesn’t clear them: only a change of variation coordinates does, which `check_serial` notices by comparing the font’s `serial_coords` with the one it saw last (`hb-ot-font.cc:290`).
 
-Each cache sits in an atomic pointer, and is borrowed rather than locked. A caller swaps the pointer for null, uses the cache, and swaps it back. If another thread got there first, the second one finds null, allocates a cache of its own for the call, and frees it afterwards if the slot has been refilled in the meantime. So two threads can shape with the same font object at once, at the cost of a cache each.
+Each cache sits in an atomic pointer, and is borrowed rather than locked. A caller swaps the pointer for null, uses the cache, and swaps it back. If another thread got there first, the second one finds null, allocates a cache of its own for the call, and frees it afterward if the slot has been refilled in the meantime. So two threads can shape with the same font object at once, at the cost of a cache each.
 
 > For programmers: a font object’s caches belong to its variation coordinates. An application that shapes the same variable font at several locations does better with one font object for each location than with one font object whose coordinates keep changing.
 
@@ -219,13 +219,13 @@ A font with no `vmtx`, which is most fonts, gets the same advance for every glyp
 
 ### Origins
 
-Glyphs are drawn from their horizontal origin, at the left end of the baseline. In vertical text they should hang from a different point, the **vertical origin**, usually centred above the glyph. The shaper moves each glyph by the difference between the two (`hb-ot-shape.cc:1022`). Since hb-ot’s horizontal origin is always (0, 0), the offsets `hb-shape` prints for vertical text are just the vertical origin, negated.
+Glyphs are drawn from their horizontal origin, at the left end of the baseline. In vertical text they should hang from a different point, the **vertical origin**, usually centered above the glyph. The shaper moves each glyph by the difference between the two (`hb-ot-shape.cc:1022`). Since hb-ot’s horizontal origin is always (0, 0), the offsets `hb-shape` prints for vertical text are just the vertical origin, negated.
 
 The x of the vertical origin is always half the glyph’s horizontal advance (`hb-ot-font.cc:649`). The y comes from the first of three sources that is there:
 
 1. **VORG**, if the font has one. It lists a vertical origin for some glyphs and a default for the rest, and is meant for CFF fonts. In a variable font, VVAR’s `vorgMap` gives deltas for it.
 2. Otherwise, if the font has both `vmtx` and `glyf`, the **top phantom point**: the glyph’s `yMax` plus its top side bearing from `vmtx`, with `gvar`’s deltas if the font is variable (`hb-ot-font.cc:725`).
-3. Otherwise, a guess from the **glyph’s extents**: the glyph is centred in the font’s line height, so that the space above it equals the space below. If the glyph has no extents, the origin is the ascender.
+3. Otherwise, a guess from the **glyph’s extents**: the glyph is centered in the font’s line height, so that the space above it equals the space below. If the glyph has no extents, the origin is the ascender.
 
 Here are the same glyphs, set vertically, in four fonts. `metrics.ttf` has no vertical tables. `metrics-vert.ttf` has `vhea` and `vmtx`, with every advance 1000 and every top side bearing chosen to put the top of the glyph at 880. `metrics-cff.otf` has the same metrics with CFF outlines and a VORG whose default is 880, with 800 for `p`. `metrics-cff-novorg.otf` is that font without VORG:
 
@@ -259,13 +259,13 @@ if (ot_face->cff1->get_extents (font, glyph, extents)) return true;
 return false;
 ```
 
-(trimmed of the `#ifdef`s that leave out each part in smaller builds). Bitmaps come first, then colour, then outlines. So in a font with both a colour version of a glyph and an outline, the extents are the colour glyph’s.
+(trimmed of the `#ifdef`s that leave out each part in smaller builds). Bitmaps come first, then color, then outlines. So in a font with both a color version of a glyph and an outline, the extents are the color glyph’s.
 
 **glyf.** At the default location, the extents are the box in the glyph’s header, with the left edge taken from `hmtx` as described above. HarfBuzz doesn’t recompute it from the points. At any other location it has to: it applies `gvar`’s deltas to every point and takes the box around them, rounded to whole font units (`OT/glyf/glyf.hh:527`). In both cases the box includes the off-curve points: the header’s box does by definition, and the computed one is taken around every point. A curve rarely reaches its control points, so this box can be larger than the ink. An empty glyph, like `space`, has extents of zero.
 
 **CFF and CFF2.** HarfBuzz runs the glyph’s charstring with operators that collect a bounding box instead of drawing (`hb-ot-cff1-table.cc:410`, `hb-ot-cff2-table.cc:106`). Like `glyf`’s, the box includes the curves’ control points. A CFF2 charstring is run at the font’s variation coordinates. Neither looks at `hmtx`, which is why the CFF `L` above has its ink at 80.
 
-**COLR.** A colour glyph’s extents are its ClipBox, if COLR version 1 gives it one. Otherwise HarfBuzz paints the glyph into a context that records extents instead of pixels (`hb-paint-extents.hh`), so they are the box around every layer. In `metrics.ttf`, `x` has a small box as its outline, but it’s also a COLR glyph made of an `H` and a `p`:
+**COLR.** A color glyph’s extents are its ClipBox, if COLR version 1 gives it one. Otherwise HarfBuzz paints the glyph into a context that records extents instead of pixels (`hb-paint-extents.hh`), so they are the box around every layer. In `metrics.ttf`, `x` has a small box as its outline, but it’s also a COLR glyph made of an `H` and a `p`:
 
 ```shape
 metrics.ttf  Hpx  --show-extents
@@ -273,7 +273,7 @@ metrics.ttf  Hpx  --show-extents
 
 Its extents are the union of the other two, from the top of the `H` to the bottom of the `p`. Its own outline, a 300-unit square, isn’t consulted.
 
-**sbix and CBDT.** Bitmap extents are in the pixels of one strike. HarfBuzz chooses the strike from the font’s ppem: the smallest strike at least that size, or the largest if none is big enough or the font has no ppem set. It then converts from the strike’s pixels to the font’s scale. For `sbix` it reads the size of the PNG image and the origin offsets beside it, and only PNG images are supported. For `CBDT` it reads the glyph’s metrics from beside the image, which it can do only for image formats 17 and 18. A glyph in another format has no bitmap extents, and the outlines answer instead. The [Colour](colour.html) chapter covers these tables.
+**sbix and CBDT.** Bitmap extents are in the pixels of one strike. HarfBuzz chooses the strike from the font’s ppem: the smallest strike at least that size, or the largest if none is big enough or the font has no ppem set. It then converts from the strike’s pixels to the font’s scale. For `sbix` it reads the size of the PNG image and the origin offsets beside it, and only PNG images are supported. For `CBDT` it reads the glyph’s metrics from beside the image, which it can do only for image formats 17 and 18. A glyph in another format has no bitmap extents, and the outlines answer instead. The [Color](color.html) chapter covers these tables.
 
 **VARC**, variable composites, have extents worked out from their components; see [Variable components](variable-components.html). `SVG` glyphs are missing from the list: HarfBuzz doesn’t read extents from SVG documents, so an SVG glyph has the extents of its outline.
 
@@ -353,7 +353,7 @@ Bitmap extents are converted from the strike’s pixels in two steps, each round
 | `src/OT/glyf/GlyphHeader.hh` | extents from the glyph’s header, with `xMin` replaced by the left side bearing |
 | `src/hb-ot-vorg-table.hh` | VORG |
 | `src/hb-ot-cff1-table.cc`, `src/hb-ot-cff2-table.cc` | CFF and CFF2 extents |
-| `src/OT/Color/COLR/COLR.hh`, `src/OT/Color/CBDT/CBDT.hh`, `src/OT/Color/sbix/sbix.hh` | colour and bitmap extents, and strike choice |
+| `src/OT/Color/COLR/COLR.hh`, `src/OT/Color/CBDT/CBDT.hh`, `src/OT/Color/sbix/sbix.hh` | color and bitmap extents, and strike choice |
 | `src/hb-ot-metrics.cc` | font extents, `USE_TYPO_METRICS`, MVAR, and the other metrics with their fallbacks |
 | `src/hb-ot-os2-table.hh`, `src/hb-ot-var-mvar-table.hh` | OS/2 and MVAR |
 | `src/hb-font.hh` | scaling (`em_mult`, `scale_glyph_extents`) and the font object’s own fallbacks |

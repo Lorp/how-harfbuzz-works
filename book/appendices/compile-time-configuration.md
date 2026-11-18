@@ -1,6 +1,6 @@
 # Compile-time configuration
 
-HarfBuzz can be built without most of what it can do. A browser wants all of it; a game console that shapes one Latin font wants `hb_shape` and little else, and would rather not carry an AAT engine, a colour-font painter and a subsetter in its binary. Nearly every part of the library can be removed by defining a preprocessor macro, most of them named `HB_NO_` and the thing removed.
+HarfBuzz can be built without most of what it can do. A browser wants all of it; a game console that shapes one Latin font wants `hb_shape` and little else, and would rather not carry an AAT engine, a color-font painter and a subsetter in its binary. Nearly every part of the library can be removed by defining a preprocessor macro, most of them named `HB_NO_` and the thing removed.
 
 This appendix lists them. It starts with how the macros are processed, then the three ready-made sets of them, the macros that change speed and size rather than features, every `HB_NO_*` macro in the {{hb}} source, the other switches, and the Meson build options. Chapters that mention a macro link here; the table of `HB_NO_*` macros links back to the chapter that explains what each one removes.
 
@@ -47,7 +47,7 @@ and `HB_NO_OT_SHAPE_FALLBACK` defines five more a few lines further on (`:174`).
 
 * **Whole files.** `hb-ot-math.cc` is wrapped in `#ifndef HB_NO_MATH` from top to bottom (`hb-ot-math.cc:29`), so in such a build the `hb_ot_math_*` functions don’t exist. The public headers are not changed (the only `HB_NO_*` test in them is `HB_NO_SUBSET_DEPEND`, in `hb-subset-depend.h:73`), so a program that calls a removed function still compiles, and fails to link.
 * **Early returns.** `_hb_preprocess_text_vowel_constraints` begins with `#ifdef HB_NO_OT_SHAPER_VOWEL_CONSTRAINTS return; #endif` (`hb-ot-shaper-vowel-constraints.cc:42`). The function is still there and still called; it just does nothing.
-* **Table slots.** `hb-ot-face-table-list.hh` lists the tables a face keeps a lazy slot for, and many entries are guarded, so a face in a build without colour has no slot for `COLR` at all ([Blobs, faces and lazy tables](blobs-faces-and-lazy-tables.html#one-pointer-per-table)).
+* **Table slots.** `hb-ot-face-table-list.hh` lists the tables a face keeps a lazy slot for, and many entries are guarded, so a face in a build without color has no slot for `COLR` at all ([Blobs, faces and lazy tables](blobs-faces-and-lazy-tables.html#one-pointer-per-table)).
 
 ## The tiers
 
@@ -56,14 +56,14 @@ The three predefined sets are meant for size-constrained builds. `CONFIG.md` des
 | Tier | Defines | What is lost |
 |---|---|---|
 | `HB_MINI` | `HB_NO_AAT`, `HB_NO_LEGACY`, `HB_NO_BEYOND_64K`, `HB_NO_CUBIC_GLYF` (`hb-config.hh:93`) | AAT tables and shaping; the `kern` table; fallback mark positioning and kerning; the legacy-font paths in the Arabic, Hebrew and Thai shapers, Zawgyi and vowel constraints; the fallback shaper; the blocklists of broken fonts; symbol and Mac `cmap` handling; formats for more than 65,535 glyphs; cubic curves in `glyf` |
-| `HB_LEAN` | 27 macros (`:56`), plus `HB_NO_COLOR`, `HB_NO_DRAW` and `HB_NO_PAINT` unless a drawing library is in the build (`:85`) | variations; vertical text; colour, drawing and painting; the `MATH`, `meta`, `name`, `STAT` and metrics APIs; buffer messages, serialization and verification; reading fonts from files; Device-table hinting; glyph names; several rarely used layout functions; deprecated API; environment variables, `errno`, locales and `atexit` |
+| `HB_LEAN` | 27 macros (`:56`), plus `HB_NO_COLOR`, `HB_NO_DRAW` and `HB_NO_PAINT` unless a drawing library is in the build (`:85`) | variations; vertical text; color, drawing and painting; the `MATH`, `meta`, `name`, `STAT` and metrics APIs; buffer messages, serialization and verification; reading fonts from files; Device-table hinting; glyph names; several rarely used layout functions; deprecated API; environment variables, `errno`, locales and `atexit` |
 | `HB_TINY` | `HB_LEAN` and `HB_MINI`, plus `HB_NO_SVG`, `HB_OPTIMIZE_SIZE`, `HB_OPTIMIZE_SIZE_MORE`, `HB_MINIMIZE_MEMORY_USAGE`, `HB_NO_MT`, `HB_NO_UCD_UNASSIGNED` and `NDEBUG` (`:42`) | all of the above; thread safety; the speed-ups that cost size; the three caches; assertions; exact Unicode properties for unassigned code points |
 
 `HB_LEAN`’s 27 are `HB_DISABLE_DEPRECATED`, `HB_NO_ATEXIT`, `HB_NO_BUFFER_MESSAGE`, `HB_NO_BUFFER_SERIALIZE`, `HB_NO_BUFFER_VERIFY`, `HB_NO_BITMAP`, `HB_NO_ERRNO`, `HB_NO_FACE_COLLECT_UNICODES`, `HB_NO_GETENV`, `HB_NO_HINTING`, `HB_NO_LAYOUT_FEATURE_PARAMS`, `HB_NO_LAYOUT_COLLECT_GLYPHS`, `HB_NO_LAYOUT_RARELY_USED`, `HB_NO_LAYOUT_UNUSED`, `HB_NO_MATH`, `HB_NO_META`, `HB_NO_METRICS`, `HB_NO_MMAP`, `HB_NO_NAME`, `HB_NO_OPEN`, `HB_NO_OT_FETCH`, `HB_NO_OT_FONT_GLYPH_NAMES`, `HB_NO_SETLOCALE`, `HB_NO_STYLE`, `HB_NO_SUBSET_DEPEND`, `HB_NO_VERTICAL` and `HB_NO_VAR`.
 
 Two consequences are easy to miss. `HB_NO_DRAW` implies `HB_NO_OT_FONT_CFF` (`:139`), so a lean build without a drawing library has no glyph extents or glyph names from CFF fonts, as well as no outlines (`hb-ot-font.cc:831`, `:851`). And `HB_NO_STYLE` turns off `trak` ([AAT positioning](aat-positioning.html#when-it-applies)), because tracking is applied only when the font also has a `STAT` table (`hb-ot-shape.cc:217`).
 
-**When `HB_LEAN` keeps drawing.** The test at `hb-config.hh:85` asks whether `HB_HAS_CAIRO`, `HB_HAS_RASTER`, `HB_HAS_VECTOR` or `HB_HAS_GPU` is defined. Those come from `hb-features.h`, the header Meson generates for applications, and no library source includes it. `harfbuzz-world.cc`, the single-file build, does, if `HB_FEATURES_H` names it (`harfbuzz-world.cc:1`), and anyone can define the macros by hand. A Meson build doesn’t: `config.h` has `HAVE_RASTER`, not `HB_HAS_RASTER`. Preprocessing `hb.hh` with `-DHB_LEAN` against the book’s own Meson build, where the raster and vector libraries are on, gives `HB_NO_DRAW` defined. So in a Meson build `HB_LEAN` always removes drawing, painting and colour, and the libraries that need them are left without (checked with the preprocessor only; what then happens to those libraries was not tried).
+**When `HB_LEAN` keeps drawing.** The test at `hb-config.hh:85` asks whether `HB_HAS_CAIRO`, `HB_HAS_RASTER`, `HB_HAS_VECTOR` or `HB_HAS_GPU` is defined. Those come from `hb-features.h`, the header Meson generates for applications, and no library source includes it. `harfbuzz-world.cc`, the single-file build, does, if `HB_FEATURES_H` names it (`harfbuzz-world.cc:1`), and anyone can define the macros by hand. A Meson build doesn’t: `config.h` has `HAVE_RASTER`, not `HB_HAS_RASTER`. Preprocessing `hb.hh` with `-DHB_LEAN` against the book’s own Meson build, where the raster and vector libraries are on, gives `HB_NO_DRAW` defined. So in a Meson build `HB_LEAN` always removes drawing, painting and color, and the libraries that need them are left without (checked with the preprocessor only; what then happens to those libraries was not tried).
 
 Many macros belong to no tier. Some are for unusual builds (`HB_NO_OT_SHAPE` for a library with only the Core Text backend, `HB_NO_UCD` for one that brings its own Unicode data); others are single features nobody has grouped: `HB_NO_AVAR2`, `HB_NO_BASE`, `HB_NO_CFF`, `HB_NO_EMOJI_SEQUENCES`, `HB_NO_LANGUAGE_LONG`, `HB_NO_OT_SHAPE_FRACTIONS`, `HB_NO_SUBSET_LAYOUT`, `HB_NO_WIN1256` and more. The table below marks them “—” in the third column.
 
@@ -82,7 +82,7 @@ Four macros change how the code is compiled rather than what it can do.
 
 The comment at `hb-aat-layout-common.hh:52` puts a figure on one of these: forcing the AAT transitions inline “is worth 3-10% instructions on morx/kerx-heavy fonts, for about 16KB of code”.
 
-**`HB_OPTIMIZE_SIZE_MORE`**, set only by `HB_TINY`, goes a little further: it defines `HB_NO_OT_RULESETS_FAST_PATH` (`hb-config.hh:182`), which turns the rule-set and ligature fast paths off even without `HB_OPTIMIZE_SIZE`, and drops the `fasthash32` specialisation of byte-array hashing (`hb-array.hh:510`).
+**`HB_OPTIMIZE_SIZE_MORE`**, set only by `HB_TINY`, goes a little further: it defines `HB_NO_OT_RULESETS_FAST_PATH` (`hb-config.hh:182`), which turns the rule-set and ligature fast paths off even without `HB_OPTIMIZE_SIZE`, and drops the `fasthash32` specialization of byte-array hashing (`hb-array.hh:510`).
 
 **`HB_MINIMIZE_MEMORY_USAGE`**, also `HB_TINY` only, defines `HB_NO_GDEF_CACHE`, `HB_NO_OT_LAYOUT_LOOKUP_CACHE` and `HB_NO_OT_FONT_CMAP_CACHE` (`:186`), removing the three caches that face and lookup accelerators allocate. Its `_VAL` form is defined at `:205` and used nowhere.
 
@@ -103,13 +103,13 @@ These are all the `HB_NO_*` macros that the {{hb}} source in `src/` tests or def
 | `HB_NO_AVAR2` | `avar` version 2 (`hb-ot-var-avar-table.hh:516`) | — | [Design space](design-space.html#avar-version-2) |
 | `HB_NO_BASE` | the `BASE` table: `hb_ot_layout_get_baseline` and friends, and its subsetting | — | [Other tables](other-tables.html) |
 | `HB_NO_BEYOND_64K` | 24-bit glyph IDs and offsets: Coverage formats 3 and 4, the wide lookup formats, `COLR`’s PaintGlyph format 33, 24-bit composite components in `glyf`, `cmap` format 15 | `HB_MINI` | [Fonts as bytes](fonts-as-bytes.html#smalltypes-and-mediumtypes) |
-| `HB_NO_BITMAP` | nothing directly: an umbrella for `HB_NO_OT_FONT_BITMAP` | `HB_LEAN` | [Colour](colour.html#bitmaps-sbix-and-cbdt) |
+| `HB_NO_BITMAP` | nothing directly: an umbrella for `HB_NO_OT_FONT_BITMAP` | `HB_LEAN` | [Color](color.html#bitmaps-sbix-and-cbdt) |
 | `HB_NO_BUFFER_MESSAGE` | the message callback and every message sent (`hb-buffer.hh:132`) | `HB_LEAN` | [Buffers](buffers.html#messages) |
 | `HB_NO_BUFFER_SERIALIZE` | `hb_buffer_serialize*` and `hb_buffer_deserialize*` (`hb-buffer-serialize.cc:29`) | `HB_LEAN` | [Buffers](buffers.html#comparing-and-writing-out) |
 | `HB_NO_BUFFER_VERIFY` | `HB_BUFFER_FLAG_VERIFY`’s checks (`hb-buffer-verify.cc:29`) | `HB_LEAN` | [Buffers](buffers.html#verification) |
 | `HB_NO_CFF` | the `CFF ` and `CFF2` slots, and so CFF outlines, extents and subsetting | — | [Drawing outlines](drawing-outlines.html#cff-and-cff2-running-charstrings) |
 | `HB_NO_CMAP_LEGACY_SUBTABLES` | the special handling of symbol (3,0), MacRoman and other Mac `cmap` subtables, including the Arabic PUA maps (`hb-ot-cmap-table.hh:2199`) | `HB_NO_LEGACY` (`HB_MINI`) | [Joining scripts](joining-scripts.html#legacy-encodings) |
-| `HB_NO_COLOR` | the `COLR`, `CPAL`, `CBDT`, `sbix` and `SVG ` slots and `hb-ot-color.cc` | `HB_LEAN`, if no drawing library | [Colour](colour.html#compiled-out) |
+| `HB_NO_COLOR` | the `COLR`, `CPAL`, `CBDT`, `sbix` and `SVG ` slots and `hb-ot-color.cc` | `HB_LEAN`, if no drawing library | [Color](color.html#compiled-out) |
 | `HB_NO_CUBIC_GLYF` | cubic curves in `glyf` (`OT/glyf/path-builder.hh:44`) | `HB_MINI` | [Drawing outlines](drawing-outlines.html#cubic-curves-in-glyf) |
 | `HB_NO_DRAW` | the draw API (`hb-draw.cc`) and every font funcs’ outline callback | `HB_LEAN`, if no drawing library | [Drawing outlines](drawing-outlines.html#the-draw-api) |
 | `HB_NO_EMOJI_SEQUENCES` | keeping an Extended_Pictographic character after a ZWJ in the same cluster (`hb-ot-shape.cc:516`) | — | [Unicode inside HarfBuzz](unicode-inside-harfbuzz.html#continuations-just-enough-of-graphemes) |
@@ -136,7 +136,7 @@ These are all the `HB_NO_*` macros that the {{hb}} source in `src/` tests or def
 | `HB_NO_OT` | nothing directly: an umbrella for the four below it (`:163`) | — | [hb_shape and its backends](hb_shape-and-its-backends.html#ot) |
 | `HB_NO_OT_FETCH` | `hb_ot_fetch_bits` and `hb_ot_fetch_number` (new in 14.3.0) | `HB_LEAN` | [Other tables](other-tables.html) |
 | `HB_NO_OT_FONT` | the hb-ot font funcs (`hb-ot-font.cc:29`); fonts must be given others | `HB_NO_OT` | [Fonts and font functions](fonts-and-font-functions.html#hb-ot-the-default-funcs) |
-| `HB_NO_OT_FONT_BITMAP` | hb-ot’s extents and painting from `sbix` and `CBDT` (`hb-ot-font.cc:820`, `:952`) | `HB_NO_BITMAP` (`HB_LEAN`) | [Colour](colour.html#bitmaps-sbix-and-cbdt) |
+| `HB_NO_OT_FONT_BITMAP` | hb-ot’s extents and painting from `sbix` and `CBDT` (`hb-ot-font.cc:820`, `:952`) | `HB_NO_BITMAP` (`HB_LEAN`) | [Color](color.html#bitmaps-sbix-and-cbdt) |
 | `HB_NO_OT_FONT_CFF` | hb-ot’s CFF extents, glyph names and outlines (`hb-ot-font.cc:831`) | `HB_NO_CFF`, `HB_NO_DRAW` | [Drawing outlines](drawing-outlines.html#cff-and-cff2-running-charstrings) |
 | `HB_NO_OT_FONT_CMAP_CACHE` | the 1 KB cache of recent `cmap` lookups (`hb-ot-cmap-table.hh:2190`) | `HB_MINIMIZE_MEMORY_USAGE` (`HB_TINY`) | [Blobs, faces and lazy tables](blobs-faces-and-lazy-tables.html#two-kinds-of-loader) |
 | `HB_NO_OT_FONT_GLYPH_NAMES` | the glyph-name callbacks of hb-ot and the platform font funcs (`hb-ot-font.cc:839`) | `HB_LEAN` | [Fonts and font functions](fonts-and-font-functions.html#hb-ot-the-default-funcs) |
@@ -157,7 +157,7 @@ These are all the `HB_NO_*` macros that the {{hb}} source in `src/` tests or def
 | `HB_NO_OT_SHAPER_VOWEL_CONSTRAINTS` | the dotted circles inserted for forbidden vowel sequences (`hb-ot-shaper-vowel-constraints.cc:42`) | `HB_NO_OT_SHAPE_FALLBACK` | [Dotted circles and broken clusters](dotted-circles-and-broken-clusters.html#vowel-constraints) |
 | `HB_NO_OT_TAG` | `hb_ot_tag*` conversions; `hb-ot-layout.cc` and Uniscribe refuse to compile without them | `HB_NO_OT` | [Choosing a script shaper](choosing-a-script-shaper.html) |
 | `HB_NO_OUTLINE` | synthetic bold and slant of drawn outlines (`hb-font.hh:695`) | `HB_NO_DRAW` | [Fonts and font functions](fonts-and-font-functions.html#synthetic-bold-and-slant) |
-| `HB_NO_PAINT` | the paint API and every font funcs’ paint callback (`hb-paint.cc:27`) | `HB_NO_DRAW`; `HB_LEAN`, if no drawing library | [Colour](colour.html#the-paint-api) |
+| `HB_NO_PAINT` | the paint API and every font funcs’ paint callback (`hb-paint.cc:27`) | `HB_NO_DRAW`; `HB_LEAN`, if no drawing library | [Color](color.html#the-paint-api) |
 | `HB_NO_PRAGMA_GCC_DIAGNOSTIC` | the `#pragma`s that set HarfBuzz’s warnings (`hb.hh:38`) | — | — |
 | `HB_NO_PRAGMA_GCC_DIAGNOSTIC_ERROR` | the warnings promoted to errors (`hb.hh:69`) | — | — |
 | `HB_NO_PRAGMA_GCC_DIAGNOSTIC_IGNORED` | the warnings silenced (`hb.hh:136`) | — | — |
@@ -170,7 +170,7 @@ These are all the `HB_NO_*` macros that the {{hb}} source in `src/` tests or def
 | `HB_NO_SUBSET_CFF` | subsetting CFF and CFF2 (`hb-subset-cff1.cc`, `hb-subset-cff2.cc`) | `HB_NO_CFF` | [Subsetting](subsetting.html) |
 | `HB_NO_SUBSET_DEPEND` | the public `hb_subset_depend_*` API (`hb-subset-depend.h:73`) | `HB_LEAN`; every build without `HB_EXPERIMENTAL_API` (`:38`) | [hb-depend](hb-depend.html#status-and-limits) |
 | `HB_NO_SUBSET_LAYOUT` | the layout stage of subsetting: GDEF, GSUB, GPOS, `kern` and the AAT tables are dropped (`hb-subset.cc:236`) | — | [Subsetting](subsetting.html#the-layout-stage) |
-| `HB_NO_SVG` | the `SVG ` slot and its painting (`hb-ot-color.cc:279`) | `HB_TINY` | [Colour](colour.html#svg) |
+| `HB_NO_SVG` | the `SVG ` slot and its painting (`hb-ot-color.cc:279`) | `HB_TINY` | [Color](color.html#svg) |
 | `HB_NO_UCD` | HarfBuzz’s own Unicode tables (`hb-ucd.cc:254`) | — | [Unicode inside HarfBuzz](unicode-inside-harfbuzz.html#three-implementations) |
 | `HB_NO_UCD_UNASSIGNED` | exact properties for unassigned code points, in the size-optimized tables only (`hb-ucd-table.hh:2767`) | `HB_TINY` | [Unicode inside HarfBuzz](unicode-inside-harfbuzz.html#three-sizes) |
 | `HB_NO_UNICODE_FUNCS` | any default Unicode funcs, and the `#error` when none is found (`hb-unicode.cc:166`) | — | [Unicode inside HarfBuzz](unicode-inside-harfbuzz.html#three-implementations) |
@@ -236,7 +236,7 @@ The options in `meson_options.txt` decide what is built and linked. Most of them
 | `harfrust`, `kbts`, `wasm` | disabled | the `harfrust`, `kbts` and `wasm` backends ([hb_shape and its backends](hb_shape-and-its-backends.html#the-backends)); `wasm` also sets `HB_WASM_MODULE_DIR` |
 | `coretext`, `directwrite`, `gdi` | disabled | the platform backends and font funcs; `gdi` brings Uniscribe |
 | `subset` | enabled | `libharfbuzz-subset` |
-| `raster`, `vector`, `gpu` | enabled | `libharfbuzz-raster`, `-vector` and `-gpu` ([Rendering](rendering.html)) |
+| `raster`, `vector`, `gpu` | enabled | `libharfbuzz-raster`, `-vector` and `-gpu` ([hb-raster](hb-raster.html), [hb-vector](hb-vector.html) and [hb-gpu](hb-gpu.html)) |
 | `gpu_demo` | auto | the hb-gpu demo, which needs GLEW, GLFW and GL |
 | `experimental_api` | false | `HB_EXPERIMENTAL_API` |
 | `utilities` | enabled | `hb-shape`, `hb-view`, `hb-subset` and the other tools |
@@ -260,7 +260,7 @@ Meson also writes `hb-features.h`, installed for applications, which defines an 
 | `src/hb-ot-face-table-list.hh` | the table slots and the macros that remove them |
 | `src/hb-algs.hh` | `HB_FAST_NUM_ACCESS` |
 | `src/hb-limits.hh` | the limits a build can change |
-| `src/harfbuzz-world.cc` | the single-file build, selected with `HB_HAS_*` |
+| `src/harfbuzz-world.cc` | the single-file build, selected with `HB_HAS_*` ([Building HarfBuzz](building-harfbuzz.html#single-file-builds)) |
 | `CONFIG.md` | upstream’s guide to small builds |
 | `meson_options.txt`, `meson.build` | the build options and the `HAVE_*` macros they set |
 
@@ -271,4 +271,4 @@ Meson also writes `hb-features.h`, installed for applications, which defines an 
 * The `HB_NO_*` macros only need to be defined. They remove whole files, empty function bodies or remove table slots, and the public headers don’t change, so calling a removed function fails at link time.
 * `-Os` turns on `HB_OPTIMIZE_SIZE` by itself. It gives up forced inlining, unrolled loops, fast paths and the larger lookup tables.
 * `HB_BUFFER_MESSAGE_MORE` and the `HB_DEBUG_*` macros need a rebuild; `HB_EXPERIMENTAL_API` is the one macro with a Meson option.
-* In a Meson build, `HB_LEAN` always removes drawing, painting and colour, because it can’t see `hb-features.h`.
+* In a Meson build, `HB_LEAN` always removes drawing, painting and color, because it can’t see `hb-features.h`.

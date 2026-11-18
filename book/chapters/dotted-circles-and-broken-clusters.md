@@ -144,7 +144,7 @@ Each shaper calls the same function at the start of its reordering, in the GSUB 
   buffer->sync ();
 ```
 
-It walks the buffer once and puts one circle at the start of each broken syllable, recognised by the low four bits of its `syllable` byte. The four shapers differ only in the arguments:
+It walks the buffer once and puts one circle at the start of each broken syllable, recognized by the low four bits of its `syllable` byte. The four shapers differ only in the arguments:
 
 | Shaper | Broken type | Circle’s category | Skipped first | Position |
 |---|---|---|---|---|

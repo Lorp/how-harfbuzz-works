@@ -1,15 +1,15 @@
 """Build the test fonts for the chapter “Colour”.
 
-usage: python3 build-colour-fonts.py OUT_DIR
+usage: python3 build-color-fonts.py OUT_DIR
 
-Every glyph is made of squares, bars and discs. Each colour glyph also has an
+Every glyph is made of squares, bars and discs. Each color glyph also has an
 outline of its own, a plain black square with a corner cut off, so that a
 drawing shows at once when HarfBuzz has fallen back to the outline.
 
 Fonts written:
   colr0.ttf          COLR version 0 and CPAL version 1, with two palettes.
                      A is three layers: a square in palette entry 0, a disc in
-                     entry 1, and a bar in the foreground colour (0xFFFF).
+                     entry 1, and a bar in the foreground color (0xFFFF).
                      B is the same layers in another order. Palette 0 is
                      marked usable on a light background, palette 1 on a
                      dark one, and both have names.
@@ -77,7 +77,7 @@ def disc(pen, cx, cy, r):
 
 
 def fallback(pen):
-    # The outline every colour glyph has: a square with its top right corner cut.
+    # The outline every color glyph has: a square with its top right corner cut.
     pen.moveTo((100, 0)); pen.lineTo((100, 800)); pen.lineTo((650, 800))
     pen.lineTo((900, 550)); pen.lineTo((900, 0)); pen.closePath()
 

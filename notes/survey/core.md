@@ -108,7 +108,7 @@ Since 11.0.1, emboldening and slant are applied in `hb_font_t`, not in hb-ot or 
 * non-variable → hmtx scaled, uncached;
 * variable → `HVAR` if present, else **gvar phantom points** (`glyf.get_advance_with_var_unscaled`), cached.
 
-v-advances (:506) work like h-advances: `vmtx`, plus `VVAR` or `gvar` phantom points away from the default; with no `vmtx`, the font’s ascender-to-descender height. v-origins (:633) are a separate chain: `VORG` (+ VVAR `vorgMap`), else `vmtx` top side bearing *only with `glyf`*, else the glyph’s extents centred in the line, else the ascender. A CFF font without VORG ignores its vmtx tsb. (“Half the advance, ascender”, `hb-font.hh:858`, is the font object’s own guess when no funcs answer, not hb-ot’s.) A glyph past the end of `hmtx`’s side bearings gets advance 0, not the shared last advance.
+v-advances (:506) work like h-advances: `vmtx`, plus `VVAR` or `gvar` phantom points away from the default; with no `vmtx`, the font’s ascender-to-descender height. v-origins (:633) are a separate chain: `VORG` (+ VVAR `vorgMap`), else `vmtx` top side bearing *only with `glyf`*, else the glyph’s extents centered in the line, else the ascender. A CFF font without VORG ignores its vmtx tsb. (“Half the advance, ascender”, `hb-font.hh:858`, is the font object’s own guess when no funcs answer, not hb-ot’s.) A glyph past the end of `hmtx`’s side bearings gets advance 0, not the shared last advance.
 
 **Extents** (`hb_ot_get_glyph_extents`, :811) are tried in this fixed order: `sbix` → `CBDT` → `COLR` → `VARC` → `glyf` → `CFF2` → `CFF `. Glyph names come from `post`, then CFF1.
 
@@ -165,7 +165,7 @@ They are allocated byte by byte with `allocated_var_bits` and asserted with `HB_
 `unicode_props` packs data compactly (`hb-ot-layout.hh:186–220`):
 * the low byte holds a 5-bit “modified” General_Category, plus IGNORABLE, HIDDEN and CONTINUATION bits;
 * the high byte holds the modified combining class (for marks), ZWJ/ZWNJ/VS/AAT-deleted flags (for Cf), or a space-fallback type (for Zs);
-* variation selectors are re-labelled from Mn to Cf so their flag fits.
+* variation selectors are re-labeled from Mn to Cf so their flag fits.
 
 ### 4.4 The mask
 
@@ -178,7 +178,7 @@ They are allocated byte by byte with `allocated_var_bits` and asserted with `HB_
 
 * `hb_buffer_add_utf*` (`hb-buffer.cc:1868`) sets `cluster` to the **code-unit offset** in the caller’s string (bytes for UTF-8). It stores up to 5 codepoints of pre-context (only when the buffer is empty and `item_offset > 0`) and of post-context. Invalid input becomes `replacement`.
 * **Four cluster levels** (`hb-buffer.h:461`): 0 MONOTONE_GRAPHEMES (default), 1 MONOTONE_CHARACTERS, 2 CHARACTERS, and **3 GRAPHEMES (new in 11.0)**. The predicate macros `HB_BUFFER_CLUSTER_LEVEL_IS_MONOTONE/IS_GRAPHEMES/IS_CHARACTERS` (:478–509) are also 11.0. Code should test these predicates rather than compare the level to numbers.
-* `merge_clusters` (`hb-buffer.hh:396`) merges only in monotone levels; otherwise it just marks unsafe-to-break. `merge_grapheme_clusters` merges only in grapheme levels. `merge_clusters_impl` (`hb-buffer.cc:569`) extends over neighbouring runs with the same cluster, into the out-buffer if needed, and charges the work to `max_ops`.
+* `merge_clusters` (`hb-buffer.hh:396`) merges only in monotone levels; otherwise it just marks unsafe-to-break. `merge_grapheme_clusters` merges only in grapheme levels. `merge_clusters_impl` (`hb-buffer.cc:569`) extends over neighboring runs with the same cluster, into the out-buffer if needed, and charges the work to `max_ops`.
 * The header doc recommends level 1 for new clients. The user manual’s clusters chapter (`docs/usermanual-clusters.xml`) does not mention level 3: **the docs lag the code here.**
 
 ### 4.6 Flags
@@ -271,7 +271,7 @@ Order matters. **With no shaper list, the first backend whose *face data* can be
 **Files:** `hb-shape-plan.h/.hh/.cc`, `hb-ot-shape.hh` (`hb_ot_shape_plan_key_t`).
 
 * **Key** (`hb_shape_plan_key_t`, `hb-shape-plan.hh:34`): segment props, user features, the `ot` key, and the shaper func. `equal` is at `hb-shape-plan.cc:177`.
-* **User features match only on tag, value, and *whether they are global*.** Ranges are not part of the key (`user_features_match`, :159), because ranges are applied per buffer as masks (§9). (The normalisation loop at :94 writes `features[0]` instead of `features[i]`. It looks like a harmless typo, since start/end are never compared; inferred.)
+* **User features match only on tag, value, and *whether they are global*.** Ranges are not part of the key (`user_features_match`, :159), because ranges are applied per buffer as masks (§9). (The normalization loop at :94 writes `features[0]` instead of `features[i]`. It looks like a harmless typo, since start/end are never compared; inferred.)
 * **Variation coords are not in the key.** The key holds the *outcome* of FeatureVariations: `variations_index[2]`, plus, new with FeatureVariations 1.1 (14.6), the sorted list of true condition offsets `lookup_conditions[2]` (`hb-ot-shape.hh:51`). Two different coordinate sets that select the same feature variations share one plan.
 * **The cache** (`hb_shape_plan_create_cached2`, `hb-shape-plan.cc:538`) is a lock-free singly-linked list on the face, prepended with `cmpexch` and retried on races, with a **one-entry `last_shape_plan` fast path** (added for 15.1’s “speed up shaping on faces with many shape plans”; `hb-face.hh:75`). Plans are **never evicted** while the face lives. A program that shapes with many feature combinations will slowly fill this list (inferred).
 * `hb_shape_plan_create2` (:240) returns the empty plan for an invalid direction. It makes the face immutable and builds `ot` (`hb_ot_shape_plan_t::init0`, `hb-ot-shape.cc:227`), which runs the planner (§9) and compiles the map.
@@ -449,7 +449,7 @@ The design comment (:36–75) is worth quoting in the book: it is “like Unicod
 
 * **Mark positioning** (`_hb_ot_shape_fallback_mark_position`, :470): marks are clustered around the preceding base (skipping hidden and default-ignorable glyphs). Each mark is placed from **glyph extents only**, using its recategorized combining class:
   * the class is mapped to above, below, left, right or attached (`recategorize_combining_class`, :35, with Thai and Lao per-character cases);
-  * the mark is centred or aligned left or right on the base’s ink box (:211);
+  * the mark is centered or aligned left or right on the base’s ink box (:211);
   * a gap of y_scale/16 is added, and stacked marks grow the box;
   * below-marks are never shifted up, and above-marks are not shifted far down.
   This makes it *font-extents-dependent*, so results differ between font-func backends (inferred).

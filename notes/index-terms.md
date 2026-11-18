@@ -18,7 +18,35 @@ Code index:
 * API and macros (17): `_hb_ot_shape_normalize`, `hb_buffer_add_utf16`, `hb_buffer_add_utf32`, `hb_buffer_add_utf8`, `hb_buffer_cluster_level_t`, `hb_buffer_guess_segment_properties`, `hb_codepoint_t`, `hb_direction_t`, `hb_feature_t`, `hb_form_clusters`, `hb_glyph_info_t`, `hb_glyph_position_t`, `hb_language_t`, `hb_ot_map_glyphs_fast`, `hb_ot_shape_internal`, `hb_script_t`, `hb_segment_properties_t`
 * Source files (12): `hb-buffer.cc`, `hb-buffer.h`, `hb-common.h`, `hb-ot-layout.cc`, `hb-ot-shape-normalize.cc`, `hb-ot-shape.cc`, `hb-ot-shaper-arabic.cc`, `hb-ot-shaper-hangul.cc`, `hb-ot-shaper-indic.cc`, `hb-ot-shaper-khmer.cc`, `hb-ot-tag.cc`, `README.md`
 
-## 2. Fonts as bytes
+## 2. Building HarfBuzz
+
+`chapters/building-harfbuzz.md`
+
+General index:
+
+* Concepts (12): `.pc` file, `build-ft/`, `build-msg/`, `build/`, `hb-features.h`, build directory, build options, detailed messages, feature options, Meson, Ninja, suites
+* Tables and tags (8): `docs`, `glib`, `kbts`, `liga`, `PATH`, `src/`, `wasm`, `zlib`
+
+Code index:
+
+* API and macros (15): `HB_BUFFER_MESSAGE_MORE`, `HB_BUILD_UTILS`, `HB_EXPERIMENTAL_API`, `HB_FEATURES_H`, `HB_HAS_FREETYPE`, `HB_HAS_GPU`, `HB_HAS_GRAPHITE`, `HB_HAS_RASTER`, `HB_HAS_SUBSET`, `HB_HAS_VECTOR`, `HB_HAVE_FREETYPE`, `HB_LEAN`, `HB_MINI`, `hb_shape_justify`, `HB_TINY`
+* Source files (32): `.ci/win64-cross-file.txt`, `AGENTS.md`, `BUILD.md`, `build/meson-logs/testlog.txt`, `CMakeLists.txt`, `compilers/detect.py`, `config.h`, `CONFIG.md`, `gen-harfbuzz-world.py`, `gen-harfbuzzcc.py`, `harfbuzz-subset.cc`, `harfbuzz-world.cc`, `harfbuzz.cc`, `hb-debug.hh`, `hb-features.h`, `hb-ft.cc`, `hb-ot-shaper-use-table.hh`, `hb-ucd-table.hh`, `meson_options.txt`, `meson.build`, `mesonbuild/envconfig.py`, `README.md`, `README.mingw.md`, `README.python.md`, `sample.py`, `test/api/meson.build`, `test/meson.build`, `test/subset/meson.build`, `TESTING.md`, `util/gpu/web/config.h`, `util/meson.build`, `util/options.hh`
+
+## 3. The command-line tools
+
+`chapters/command-line-tools.md`
+
+General index:
+
+* Concepts (1): context
+* Tables and tags (23): `ansi`, `Arab`, `BASE`, `cmap`, `face`, `font`, `gid0`, `gid1`, `kern`, `LANG`, `Latn`, `liga`, `main`, `medi`, `meta`, `name`, `none`, `post`, `rlig`, `STAT`, `text`, `trak`, `view`
+
+Code index:
+
+* API and macros (6): `hb_buffer_guess_segment_properties`, `HB_BUFFER_MESSAGE_MORE`, `HB_FACE_LOADER`, `hb_feature_from_string`, `HB_FONT_FUNCS`, `HB_SHAPER_LIST`
+* Source files (49): `batch.hh`, `face-options.hh`, `font-options.hh`, `gpu-output.hh`, `hb-buffer-serialize.cc`, `hb-gpu.cc`, `hb-info.cc`, `hb-ot-layout.cc`, `hb-raster.cc`, `hb-shape.cc`, `hb-subset-depend.cc`, `hb-subset.cc`, `helper-cairo.hh`, `helper-extents-overlay.hh`, `helper-image-output.hh`, `helper-subset.hh`, `main-font-text.hh`, `options.hh`, `output-options.hh`, `raster-output.hh`, `shape-consumer.hh`, `shape-format.hh`, `shape-options.hh`, `shape-output.hh`, `test/shape/run-tests.py`, `text-options.hh`, `util/batch.hh`, `util/face-options.hh`, `util/font-options.hh`, `util/gpu-output.hh`, `util/gpu/demo-view.cc`, `util/hb-gpu.cc`, `util/hb-info.cc`, `util/hb-subset.cc`, `util/helper-subset.hh`, `util/main-font-text.hh`, `util/meson.build`, `util/options.hh`, `util/raster-output.hh`, `util/shape-consumer.hh`, `util/shape-format.hh`, `util/shape-options.hh`, `util/shape-output.hh`, `util/text-options.hh`, `util/vector-output.hh`, `util/view-cairo.hh`, `util/view-options.hh`, `vector-output.hh`, `view-options.hh`
+
+## 4. Fonts as bytes
 
 `chapters/fonts-as-bytes.md`
 
@@ -33,7 +61,7 @@ Code index:
 * Types and structs (62): `AAT::Lookup`, `AAT::SettingName`, `Array16Of`, `Array16OfOffset16To`, `Array24Of`, `Array32Of`, `ArrayOf`, `ArrayOfM1`, `BaseType`, `BinSearchArrayOf`, `BinSearchHeader`, `CoverageFormat1_3`, `CrapOrNull`, `F16DOT16`, `F2DOT14`, `HBGlyphID16`, `HBGlyphID24`, `HBINT16`, `HBINT32`, `HBINT64`, `HBINT8`, `HBUINT16`, `HBUINT24`, `HBUINT32`, `HBUINT64`, `HBUINT8`, `HeadlessArray16Of`, `HeadlessArrayOf`, `LigatureSubstFormat1_2`, `List16OfOffsetTo`, `MediumTypes`, `NNOffset16To`, `NumType`, `Offset16`, `Offset24`, `Offset32`, `OffsetTo`, `OpenTypeFontFile`, `OpenTypeOffsetTable`, `OT::ClipRecord`, `OT::CmapSubtableLongGroup`, `OT::Index`, `OT::LangSys`, `OT::RangeRecord`, `OT::VarIdx`, `PosLookupSubTable`, `RangeRecord`, `ResourceForkHeader`, `SingleSubst`, `SmallTypes`, `SortedArray16Of`, `SortedArrayOf`, `SortedUnsizedArrayOf`, `StructAfter`, `StructAtOffset`, `SubstLookupSubTable`, `TableRecord`, `TTCHeaderVersion1`, `UnsizedArrayOf`, `ValueBase`, `VarIdx`, `VarSizedBinSearchArrayOf`
 * Source files (29): `build-fonts.py`, `Coverage.hh`, `dump.py`, `fonts/fonts-as-bytes/dump.py`, `hb-algs.hh`, `hb-array.hh`, `hb-blob.cc`, `hb-dispatch.hh`, `hb-face.cc`, `hb-machinery.hh`, `hb-meta.hh`, `hb-null.hh`, `hb-open-file.hh`, `hb-open-type.hh`, `hb-ot-dual.hh`, `hb-ot-layout-common.hh`, `hb-ot-layout-gsubgpos.hh`, `hb-ot-layout.cc`, `hb-sanitize.hh`, `hb-static.cc`, `hb-subset.hh`, `OT/Color/COLR/COLR.hh`, `OT/Layout/Common/Coverage.hh`, `OT/Layout/Common/CoverageFormat2.hh`, `OT/Layout/Common/RangeRecord.hh`, `OT/Layout/GPOS/ValueFormat.hh`, `OT/Layout/GSUB/SingleSubst.hh`, `OT/Layout/GSUB/SingleSubstFormat1.hh`, `OT/Layout/GSUB/SubstLookupSubTable.hh`
 
-## 3. Trust nothing: the sanitizer
+## 5. Trust nothing: the sanitizer
 
 `chapters/trust-nothing-the-sanitizer.md`
 
@@ -48,7 +76,7 @@ Code index:
 * Types and structs (12): `AnchorMatrix`, `CursivePos`, `LigatureSet`, `LigatureSubst`, `MarkArray`, `MarkBasePos`, `MarkLigPos`, `MarkMarkPos`, `OffsetTo`, `PaintComposite`, `PairPos`, `SinglePos`
 * Source files (29): `AnchorFormat3.hh`, `AnchorMatrix.hh`, `COLR.hh`, `CoverageFormat2.hh`, `CursivePosFormat1.hh`, `glyf.hh`, `hb-aat-layout-kerx-table.hh`, `hb-aat-layout-morx-table.hh`, `hb-aat-layout.cc`, `hb-atomic.hh`, `hb-blob.cc`, `hb-dispatch.hh`, `hb-open-type.hh`, `hb-ot-cmap-table.hh`, `hb-ot-hmtx-table.hh`, `hb-ot-layout-common.hh`, `hb-ot-layout-gsubgpos.hh`, `hb-ot-layout.cc`, `hb-sanitize.hh`, `hb-subset-plan.hh`, `OT/Color/COLR/COLR.hh`, `OT/glyf/glyf.hh`, `OT/Layout/Common/Coverage.hh`, `OT/Layout/GSUB/LigatureSubst.hh`, `PairPosFormat2.hh`, `PairSet.hh`, `SinglePosFormat1.hh`, `SingleSubstFormat1.hh`, `ValueFormat.hh`
 
-## 4. Blobs, faces and lazy tables
+## 6. Blobs, faces and lazy tables
 
 `chapters/blobs-faces-and-lazy-tables.md`
 
@@ -63,21 +91,21 @@ Code index:
 * Types and structs (5): `CreateFileMapping`, `MapViewOfFile`, `OpenTypeFontFile`, `OT::head`, `WheresData`
 * Source files (22): `hb-blob.cc`, `hb-blob.h`, `hb-blob.hh`, `hb-cache.hh`, `hb-face-builder.cc`, `hb-face.cc`, `hb-face.hh`, `hb-font.cc`, `hb-machinery.hh`, `hb-object.hh`, `hb-open-file.hh`, `hb-ot-face-table-list.hh`, `hb-ot-face.cc`, `hb-ot-face.hh`, `hb-ot-layout-gsub-table.hh`, `hb-ot-layout-gsubgpos.hh`, `hb-ot-layout.cc`, `hb-ot-maxp-table.hh`, `hb-ot-var-cvar-table.hh`, `hb-sanitize.hh`, `hb-shape-plan.cc`, `hb-static.cc`
 
-## 5. Fonts and font functions
+## 7. Fonts and font functions
 
 `chapters/fonts-and-font-functions.md`
 
 General index:
 
-* Concepts (8): font, font functions, fontations, grade, hb-ft, Pixels per em, Point size, Scale
+* Concepts (8): `fontations`, font, font functions, grade, hb-ft, Pixels per em, Point size, Scale
 * Tables and tags (21): `avar`, `CBDT`, `CFF`, `cmap`, `data`, `Font`, `fvar`, `glyf`, `gvar`, `hhea`, `hmtx`, `HVAR`, `kern`, `NULL`, `opsz`, `post`, `ptem`, `sbix`, `slnt`, `Slnt`, `trak`
 
 Code index:
 
-* API and macros (39): `_hb_font_adopt_var_coords`, `_hb_font_create`, `_hb_font_funcs_default`, `hb_font_changed`, `hb_font_create`, `hb_font_create_sub_font`, `hb_font_draw_glyph_or_fail_default`, `HB_FONT_FUNC_IMPLEMENT`, `HB_FONT_FUNCS`, `hb_font_funcs_create`, `hb_font_funcs_get_empty`, `hb_font_funcs_t`, `hb_font_get_empty`, `hb_font_get_glyph_h_advance`, `hb_font_get_serial`, `hb_font_list_funcs`, `hb_font_make_immutable`, `HB_FONT_NO_VAR_NAMED_INSTANCE`, `hb_font_set_face`, `hb_font_set_funcs`, `hb_font_set_funcs_using`, `hb_font_set_parent`, `hb_font_set_scale`, `hb_font_set_synthetic_bold`, `hb_font_set_synthetic_slant`, `hb_font_set_var_coords_design`, `hb_font_set_var_coords_normalized`, `hb_font_set_var_named_instance`, `hb_font_set_variation`, `hb_font_set_variations`, `hb_font_t`, `hb_ft_font_create`, `hb_ft_font_set_funcs`, `HB_NO_OT_FONT`, `hb_ot_font_set_funcs`, `hb_ot_font_t`, `hb_ot_metrics_get_position`, `hb_ot_position_default`, `hb_style_get_value`
+* API and macros (40): `_hb_font_adopt_var_coords`, `_hb_font_create`, `_hb_font_funcs_default`, `hb_coretext_font_set_funcs`, `hb_font_changed`, `hb_font_create`, `hb_font_create_sub_font`, `hb_font_draw_glyph_or_fail_default`, `HB_FONT_FUNC_IMPLEMENT`, `HB_FONT_FUNCS`, `hb_font_funcs_create`, `hb_font_funcs_get_empty`, `hb_font_funcs_t`, `hb_font_get_empty`, `hb_font_get_glyph_h_advance`, `hb_font_get_serial`, `hb_font_list_funcs`, `hb_font_make_immutable`, `HB_FONT_NO_VAR_NAMED_INSTANCE`, `hb_font_set_face`, `hb_font_set_funcs`, `hb_font_set_funcs_using`, `hb_font_set_parent`, `hb_font_set_scale`, `hb_font_set_synthetic_bold`, `hb_font_set_synthetic_slant`, `hb_font_set_var_coords_design`, `hb_font_set_var_coords_normalized`, `hb_font_set_var_named_instance`, `hb_font_set_variation`, `hb_font_set_variations`, `hb_font_t`, `hb_ft_font_create`, `hb_ft_font_set_funcs`, `HB_NO_OT_FONT`, `hb_ot_font_set_funcs`, `hb_ot_font_t`, `hb_ot_metrics_get_position`, `hb_ot_position_default`, `hb_style_get_value`
 * Source files (20): `fonts/fonts-and-font-functions/build-font.py`, `hb-aat-layout-trak-table.hh`, `hb-coretext-font.cc`, `hb-coretext-shape.cc`, `hb-directwrite-font.cc`, `hb-font.cc`, `hb-font.h`, `hb-font.hh`, `hb-ft.cc`, `hb-ot-font.cc`, `hb-ot-layout-common.hh`, `hb-ot-metrics.cc`, `hb-ot-shape.cc`, `hb-outline.cc`, `hb-style.cc`, `OT/Color/COLR/COLR.hh`, `OT/Layout/GPOS/GPOS.hh`, `rust/font.rs`, `util/font-options.hh`, `ValueFormat.hh`
 
-## 6. Where metrics come from
+## 8. Where metrics come from
 
 `chapters/where-metrics-come-from.md`
 
@@ -92,7 +120,7 @@ Code index:
 * Types and structs (2): `CFF2`, `LongMetric`
 * Source files (24): `fonts/where-metrics-come-from/build-metrics-fonts.py`, `hb-cache.hh`, `hb-font.cc`, `hb-font.hh`, `hb-ot-cff1-table.cc`, `hb-ot-cff2-table.cc`, `hb-ot-dual.hh`, `hb-ot-font.cc`, `hb-ot-hhea-table.hh`, `hb-ot-hmtx-table.hh`, `hb-ot-metrics.cc`, `hb-ot-os2-table.hh`, `hb-ot-shape.cc`, `hb-ot-var-hvar-table.hh`, `hb-ot-var-mvar-table.hh`, `hb-ot-vorg-table.hh`, `hb-paint-extents.hh`, `OT/Color/CBDT/CBDT.hh`, `OT/Color/COLR/COLR.hh`, `OT/Color/sbix/sbix.hh`, `OT/glyf/glyf.hh`, `OT/glyf/Glyph.hh`, `OT/glyf/GlyphHeader.hh`, `OT/glyf/SimpleGlyph.hh`
 
-## 7. Unicode inside HarfBuzz
+## 9. Unicode inside HarfBuzz
 
 `chapters/unicode-inside-harfbuzz.md`
 
@@ -107,7 +135,7 @@ Code index:
 * Types and structs (2): `CCC22`, `CCC26`
 * Source files (25): `emoji-data.txt`, `gen-arabic-table.py`, `gen-indic-table.py`, `gen-ucd-table.py`, `gen-use-table.py`, `gen-vowel-constraints.py`, `hb-buffer.cc`, `hb-config.hh`, `hb-fallback-shape.cc`, `hb-glib.cc`, `hb-icu.cc`, `hb-ot-layout-gsubgpos.hh`, `hb-ot-layout.hh`, `hb-ot-shape-fallback.cc`, `hb-ot-shape-normalize.cc`, `hb-ot-shape.cc`, `hb-ot-shaper-arabic.cc`, `hb-ot-shaper-thai.cc`, `hb-script-list.h`, `hb-ucd-table.hh`, `hb-ucd.cc`, `hb-unicode-emoji-table.hh`, `hb-unicode.cc`, `hb-unicode.h`, `hb-unicode.hh`
 
-## 8. Buffers
+## 10. Buffers
 
 `chapters/buffers.md`
 
@@ -121,7 +149,7 @@ Code index:
 * API and macros (43): `_hb_ot_layout_reverse_graphemes`, `hb_buffer_add`, `hb_buffer_add_utf`, `hb_buffer_add_utf8`, `HB_BUFFER_ALLOCATE_VAR`, `hb_buffer_allocation_successful`, `HB_BUFFER_ASSERT_VAR`, `hb_buffer_changed`, `hb_buffer_clear_contents`, `HB_BUFFER_CLUSTER_LEVEL_IS_MONOTONE`, `HB_BUFFER_DEALLOCATE_VAR`, `hb_buffer_diff`, `HB_BUFFER_FLAG_PRODUCE_SAFE_TO_INSERT_TATWEEL`, `HB_BUFFER_FLAG_PRODUCE_UNSAFE_TO_CONCAT`, `HB_BUFFER_FLAG_VERIFY`, `hb_buffer_get_glyph_positions`, `HB_BUFFER_MESSAGE_MORE`, `hb_buffer_normalize_glyphs`, `hb_buffer_reset`, `HB_BUFFER_SERIALIZE_FLAG_NO_ADVANCES`, `hb_buffer_serialize_glyphs`, `hb_buffer_serialize_unicode`, `hb_buffer_set_content_type`, `hb_buffer_set_message_func`, `hb_buffer_t`, `HB_BUFFER_TRY_ALLOCATE_VAR`, `hb_ensure_native_direction`, `hb_form_clusters`, `hb_glyph_info_get_glyph_flags`, `hb_glyph_info_t`, `hb_glyph_position_t`, `hb_insert_dotted_circle`, `hb_ot_hide_default_ignorables`, `hb_ot_map_glyphs_fast`, `hb_ot_position`, `hb_ot_shape_internal`, `hb_ot_substitute_default`, `hb_ot_substitute_pre`, `hb_propagate_flags`, `hb_shape`, `hb_shape_full`, `hb_shape_plan_execute`, `hb_syllabic_clear_var`
 * Source files (24): `-khmer.cc`, `-myanmar.cc`, `-use.cc`, `hb-buffer-serialize.cc`, `hb-buffer-verify.cc`, `hb-buffer.cc`, `hb-buffer.h`, `hb-buffer.hh`, `hb-debug.hh`, `hb-limits.hh`, `hb-ot-layout-gsubgpos.hh`, `hb-ot-layout.cc`, `hb-ot-layout.hh`, `hb-ot-map.cc`, `hb-ot-shape.cc`, `hb-ot-shaper-arabic.cc`, `hb-ot-shaper-hangul.cc`, `hb-ot-shaper-indic.cc`, `hb-ot-shaper-syllabic.cc`, `hb-ot-shaper.hh`, `hb-shape-plan.cc`, `hb-shape.cc`, `OT/Layout/GPOS/Common.hh`, `OT/Layout/GPOS/GPOS.hh`
 
-## 9. hb_shape and its backends
+## 11. hb_shape and its backends
 
 `chapters/hb_shape-and-its-backends.md`
 
@@ -136,7 +164,7 @@ Code index:
 * Types and structs (1): `AddFontMemResourceEx`
 * Source files (31): `docs/wasm-shaper.md`, `hb-aat-layout.hh`, `hb-buffer.cc`, `hb-config.hh`, `hb-coretext-shape.cc`, `hb-coretext.cc`, `hb-directwrite-shape.cc`, `hb-face.hh`, `hb-fallback-shape.cc`, `hb-font.hh`, `hb-graphite2.cc`, `hb-harfrust.cc`, `hb-kbts.cc`, `hb-machinery.hh`, `hb-ot-shape.cc`, `hb-ot-shaper.hh`, `hb-shape-plan.cc`, `hb-shape-plan.hh`, `hb-shape.cc`, `hb-shaper-list.hh`, `hb-shaper.cc`, `hb-shaper.hh`, `hb-uniscribe.cc`, `hb-wasm-api-shape.hh`, `hb-wasm-shape.cc`, `hb.hh`, `meson_options.txt`, `rust/shape.rs`, `shape.rs`, `test-graphite2-buffer.cc`, `util/shape-options.hh`
 
-## 10. Shape plans and their cache
+## 12. Shape plans and their cache
 
 `chapters/shape-plans-and-their-cache.md`
 
@@ -151,7 +179,7 @@ Code index:
 * Types and structs (2): `FeatureVariations`, `LookupVariationRecord`
 * Source files (16): `fonts/shape-plans-and-their-cache/build-fonts.py`, `hb-buffer.cc`, `hb-face.cc`, `hb-face.hh`, `hb-kbts.cc`, `hb-ot-layout-common.hh`, `hb-ot-layout-gsubgpos.hh`, `hb-ot-layout.cc`, `hb-ot-map.cc`, `hb-ot-shape.cc`, `hb-ot-shape.hh`, `hb-ot-shaper-arabic.cc`, `hb-ot-shaper-indic.cc`, `hb-shape-plan.cc`, `hb-shape-plan.hh`, `hb-shape.cc`
 
-## 11. From features to lookups
+## 13. From features to lookups
 
 `chapters/from-features-to-lookups.md`
 
@@ -166,7 +194,7 @@ Code index:
 * Types and structs (3): `FeatureTableSubstitution`, `FeatureVariations`, `LookupVariationRecord`
 * Source files (13): `fonts/from-features-to-lookups/build-fonts.py`, `hb-algs.hh`, `hb-ot-layout-common.hh`, `hb-ot-layout-gsubgpos.hh`, `hb-ot-layout.cc`, `hb-ot-map.cc`, `hb-ot-map.hh`, `hb-ot-shape.cc`, `hb-ot-shaper-arabic.cc`, `hb-ot-shaper-hangul.cc`, `hb-ot-shaper-indic.cc`, `hb-ot-shaper-khmer.cc`, `hb-subset-input.cc`
 
-## 12. Choosing a script shaper
+## 14. Choosing a script shaper
 
 `chapters/choosing-a-script-shaper.md`
 
@@ -181,7 +209,7 @@ Code index:
 * Types and structs (1): `HYE0`
 * Source files (16): `fonts/choosing-a-script-shaper/build-fonts.py`, `gen-tag-table.py`, `hb-common.cc`, `hb-ot-layout-common.hh`, `hb-ot-layout.cc`, `hb-ot-layout.h`, `hb-ot-map.cc`, `hb-ot-map.hh`, `hb-ot-shape.cc`, `hb-ot-shaper-default.cc`, `hb-ot-shaper-indic.cc`, `hb-ot-shaper-myanmar.cc`, `hb-ot-shaper-thai.cc`, `hb-ot-shaper.hh`, `hb-ot-tag-table.hh`, `hb-ot-tag.cc`
 
-## 13. The pipeline, step by step
+## 15. The pipeline, step by step
 
 `chapters/the-pipeline-step-by-step.md`
 
@@ -195,7 +223,7 @@ Code index:
 * API and macros (24): `_hb_buffer_allocate_gsubgpos_vars`, `hb_aat_layout_substitute`, `hb_buffer_reverse`, `hb_ensure_native_direction`, `hb_form_clusters`, `hb_insert_dotted_circle`, `hb_ot_hide_default_ignorables`, `hb_ot_layout_substitute_start_with_digest`, `hb_ot_map_glyphs_fast`, `hb_ot_position`, `hb_ot_position_default`, `hb_ot_position_plan`, `hb_ot_rotate_chars`, `hb_ot_shape_collect_features`, `hb_ot_shape_context_t`, `hb_ot_shape_internal`, `hb_ot_shape_setup_masks`, `hb_ot_substitute_default`, `hb_ot_substitute_post`, `hb_ot_substitute_pre`, `hb_ot_zero_width_default_ignorables`, `hb_propagate_flags`, `hb_set_unicode_props`, `hb_shape`
 * Source files (7): `hb-ot-layout.cc`, `hb-ot-shape-fallback.cc`, `hb-ot-shape-normalize.cc`, `hb-ot-shape.cc`, `hb-ot-shaper-arabic.cc`, `hb-ot-shaper.hh`, `OT/Layout/GPOS/GPOS.hh`
 
-## 14. Normalization
+## 16. Normalization
 
 `chapters/normalization.md`
 
@@ -209,7 +237,7 @@ Code index:
 * API and macros (9): `_hb_ot_shape_fallback_spaces`, `hb_buffer_set_not_found_glyph`, `HB_NO_OT_SHAPER_HEBREW_FALLBACK`, `hb_ot_map_glyphs_fast`, `hb_ot_rotate_chars`, `hb_ot_shape_glyphs_closure`, `HB_OT_SHAPE_MAX_COMBINING_MARKS`, `hb_ot_shape_normalization_mode_t`, `hb_ot_substitute_default`
 * Source files (14): `hb-buffer.cc`, `hb-buffer.hh`, `hb-font.hh`, `hb-ot-shape-fallback.cc`, `hb-ot-shape-normalize.cc`, `hb-ot-shape-normalize.hh`, `hb-ot-shape.cc`, `hb-ot-shaper-arabic.cc`, `hb-ot-shaper-hebrew.cc`, `hb-ot-shaper-indic.cc`, `hb-ot-shaper-khmer.cc`, `hb-ot-shaper-use.cc`, `hb-ot-shaper.hh`, `hb-unicode.hh`
 
-## 15. Substituting glyphs: GSUB
+## 17. GSUB: substituting glyphs
 
 `chapters/gsub.md`
 
@@ -224,7 +252,7 @@ Code index:
 * Types and structs (6): `HBUINT16`, `HeadlessArray16Of`, `IgnoreMarks`, `LigatureSubstFormat1_2`, `MediumTypes`, `SmallTypes`
 * Source files (7): `hb-limits.hh`, `hb-ot-layout-gsubgpos.hh`, `hb-ot-layout.cc`, `hb-ot-map.cc`, `hb-ot-map.hh`, `hb-ot-shaper-indic.cc`, `hb-set-digest.hh`
 
-## 16. Positioning glyphs: GPOS
+## 18. GPOS: positioning glyphs
 
 `chapters/positioning-glyphs-gpos.md`
 
@@ -239,7 +267,7 @@ Code index:
 * Types and structs (3): `HintingDevice`, `IgnoreMarks`, `VariationDevice`
 * Source files (18): `AnchorFormat2.hh`, `CursivePosFormat1.hh`, `GPOS.hh`, `hb-ot-font.cc`, `hb-ot-layout-common.hh`, `hb-ot-layout-gsubgpos.hh`, `hb-ot-layout.cc`, `hb-ot-shape.cc`, `MarkArray.hh`, `MarkBasePosFormat1.hh`, `MarkLigPosFormat1.hh`, `MarkMarkPosFormat1.hh`, `OT/Layout/GPOS/Common.hh`, `OT/Layout/GPOS/CursivePosFormat1.hh`, `OT/Layout/GPOS/GPOS.hh`, `PairPosFormat2.hh`, `PairSet.hh`, `ValueFormat.hh`
 
-## 17. Fallbacks
+## 19. Fallbacks
 
 `chapters/fallbacks.md`
 
@@ -253,7 +281,7 @@ Code index:
 * API and macros (16): `_hb_ot_shape_fallback_kern`, `_hb_ot_shape_fallback_mark_position`, `_hb_ot_shape_fallback_mark_position_recategorize_marks`, `_hb_ot_shape_fallback_spaces`, `hb_buffer_set_invisible_glyph`, `HB_DISABLE_DEPRECATED`, `hb_font_funcs_set_glyph_h_kerning_func`, `hb_ft_get_glyph_h_kerning`, `hb_kern_machine_t`, `HB_LEAN`, `HB_NO_LEGACY`, `HB_NO_OT_KERN`, `HB_NO_OT_SHAPE_FALLBACK`, `hb_ot_layout_has_positioning`, `hb_ot_position_default`, `hb_ot_position_plan`
 * Source files (9): `hb-config.hh`, `hb-font.cc`, `hb-ft.cc`, `hb-kern.hh`, `hb-ot-shape-fallback.cc`, `hb-ot-shape-normalize.cc`, `hb-ot-shape.cc`, `hb-ot-shape.hh`, `hb-unicode.hh`
 
-## 18. Legacy kern
+## 20. Legacy kern
 
 `chapters/legacy-kern.md`
 
@@ -268,7 +296,7 @@ Code index:
 * Types and structs (13): `BinSearchArrayOf`, `CrossStream`, `HBUINT16`, `IgnoreMarks`, `KernAATSubTableHeader`, `KernOTSubTableHeader`, `KernSubTable`, `KernSubTableFormat3`, `KerxSubTableFormat0`, `KerxSubTableFormat1`, `KerxSubTableFormat2`, `KerxTable`, `ObsoleteTypes`
 * Source files (7): `fonts/legacy-kern/build-fonts.py`, `hb-aat-layout-kerx-table.hh`, `hb-config.hh`, `hb-kern.hh`, `hb-ot-kern-table.hh`, `hb-ot-layout.cc`, `hb-ot-shape.cc`
 
-## 19. Vertical text
+## 21. Vertical text
 
 `chapters/vertical-text.md`
 
@@ -282,7 +310,7 @@ Code index:
 * API and macros (16): `_hb_apply_morx`, `hb_buffer_guess_segment_properties`, `hb_buffer_set_direction`, `HB_DIRECTION_BTT`, `HB_DIRECTION_IS_BACKWARD`, `HB_DIRECTION_IS_VERTICAL`, `HB_DIRECTION_REVERSE`, `hb_direction_t`, `HB_DIRECTION_TTB`, `hb_ensure_native_direction`, `HB_LEAN`, `HB_NO_VERTICAL`, `hb_ot_position_default`, `hb_ot_rotate_chars`, `hb_ot_shape_internal`, `hb_shape`
 * Source files (16): `CursivePosFormat1.hh`, `fonts/vertical-text/build-fonts.py`, `GPOS.hh`, `hb-buffer.cc`, `hb-common.h`, `hb-font.hh`, `hb-ot-font.cc`, `hb-ot-map.cc`, `hb-ot-shape.cc`, `hb-ot-shaper.hh`, `hb-unicode.hh`, `MarkArray.hh`, `OT/Layout/GPOS/CursivePosFormat1.hh`, `OT/Layout/GPOS/MarkArray.hh`, `OT/Layout/GPOS/ValueFormat.hh`, `ValueFormat.hh`
 
-## 20. Joining scripts
+## 22. Joining scripts
 
 `chapters/joining-scripts.md`
 
@@ -297,7 +325,7 @@ Code index:
 * Types and structs (1): `CCC26`
 * Source files (20): `ArabicPUASimplified.txt`, `ArabicPUATraditional.txt`, `ArabicShaping-18.0.0.txt`, `ArabicShaping.txt`, `Blocks.txt`, `fonts/joining-scripts/build-fonts.py`, `gen-arabic-joining-list.py`, `gen-arabic-pua.py`, `gen-arabic-table.py`, `hb-ft.cc`, `hb-ot-cmap-table.hh`, `hb-ot-shaper-arabic-fallback.hh`, `hb-ot-shaper-arabic-joining-list.hh`, `hb-ot-shaper-arabic-pua.hh`, `hb-ot-shaper-arabic-table.hh`, `hb-ot-shaper-arabic-win1256.hh`, `hb-ot-shaper-arabic.cc`, `hb-ot-shaper-use.cc`, `Scripts.txt`, `UnicodeData.txt`
 
-## 21. Hebrew, Thai, Lao and Hangul
+## 23. Hebrew, Thai, Lao and Hangul
 
 `chapters/hebrew-thai-lao-and-hangul.md`
 
@@ -311,7 +339,7 @@ Code index:
 * API and macros (4): `HB_NO_OT_SHAPE_FALLBACK`, `HB_NO_OT_SHAPER_HEBREW_FALLBACK`, `HB_NO_OT_SHAPER_THAI_FALLBACK`, `HB_SCRIPT_THAI`
 * Source files (9): `build-fonts.py`, `gen-tag-table.py`, `hb-ot-shape-normalize.cc`, `hb-ot-shape.cc`, `hb-ot-shaper-hangul.cc`, `hb-ot-shaper-hebrew.cc`, `hb-ot-shaper-thai.cc`, `hb-ot-tag-table.hh`, `hb-unicode.hh`
 
-## 22. The Indic model
+## 24. The Indic model
 
 `chapters/the-indic-model.md`
 
@@ -325,7 +353,7 @@ Code index:
 * API and macros (6): `hb_indic_get_categories`, `hb_indic_would_substitute_feature_t`, `HB_MAX_SYLLABLE_LENGTH`, `hb_ot_layout_lookup_would_substitute_with_buffer`, `hb_stable_sort`, `hb_syllabic_clear_var`
 * Source files (16): `Blocks.txt`, `fonts/the-indic-model/build-fonts.py`, `gen-indic-table.py`, `gen-ragel-artifacts.py`, `hb-limits.hh`, `hb-ot-layout-gsubgpos.hh`, `hb-ot-layout.hh`, `hb-ot-shaper-indic-machine.hh`, `hb-ot-shaper-indic-machine.rl`, `hb-ot-shaper-indic-table.cc`, `hb-ot-shaper-indic.cc`, `hb-ot-shaper-indic.hh`, `hb-ot-shaper-syllabic.cc`, `IndicPositionalCategory.txt`, `IndicSyllabicCategory.txt`, `meson.build`
 
-## 23. Khmer and Myanmar
+## 25. Khmer and Myanmar
 
 `chapters/khmer-and-myanmar.md`
 
@@ -340,7 +368,7 @@ Code index:
 * Types and structs (1): `D0`
 * Source files (10): `fonts/khmer-and-myanmar/build-fonts.py`, `gen-indic-table.py`, `hb-ot-shaper-indic-table.cc`, `hb-ot-shaper-khmer-machine.hh`, `hb-ot-shaper-khmer-machine.rl`, `hb-ot-shaper-khmer.cc`, `hb-ot-shaper-myanmar-machine.hh`, `hb-ot-shaper-myanmar-machine.rl`, `hb-ot-shaper-myanmar.cc`, `hb-ot-shaper.hh`
 
-## 24. The Universal Shaping Engine
+## 26. The Universal Shaping Engine
 
 `chapters/the-universal-shaping-engine.md`
 
@@ -354,7 +382,7 @@ Code index:
 * API and macros (5): `_hb_clear_substitution_flags`, `HB_OPTIMIZE_SIZE`, `HB_OT_SHAPE_ZERO_WIDTH_MARKS_BY_GDEF_EARLY`, `hb_syllabic_clear_var`, `hb_use_get_category`
 * Source files (19): `ArabicShaping.txt`, `Blocks.txt`, `DerivedCoreProperties.txt`, `fonts/the-universal-shaping-engine/build-fonts.py`, `gen-use-table.py`, `hb-ot-shaper-arabic.cc`, `hb-ot-shaper-syllabic.cc`, `hb-ot-shaper-use-machine.hh`, `hb-ot-shaper-use-machine.rl`, `hb-ot-shaper-use-table.hh`, `hb-ot-shaper-use.cc`, `IndicPositionalCategory.txt`, `IndicShapingInvalidCluster.txt`, `IndicSyllabicCategory.txt`, `ms-use/IndicPositionalCategory-Additional.txt`, `ms-use/IndicSyllabicCategory-Additional.txt`, `Scripts.txt`, `test-use-table.cc`, `UnicodeData.txt`
 
-## 25. Dotted circles and broken clusters
+## 27. Dotted circles and broken clusters
 
 `chapters/dotted-circles-and-broken-clusters.md`
 
@@ -368,7 +396,7 @@ Code index:
 * API and macros (12): `_hb_preprocess_text_vowel_constraints`, `HB_BUFFER_FLAG_DO_NOT_INSERT_DOTTED_CIRCLE`, `HB_BUFFER_SCRATCH_FLAG_HAS_BROKEN_SYLLABLE`, `hb_insert_dotted_circle`, `HB_NO_LEGACY`, `HB_NO_OT_SHAPE`, `HB_NO_OT_SHAPE_FALLBACK`, `HB_NO_OT_SHAPER_VOWEL_CONSTRAINTS`, `hb_ot_layout_substitute_start`, `hb_ot_shape_internal`, `hb_syllabic_insert_dotted_circles`, `hb_synthesize_glyph_classes`
 * Source files (20): `-khmer.cc`, `-myanmar.cc`, `-use.cc`, `gen-use-table.py`, `gen-vowel-constraints.py`, `hb-buffer.h`, `hb-buffer.hh`, `hb-config.hh`, `hb-ot-shape.cc`, `hb-ot-shaper-hangul.cc`, `hb-ot-shaper-indic-machine.rl`, `hb-ot-shaper-indic-table.cc`, `hb-ot-shaper-indic.cc`, `hb-ot-shaper-syllabic.cc`, `hb-ot-shaper-use.cc`, `hb-ot-shaper-vowel-constraints.cc`, `MarkBasePosFormat1.hh`, `ms-use/IndicShapingInvalidCluster.txt`, `Scripts-18.0.0.txt`, `Scripts.txt`
 
-## 26. AAT inside HarfBuzz
+## 28. AAT inside HarfBuzz
 
 `chapters/aat-inside-harfbuzz.md`
 
@@ -383,7 +411,7 @@ Code index:
 * Types and structs (6): `AllDirections`, `ChainSubtable`, `ExtendedTypes`, `ObsoleteTypes`, `StateTable`, `StateTableDriver`
 * Source files (14): `fonts/aat-inside-harfbuzz/build-fonts.py`, `hb-aat-layout-common.hh`, `hb-aat-layout-feat-table.hh`, `hb-aat-layout-morx-table.hh`, `hb-aat-layout.cc`, `hb-aat-ltag-table.hh`, `hb-aat-map.cc`, `hb-aat-map.hh`, `hb-buffer.cc`, `hb-config.hh`, `hb-coretext-shape.cc`, `hb-limits.hh`, `hb-ot-shape.cc`, `OT/name/name.hh`
 
-## 27. AAT positioning
+## 29. AAT positioning
 
 `chapters/aat-positioning.md`
 
@@ -398,7 +426,7 @@ Code index:
 * Types and structs (5): `CrossStream`, `ExtendedTypes`, `KerxSubTableHeader`, `KerxTable`, `ValuesAreLong`
 * Source files (17): `fonts/aat-positioning/build-fonts.py`, `fonts/aat-positioning/views.py`, `hb-aat-layout-ankr-table.hh`, `hb-aat-layout-common.hh`, `hb-aat-layout-kerx-table.hh`, `hb-aat-layout-trak-table.hh`, `hb-aat-layout.cc`, `hb-aat-layout.hh`, `hb-config.hh`, `hb-kern.hh`, `hb-limits.hh`, `hb-ot-font.cc`, `hb-ot-shape.cc`, `MarkArray.hh`, `OT/Layout/GPOS/GPOS.hh`, `OT/Layout/GPOS/MarkArray.hh`, `ValueFormat.hh`
 
-## 28. Design space
+## 30. Design space
 
 `chapters/design-space.md`
 
@@ -412,7 +440,7 @@ Code index:
 * API and macros (12): `_hb_font_adopt_var_coords`, `hb_font_get_var_coords_design`, `hb_font_set_var_coords_design`, `hb_font_set_var_coords_normalized`, `hb_font_set_var_named_instance`, `hb_font_set_variation`, `hb_font_set_variations`, `hb_max`, `hb_ot_var_get_axis_infos`, `hb_ot_var_normalize_coords`, `hb_ot_var_normalize_variations`, `hb_shape_full`
 * Source files (8): `hb-font.cc`, `hb-ot-font.cc`, `hb-ot-var-avar-table.hh`, `hb-ot-var-fvar-table.hh`, `hb-ot-var.cc`, `hb-shape.cc`, `tools/build-var-test-fonts.py`, `util/hb-info.cc`
 
-## 29. Deltas
+## 31. Deltas
 
 `chapters/deltas.md`
 
@@ -427,7 +455,7 @@ Code index:
 * Types and structs (7): `DeltaSetIndexMap`, `ItemVariationStore`, `ItemVarStoreInstancer`, `MultiItemVariationStore`, `VarData`, `VarRegionAxis`, `VarRegionList`
 * Source files (8): `hb-ot-font.cc`, `hb-ot-hmtx-table.hh`, `hb-ot-layout-common.hh`, `hb-ot-metrics.cc`, `hb-ot-shape.cc`, `hb-ot-var-hvar-table.hh`, `hb-ot-var-mvar-table.hh`, `OT/glyf/glyf.hh`
 
-## 30. Varying outlines
+## 32. Varying outlines
 
 `chapters/varying-outlines.md`
 
@@ -441,7 +469,7 @@ Code index:
 * Types and structs (2): `MediumTypes`, `SmallTypes`
 * Source files (9): `Glyph.hh`, `hb-cff2-interp-cs.hh`, `hb-ot-var-common.hh`, `hb-ot-var-cvar-table.hh`, `hb-ot-var-gvar-table.hh`, `hb-subset.cc`, `OT/glyf/CompositeGlyph.hh`, `OT/glyf/glyf.hh`, `OT/glyf/Glyph.hh`
 
-## 31. Variable components: VARC
+## 33. VARC: variable components
 
 `chapters/variable-components.md`
 
@@ -456,7 +484,7 @@ Code index:
 * Types and structs (5): `HBUINT32VAR`, `MultiItemVarStoreInstancer`, `MultiVarData`, `SparseVarRegionAxis`, `TupleValues`
 * Source files (14): `fonts/variable-components/lsb.py`, `fonts/variable-components/no-reset.py`, `fonts/variable-components/varc-dump.py`, `hb-geometry.hh`, `hb-limits.hh`, `hb-open-type.hh`, `hb-ot-font.cc`, `hb-ot-layout-common.hh`, `OT/Var/VARC/coord-setter.hh`, `OT/Var/VARC/VARC.cc`, `OT/Var/VARC/VARC.hh`, `varc-dump.py`, `VARC.cc`, `VARC.hh`
 
-## 32. Drawing outlines
+## 34. Drawing outlines
 
 `chapters/drawing-outlines.md`
 
@@ -470,36 +498,65 @@ Code index:
 * API and macros (18): `HB_BUDGET_DEFAULT`, `HB_BUDGET_GLYPH`, `HB_BUDGET_UNLIMITED`, `HB_CFF_MAX_OPS`, `hb_draw_circle`, `hb_draw_funcs_t`, `hb_draw_get_budget_remaining`, `hb_draw_line`, `hb_draw_rectangle`, `hb_draw_session_t`, `hb_draw_set_budget`, `hb_draw_state_t`, `hb_font_draw_glyph`, `hb_font_draw_glyph_or_fail`, `HB_GLYF_MAX_POINTS`, `HB_MAX_GRAPH_EDGE_COUNT`, `HB_MAX_NESTING_LEVEL`, `hb_ot_draw_glyph_or_fail`
 * Source files (26): `CompositeGlyph.hh`, `glyf.hh`, `glyf1-cubicOutlines.md`, `Glyph.hh`, `hb-cff-interp-common.hh`, `hb-cff-interp-cs-common.hh`, `hb-cff1-interp-cs.hh`, `hb-cff2-interp-cs.hh`, `hb-draw.cc`, `hb-draw.h`, `hb-draw.hh`, `hb-font.cc`, `hb-font.hh`, `hb-limits.hh`, `hb-ot-cff1-table.cc`, `hb-ot-cff2-table.cc`, `hb-ot-font.cc`, `hb-ot-var-gvar-table.hh`, `hb-vector-draw.cc`, `OT/glyf/CompositeGlyph.hh`, `OT/glyf/glyf.hh`, `OT/glyf/Glyph.hh`, `OT/glyf/path-builder.hh`, `OT/glyf/SimpleGlyph.hh`, `path-builder.hh`, `SimpleGlyph.hh`
 
-## 33. Colour
+## 35. Color
 
-`chapters/colour.md`
+`chapters/color.md`
 
 General index:
 
-* Concepts (12): `hb_font_paint_glyph_or_fail`, `hb_font_paint_glyph`, ClipList, colour line, extend mode, foreground colour, paint graph, PaintColrGlyph, PaintComposite, PaintGlyph, palette, strikes
+* Concepts (12): `hb_font_paint_glyph_or_fail`, `hb_font_paint_glyph`, ClipList, color line, extend mode, foreground color, paint graph, PaintColrGlyph, PaintComposite, PaintGlyph, palette, strikes
 * Tables and tags (9): `CBDT`, `CBLC`, `COLR`, `CPAL`, `dupe`, `EBDT`, `glyf`, `name`, `sbix`
 
 Code index:
 
 * API and macros (46): `HB_BUDGET_GLYPH`, `HB_CBDT_MAX_INDEX_ENTRIES`, `hb_color_line_get_color_stops`, `hb_color_line_get_extend`, `hb_color_line_t`, `hb_color_stop_t`, `hb_color_t`, `hb_decycler_t`, `hb_font_paint_glyph`, `hb_font_paint_glyph_or_fail`, `HB_LEAN`, `HB_MAX_GRAPH_EDGE_COUNT`, `HB_MAX_NESTING_LEVEL`, `HB_NO_BEYOND_64K`, `HB_NO_BITMAP`, `HB_NO_COLOR`, `HB_NO_DRAW`, `HB_NO_OT_FONT_BITMAP`, `HB_NO_PAINT`, `HB_NO_SVG`, `hb_ot_color_get_svg_document_count`, `hb_ot_color_get_svg_document_glyph_range`, `hb_ot_color_glyph_get_layers`, `hb_ot_color_glyph_get_svg_document_index`, `hb_ot_color_glyph_reference_png`, `hb_ot_color_glyph_reference_svg`, `hb_ot_color_has_palettes`, `hb_ot_color_has_png`, `hb_ot_color_palette_color_get_name_id`, `hb_ot_color_palette_get_colors`, `hb_ot_color_palette_get_count`, `hb_ot_color_palette_get_flags`, `hb_ot_color_palette_get_name_id`, `hb_ot_paint_glyph_or_fail`, `hb_paint_color_func_t`, `hb_paint_composite_mode_t`, `hb_paint_context_t`, `hb_paint_funcs_create`, `hb_paint_funcs_make_immutable`, `hb_paint_funcs_t`, `HB_PAINT_IMAGE_FORMAT_BGRA`, `HB_PAINT_IMAGE_FORMAT_PNG`, `HB_PAINT_IMAGE_FORMAT_SVG`, `hb_paint_normalize_color_line`, `hb_paint_reduce_linear_anchors`, `hb_paint_sweep_gradient_tiles`
 * Types and structs (2): `PaintTranslate`, `PaintVarTranslate`
-* Source files (28): `CBDT.hh`, `COLR.hh`, `CPAL.hh`, `fonts/colour/build-colour-fonts.py`, `hb-array.hh`, `hb-config.hh`, `hb-decycler.hh`, `hb-font.cc`, `hb-font.hh`, `hb-ft.cc`, `hb-ot-color.cc`, `hb-ot-color.h`, `hb-ot-font.cc`, `hb-ot-layout-common.hh`, `hb-paint-bounded.cc`, `hb-paint-bounded.hh`, `hb-paint-extents.cc`, `hb-paint.cc`, `hb-paint.h`, `hb-paint.hh`, `hb-vector-paint-svg.cc`, `OT/Color/CBDT/CBDT.hh`, `OT/Color/COLR/COLR.hh`, `OT/Color/CPAL/CPAL.hh`, `OT/Color/sbix/sbix.hh`, `OT/Color/svg/svg.hh`, `sbix.hh`, `svg.hh`
+* Source files (28): `CBDT.hh`, `COLR.hh`, `CPAL.hh`, `fonts/color/build-color-fonts.py`, `hb-array.hh`, `hb-config.hh`, `hb-decycler.hh`, `hb-font.cc`, `hb-font.hh`, `hb-ft.cc`, `hb-ot-color.cc`, `hb-ot-color.h`, `hb-ot-font.cc`, `hb-ot-layout-common.hh`, `hb-paint-bounded.cc`, `hb-paint-bounded.hh`, `hb-paint-extents.cc`, `hb-paint.cc`, `hb-paint.h`, `hb-paint.hh`, `hb-vector-paint-svg.cc`, `OT/Color/CBDT/CBDT.hh`, `OT/Color/COLR/COLR.hh`, `OT/Color/CPAL/CPAL.hh`, `OT/Color/sbix/sbix.hh`, `OT/Color/svg/svg.hh`, `sbix.hh`, `svg.hh`
 
-## 34. Rendering
+## 36. hb-raster: rendering to pixels
 
-`chapters/rendering.md`
+`chapters/hb-raster.md`
 
 General index:
 
-* Concepts (13): analytic coverage, bands, cu2qu, draw context, flattened, hb-gpu, hb-raster, hb-vector, nonzero winding rule, paint context, precision, Slug, texels
-* Tables and tags (5): `CBDT`, `GLYF`, `main`, `NULL`, `sbix`
+* Concepts (16): analytic coverage, Color glyphs and emoji, draw context, edge limit, flattened, Glyph atlases, hb-raster, High-resolution screens, Images rather than screens, Large text, load flags, Moving text, nonzero winding rule, paint context, pixel budget, Small or sandboxed builds
+* Tables and tags (7): `CBDT`, `cvar`, `fpgm`, `head`, `NULL`, `prep`, `sbix`
 
 Code index:
 
-* API and macros (59): `_hb_gpu_slug_single`, `HB_BUDGET_RASTER_PIXELS`, `hb_font_draw_glyph`, `hb_font_paint_glyph`, `hb_font_paint_glyph_or_fail`, `HB_GPU_ATLAS_2D`, `hb_gpu_dilate`, `hb_gpu_draw`, `hb_gpu_draw_encode`, `hb_gpu_draw_glyph`, `HB_GPU_DRAW_MAX_CURVES`, `hb_gpu_draw_shader_source`, `hb_gpu_draw_t`, `HB_GPU_NO_MSAA`, `hb_gpu_paint`, `hb_gpu_paint_encode`, `hb_gpu_paint_glyph`, `HB_GPU_PAINT_MAX_SUB_BYTES`, `hb_gpu_paint_shader_source`, `hb_gpu_paint_t`, `hb_gpu_stem_darken`, `HB_GPU_UNITS_PER_EM`, `HB_HAS_CAIRO`, `HB_HAS_GPU`, `HB_HAS_RASTER`, `HB_HAS_VECTOR`, `HB_LEAN`, `HB_NO_COLOR`, `HB_NO_DRAW`, `HB_NO_PAINT`, `HB_NO_RASTER`, `hb_paint_composite_mode_t`, `hb_paint_sweep_gradient_tiles`, `hb_raster_draw_glyph`, `hb_raster_draw_render`, `hb_raster_draw_set_extents`, `hb_raster_draw_t`, `hb_raster_image_get_buffer`, `hb_raster_image_serialize_to_png_or_fail`, `hb_raster_image_t`, `HB_RASTER_MAX_AUTO_DIMENSION`, `HB_RASTER_MAX_BUFFER_SIZE`, `HB_RASTER_MAX_DRAW_EDGES`, `hb_raster_paint_glyph`, `hb_raster_paint_render`, `hb_raster_paint_t`, `hb_vector_draw_glyph`, `hb_vector_draw_new_path`, `hb_vector_draw_render`, `hb_vector_draw_set_precision`, `hb_vector_draw_t`, `HB_VECTOR_EXTENTS_MODE_EXPAND`, `HB_VECTOR_FORMAT_PDF`, `HB_VECTOR_MAX_DOCUMENT_SIZE`, `hb_vector_paint_get_funcs`, `hb_vector_paint_glyph`, `hb_vector_paint_render`, `hb_vector_paint_set_svg_prefix`, `hb_vector_paint_t`
-* Source files (33): `gen-gpu-shader-artifacts.py`, `harfbuzz-world.cc`, `hb-config.hh`, `hb-features.h`, `hb-gpu-cu2qu.hh`, `hb-gpu-draw.cc`, `hb-gpu-draw.hh`, `hb-gpu-paint.cc`, `hb-gpu-paint.hh`, `hb-gpu.cc`, `hb-gpu.h`, `hb-limits.hh`, `hb-raster-draw.cc`, `hb-raster-image.cc`, `hb-raster-paint.cc`, `hb-raster-paint.hh`, `hb-raster.h`, `hb-raster.hh`, `hb-vector-buf.hh`, `hb-vector-draw.cc`, `hb-vector-draw.hh`, `hb-vector-paint-pdf.cc`, `hb-vector-paint-svg.cc`, `hb-vector-paint.cc`, `hb-vector.cc`, `hb-vector.h`, `meson_options.txt`, `README.md`, `util/hb-ft-raster.cc`, `util/hb-gpu.cc`, `util/hb-raster.cc`, `util/hb-vector.cc`, `util/vector-output.hh`
+* API and macros (30): `HB_BUDGET_RASTER_PAINT_PASSES`, `HB_BUDGET_RASTER_PIXELS`, `hb_font_get_glyph_extents`, `hb_font_paint_glyph`, `hb_font_paint_glyph_or_fail`, `hb_ft_font_create_referenced`, `hb_ft_font_set_load_flags`, `hb_gpu_stem_darken`, `hb_paint_composite_mode_t`, `hb_raster_draw_glyph`, `hb_raster_draw_render`, `hb_raster_draw_set_extents`, `hb_raster_draw_set_glyph_extents`, `hb_raster_draw_t`, `hb_raster_extents_t`, `HB_RASTER_FORMAT_A8`, `HB_RASTER_FORMAT_BGRA32`, `hb_raster_image_deserialize_from_png_or_fail`, `hb_raster_image_get_buffer`, `hb_raster_image_serialize_to_png_or_fail`, `hb_raster_image_t`, `HB_RASTER_MAX_AUTO_DIMENSION`, `HB_RASTER_MAX_BUFFER_SIZE`, `HB_RASTER_MAX_DRAW_EDGES`, `hb_raster_paint_clear_custom_palette_colors`, `hb_raster_paint_glyph`, `hb_raster_paint_render`, `hb_raster_paint_set_custom_palette_color`, `hb_raster_paint_set_palette`, `hb_raster_paint_t`
+* Source files (22): `cff/hint.rs`, `freetype.h`, `hb-cff-interp-cs-common.hh`, `hb-ft.cc`, `hb-gpu.cc`, `hb-limits.hh`, `hb-ot-var-cvar-table.hh`, `hb-raster-draw.cc`, `hb-raster-image.cc`, `hb-raster-paint.cc`, `hb-raster-paint.hh`, `hb-raster.h`, `hb-raster.hh`, `lib.rs`, `meson_options.txt`, `meson.build`, `README.md`, `rust/font.rs`, `util/font-options.hh`, `util/hb-ft-raster.cc`, `util/hb-raster.cc`, `util/raster-output.hh`
 
-## 35. Subsetting
+## 37. hb-vector: rendering to SVG and PDF
+
+`chapters/hb-vector.md`
+
+General index:
+
+* Concepts (6): draw context, foreground, hb-vector, paint context, precision, scale factor
+* Tables and tags (4): `CBDT`, `draw`, `NULL`, `sbix`
+
+Code index:
+
+* API and macros (22): `hb_color_lerp`, `hb_font_draw_glyph_or_fail`, `hb_font_paint_glyph`, `hb_font_paint_glyph_or_fail`, `hb_paint_normalize_color_line`, `hb_paint_reduce_linear_anchors`, `hb_paint_sweep_gradient_tiles`, `hb_vector_draw_glyph`, `hb_vector_draw_new_path`, `hb_vector_draw_set_precision`, `hb_vector_draw_t`, `HB_VECTOR_EXTENTS_MODE_EXPAND`, `HB_VECTOR_FORMAT_PDF`, `HB_VECTOR_FORMAT_SVG`, `HB_VECTOR_MAX_DOCUMENT_SIZE`, `hb_vector_paint_glyph`, `hb_vector_paint_glyph_or_fail`, `hb_vector_paint_set_custom_palette_color`, `hb_vector_paint_set_foreground`, `hb_vector_paint_set_palette`, `hb_vector_paint_set_svg_prefix`, `hb_vector_paint_t`
+* Source files (17): `hb-limits.hh`, `hb-paint.hh`, `hb-vector-buf.hh`, `hb-vector-draw.cc`, `hb-vector-draw.hh`, `hb-vector-internal.hh`, `hb-vector-paint-pdf.cc`, `hb-vector-paint-svg.cc`, `hb-vector-paint.cc`, `hb-vector-paint.hh`, `hb-vector-path.cc`, `hb-vector-path.hh`, `hb-vector.cc`, `hb-vector.h`, `meson_options.txt`, `util/hb-vector.cc`, `util/vector-output.hh`
+
+## 38. hb-gpu: rendering on the GPU
+
+`chapters/hb-gpu.md`
+
+General index:
+
+* Concepts (8): `hb_gpu_draw_t`, `hb_gpu_paint_t`, atlas, bands, cu2qu, hb-gpu, Slug, texels
+* Tables and tags (7): `CBDT`, `COLR`, `GLYF`, `main`, `NULL`, `ppem`, `sbix`
+
+Code index:
+
+* API and macros (42): `_hb_gpu_calc_coverage`, `_hb_gpu_calc_root_code`, `_hb_gpu_composite`, `_hb_gpu_slug`, `_hb_gpu_slug_single`, `hb_blob_t`, `hb_font_draw_glyph_or_fail`, `hb_font_paint_glyph`, `hb_font_paint_glyph_or_fail`, `hb_gpu_atlas`, `HB_GPU_ATLAS_2D`, `hb_gpu_atlas_width`, `HB_GPU_CU2QU_MAX_DEPTH`, `hb_gpu_dilate`, `hb_gpu_draw`, `hb_gpu_draw_encode`, `hb_gpu_draw_get_funcs`, `hb_gpu_draw_glyph`, `HB_GPU_DRAW_MAX_CURVES`, `hb_gpu_draw_recycle_blob`, `hb_gpu_draw_set_scale`, `hb_gpu_draw_shader_source`, `hb_gpu_draw_t`, `HB_GPU_NO_MSAA`, `hb_gpu_paint`, `hb_gpu_paint_encode`, `hb_gpu_paint_get_funcs`, `hb_gpu_paint_glyph`, `hb_gpu_paint_glyph_or_fail`, `HB_GPU_PAINT_MAX_CLIP_DEPTH`, `HB_GPU_PAINT_MAX_GROUP_DEPTH`, `HB_GPU_PAINT_MAX_OPS`, `HB_GPU_PAINT_MAX_SUB_BLOBS`, `HB_GPU_PAINT_MAX_SUB_BYTES`, `hb_gpu_paint_set_custom_palette_color`, `hb_gpu_paint_set_palette`, `hb_gpu_paint_shader_source`, `hb_gpu_paint_t`, `hb_gpu_ppem`, `HB_GPU_UNITS_PER_EM`, `HB_HAS_GPU`, `hb_paint_composite_mode_t`
+* Types and structs (1): `StructuredBuffer`
+* Source files (17): `build/src/hb-features.h`, `gen-gpu-shader-artifacts.py`, `hb-blob.hh`, `hb-features.h`, `hb-gpu-cu2qu.hh`, `hb-gpu-draw.cc`, `hb-gpu-draw.hh`, `hb-gpu-paint.cc`, `hb-gpu-paint.hh`, `hb-gpu.cc`, `hb-gpu.h`, `hb-limits.hh`, `meson_options.txt`, `meson.build`, `util/gpu-output.hh`, `util/hb-gpu-encode-all.cc`, `util/meson.build`
+
+## 39. Subsetting
 
 `chapters/subsetting.md`
 
@@ -514,7 +571,7 @@ Code index:
 * Types and structs (4): `ClassDef_remap_and_serialize`, `L0`, `L1`, `L19`
 * Source files (45): `CoverageFormat2.hh`, `docs/depend-for-closure.md`, `docs/subset-preprocessing.md`, `fonts/subsetting/build-subsetting-fonts.py`, `fonts/subsetting/math-summary.txt`, `fontTools/subset/cff.py`, `hb-limits.hh`, `hb-ot-cmap-table.hh`, `hb-ot-hdmx-table.hh`, `hb-ot-hmtx-table.hh`, `hb-ot-layout-base-table.hh`, `hb-ot-layout-common.hh`, `hb-ot-layout-gsubgpos.hh`, `hb-ot-layout.cc`, `hb-ot-math-table.hh`, `hb-ot-maxp-table.hh`, `hb-ot-os2-table.hh`, `hb-ot-post-table.hh`, `hb-ot-shaper-indic.cc`, `hb-ot-var-gvar-table.hh`, `hb-ot-var-hvar-table.hh`, `hb-ot-vorg-table.hh`, `hb-subset-accelerator.hh`, `hb-subset-cff-common.hh`, `hb-subset-cff1.cc`, `hb-subset-cff2.cc`, `hb-subset-input.cc`, `hb-subset-plan-layout.cc`, `hb-subset-plan-member-list.hh`, `hb-subset-plan.cc`, `hb-subset-table.hh`, `hb-subset.cc`, `hb-subset.h`, `OT/Color/CBDT/CBDT.hh`, `OT/Color/COLR/COLR.hh`, `OT/Color/CPAL/CPAL.hh`, `OT/Color/sbix/sbix.hh`, `OT/glyf/glyf.hh`, `OT/Layout/GDEF/GDEF.hh`, `OT/Layout/GPOS/PairSet.hh`, `OT/Layout/GSUB/SubstLookup.hh`, `OT/name/name.hh`, `OT/Var/VARC/VARC-subset.hh`, `PairSet.hh`, `SubstLookup.hh`
 
-## 36. Writing tables
+## 40. Writing tables
 
 `chapters/writing-tables.md`
 
@@ -529,7 +586,7 @@ Code index:
 * Types and structs (2): `graph::serialize`, `OffsetTo`
 * Source files (35): `build-fonts.py`, `docs/repacker.md`, `docs/serializer.md`, `fonts/writing-tables/forty-subset.repack-log.txt`, `fonts/writing-tables/layout.py`, `fonts/writing-tables/serialize-example.cc`, `fonts/writing-tables/sixty-subset.repack-log.txt`, `fontTools/ttLib/tables/otBase.py`, `graph/graph-result.hh`, `graph/graph.hh`, `graph/gsubgpos-graph.hh`, `graph/ligature-graph.hh`, `graph/serialize.hh`, `hb-face-builder.cc`, `hb-limits.hh`, `hb-open-file.hh`, `hb-open-type.hh`, `hb-ot-cmap-table.hh`, `hb-ot-layout-gsubgpos.hh`, `hb-repacker.hh`, `hb-serialize.hh`, `hb-subset-cff-common.hh`, `hb-subset-cff1.cc`, `hb-subset-serialize.cc`, `hb-subset-serialize.h`, `hb-subset-table.hh`, `layout.py`, `ligature-graph.hh`, `markbasepos-graph.hh`, `OT/Layout/GDEF/GDEF.hh`, `OT/Layout/GSUB/Ligature.hh`, `OT/Layout/GSUB/LigatureSubstFormat1.hh`, `OT/name/name.hh`, `pairpos-graph.hh`, `serialize-example.cc`
 
-## 37. Instancing
+## 41. Instancing
 
 `chapters/instancing.md`
 
@@ -544,7 +601,7 @@ Code index:
 * Types and structs (1): `VarData`
 * Source files (24): `AVAR2-INSTANCING.md`, `fonts/instancing/build-instancing-fonts.py`, `fonts/instancing/featvars-summary.txt`, `hb-limits.hh`, `hb-ot-layout-common.hh`, `hb-ot-os2-table.hh`, `hb-ot-stat-table.hh`, `hb-ot-var-avar-table.hh`, `hb-ot-var-common.hh`, `hb-ot-var-fvar-table.hh`, `hb-ot-var-gvar-table.hh`, `hb-subset-cff2.cc`, `hb-subset-input.cc`, `hb-subset-instancer-iup.cc`, `hb-subset-instancer-solver.cc`, `hb-subset-plan-var.cc`, `hb-subset.cc`, `hb-subset.h`, `hb-subset.hh`, `iup.py`, `OT/glyf/glyf.hh`, `OT/glyf/Glyph.hh`, `OT/Var/VARC/VARC-subset.hh`, `util/helper-subset.hh`
 
-## 38. hb-depend
+## 42. hb-depend: the glyph dependency graph
 
 `chapters/hb-depend.md`
 
@@ -559,7 +616,36 @@ Code index:
 * Types and structs (2): `PaintColrGlyph`, `PaintGlyph`
 * Source files (32): `colrv1-depend.hh`, `depend-api.md`, `depend-graph.cc`, `depend-implementation.md`, `docs/depend-api.md`, `docs/depend-for-closure.md`, `docs/depend-implementation.md`, `fonts/hb-depend/build-font.py`, `fonts/hb-depend/closures.txt`, `fonts/hb-depend/depend-graph.cc`, `harfbuzz-subset.cc`, `hb-config.hh`, `hb-depend-closure-parity.cc`, `hb-depend-data.hh`, `hb-depend.cc`, `hb-depend.h`, `hb-ot-cff1-table.hh`, `hb-ot-layout-gsub-table.hh`, `hb-ot-layout-gsubgpos.hh`, `hb-ot-layout.cc`, `hb-ot-math-table.hh`, `hb-subset-depend.h`, `hb-subset-plan.cc`, `hb-subset.h`, `Ligature.hh`, `OT/Color/COLR/COLR.hh`, `OT/Color/COLR/colrv1-depend.hh`, `OT/glyf/glyf.hh`, `OT/Var/VARC/VARC.cc`, `test/fuzzing/hb-depend-closure-parity.cc`, `test/fuzzing/README.md`, `util/hb-subset-depend.cc`
 
-## 39. Other tables
+## 43. For applications
+
+`chapters/for-applications.md`
+
+General index:
+
+* Concepts (1): ligature carets
+* Tables and tags (10): `init`, `jstf`, `kbts`, `kern`, `kerx`, `lcar`, `morx`, `stch`, `wasm`, `wdth`
+
+Code index:
+
+* API and macros (18): `hb_buffer_add`, `hb_buffer_add_utf`, `hb_buffer_add_utf8`, `hb_buffer_allocation_successful`, `hb_buffer_append`, `hb_buffer_clear_contents`, `HB_BUFFER_FLAG_PRODUCE_SAFE_TO_INSERT_TATWEEL`, `HB_BUFFER_FLAG_PRODUCE_UNSAFE_TO_CONCAT`, `HB_BUFFER_FLAG_VERIFY`, `hb_buffer_guess_segment_properties`, `hb_feature_t`, `hb_font_get_nominal_glyph`, `hb_glyph_info_t`, `hb_ot_layout_get_ligature_carets`, `hb_propagate_flags`, `hb_shape`, `hb_shape_full`, `hb_shape_justify`
+* Source files (13): `hb-aat-layout-kerx-table.hh`, `hb-aat-layout-morx-table.hh`, `hb-buffer-verify.cc`, `hb-buffer.cc`, `hb-buffer.h`, `hb-buffer.hh`, `hb-kern.hh`, `hb-ot-layout.cc`, `hb-ot-shape.cc`, `hb-ot-shaper-arabic.cc`, `hb-ot-shaper-hangul.cc`, `hb-shape.cc`, `util/shape-options.hh`
+
+## 44. Integrations: FreeType, cairo, ICU and the platforms
+
+`chapters/integrations.md`
+
+General index:
+
+* Concepts (5): harfbuzz-sys, HarfBuzzSharp, integration layers, load flags, scale factor
+* Tables and tags (5): `Arab`, `glib`, `NULL`, `ptem`, `Silf`
+
+Code index:
+
+* API and macros (57): `_hb_ft_hb_font_check_changed`, `hb_buffer_guess_segment_properties`, `hb_buffer_set_unicode_funcs`, `hb_cairo_font_face_create_for_font`, `hb_cairo_font_face_set_font_init_func`, `hb_cairo_font_face_set_scale_factor`, `hb_cairo_glyphs_from_buffer`, `hb_coretext_face_create_from_file_or_fail`, `hb_coretext_font_get_ct_font`, `hb_coretext_font_set_funcs`, `hb_directwrite_face_create`, `hb_directwrite_face_get_dw_font_face`, `hb_directwrite_font_create`, `hb_directwrite_font_get_dw_font`, `hb_directwrite_font_get_dw_font_face`, `hb_directwrite_font_set_funcs`, `HB_DRAW`, `hb_face_create`, `hb_feature_t`, `hb_font_draw_glyph_or_fail`, `hb_font_paint_glyph`, `hb_font_set_scale`, `hb_font_t`, `hb_ft_face_create`, `hb_ft_face_create_cached`, `hb_ft_face_create_from_blob_or_fail`, `hb_ft_face_create_from_file_or_fail`, `hb_ft_face_create_referenced`, `hb_ft_font_changed`, `hb_ft_font_get_ft_face`, `hb_ft_font_lock_face`, `hb_ft_font_set_funcs`, `hb_ft_font_set_load_flags`, `hb_ft_font_unlock_face`, `hb_ft_hb_font_changed`, `hb_glib_blob_create`, `hb_glib_get_unicode_funcs`, `hb_glib_script_from_script`, `hb_glib_script_to_script`, `hb_glyph_position_t`, `hb_graphite2_face_get_gr_face`, `hb_graphite2_font_get_gr_font`, `HB_GRAPHITE2_TAG_SILF`, `HB_HAS_CAIRO`, `HB_HAS_FREETYPE`, `HB_HAS_GRAPHITE`, `HB_HAS_ICU`, `hb_icu_get_unicode_funcs`, `hb_icu_script_from_script`, `hb_icu_script_to_script`, `HB_NO_UCD`, `hb_script_t`, `hb_shape`, `hb_unicode_funcs_get_default`, `hb_unicode_funcs_t`, `hb_uniscribe_font_get_hfont`, `hb_uniscribe_font_get_logfontw`
+* Types and structs (3): `GetFontData`, `ScriptPlace`, `ScriptShape`
+* Source files (36): `CONFIG.md`, `hb-cairo-utils.cc`, `hb-cairo.cc`, `hb-cairo.h`, `hb-coretext-font.cc`, `hb-coretext-shape.cc`, `hb-coretext.cc`, `hb-coretext.h`, `hb-directwrite-font.cc`, `hb-directwrite.cc`, `hb-directwrite.h`, `hb-features.h`, `hb-font.hh`, `hb-ft.cc`, `hb-ft.h`, `hb-gdi.cc`, `hb-gdi.h`, `hb-glib.cc`, `hb-glib.h`, `hb-gobject-structs.cc`, `hb-gobject.h`, `hb-graphite2.cc`, `hb-graphite2.h`, `hb-icu.cc`, `hb-icu.h`, `hb-unicode.cc`, `hb-uniscribe.cc`, `hb-uniscribe.h`, `helper-cairo.hh`, `meson_options.txt`, `meson.build`, `README.md`, `README.python.md`, `sample.py`, `util/font-options.hh`, `util/helper-cairo.hh`
+
+## 45. Other tables
 
 `chapters/other-tables.md`
 
@@ -574,1795 +660,2080 @@ Code index:
 * Types and structs (11): `DefaultMinMax`, `INT32_MAX`, `MathConstants`, `MathGlyphConstruction`, `MathGlyphInfo`, `MathKern`, `MathValueRecord`, `MathVariants`, `MaxCoord`, `MinCoord`, `MinMax`
 * Source files (25): `fonts/other-tables/build-fonts.py`, `hb-aat-ltag-table.hh`, `hb-config.hh`, `hb-ot-head-table.hh`, `hb-ot-layout-base-table.hh`, `hb-ot-layout.cc`, `hb-ot-math-table.hh`, `hb-ot-math.cc`, `hb-ot-math.h`, `hb-ot-meta-table.hh`, `hb-ot-meta.cc`, `hb-ot-meta.h`, `hb-ot-name-language-static.hh`, `hb-ot-name.cc`, `hb-ot-name.h`, `hb-ot-os2-table.hh`, `hb-ot-post-table.hh`, `hb-ot-shape.cc`, `hb-ot-stat-table.hh`, `hb-style.cc`, `hb-style.h`, `hb-utf.hh`, `OT/name/name.hh`, `third_party/blink/renderer/platform/fonts/opentype/open_type_math_support.cc`, `util/hb-info.cc`
 
-## 40. For applications
-
-`chapters/for-applications.md`
-
-General index:
-
-* Concepts (1): ligature carets
-* Tables and tags (10): `init`, `jstf`, `kbts`, `kern`, `kerx`, `lcar`, `morx`, `stch`, `wasm`, `wdth`
-
-Code index:
-
-* API and macros (18): `hb_buffer_add`, `hb_buffer_add_utf`, `hb_buffer_add_utf8`, `hb_buffer_allocation_successful`, `hb_buffer_append`, `hb_buffer_clear_contents`, `HB_BUFFER_FLAG_PRODUCE_SAFE_TO_INSERT_TATWEEL`, `HB_BUFFER_FLAG_PRODUCE_UNSAFE_TO_CONCAT`, `HB_BUFFER_FLAG_VERIFY`, `hb_buffer_guess_segment_properties`, `hb_feature_t`, `hb_font_get_nominal_glyph`, `hb_glyph_info_t`, `hb_ot_layout_get_ligature_carets`, `hb_propagate_flags`, `hb_shape`, `hb_shape_full`, `hb_shape_justify`
-* Source files (13): `hb-aat-layout-kerx-table.hh`, `hb-aat-layout-morx-table.hh`, `hb-buffer-verify.cc`, `hb-buffer.cc`, `hb-buffer.h`, `hb-buffer.hh`, `hb-kern.hh`, `hb-ot-layout.cc`, `hb-ot-shape.cc`, `hb-ot-shaper-arabic.cc`, `hb-ot-shaper-hangul.cc`, `hb-shape.cc`, `util/shape-options.hh`
-
-## 41. Testing HarfBuzz
+## 46. Testing HarfBuzz
 
 `chapters/testing-harfbuzz.md`
 
 General index:
 
 * Concepts (2): detailed messages, fuzzer
-* Tables and tags (18): `aots`, `avar`, `calt`, `cmap`, `DFLT`, `hebr`, `init`, `kern`, `kerx`, `main`, `mark`, `MVAR`, `name`, `slow`, `src/`, `stch`, `test`, `trak`
+* Tables and tags (19): `aots`, `avar`, `calt`, `cmap`, `DFLT`, `hebr`, `init`, `kern`, `kerx`, `libs`, `main`, `mark`, `MVAR`, `name`, `slow`, `src/`, `stch`, `test`, `trak`
 
 Code index:
 
-* API and macros (28): `_hb_debug`, `hb_auto_trace_t`, `hb_buffer_changed`, `HB_BUFFER_FLAG_VERIFY`, `HB_BUFFER_MESSAGE_MORE`, `hb_buffer_set_message_func`, `hb_calloc_impl`, `HB_CLOSURE_MAX_STAGES`, `HB_CUSTOM_MALLOC`, `HB_DEBUG_APPLY`, `HB_DEBUG_PAINT`, `HB_DEBUG_SANITIZE`, `HB_DEBUG_SHAPE_PLAN`, `HB_DEBUG_SUBSET`, `HB_FACE_LOADER`, `hb_font_t`, `HB_HAS_GPU`, `HB_HAS_GRAPHITE`, `HB_LEAN`, `hb_malloc_impl`, `HB_NO_HINTING`, `hb_no_trace_t`, `hb_realloc_impl`, `hb_set_invert`, `hb_shape`, `hb_shape_full`, `HB_SHAPER_LIST`, `hb_style_get_value`
-* Types and structs (1): `HBSUBFZ2`
-* Source files (36): `aots/update.py`, `docs/repacker.md`, `docs/serializer.md`, `generate-cff2-nested-delta-font.py`, `generate-expected-outputs.py`, `hb-buffer-verify.cc`, `hb-buffer.cc`, `hb-debug.hh`, `hb-features.h`, `hb-font.cc`, `hb-fuzzer.hh`, `hb-ot-layout-gsubgpos.hh`, `hb-ot-layout.cc`, `hb-shape-fuzzer.cc`, `hb-shape-input.hh`, `hb-shape-plan.cc`, `hb-shape-threads.cc`, `hb-shape.cc`, `hb-subset-threads.cc`, `hb-test.h`, `main.cc`, `meson.build`, `notes/upstream-bug-reports.md`, `run-repack-tests.py`, `run-tests.py`, `test/api/hb-test.h`, `test/api/meson.build`, `test/fuzzing/main.cc`, `test/fuzzing/meson.build`, `test/shape/meson.build`, `test/shape/README.md`, `test/shape/run-tests.py`, `test/subset/generate-expected-outputs.py`, `test/subset/run-tests.py`, `update.py`, `util/shape-output.hh`
+* API and macros (35): `_hb_debug`, `_hb_gdi_reference_table`, `hb_auto_trace_t`, `hb_buffer_changed`, `HB_BUFFER_FLAG_VERIFY`, `HB_BUFFER_MESSAGE_MORE`, `hb_buffer_set_message_func`, `hb_calloc_impl`, `HB_CLOSURE_MAX_STAGES`, `hb_color_lerp`, `HB_CUSTOM_MALLOC`, `HB_DEBUG_APPLY`, `HB_DEBUG_PAINT`, `HB_DEBUG_SANITIZE`, `HB_DEBUG_SHAPE_PLAN`, `HB_DEBUG_SUBSET`, `hb_directwrite_font_set_funcs`, `HB_FACE_LOADER`, `HB_FEATURES_H`, `hb_font_t`, `hb_ft_font_set_funcs`, `hb_ft_hb_font_changed`, `HB_HAS_GPU`, `HB_HAS_GRAPHITE`, `HB_LEAN`, `hb_malloc_impl`, `HB_MINI`, `HB_NO_HINTING`, `hb_no_trace_t`, `hb_realloc_impl`, `hb_set_invert`, `hb_shape`, `hb_shape_full`, `HB_SHAPER_LIST`, `hb_style_get_value`
+* Types and structs (3): `HBSUBFZ2`, `ReleaseDC`, `SelectObject`
+* Source files (38): `aots/update.py`, `CONFIG.md`, `docs/repacker.md`, `docs/serializer.md`, `generate-cff2-nested-delta-font.py`, `generate-expected-outputs.py`, `harfbuzz-world.cc`, `hb-buffer-verify.cc`, `hb-buffer.cc`, `hb-debug.hh`, `hb-features.h`, `hb-font.cc`, `hb-fuzzer.hh`, `hb-ot-layout-gsubgpos.hh`, `hb-ot-layout.cc`, `hb-shape-fuzzer.cc`, `hb-shape-input.hh`, `hb-shape-plan.cc`, `hb-shape-threads.cc`, `hb-shape.cc`, `hb-subset-threads.cc`, `hb-test.h`, `main.cc`, `meson.build`, `notes/upstream-bug-reports.md`, `run-repack-tests.py`, `run-tests.py`, `test/api/hb-test.h`, `test/api/meson.build`, `test/fuzzing/main.cc`, `test/fuzzing/meson.build`, `test/shape/meson.build`, `test/shape/README.md`, `test/shape/run-tests.py`, `test/subset/generate-expected-outputs.py`, `test/subset/run-tests.py`, `update.py`, `util/shape-output.hh`
 
-## 42. The family
+## 47. HarfRust
+
+`chapters/harfrust.md`
+
+General index:
+
+* Concepts (3): An unsorted kerning pair set, HarfRust, rustybuzz
+* Tables and tags (29): `aat/`, `avar`, `BASE`, `calt`, `CFF`, `cmap`, `COLR`, `CPAL`, `cvar`, `draw`, `Font`, `fvar`, `glyf`, `gvar`, `hmtx`, `HVAR`, `kern`, `kerx`, `MATH`, `Mono`, `mort`, `morx`, `name`, `OS/2`, `Plan`, `post`, `src/`, `VARC`, `VVAR`
+
+Code index:
+
+* API and macros (15): `hb_buffer_diff`, `hb_buffer_t`, `hb_face_reference_table`, `hb_face_t`, `hb_font_draw_glyph`, `hb_font_funcs_t`, `hb_font_get_nominal_glyph`, `hb_font_paint_glyph`, `hb_font_t`, `hb_shape`, `hb_shape_plan_t`, `hb_subset_or_fail`, `hb_subset_plan_create_or_fail`, `hb_subset_plan_execute_or_fail`, `HB_VERSION_STRING`
+* Types and structs (17): `CFF2`, `ColorPainter`, `ContentType`, `DrawSettings`, `FontFuncs`, `FontRef`, `GlyphInfo`, `GlyphPosition`, `OutlinePen`, `PaintSink`, `PathSink`, `ScalerFont`, `ShapeOptions`, `ShapePlan`, `ShapePlanKey`, `ShaperFont`, `VerticalLcd`
+* Source files (82): `aat/morx.rs`, `buffer.rs`, `CHANGELOG.md`, `docs/ragel.md`, `draw.rs`, `fallback.rs`, `HARFBUZZ.md`, `harfrust_capi/include/hr-hb-draw.h`, `harfrust_capi/include/hr-hb.h`, `harfrust_capi/README.md`, `harfrust_capi/src/draw.rs`, `harfrust_capi/src/paint/backend.rs`, `harfrust_capi/src/rendering.rs`, `harfrust_capi/src/subset/mod.rs`, `harfrust/benches/shaping.rs`, `harfrust/src/aat/kerx.rs`, `harfrust/src/aat/map.rs`, `harfrust/src/aat/morx.rs`, `harfrust/src/lib.rs`, `harfrust/src/shape.rs`, `harfrust/src/shaper_font.rs`, `harfrust/tests/shaping/in_house.rs`, `hb-aat-layout-kerx-table.hh`, `hb-aat-layout-morx-table.hh`, `hb-buffer.cc`, `hb-buffer.hh`, `hb-harfrust.cc`, `hb-ot-layout-gsubgpos.hh`, `hb-ot-map.cc`, `hb-ot-shape-fallback.cc`, `hb-ot-shape-normalize.cc`, `hb-ot-shape.cc`, `hb-ot-shaper-indic-table.cc`, `hb-ot-tag-table.hh`, `hb-shaper-list.hh`, `hb-subset-input.cc`, `hb-ucd-table.hh`, `hb.h`, `hr-hb-draw.h`, `hr-hb-paint.h`, `hr-hb-subset.h`, `hr-hb.h`, `hr-shape/README.md`, `indic_table.rs`, `kern.rs`, `kerx.rs`, `meson_options.txt`, `normalize.rs`, `notes/harfrust-differences.md`, `ot/apply.rs`, `OT/Layout/GPOS/GPOS.hh`, `ot/lookup/context.rs`, `ot/lookup/gpos.rs`, `ot/lookup/gsub.rs`, `ot/map.rs`, `ot/shaper/indic_table.rs`, `paint/backend.rs`, `plan.rs`, `read-fonts/README.md`, `read-fonts/src/font_data.rs`, `read-fonts/src/lib.rs`, `read-fonts/src/model/glyph/color.rs`, `read-fonts/src/model/glyph/outline/path.rs`, `README.md`, `rust/meson.build`, `rust/shape.rs`, `scripts/gen-shaping-tests.py`, `scripts/README.md`, `shape.rs`, `shaper_font.rs`, `skera/README.md`, `skera/src/lib.rs`, `skrifa/README.md`, `skrifa/src/font.rs`, `skrifa/src/lib.rs`, `skrifa/src/outline/pen.rs`, `skrifa/src/scaler/hinting.rs`, `subset/mod.rs`, `SUBSETTING.md`, `tag_table.rs`, `trak.rs`, `unicode/ucd_table.rs`
+
+## 48. The family
 
 `chapters/the-family.md`
 
 General index:
 
-* Concepts (7): harfbuzz_rs, harfbuzzjs, HarfRust, rustybuzz, Skrifa, uharfbuzz, vendoring
-* Tables and tags (10): `CBDT`, `CFF`, `cmap`, `kbts`, `kern`, `main`, `mort`, `sbix`, `test`, `trak`
+* Concepts (4): harfbuzz_rs, harfbuzzjs, uharfbuzz, vendoring
+* Tables and tags (8): `CBDT`, `CFF`, `cmap`, `kbts`, `kern`, `sbix`, `test`, `trak`
 
 Code index:
 
-* API and macros (11): `HB_BUFFER_CLUSTER_LEVEL_MONOTONE_CHARACTERS`, `hb_buffer_diff`, `HB_BUFFER_FLAG_PRESERVE_DEFAULT_IGNORABLES`, `HB_BUFFER_FLAG_PRODUCE_SAFE_TO_INSERT_TATWEEL`, `hb_ft_font_create`, `HB_NO_BEYOND_64K`, `HB_NO_CUBIC_GLYF`, `HB_NO_UCD`, `HB_NO_VAR_COMPOSITES`, `hb_shape_full`, `HB_VERSION_STRING`
+* API and macros (9): `HB_BUFFER_CLUSTER_LEVEL_MONOTONE_CHARACTERS`, `HB_BUFFER_FLAG_PRESERVE_DEFAULT_IGNORABLES`, `HB_BUFFER_FLAG_PRODUCE_SAFE_TO_INSERT_TATWEEL`, `hb_ft_font_create`, `HB_NO_BEYOND_64K`, `HB_NO_CUBIC_GLYF`, `HB_NO_UCD`, `HB_NO_VAR_COMPOSITES`, `hb_shape_full`
 * Types and structs (1): `HarfRustShaping`
-* Source files (9): `CHANGELOG.md`, `HARFBUZZ.md`, `harfrust_capi/README.md`, `hb-harfrust.cc`, `hr-hb.h`, `README.md`, `README.python.md`, `rust/font.rs`, `rust/shape.rs`
+* Source files (8): `CHANGELOG.md`, `HARFBUZZ.md`, `harfrust_capi/README.md`, `hb-harfrust.cc`, `README.md`, `README.python.md`, `rust/font.rs`, `rust/shape.rs`
 
 ## The general index so far
 
 Each term, with the chapters it is in.
 
-* `aalt`: 26
-* `abvf`: 22, 23, 24
-* `abvm`: 11
-* `abvs`: 22, 23, 24
-* accelerator: 4, 35
+* `.pc` file: 2
+* `aalt`: 28
+* `aat/`: 47
+* `abvf`: 24, 25, 26
+* `abvm`: 13
+* `abvs`: 24, 25, 26
+* accelerator: 6, 39
 * advance: 1
-* advance cache: 6
-* `akhn`: 1, 12, 15, 22, 24
-* `alef`: 7
-* analytic coverage: 34
-* anchors: 16
-* `ankr`: 26, 27
-* `aots`: 41
-* `appl`: 39
-* `Arab`: 1, 12
-* `arab`: 12
-* `attach_chain`: 16
-* `attach_type`: 16
-* `AUTO`: 14
-* `avar`: 5, 28, 32, 35, 37, 41
-* axis values: 31
-* backend: 9
-* backend shaper: 9
-* bands: 34
-* `BASE`: 39
-* `beng`: 12
-* bias: 36
-* `bias`: 36
-* bidi closure: 35
-* `bild`: 39
-* blob: 4
-* blocked: 14
-* `blwf`: 10, 12, 22, 23, 24
-* `blwf` mode: 22
-* `blwm`: 11
-* `blws`: 22, 23, 24
-* bmg: 7
-* `bng2`: 12
-* `bng3`: 12
-* bottom to top: 19
-* broken cluster: 22, 25
-* `bsln`: 26
-* `Buzz`: 11, 20, 22, 24, 35
-* `BUZZ`: 11, 22, 24, 35
-* `calt`: 1, 3, 11, 15, 19, 20, 21, 26, 38, 41
+* advance cache: 8
+* `akhn`: 1, 14, 17, 24, 26
+* `alef`: 9
+* An unsorted kerning pair set: 47
+* analytic coverage: 36
+* anchors: 18
+* `ankr`: 28, 29
+* `ansi`: 3
+* `aots`: 46
+* `appl`: 45
+* `Arab`: 1, 3, 14, 44
+* `arab`: 14
+* atlas: 38
+* `attach_chain`: 18
+* `attach_type`: 18
+* `AUTO`: 16
+* `avar`: 7, 30, 34, 39, 41, 46, 47
+* axis values: 33
+* backend: 11
+* backend shaper: 11
+* bands: 38
+* `BASE`: 3, 45, 47
+* `beng`: 14
+* bias: 40
+* `bias`: 40
+* bidi closure: 39
+* `bild`: 45
+* blob: 6
+* blocked: 16
+* `blwf`: 12, 14, 24, 25, 26
+* `blwf` mode: 24
+* `blwm`: 13
+* `blws`: 24, 25, 26
+* bmg: 9
+* `bng2`: 14
+* `bng3`: 14
+* bottom to top: 21
+* broken cluster: 24, 27
+* `bsln`: 28
+* build directory: 2
+* build options: 2
+* `build-ft/`: 2
+* `build-msg/`: 2
+* `build/`: 2
+* `Buzz`: 13, 22, 24, 26, 39
+* `BUZZ`: 13, 24, 26, 39
+* `calt`: 1, 5, 13, 17, 21, 22, 23, 28, 42, 46, 47
 * canonically equivalent: 1
-* catch-all record: 37
-* category: 22
-* `CBDT`: 5, 6, 33, 34, 35, 42
-* `CBLC`: 33, 35
-* ccc: 7
-* `ccmp`: 4, 8, 11, 15, 20, 21, 22, 23, 24, 26, 35, 38
-* `cfar`: 23
-* `CFF`: 5, 6, 38, 42
-* chains: 26
+* catch-all record: 41
+* category: 24
+* `CBDT`: 7, 8, 35, 36, 37, 38, 39, 48
+* `CBLC`: 35, 39
+* ccc: 9
+* `ccmp`: 6, 10, 13, 17, 22, 23, 24, 25, 26, 28, 39, 42
+* `cfar`: 25
+* `CFF`: 7, 8, 42, 47, 48
+* chains: 28
 * character: 1
-* charstring: 32
-* chillu: 22
-* chosen script: 12
-* `cjct`: 22, 24
-* class table: 26
-* `clig`: 11, 19, 20, 23
-* ClipList: 33
+* charstring: 34
+* chillu: 24
+* chosen script: 14
+* `cjct`: 24, 26
+* class table: 28
+* `clig`: 13, 21, 22, 25
+* ClipList: 35
 * cluster: 1
 * cluster level: 1
-* `cmap`: 1, 2, 3, 4, 5, 6, 7, 9, 10, 12, 13, 14, 15, 17, 19, 20, 21, 22, 25, 35, 38, 39, 41, 42
+* `cmap`: 1, 3, 4, 5, 6, 7, 8, 9, 11, 12, 14, 15, 16, 17, 19, 21, 22, 23, 24, 27, 39, 42, 45, 46, 47, 48
 * code point: 1
-* COENG: 23
-* colour line: 33
-* `COLR`: 6, 33, 35, 38
-* components: 31
-* condition: 31
-* consonant syllable: 22
-* content type: 8
-* context: 1, 2
-* context set: 38
-* Contextual subtable: 26
-* continuations: 13
-* `copy`: 10, 36
-* coverage index: 2
-* `CPAL`: 33, 35, 39
-* `Crap`: 2
-* cross-stream: 18
-* `cswh`: 20
-* cu2qu: 34
-* `curs`: 11, 16, 19
-* `cv01`: 11
-* `cv06`: 11
-* `cvar`: 4, 30, 35, 37
-* `data`: 4, 5, 9, 10
-* default flags: 26
-* delta-set index map: 29
-* deltas: 29
-* depend context: 38
-* design space: 28
-* detailed messages: 41
-* `dev2`: 1, 12, 22, 24, 39
-* `dev3`: 12, 24, 25, 39
-* `Deva`: 1, 12
-* `deva`: 12, 39
-* `DFLT`: 1, 12, 17, 20, 21, 23, 25, 39, 41
-* `dflt`: 12
+* COENG: 25
+* Color glyphs and emoji: 36
+* color line: 35
+* `COLR`: 8, 35, 38, 39, 42, 47
+* components: 33
+* condition: 33
+* consonant syllable: 24
+* content type: 10
+* context: 1, 3, 4
+* context set: 42
+* Contextual subtable: 28
+* continuations: 15
+* `copy`: 12, 40
+* coverage index: 4
+* `CPAL`: 35, 39, 45, 47
+* `Crap`: 4
+* cross-stream: 20
+* `cswh`: 22
+* cu2qu: 38
+* `curs`: 13, 18, 21
+* `cv01`: 13
+* `cv06`: 13
+* `cvar`: 6, 32, 36, 39, 41, 47
+* `data`: 6, 7, 11, 12
+* default flags: 28
+* delta-set index map: 31
+* deltas: 31
+* depend context: 42
+* design space: 30
+* detailed messages: 2, 46
+* `dev2`: 1, 14, 24, 26, 45
+* `dev3`: 14, 26, 27, 45
+* `Deva`: 1, 14
+* `deva`: 14, 45
+* `DFLT`: 1, 14, 19, 22, 23, 25, 27, 45, 46
+* `dflt`: 14
 * direction: 1
-* `dist`: 11, 18, 19
-* distance: 36
-* `dlig`: 35
-* `dlng`: 39
-* dm: 7
-* `dnom`: 11, 13, 20, 22, 24
-* DontAdvance: 26
-* draw context: 34
-* draw funcs: 32
-* draw state: 32
-* `DSIG`: 35
-* dual-joining: 20
-* `dupe`: 33
-* `EBDT`: 33, 35
-* `EBLC`: 35
-* `EBSC`: 35
-* empty blob: 3, 4
-* empty plan: 10
-* entry anchor: 16
-* entry table: 26
-* exit anchor: 16
-* extend mode: 33
-* `FAbv`: 24
-* face: 4
-* `face`: 4
-* face builder: 4
-* face index: 2
-* face loader: 4
-* fallbacks: 17
-* `FBlw`: 24
-* `Feat`: 9
-* feat: 26
-* `feat`: 26
-* feature entries: 26
-* feature table substitution: 11
-* feature types: 26
-* FeatureList: 15
+* `dist`: 13, 20, 21
+* distance: 40
+* `dlig`: 39
+* `dlng`: 45
+* dm: 9
+* `dnom`: 13, 15, 22, 24, 26
+* `docs`: 2
+* DontAdvance: 28
+* `draw`: 37, 47
+* draw context: 36, 37
+* draw funcs: 34
+* draw state: 34
+* `DSIG`: 39
+* dual-joining: 22
+* `dupe`: 35
+* `EBDT`: 35, 39
+* `EBLC`: 39
+* `EBSC`: 39
+* edge limit: 36
+* empty blob: 5, 6
+* empty plan: 12
+* entry anchor: 18
+* entry table: 28
+* exit anchor: 18
+* extend mode: 35
+* `FAbv`: 26
+* `face`: 3, 6
+* face: 6
+* face builder: 6
+* face index: 4
+* face loader: 6
+* fallbacks: 19
+* `FBlw`: 26
+* `Feat`: 11
+* feat: 28
+* `feat`: 28
+* feature entries: 28
+* feature options: 2
+* feature table substitution: 13
+* feature types: 28
+* FeatureList: 17
 * features: 1
-* FeatureVariations: 15
-* `fin2`: 11, 20
-* `fin3`: 11, 20
-* `fina`: 1, 11, 12, 13, 20, 24
-* final: 20
-* final reordering: 22
-* `fini`: 9
-* fixpoint: 35
-* flattened: 34
-* font: 5
-* `Font`: 5, 9
-* Font extents: 6
-* font functions: 5
-* font segmentation: 38
-* fontations: 5
-* foreground colour: 33
-* Format 1: 16
-* Format 2: 16
-* Format 3: 16
-* `fpgm`: 35
-* `FPst`: 24
-* `frac`: 7, 11, 13, 20, 22, 24
-* full instance: 37
-* fuzzer: 41
-* `fvar`: 5, 28, 31, 35, 37, 39
-* gain: 37
-* gap: 17
-* `gasp`: 35
-* gc: 7
-* `GDEF`: 1, 3, 4, 9
-* `gid1`: 32
-* `gid2`: 32
-* `Glat`: 9
-* GLib: 7
-* global: 10
-* global bit: 11
-* `Gloc`: 9
-* `GLYF`: 2, 4, 32, 34, 38
-* `glyf`: 2, 3, 4, 5, 6, 19, 31, 32, 33, 35, 37, 38
+* FeatureVariations: 17
+* `fin2`: 13, 22
+* `fin3`: 13, 22
+* `fina`: 1, 13, 14, 15, 22, 26
+* final: 22
+* final reordering: 24
+* `fini`: 11
+* fixpoint: 39
+* flattened: 36
+* `font`: 3
+* font: 7
+* `Font`: 7, 11, 47
+* Font extents: 8
+* font functions: 7
+* font segmentation: 42
+* `fontations`: 7
+* foreground: 37
+* foreground color: 35
+* Format 1: 18
+* Format 2: 18
+* Format 3: 18
+* `fpgm`: 36, 39
+* `FPst`: 26
+* `frac`: 9, 13, 15, 22, 24, 26
+* full instance: 41
+* fuzzer: 46
+* `fvar`: 7, 30, 33, 39, 41, 45, 47
+* gain: 41
+* gap: 19
+* `gasp`: 39
+* gc: 9
+* `GDEF`: 1, 5, 6, 11
+* `gid0`: 3
+* `gid1`: 3, 34
+* `gid2`: 34
+* `Glat`: 11
+* `glib`: 2, 44
+* GLib: 9
+* global: 12
+* global bit: 13
+* `Gloc`: 11
+* `GLYF`: 4, 6, 34, 38, 42
+* `glyf`: 4, 5, 6, 7, 8, 21, 33, 34, 35, 39, 41, 42, 47
 * glyph: 1
-* glyph assembly: 39
-* glyph closure: 35
-* glyph dependency graph: 38
+* glyph assembly: 45
+* Glyph atlases: 36
+* glyph closure: 39
+* glyph dependency graph: 42
 * glyph ID: 1
-* glyph’s extents: 6
-* `GPOS`: 1, 3, 4, 9
-* grade: 5
-* `GSUB`: 1, 2, 3, 4, 9, 20, 35, 38
-* `gvar`: 3, 4, 5, 6, 29, 30, 35, 37
-* gvar: 6
-* `GVAR`: 30
-* gvar cache: 6
-* `half`: 11, 12, 22, 24
-* `haln`: 22, 24
-* `hang`: 39
-* `hani`: 19, 39
-* `Harf`: 11, 20, 22, 24, 35
-* `HARF`: 11, 22, 24, 35
-* harfbuzz_rs: 42
-* harfbuzzjs: 42
-* HarfRust: 42
-* `hasc`: 6, 29
-* `hb_font_paint_glyph`: 33
-* `hb_font_paint_glyph_or_fail`: 33
-* hb-depend: 38
-* hb-ft: 5
-* hb-gpu: 34
-* hb-ot: 6
-* hb-raster: 34
-* hb-ucd: 7
-* hb-vector: 34
-* `hcla`: 6
-* `hcld`: 6
-* `hdmx`: 35
-* `hdsc`: 29
-* `head`: 4, 35, 36, 37, 39
-* `Head`: 36
-* `hebr`: 12, 17, 21, 41
-* `hhea`: 5, 6, 29, 35, 37
-* `HHEA`: 6
-* hidden: 7
-* hidden axes: 31
-* `hlgp`: 29
-* `hmtx`: 2, 3, 4, 5, 6, 9, 13, 27, 28, 29, 31, 32, 35, 37
-* `HMTX`: 2, 6
-* `HVAR`: 4, 5, 6, 32, 35, 37
-* HVAR: 6
-* `icfb`: 39
-* `Icfc`: 39
-* `icft`: 39
-* ICU: 7
-* `Idce`: 39
-* `ideo`: 39
-* `idtp`: 39
-* implied on-curve point: 32
-* independent cluster: 24
-* `init`: 1, 10, 11, 12, 13, 20, 22, 24, 40, 41
-* `INIT`: 38
-* initial reordering: 22
-* Insertion subtable: 26
-* instance: 37
-* `int8`: 2
-* intermediate: 29
-* interpolation of untouched points: 30
-* invisible glyph: 7, 17
-* `IPPH`: 12
-* `isol`: 11, 13, 20, 24
-* isolated: 20
-* `ital`: 39
-* italics correction: 39
-* item: 29
-* item variation store: 28, 29
-* `jalt`: 35
-* jamo: 21
-* join-causing: 20
-* joining type: 20
-* `JSTF`: 35
-* `jstf`: 40
-* `just`: 26
-* `kana`: 12, 19
-* `kbts`: 9, 10, 40, 42
-* `kern`: 1, 3, 5, 6, 10, 11, 12, 13, 16, 17, 18, 19, 21, 26, 27, 35, 40, 41, 42
-* kern machine: 18
-* `kerx`: 1, 2, 3, 9, 13, 16, 17, 18, 26, 27, 35, 40, 41
-* key: 10
-* Khmer consonant syllable: 23
-* `khmr`: 23
-* kinzi: 23
+* glyph’s extents: 8
+* `GPOS`: 1, 5, 6, 11
+* grade: 7
+* `GSUB`: 1, 4, 5, 6, 11, 22, 39, 42
+* `gvar`: 5, 6, 7, 8, 31, 32, 39, 41, 47
+* gvar: 8
+* `GVAR`: 32
+* gvar cache: 8
+* `half`: 13, 14, 24, 26
+* `haln`: 24, 26
+* `hang`: 45
+* `hani`: 21, 45
+* `Harf`: 13, 22, 24, 26, 39
+* `HARF`: 13, 24, 26, 39
+* harfbuzz_rs: 48
+* harfbuzz-sys: 44
+* harfbuzzjs: 48
+* HarfBuzzSharp: 44
+* HarfRust: 47
+* `hasc`: 8, 31
+* `hb_font_paint_glyph`: 35
+* `hb_font_paint_glyph_or_fail`: 35
+* `hb_gpu_draw_t`: 38
+* `hb_gpu_paint_t`: 38
+* hb-depend: 42
+* `hb-features.h`: 2
+* hb-ft: 7
+* hb-gpu: 38
+* hb-ot: 8
+* hb-raster: 36
+* hb-ucd: 9
+* hb-vector: 37
+* `hcla`: 8
+* `hcld`: 8
+* `hdmx`: 39
+* `hdsc`: 31
+* `head`: 6, 36, 39, 40, 41, 45
+* `Head`: 40
+* `hebr`: 14, 19, 23, 46
+* `hhea`: 7, 8, 31, 39, 41
+* `HHEA`: 8
+* hidden: 9
+* hidden axes: 33
+* High-resolution screens: 36
+* `hlgp`: 31
+* `hmtx`: 4, 5, 6, 7, 8, 11, 15, 29, 30, 31, 33, 34, 39, 41, 47
+* `HMTX`: 4, 8
+* `HVAR`: 6, 7, 8, 34, 39, 41, 47
+* HVAR: 8
+* `icfb`: 45
+* `Icfc`: 45
+* `icft`: 45
+* ICU: 9
+* `Idce`: 45
+* `ideo`: 45
+* `idtp`: 45
+* Images rather than screens: 36
+* implied on-curve point: 34
+* independent cluster: 26
+* `init`: 1, 12, 13, 14, 15, 22, 24, 26, 43, 46
+* `INIT`: 42
+* initial reordering: 24
+* Insertion subtable: 28
+* instance: 41
+* `int8`: 4
+* integration layers: 44
+* intermediate: 31
+* interpolation of untouched points: 32
+* invisible glyph: 9, 19
+* `IPPH`: 14
+* `isol`: 13, 15, 22, 26
+* isolated: 22
+* `ital`: 45
+* italics correction: 45
+* item: 31
+* item variation store: 30, 31
+* `jalt`: 39
+* jamo: 23
+* join-causing: 22
+* joining type: 22
+* `JSTF`: 39
+* `jstf`: 43
+* `just`: 28
+* `kana`: 14, 21
+* `kbts`: 2, 11, 12, 43, 48
+* `kern`: 1, 3, 5, 7, 8, 12, 13, 14, 15, 18, 19, 20, 21, 23, 28, 29, 39, 43, 46, 47, 48
+* kern machine: 20
+* `kerx`: 1, 4, 5, 11, 15, 18, 19, 20, 28, 29, 39, 43, 46, 47
+* key: 12
+* Khmer consonant syllable: 25
+* `khmr`: 25
+* kinzi: 25
+* `LANG`: 3
 * language: 1
-* language system tags: 12
-* `last_base`: 16
-* `Latn`: 1, 17
-* `latn`: 1, 11, 12, 17, 25, 39
-* `lcar`: 40
-* leaf: 31
-* `Left`: 24
-* left-joining: 20
-* `liga`: 1, 2, 3, 4, 8, 10, 11, 15, 19, 20, 22, 23, 24, 26, 35, 38
-* ligature actions: 26
-* ligature carets: 40
-* ligature ID: 15
-* ligature set: 38
-* Ligature subtable: 26
-* limiting: 37
-* `line`: 32
-* link: 36
-* `ljmo`: 21
-* `loca`: 3, 4, 32, 35
-* `LOCA`: 4, 32
-* `locl`: 11, 12, 20, 22, 23, 24, 35
+* language system tags: 14
+* Large text: 36
+* `last_base`: 18
+* `Latn`: 1, 3, 19
+* `latn`: 1, 13, 14, 19, 27, 45
+* `lcar`: 43
+* leaf: 33
+* `Left`: 26
+* left-joining: 22
+* `libs`: 46
+* `liga`: 1, 2, 3, 4, 5, 6, 10, 12, 13, 17, 21, 22, 24, 25, 26, 28, 39, 42
+* ligature actions: 28
+* ligature carets: 43
+* ligature ID: 17
+* ligature set: 42
+* Ligature subtable: 28
+* limiting: 41
+* `line`: 34
+* link: 40
+* `ljmo`: 23
+* load flags: 36, 44
+* `loca`: 5, 6, 34, 39
+* `LOCA`: 6, 34
+* `locl`: 13, 14, 22, 24, 25, 26, 39
 * logical order: 1
-* long metrics: 6
-* lookup: 15
-* lookup flag: 15
-* LookupList: 15
-* ltag: 26
-* `ltag`: 26, 39
-* `ltra`: 11, 19
-* `ltrm`: 11, 19
-* `LTSH`: 35
-* `MAbv`: 24
-* `main`: 34, 41, 42
-* map: 11
-* map builder: 11
-* `mark`: 1, 7, 11, 12, 14, 15, 16, 17, 18, 21, 25, 27, 35, 41
-* mark: 17
-* `Mark`: 27
-* marked glyph: 26, 27
-* MarkFirst: 26
-* MarkLast: 26
-* mask: 15
-* `MATH`: 38, 39
-* `math`: 39
-* math kern: 39
-* `maxp`: 3, 4, 6, 35, 37
-* `MAXP`: 4
-* `MBlw`: 24
-* `med2`: 11, 20
-* `medi`: 1, 11, 12, 13, 20, 24
+* long metrics: 8
+* lookup: 17
+* lookup flag: 17
+* LookupList: 17
+* ltag: 28
+* `ltag`: 28, 45
+* `ltra`: 13, 21
+* `ltrm`: 13, 21
+* `LTSH`: 39
+* `MAbv`: 26
+* `main`: 3, 38, 46
+* map: 13
+* map builder: 13
+* `mark`: 1, 9, 13, 14, 16, 17, 18, 19, 20, 23, 27, 29, 39, 46
+* mark: 19
+* `Mark`: 29
+* marked glyph: 28, 29
+* MarkFirst: 28
+* MarkLast: 28
+* mask: 17
+* `MATH`: 42, 45, 47
+* `math`: 45
+* math kern: 45
+* `maxp`: 5, 6, 8, 39, 41
+* `MAXP`: 6
+* `MBlw`: 26
+* `med2`: 13, 22
+* `medi`: 1, 3, 13, 14, 15, 22, 26
 * merges: 1
-* `meta`: 39
-* `min_size`: 2
-* min/max extents: 39
-* `mkmk`: 7, 11, 15, 16
-* `mmap`: 4
-* modified combining classes: 7
-* modifier combining marks: 20
-* `mort`: 1, 12, 26, 35, 42
-* `morx`: 1, 3, 7, 8, 9, 10, 12, 13, 14, 17, 18, 19, 25, 26, 27, 35, 38, 39, 40
-* `MPre`: 24
-* `MPst`: 22, 24
-* `mset`: 11, 20
-* multiple item variation store: 29, 31
-* `MVAR`: 6, 35, 37, 41
-* Myanmar consonant syllable: 23
-* `mym2`: 12, 23
-* `mym3`: 12
-* `mymr`: 12
-* `name`: 9, 26, 33, 35, 36, 37, 39, 41
-* name record: 39
-* named instance: 4
-* named instances: 28
-* neutering: 3
+* Meson: 2
+* `meta`: 3, 45
+* `min_size`: 4
+* min/max extents: 45
+* `mkmk`: 9, 13, 17, 18
+* `mmap`: 6
+* modified combining classes: 9
+* modifier combining marks: 22
+* `Mono`: 47
+* `mort`: 1, 14, 28, 39, 47
+* `morx`: 1, 5, 9, 10, 11, 12, 14, 15, 16, 19, 20, 21, 27, 28, 29, 39, 42, 43, 45, 47
+* Moving text: 36
+* `MPre`: 26
+* `MPst`: 24, 26
+* `mset`: 13, 22
+* multiple item variation store: 31, 33
+* `MVAR`: 8, 39, 41, 46
+* Myanmar consonant syllable: 25
+* `mym2`: 14, 25
+* `mym3`: 14
+* `mymr`: 14
+* `name`: 3, 11, 28, 35, 39, 40, 41, 45, 46, 47
+* name record: 45
+* named instance: 6
+* named instances: 30
+* neutering: 5
+* Ninja: 2
 * nominal glyph: 1
-* non-Indic cluster: 22
-* non-joining: 20
-* non-Khmer clusters: 23
-* non-Myanmar cluster: 23
-* Noncontextual subtable: 26
-* `NONE`: 14, 21
-* nonzero winding rule: 34
+* non-Indic cluster: 24
+* non-joining: 22
+* non-Khmer clusters: 25
+* non-Myanmar cluster: 25
+* Noncontextual subtable: 28
+* `none`: 3
+* `NONE`: 16, 23
+* nonzero winding rule: 36
 * normalization: 1
-* normalization modes: 14
-* normalized: 28
-* `normalizer_glyph_index`: 14
-* not-found glyph: 14
-* `nukt`: 14, 15, 22, 24
-* Null: 2
-* `Null`: 2, 39
-* `NULL`: 4, 5, 7, 9, 32, 34, 35, 36, 38
-* Null object: 2
-* `null_size`: 2
-* `numr`: 11, 13, 20, 22, 24
-* object: 36
-* object graph: 36
-* object index: 36
-* off-curve: 32
-* offset: 1, 2
-* Old Hangul: 21
-* on-curve: 32
-* one stage: 16
-* `onum`: 26, 35
-* `opsz`: 5, 39
-* `OS/2`: 2, 6, 20, 35, 37
-* `OTTO`: 2
-* paint context: 34
-* paint graph: 33
-* PaintColrGlyph: 33
-* PaintComposite: 33
-* PaintGlyph: 33
-* PairSet: 16
-* palette: 33
-* `palt`: 35
-* parent: 31
-* partial composition: 14
-* partial instance: 37
-* pause: 11
-* pause function: 11
-* `PCLT`: 35
-* PerformAction: 26
-* phantom points: 6, 29, 30
-* pinning: 37
-* Pixels per em: 5
-* plan: 35
-* point matching: 32
-* Point size: 5
-* position: 22
-* `post`: 5, 35, 37, 39
-* post-base glyph: 24
-* post-context: 8
-* pre-base-reordering consonant: 22
-* pre-context: 8
-* precision: 34
-* precomposed syllables: 21
-* `pref`: 10, 12, 22, 23, 24, 35
-* `prep`: 35
-* `pres`: 12, 22, 23, 24
-* presentation forms: 20, 21
-* `prev`: 16, 20
-* priority: 36
-* private-use subtags: 12
-* `pstf`: 10, 22, 23, 24
-* `psts`: 22, 23, 24
-* `ptem`: 5, 9, 27, 39
-* `push`: 36
-* `Qaag`: 12, 14
-* Ragel: 22
-* `rand`: 11, 15, 20, 22, 24, 35
-* `rclt`: 11, 19, 20
-* Rearrangement subtable: 26
-* recategorizing: 17
-* region: 29
-* renormalize: 37
-* repacker: 36
-* reph mode: 22
-* reph position: 22
-* required feature: 11
-* resource fork: 2
-* right-joining: 20
-* RightToLeft: 16
-* `rkrf`: 22, 24
-* `rlig`: 1, 11, 13, 20, 26
-* `romn`: 39
-* `rphf`: 10, 15, 22, 23, 24
-* `rtla`: 11, 19, 20
-* `rtlm`: 7, 11, 13, 19, 20, 35
+* normalization modes: 16
+* normalized: 30
+* `normalizer_glyph_index`: 16
+* not-found glyph: 16
+* `nukt`: 16, 17, 24, 26
+* Null: 4
+* `Null`: 4, 45
+* `NULL`: 6, 7, 9, 11, 34, 36, 37, 38, 39, 40, 42, 44
+* Null object: 4
+* `null_size`: 4
+* `numr`: 13, 15, 22, 24, 26
+* object: 40
+* object graph: 40
+* object index: 40
+* off-curve: 34
+* offset: 1, 4
+* Old Hangul: 23
+* on-curve: 34
+* one stage: 18
+* `onum`: 28, 39
+* `opsz`: 7, 45
+* `OS/2`: 4, 8, 22, 39, 41, 47
+* `OTTO`: 4
+* paint context: 36, 37
+* paint graph: 35
+* PaintColrGlyph: 35
+* PaintComposite: 35
+* PaintGlyph: 35
+* PairSet: 18
+* palette: 35
+* `palt`: 39
+* parent: 33
+* partial composition: 16
+* partial instance: 41
+* `PATH`: 2
+* pause: 13
+* pause function: 13
+* `PCLT`: 39
+* PerformAction: 28
+* phantom points: 8, 31, 32
+* pinning: 41
+* pixel budget: 36
+* Pixels per em: 7
+* plan: 39
+* `Plan`: 47
+* point matching: 34
+* Point size: 7
+* position: 24
+* `post`: 3, 7, 39, 41, 45, 47
+* post-base glyph: 26
+* post-context: 10
+* `ppem`: 38
+* pre-base-reordering consonant: 24
+* pre-context: 10
+* precision: 37
+* precomposed syllables: 23
+* `pref`: 12, 14, 24, 25, 26, 39
+* `prep`: 36, 39
+* `pres`: 14, 24, 25, 26
+* presentation forms: 22, 23
+* `prev`: 18, 22
+* priority: 40
+* private-use subtags: 14
+* `pstf`: 12, 24, 25, 26
+* `psts`: 24, 25, 26
+* `ptem`: 7, 11, 29, 44, 45
+* `push`: 40
+* `Qaag`: 14, 16
+* Ragel: 24
+* `rand`: 13, 17, 22, 24, 26, 39
+* `rclt`: 13, 21, 22
+* Rearrangement subtable: 28
+* recategorizing: 19
+* region: 31
+* renormalize: 41
+* repacker: 40
+* reph mode: 24
+* reph position: 24
+* required feature: 13
+* resource fork: 4
+* right-joining: 22
+* RightToLeft: 18
+* `rkrf`: 24, 26
+* `rlig`: 1, 3, 13, 15, 22, 28
+* `romn`: 45
+* `rphf`: 12, 17, 24, 25, 26
+* `rtla`: 13, 21, 22
+* `rtlm`: 9, 13, 15, 21, 22, 39
 * run: 1
-* rustybuzz: 42
-* `rvrn`: 10, 11, 22, 24, 26, 37
-* sakot-terminated cluster: 24
-* `salt`: 38
-* sanitizer: 3
-* SARA AM: 21
-* `sbix`: 3, 4, 5, 6, 33, 34, 35, 42
-* sc: 7
-* scalar: 29
-* Scale: 5
-* scale: 6
-* scanner: 22
-* scratch flags: 7, 13
+* rustybuzz: 47
+* `rvrn`: 12, 13, 24, 26, 28, 41
+* sakot-terminated cluster: 26
+* `salt`: 42
+* sanitizer: 5
+* SARA AM: 23
+* `sbix`: 5, 6, 7, 8, 35, 36, 37, 38, 39, 48
+* sc: 9
+* scalar: 31
+* Scale: 7
+* scale: 8
+* scale factor: 37, 44
+* scanner: 24
+* scratch flags: 9, 15
 * script: 1
-* script shaper: 1, 9
-* script tags: 12
-* ScriptList: 15
-* seac: 32
-* `seac`: 32, 35, 38
-* segment map: 28
+* script shaper: 1, 11
+* script tags: 14
+* ScriptList: 17
+* seac: 34
+* `seac`: 34, 39, 42
+* segment map: 30
 * segment properties: 1
-* selectors: 26
-* self-contained: 37
-* serializer: 36
-* set digest: 15
-* SetComponent: 26
-* SetMark: 26
-* sfnt: 2
-* `sfnt`: 2
-* shape plan: 10
-* shared tuples: 30
-* Sharing: 36
-* short-circuit: 14
-* Shortest: 14
-* `Silf`: 9
-* singleton: 14
-* `size`: 2, 35, 36, 39
-* skipping iterator: 15
-* Skrifa: 42
-* `slng`: 39
-* `slnt`: 5, 39
-* `Slnt`: 5, 39
-* `slow`: 41
-* Slug: 34
-* `smcp`: 1, 26, 35
-* `SMVD`: 22
-* `sort`: 14
-* space fallback: 14
-* space fallback types: 17
-* spaces: 36
-* `src/`: 3, 22, 41
-* `ss01`: 7, 11, 16, 26
-* `ss02`: 16
-* `ss05`: 36
-* `ss20`: 11
-* `ssty`: 35
-* stages: 15
-* standalone cluster: 22
-* standard cluster: 24
-* `star`: 35
-* starter: 14
-* `STAT`: 35, 37, 39
-* state array: 26
-* state machine: 26
-* `static_size`: 2
-* `stch`: 8, 13, 20, 40, 41
-* strikes: 33
-* sub-blob: 2, 4
-* sub-feature flags: 26
-* subscript: 23
-* subsetter: 35
-* symbol cluster: 22
-* `sync`: 8, 16
-* `syrc`: 12
-* `SYRE`: 12
-* table record: 2
-* tagged Null: 4
-* `tail`: 36
-* `Tail`: 36
-* tent: 37
-* `test`: 41, 42
-* texels: 34
-* `thai`: 12, 21
-* `tibt`: 17
-* `tjmo`: 21
-* `TODO`: 29
-* tone mark: 21
-* top accent attachment: 39
-* top phantom point: 6
-* top to bottom: 19
-* topological order: 36
-* Tracking: 27
-* tracks: 27
-* `trak`: 1, 5, 9, 13, 26, 27, 39, 41, 42
-* transform: 31
-* transparent: 20
-* TrueType Collection: 2
-* `ttcf`: 2
-* tuple variations: 30
-* `typ1`: 2
-* uharfbuzz: 42
-* Unicode funcs: 7
-* Unicode properties: 7
-* `uniscribe`: 9
-* Universal Shaping Engine: 24
-* `upem`: 4
-* USE: 24
-* user coordinates: 28
-* `VAbv`: 22, 23, 24
-* `valt`: 19
-* value record: 16
-* ValueFormat: 16
-* `var1`: 8, 13, 14
-* `var2`: 7, 8
-* VARC: 6, 31
-* `VARC`: 6, 35, 38
-* VariationIndex: 16
-* varStore cache: 6
-* `vatu`: 10, 22, 23, 24
-* `VBlw`: 22, 23, 24
-* `VDMX`: 35
-* vendoring: 42
-* verb: 26
-* `vert`: 7, 11, 13, 19, 26
-* vertical origin: 6
-* `vhal`: 19
-* `vhea`: 4, 6, 19, 35, 37, 39
-* virama-terminated cluster: 24
-* virtual link: 36
-* `vjmo`: 21
-* `vkrn`: 18, 19, 27
-* `vmtx`: 4, 6, 19, 35, 37
-* `VORG`: 4, 6, 19, 35
-* VORG: 6
-* vowel syllable: 22
-* `vpal`: 19
-* `VPre`: 22, 23, 24
-* `VPst`: 22, 23, 24
-* `vrt2`: 19
-* `vrtr`: 19
-* `VVAR`: 4, 6, 35, 37
-* `wasm`: 9, 40
-* `Wasm`: 9
-* `wdth`: 39, 40
-* weight axis: 28
-* `wght`: 31, 39
-* whence: 36
-* work budget: 32
-* `xhgt`: 6
-* `xMin`: 6
-* `xreq`: 11
-* `yMax`: 6
-* Zawgyi: 12
-* `zero`: 6, 11, 17
-* `ZWNJ`: 22, 24
+* selectors: 28
+* self-contained: 41
+* serializer: 40
+* set digest: 17
+* SetComponent: 28
+* SetMark: 28
+* sfnt: 4
+* `sfnt`: 4
+* shape plan: 12
+* shared tuples: 32
+* Sharing: 40
+* short-circuit: 16
+* Shortest: 16
+* `Silf`: 11, 44
+* singleton: 16
+* `size`: 4, 39, 40, 45
+* skipping iterator: 17
+* `slng`: 45
+* `slnt`: 7, 45
+* `Slnt`: 7, 45
+* `slow`: 46
+* Slug: 38
+* Small or sandboxed builds: 36
+* `smcp`: 1, 28, 39
+* `SMVD`: 24
+* `sort`: 16
+* space fallback: 16
+* space fallback types: 19
+* spaces: 40
+* `src/`: 2, 5, 24, 46, 47
+* `ss01`: 9, 13, 18, 28
+* `ss02`: 18
+* `ss05`: 40
+* `ss20`: 13
+* `ssty`: 39
+* stages: 17
+* standalone cluster: 24
+* standard cluster: 26
+* `star`: 39
+* starter: 16
+* `STAT`: 3, 39, 41, 45
+* state array: 28
+* state machine: 28
+* `static_size`: 4
+* `stch`: 10, 15, 22, 43, 46
+* strikes: 35
+* sub-blob: 4, 6
+* sub-feature flags: 28
+* subscript: 25
+* subsetter: 39
+* suites: 2
+* symbol cluster: 24
+* `sync`: 10, 18
+* `syrc`: 14
+* `SYRE`: 14
+* table record: 4
+* tagged Null: 6
+* `tail`: 40
+* `Tail`: 40
+* tent: 41
+* `test`: 46, 48
+* texels: 38
+* `text`: 3
+* `thai`: 14, 23
+* `tibt`: 19
+* `tjmo`: 23
+* `TODO`: 31
+* tone mark: 23
+* top accent attachment: 45
+* top phantom point: 8
+* top to bottom: 21
+* topological order: 40
+* Tracking: 29
+* tracks: 29
+* `trak`: 1, 3, 7, 11, 15, 28, 29, 45, 46, 48
+* transform: 33
+* transparent: 22
+* TrueType Collection: 4
+* `ttcf`: 4
+* tuple variations: 32
+* `typ1`: 4
+* uharfbuzz: 48
+* Unicode funcs: 9
+* Unicode properties: 9
+* `uniscribe`: 11
+* Universal Shaping Engine: 26
+* `upem`: 6
+* USE: 26
+* user coordinates: 30
+* `VAbv`: 24, 25, 26
+* `valt`: 21
+* value record: 18
+* ValueFormat: 18
+* `var1`: 10, 15, 16
+* `var2`: 9, 10
+* VARC: 8, 33
+* `VARC`: 8, 39, 42, 47
+* VariationIndex: 18
+* varStore cache: 8
+* `vatu`: 12, 24, 25, 26
+* `VBlw`: 24, 25, 26
+* `VDMX`: 39
+* vendoring: 48
+* verb: 28
+* `vert`: 9, 13, 15, 21, 28
+* vertical origin: 8
+* `vhal`: 21
+* `vhea`: 6, 8, 21, 39, 41, 45
+* `view`: 3
+* virama-terminated cluster: 26
+* virtual link: 40
+* `vjmo`: 23
+* `vkrn`: 20, 21, 29
+* `vmtx`: 6, 8, 21, 39, 41
+* `VORG`: 6, 8, 21, 39
+* VORG: 8
+* vowel syllable: 24
+* `vpal`: 21
+* `VPre`: 24, 25, 26
+* `VPst`: 24, 25, 26
+* `vrt2`: 21
+* `vrtr`: 21
+* `VVAR`: 6, 8, 39, 41, 47
+* `wasm`: 2, 11, 43
+* `Wasm`: 11
+* `wdth`: 43, 45
+* weight axis: 30
+* `wght`: 33, 45
+* whence: 40
+* work budget: 34
+* `xhgt`: 8
+* `xMin`: 8
+* `xreq`: 13
+* `yMax`: 8
+* Zawgyi: 14
+* `zero`: 8, 13, 19
+* `zlib`: 2
+* `ZWNJ`: 24, 26
 
 ## The code index so far
 
-* `-khmer.cc`: 8, 25
-* `-myanmar.cc`: 8, 25
-* `-use.cc`: 8, 25
-* `AAT::Lookup`: 2
-* `AAT::SettingName`: 2
-* `AddFontMemResourceEx`: 9
-* `AllDirections`: 26
-* `AnchorFormat2.hh`: 16
-* `AnchorFormat3.hh`: 3
-* `AnchorMatrix`: 3
-* `AnchorMatrix.hh`: 3
-* `aots/update.py`: 41
-* `ArabicPUASimplified.txt`: 20
-* `ArabicPUATraditional.txt`: 20
-* `ArabicShaping-18.0.0.txt`: 20
-* `ArabicShaping.txt`: 20, 24
-* `Array16Of`: 2
-* `Array16OfOffset16To`: 2
-* `Array24Of`: 2
-* `Array32Of`: 2
-* `ArrayOf`: 2
-* `ArrayOfM1`: 2
-* `AVAR2-INSTANCING.md`: 37
-* `BaseType`: 2
-* `BinSearchArrayOf`: 2, 18
-* `BinSearchHeader`: 2
-* `Blocks.txt`: 20, 22, 24
-* `build-fonts.py`: 2, 21, 36
-* `CBDT.hh`: 33
-* `CCC22`: 7
-* `CCC26`: 7, 20
-* `CFF2`: 6
-* `ChainSubtable`: 26
-* `CHANGELOG.md`: 42
-* `ClassDef_remap_and_serialize`: 35
-* `COLR.hh`: 3, 33
-* `colrv1-depend.hh`: 38
-* `CompositeGlyph.hh`: 32
-* `Coverage.hh`: 2
-* `CoverageFormat1_3`: 2
-* `CoverageFormat2.hh`: 3, 35
-* `CPAL.hh`: 33
-* `CrapOrNull`: 2
-* `CreateFileMapping`: 4
-* `CrossStream`: 18, 27
-* `CursivePos`: 3
-* `CursivePosFormat1.hh`: 3, 16, 19
-* `D0`: 23
-* `DefaultMinMax`: 39
-* `DeltaSetIndexMap`: 29
-* `depend-api.md`: 38
-* `depend-graph.cc`: 38
-* `depend-implementation.md`: 38
-* `DerivedCoreProperties.txt`: 24
-* `docs/depend-api.md`: 38
-* `docs/depend-for-closure.md`: 35, 38
-* `docs/depend-implementation.md`: 38
-* `docs/repacker.md`: 36, 41
-* `docs/serializer.md`: 36, 41
-* `docs/subset-preprocessing.md`: 35
-* `docs/wasm-shaper.md`: 9
-* `dump.py`: 2
-* `emoji-data.txt`: 7
-* `ExtendedTypes`: 26, 27
-* `F16DOT16`: 2
-* `F2DOT14`: 2
-* `FeatureTableSubstitution`: 11
-* `FeatureVariations`: 10, 11
-* `fonts/aat-inside-harfbuzz/build-fonts.py`: 26
-* `fonts/aat-positioning/build-fonts.py`: 27
-* `fonts/aat-positioning/views.py`: 27
-* `fonts/choosing-a-script-shaper/build-fonts.py`: 12
-* `fonts/colour/build-colour-fonts.py`: 33
-* `fonts/fonts-and-font-functions/build-font.py`: 5
-* `fonts/fonts-as-bytes/dump.py`: 2
-* `fonts/from-features-to-lookups/build-fonts.py`: 11
-* `fonts/hb-depend/build-font.py`: 38
-* `fonts/hb-depend/closures.txt`: 38
-* `fonts/hb-depend/depend-graph.cc`: 38
-* `fonts/instancing/build-instancing-fonts.py`: 37
-* `fonts/instancing/featvars-summary.txt`: 37
-* `fonts/joining-scripts/build-fonts.py`: 20
-* `fonts/khmer-and-myanmar/build-fonts.py`: 23
-* `fonts/legacy-kern/build-fonts.py`: 18
-* `fonts/other-tables/build-fonts.py`: 39
-* `fonts/shape-plans-and-their-cache/build-fonts.py`: 10
-* `fonts/subsetting/build-subsetting-fonts.py`: 35
-* `fonts/subsetting/math-summary.txt`: 35
-* `fonts/the-indic-model/build-fonts.py`: 22
-* `fonts/the-universal-shaping-engine/build-fonts.py`: 24
-* `fonts/variable-components/lsb.py`: 31
-* `fonts/variable-components/no-reset.py`: 31
-* `fonts/variable-components/varc-dump.py`: 31
-* `fonts/vertical-text/build-fonts.py`: 19
-* `fonts/where-metrics-come-from/build-metrics-fonts.py`: 6
-* `fonts/writing-tables/forty-subset.repack-log.txt`: 36
-* `fonts/writing-tables/layout.py`: 36
-* `fonts/writing-tables/serialize-example.cc`: 36
-* `fonts/writing-tables/sixty-subset.repack-log.txt`: 36
-* `fontTools/subset/cff.py`: 35
-* `fontTools/ttLib/tables/otBase.py`: 36
-* `gen-arabic-joining-list.py`: 20
-* `gen-arabic-pua.py`: 20
-* `gen-arabic-table.py`: 7, 20
-* `gen-gpu-shader-artifacts.py`: 34
-* `gen-indic-table.py`: 7, 22, 23
-* `gen-ragel-artifacts.py`: 22
-* `gen-tag-table.py`: 12, 21
-* `gen-ucd-table.py`: 7
-* `gen-use-table.py`: 7, 24, 25
-* `gen-vowel-constraints.py`: 7, 25
-* `generate-cff2-nested-delta-font.py`: 41
-* `generate-expected-outputs.py`: 41
-* `glyf.hh`: 3, 32
-* `glyf1-cubicOutlines.md`: 32
-* `Glyph.hh`: 30, 32
-* `GPOS.hh`: 16, 19
-* `graph::serialize`: 36
-* `graph/graph-result.hh`: 36
-* `graph/graph.hh`: 36
-* `graph/gsubgpos-graph.hh`: 36
-* `graph/ligature-graph.hh`: 36
-* `graph/serialize.hh`: 36
-* `harfbuzz-subset.cc`: 38
-* `harfbuzz-world.cc`: 34
-* `HARFBUZZ.md`: 42
-* `harfrust_capi/README.md`: 42
-* `HarfRustShaping`: 42
-* `hb_aat_layout_feature_type_get_name_id`: 26
-* `hb_aat_layout_feature_type_get_selector_infos`: 26
-* `hb_aat_layout_find_feature_mapping`: 26
-* `hb_aat_layout_get_feature_types`: 26
-* `hb_aat_layout_has_substitution`: 26
-* `hb_aat_layout_has_tracking`: 27
-* `hb_aat_layout_position`: 27
-* `hb_aat_layout_substitute`: 13, 26
-* `hb_aat_layout_track`: 27
-* `HB_AAT_MAX_SUBTABLES`: 18, 26, 27
-* `hb_accelerate_subtables_context_t`: 2
-* `_hb_all_shapers`: 9
-* `_hb_apply_morx`: 12, 19, 26
-* `HB_ARABIC_GENERAL_CATEGORY_IS_WORD`: 20
-* `hb_auto_trace_t`: 41
-* `hb_barrier`: 2, 3
-* `hb_blob_copy_writable_or_fail`: 4
-* `hb_blob_create`: 4
-* `hb_blob_create_from_file_or_fail`: 4
-* `hb_blob_create_or_fail`: 4
-* `hb_blob_create_sub_blob`: 4
-* `hb_blob_destroy`: 4
-* `hb_blob_get_data_writable`: 4
-* `hb_blob_get_empty`: 4
-* `hb_blob_ptr_t`: 2
-* `_hb_blob_read_file`: 4
-* `_hb_blob_try_mmap`: 4
-* `HB_BUDGET_AAT_MAP`: 26
-* `HB_BUDGET_DEFAULT`: 32
-* `HB_BUDGET_GLYPH`: 32, 33
-* `HB_BUDGET_RASTER_PIXELS`: 34
-* `HB_BUDGET_SUBSET_GLYF`: 37
-* `HB_BUDGET_UNLIMITED`: 32
-* `hb_buffer_add`: 8, 40
-* `hb_buffer_add_utf`: 8, 40
+* `-khmer.cc`: 10, 27
+* `-myanmar.cc`: 10, 27
+* `-use.cc`: 10, 27
+* `.ci/win64-cross-file.txt`: 2
+* `AAT::Lookup`: 4
+* `AAT::SettingName`: 4
+* `aat/morx.rs`: 47
+* `AddFontMemResourceEx`: 11
+* `AGENTS.md`: 2
+* `AllDirections`: 28
+* `AnchorFormat2.hh`: 18
+* `AnchorFormat3.hh`: 5
+* `AnchorMatrix`: 5
+* `AnchorMatrix.hh`: 5
+* `aots/update.py`: 46
+* `ArabicPUASimplified.txt`: 22
+* `ArabicPUATraditional.txt`: 22
+* `ArabicShaping-18.0.0.txt`: 22
+* `ArabicShaping.txt`: 22, 26
+* `Array16Of`: 4
+* `Array16OfOffset16To`: 4
+* `Array24Of`: 4
+* `Array32Of`: 4
+* `ArrayOf`: 4
+* `ArrayOfM1`: 4
+* `AVAR2-INSTANCING.md`: 41
+* `BaseType`: 4
+* `batch.hh`: 3
+* `BinSearchArrayOf`: 4, 20
+* `BinSearchHeader`: 4
+* `Blocks.txt`: 22, 24, 26
+* `buffer.rs`: 47
+* `build-fonts.py`: 4, 23, 40
+* `BUILD.md`: 2
+* `build/meson-logs/testlog.txt`: 2
+* `build/src/hb-features.h`: 38
+* `CBDT.hh`: 35
+* `CCC22`: 9
+* `CCC26`: 9, 22
+* `cff/hint.rs`: 36
+* `CFF2`: 8, 47
+* `ChainSubtable`: 28
+* `CHANGELOG.md`: 47, 48
+* `ClassDef_remap_and_serialize`: 39
+* `CMakeLists.txt`: 2
+* `ColorPainter`: 47
+* `COLR.hh`: 5, 35
+* `colrv1-depend.hh`: 42
+* `compilers/detect.py`: 2
+* `CompositeGlyph.hh`: 34
+* `config.h`: 2
+* `CONFIG.md`: 2, 44, 46
+* `ContentType`: 47
+* `Coverage.hh`: 4
+* `CoverageFormat1_3`: 4
+* `CoverageFormat2.hh`: 5, 39
+* `CPAL.hh`: 35
+* `CrapOrNull`: 4
+* `CreateFileMapping`: 6
+* `CrossStream`: 20, 29
+* `CursivePos`: 5
+* `CursivePosFormat1.hh`: 5, 18, 21
+* `D0`: 25
+* `DefaultMinMax`: 45
+* `DeltaSetIndexMap`: 31
+* `depend-api.md`: 42
+* `depend-graph.cc`: 42
+* `depend-implementation.md`: 42
+* `DerivedCoreProperties.txt`: 26
+* `docs/depend-api.md`: 42
+* `docs/depend-for-closure.md`: 39, 42
+* `docs/depend-implementation.md`: 42
+* `docs/ragel.md`: 47
+* `docs/repacker.md`: 40, 46
+* `docs/serializer.md`: 40, 46
+* `docs/subset-preprocessing.md`: 39
+* `docs/wasm-shaper.md`: 11
+* `draw.rs`: 47
+* `DrawSettings`: 47
+* `dump.py`: 4
+* `emoji-data.txt`: 9
+* `ExtendedTypes`: 28, 29
+* `F16DOT16`: 4
+* `F2DOT14`: 4
+* `face-options.hh`: 3
+* `fallback.rs`: 47
+* `FeatureTableSubstitution`: 13
+* `FeatureVariations`: 12, 13
+* `font-options.hh`: 3
+* `FontFuncs`: 47
+* `FontRef`: 47
+* `fonts/aat-inside-harfbuzz/build-fonts.py`: 28
+* `fonts/aat-positioning/build-fonts.py`: 29
+* `fonts/aat-positioning/views.py`: 29
+* `fonts/choosing-a-script-shaper/build-fonts.py`: 14
+* `fonts/color/build-color-fonts.py`: 35
+* `fonts/fonts-and-font-functions/build-font.py`: 7
+* `fonts/fonts-as-bytes/dump.py`: 4
+* `fonts/from-features-to-lookups/build-fonts.py`: 13
+* `fonts/hb-depend/build-font.py`: 42
+* `fonts/hb-depend/closures.txt`: 42
+* `fonts/hb-depend/depend-graph.cc`: 42
+* `fonts/instancing/build-instancing-fonts.py`: 41
+* `fonts/instancing/featvars-summary.txt`: 41
+* `fonts/joining-scripts/build-fonts.py`: 22
+* `fonts/khmer-and-myanmar/build-fonts.py`: 25
+* `fonts/legacy-kern/build-fonts.py`: 20
+* `fonts/other-tables/build-fonts.py`: 45
+* `fonts/shape-plans-and-their-cache/build-fonts.py`: 12
+* `fonts/subsetting/build-subsetting-fonts.py`: 39
+* `fonts/subsetting/math-summary.txt`: 39
+* `fonts/the-indic-model/build-fonts.py`: 24
+* `fonts/the-universal-shaping-engine/build-fonts.py`: 26
+* `fonts/variable-components/lsb.py`: 33
+* `fonts/variable-components/no-reset.py`: 33
+* `fonts/variable-components/varc-dump.py`: 33
+* `fonts/vertical-text/build-fonts.py`: 21
+* `fonts/where-metrics-come-from/build-metrics-fonts.py`: 8
+* `fonts/writing-tables/forty-subset.repack-log.txt`: 40
+* `fonts/writing-tables/layout.py`: 40
+* `fonts/writing-tables/serialize-example.cc`: 40
+* `fonts/writing-tables/sixty-subset.repack-log.txt`: 40
+* `fontTools/subset/cff.py`: 39
+* `fontTools/ttLib/tables/otBase.py`: 40
+* `freetype.h`: 36
+* `gen-arabic-joining-list.py`: 22
+* `gen-arabic-pua.py`: 22
+* `gen-arabic-table.py`: 9, 22
+* `gen-gpu-shader-artifacts.py`: 38
+* `gen-harfbuzz-world.py`: 2
+* `gen-harfbuzzcc.py`: 2
+* `gen-indic-table.py`: 9, 24, 25
+* `gen-ragel-artifacts.py`: 24
+* `gen-tag-table.py`: 14, 23
+* `gen-ucd-table.py`: 9
+* `gen-use-table.py`: 9, 26, 27
+* `gen-vowel-constraints.py`: 9, 27
+* `generate-cff2-nested-delta-font.py`: 46
+* `generate-expected-outputs.py`: 46
+* `GetFontData`: 44
+* `glyf.hh`: 5, 34
+* `glyf1-cubicOutlines.md`: 34
+* `Glyph.hh`: 32, 34
+* `GlyphInfo`: 47
+* `GlyphPosition`: 47
+* `GPOS.hh`: 18, 21
+* `gpu-output.hh`: 3
+* `graph::serialize`: 40
+* `graph/graph-result.hh`: 40
+* `graph/graph.hh`: 40
+* `graph/gsubgpos-graph.hh`: 40
+* `graph/ligature-graph.hh`: 40
+* `graph/serialize.hh`: 40
+* `harfbuzz-subset.cc`: 2, 42
+* `harfbuzz-world.cc`: 2, 46
+* `harfbuzz.cc`: 2
+* `HARFBUZZ.md`: 47, 48
+* `harfrust_capi/include/hr-hb-draw.h`: 47
+* `harfrust_capi/include/hr-hb.h`: 47
+* `harfrust_capi/README.md`: 47, 48
+* `harfrust_capi/src/draw.rs`: 47
+* `harfrust_capi/src/paint/backend.rs`: 47
+* `harfrust_capi/src/rendering.rs`: 47
+* `harfrust_capi/src/subset/mod.rs`: 47
+* `harfrust/benches/shaping.rs`: 47
+* `harfrust/src/aat/kerx.rs`: 47
+* `harfrust/src/aat/map.rs`: 47
+* `harfrust/src/aat/morx.rs`: 47
+* `harfrust/src/lib.rs`: 47
+* `harfrust/src/shape.rs`: 47
+* `harfrust/src/shaper_font.rs`: 47
+* `harfrust/tests/shaping/in_house.rs`: 47
+* `HarfRustShaping`: 48
+* `hb_aat_layout_feature_type_get_name_id`: 28
+* `hb_aat_layout_feature_type_get_selector_infos`: 28
+* `hb_aat_layout_find_feature_mapping`: 28
+* `hb_aat_layout_get_feature_types`: 28
+* `hb_aat_layout_has_substitution`: 28
+* `hb_aat_layout_has_tracking`: 29
+* `hb_aat_layout_position`: 29
+* `hb_aat_layout_substitute`: 15, 28
+* `hb_aat_layout_track`: 29
+* `HB_AAT_MAX_SUBTABLES`: 20, 28, 29
+* `hb_accelerate_subtables_context_t`: 4
+* `_hb_all_shapers`: 11
+* `_hb_apply_morx`: 14, 21, 28
+* `HB_ARABIC_GENERAL_CATEGORY_IS_WORD`: 22
+* `hb_auto_trace_t`: 46
+* `hb_barrier`: 4, 5
+* `hb_blob_copy_writable_or_fail`: 6
+* `hb_blob_create`: 6
+* `hb_blob_create_from_file_or_fail`: 6
+* `hb_blob_create_or_fail`: 6
+* `hb_blob_create_sub_blob`: 6
+* `hb_blob_destroy`: 6
+* `hb_blob_get_data_writable`: 6
+* `hb_blob_get_empty`: 6
+* `hb_blob_ptr_t`: 4
+* `_hb_blob_read_file`: 6
+* `hb_blob_t`: 38
+* `_hb_blob_try_mmap`: 6
+* `HB_BUDGET_AAT_MAP`: 28
+* `HB_BUDGET_DEFAULT`: 34
+* `HB_BUDGET_GLYPH`: 34, 35
+* `HB_BUDGET_RASTER_PAINT_PASSES`: 36
+* `HB_BUDGET_RASTER_PIXELS`: 36
+* `HB_BUDGET_SUBSET_GLYF`: 41
+* `HB_BUDGET_UNLIMITED`: 34
+* `hb_buffer_add`: 10, 43
+* `hb_buffer_add_utf`: 10, 43
 * `hb_buffer_add_utf16`: 1
 * `hb_buffer_add_utf32`: 1
-* `hb_buffer_add_utf8`: 1, 8, 40
-* `_hb_buffer_allocate_gsubgpos_vars`: 13
-* `HB_BUFFER_ALLOCATE_VAR`: 8
-* `hb_buffer_allocation_successful`: 8, 9, 40
-* `hb_buffer_append`: 40
-* `HB_BUFFER_ASSERT_VAR`: 8
-* `hb_buffer_changed`: 8, 41
-* `hb_buffer_clear_contents`: 8, 40
-* `HB_BUFFER_CLUSTER_LEVEL_IS_MONOTONE`: 8
-* `HB_BUFFER_CLUSTER_LEVEL_MONOTONE_CHARACTERS`: 42
+* `hb_buffer_add_utf8`: 1, 10, 43
+* `_hb_buffer_allocate_gsubgpos_vars`: 15
+* `HB_BUFFER_ALLOCATE_VAR`: 10
+* `hb_buffer_allocation_successful`: 10, 11, 43
+* `hb_buffer_append`: 43
+* `HB_BUFFER_ASSERT_VAR`: 10
+* `hb_buffer_changed`: 10, 46
+* `hb_buffer_clear_contents`: 10, 43
+* `HB_BUFFER_CLUSTER_LEVEL_IS_MONOTONE`: 10
+* `HB_BUFFER_CLUSTER_LEVEL_MONOTONE_CHARACTERS`: 48
 * `hb_buffer_cluster_level_t`: 1
-* `HB_BUFFER_DEALLOCATE_VAR`: 8
-* `hb_buffer_diff`: 8, 42
-* `HB_BUFFER_FLAG_DO_NOT_INSERT_DOTTED_CIRCLE`: 25
-* `HB_BUFFER_FLAG_PRESERVE_DEFAULT_IGNORABLES`: 7, 42
-* `HB_BUFFER_FLAG_PRODUCE_SAFE_TO_INSERT_TATWEEL`: 8, 40, 42
-* `HB_BUFFER_FLAG_PRODUCE_UNSAFE_TO_CONCAT`: 8, 40
-* `HB_BUFFER_FLAG_REMOVE_DEFAULT_IGNORABLES`: 7
-* `HB_BUFFER_FLAG_VERIFY`: 8, 40, 41
-* `hb_buffer_get_glyph_positions`: 8
-* `hb_buffer_guess_segment_properties`: 1, 7, 9, 12, 19, 40
-* `HB_BUFFER_MESSAGE_MORE`: 8, 15, 41
-* `hb_buffer_normalize_glyphs`: 8
-* `hb_buffer_reset`: 8
-* `hb_buffer_reverse`: 13
-* `HB_BUFFER_SCRATCH_FLAG_HAS_BROKEN_SYLLABLE`: 25
-* `HB_BUFFER_SERIALIZE_FLAG_NO_ADVANCES`: 8
-* `hb_buffer_serialize_glyphs`: 8
-* `hb_buffer_serialize_unicode`: 8
-* `hb_buffer_set_content_type`: 8
-* `hb_buffer_set_direction`: 19
-* `hb_buffer_set_invisible_glyph`: 7, 17
-* `hb_buffer_set_message_func`: 8, 41
-* `hb_buffer_set_not_found_glyph`: 14
-* `hb_buffer_set_not_found_variation_selector_glyph`: 7
-* `hb_buffer_set_random_state`: 15
-* `hb_buffer_set_unicode_funcs`: 7
-* `hb_buffer_t`: 8
-* `HB_BUFFER_TRY_ALLOCATE_VAR`: 8
-* `hb_cache_t`: 4
-* `hb_calloc_impl`: 41
-* `HB_CBDT_MAX_INDEX_ENTRIES`: 33
-* `HB_CFF_MAX_OPS`: 3, 32
-* `_hb_clear_substitution_flags`: 24
-* `hb_closure_context_t`: 2, 35
-* `hb_closure_lookups_context_t`: 2
-* `HB_CLOSURE_MAX_STAGES`: 35, 38, 41
-* `HB_CODEPOINT_INVALID`: 38
+* `HB_BUFFER_DEALLOCATE_VAR`: 10
+* `hb_buffer_diff`: 10, 47
+* `HB_BUFFER_FLAG_DO_NOT_INSERT_DOTTED_CIRCLE`: 27
+* `HB_BUFFER_FLAG_PRESERVE_DEFAULT_IGNORABLES`: 9, 48
+* `HB_BUFFER_FLAG_PRODUCE_SAFE_TO_INSERT_TATWEEL`: 10, 43, 48
+* `HB_BUFFER_FLAG_PRODUCE_UNSAFE_TO_CONCAT`: 10, 43
+* `HB_BUFFER_FLAG_REMOVE_DEFAULT_IGNORABLES`: 9
+* `HB_BUFFER_FLAG_VERIFY`: 10, 43, 46
+* `hb_buffer_get_glyph_positions`: 10
+* `hb_buffer_guess_segment_properties`: 1, 3, 9, 11, 14, 21, 43, 44
+* `HB_BUFFER_MESSAGE_MORE`: 2, 3, 10, 17, 46
+* `hb_buffer_normalize_glyphs`: 10
+* `hb_buffer_reset`: 10
+* `hb_buffer_reverse`: 15
+* `HB_BUFFER_SCRATCH_FLAG_HAS_BROKEN_SYLLABLE`: 27
+* `HB_BUFFER_SERIALIZE_FLAG_NO_ADVANCES`: 10
+* `hb_buffer_serialize_glyphs`: 10
+* `hb_buffer_serialize_unicode`: 10
+* `hb_buffer_set_content_type`: 10
+* `hb_buffer_set_direction`: 21
+* `hb_buffer_set_invisible_glyph`: 9, 19
+* `hb_buffer_set_message_func`: 10, 46
+* `hb_buffer_set_not_found_glyph`: 16
+* `hb_buffer_set_not_found_variation_selector_glyph`: 9
+* `hb_buffer_set_random_state`: 17
+* `hb_buffer_set_unicode_funcs`: 9, 44
+* `hb_buffer_t`: 10, 47
+* `HB_BUFFER_TRY_ALLOCATE_VAR`: 10
+* `HB_BUILD_UTILS`: 2
+* `hb_cache_t`: 6
+* `hb_cairo_font_face_create_for_font`: 44
+* `hb_cairo_font_face_set_font_init_func`: 44
+* `hb_cairo_font_face_set_scale_factor`: 44
+* `hb_cairo_glyphs_from_buffer`: 44
+* `hb_calloc_impl`: 46
+* `HB_CBDT_MAX_INDEX_ENTRIES`: 35
+* `HB_CFF_MAX_OPS`: 5, 34
+* `_hb_clear_substitution_flags`: 26
+* `hb_closure_context_t`: 4, 39
+* `hb_closure_lookups_context_t`: 4
+* `HB_CLOSURE_MAX_STAGES`: 39, 42, 46
+* `HB_CODEPOINT_INVALID`: 42
 * `hb_codepoint_t`: 1
-* `hb_collect_glyphs_context_t`: 2
-* `hb_color_line_get_color_stops`: 33
-* `hb_color_line_get_extend`: 33
-* `hb_color_line_t`: 33
-* `hb_color_stop_t`: 33
-* `hb_color_t`: 33
-* `HB_CORETEXT_DEFAULT_FONT_SIZE`: 9, 27
-* `HB_CUSTOM_MALLOC`: 41
-* `_hb_debug`: 41
-* `HB_DEBUG_APPLY`: 41
-* `HB_DEBUG_PAINT`: 41
-* `HB_DEBUG_SANITIZE`: 3, 41
-* `HB_DEBUG_SHAPE_PLAN`: 10, 41
-* `HB_DEBUG_SUBSET`: 36, 41
-* `HB_DEBUG_SUBSET_REPACK`: 36
-* `hb_decycler_t`: 33
-* `HB_DELETE_CREATE_COPY_ASSIGN`: 2
-* `HB_DEPEND_CONTEXT_SET_FLAG`: 38
-* `hb_depend_context_t`: 2, 38
-* `hb_depend_data_t`: 38
-* `HB_DIRECTION_BTT`: 19
-* `HB_DIRECTION_IS_BACKWARD`: 19
-* `HB_DIRECTION_IS_VERTICAL`: 19, 39
-* `HB_DIRECTION_REVERSE`: 19
-* `hb_direction_t`: 1, 19
-* `HB_DIRECTION_TTB`: 19
-* `HB_DISABLE_DEPRECATED`: 17
-* `hb_dispatch_context_t`: 2
-* `hb_draw_circle`: 32
-* `hb_draw_funcs_t`: 32
-* `hb_draw_get_budget_remaining`: 32
-* `hb_draw_line`: 32
-* `hb_draw_rectangle`: 32
-* `hb_draw_session_t`: 32
-* `hb_draw_set_budget`: 32
-* `hb_draw_state_t`: 32
-* `hb_dual_accelerator_t`: 2
-* `hb_ensure_native_direction`: 8, 13, 19
-* `HB_EXPERIMENTAL_API`: 35, 38
-* `hb_face_builder_add_table`: 4
-* `hb_face_builder_create`: 4
-* `hb_face_count`: 4
-* `hb_face_create`: 2, 4
-* `hb_face_create_for_tables`: 4, 35
-* `hb_face_create_from_file_or_fail_using`: 4
-* `hb_face_create_or_fail`: 2, 4
-* `hb_face_create_or_fail_using`: 4
-* `hb_face_destroy`: 10
-* `_hb_face_for_data_reference_table`: 2, 4
-* `hb_face_get_empty`: 9, 10
-* `hb_face_lazy_loader_t`: 4
-* `hb_face_list_loaders`: 4
-* `HB_FACE_LOADER`: 4, 41
-* `hb_face_reference_blob`: 4, 35
-* `hb_face_reference_table`: 4
-* `hb_face_set_get_table_tags_func`: 4
-* `hb_face_set_glyph_count`: 4
-* `hb_face_set_index`: 4
-* `hb_face_set_upem`: 4
-* `hb_face_t`: 4, 9
-* `HB_FAST_NUM_ACCESS`: 2
-* `HB_FEATURE_GLOBAL_END`: 10
-* `hb_feature_t`: 1, 26, 40
-* `_hb_font_adopt_var_coords`: 5, 28
-* `hb_font_changed`: 5
-* `hb_font_create`: 2, 4, 5
-* `_hb_font_create`: 5
-* `hb_font_create_sub_font`: 5
-* `hb_font_draw_glyph`: 32, 34
-* `hb_font_draw_glyph_or_fail`: 32
-* `hb_font_draw_glyph_or_fail_default`: 5
-* `hb_font_extents_t`: 6
-* `HB_FONT_FUNC_IMPLEMENT`: 5
-* `HB_FONT_FUNCS`: 5
-* `hb_font_funcs_create`: 5
-* `_hb_font_funcs_default`: 5
-* `hb_font_funcs_get_empty`: 5, 7
-* `hb_font_funcs_set_glyph_h_kerning_func`: 17
-* `hb_font_funcs_t`: 5
-* `hb_font_get_empty`: 5
-* `hb_font_get_glyph_h_advance`: 5
-* `hb_font_get_nominal_glyph`: 38, 40
-* `hb_font_get_serial`: 5
-* `hb_font_get_var_coords_design`: 28
-* `hb_font_get_variation_glyph`: 38
-* `hb_font_list_funcs`: 5
-* `hb_font_make_immutable`: 5
-* `HB_FONT_NO_VAR_NAMED_INSTANCE`: 5
-* `hb_font_paint_glyph`: 33, 34
-* `hb_font_paint_glyph_or_fail`: 33, 34
-* `hb_font_set_face`: 5
-* `hb_font_set_funcs`: 5
-* `hb_font_set_funcs_using`: 5
-* `hb_font_set_parent`: 5
-* `hb_font_set_scale`: 5
-* `hb_font_set_synthetic_bold`: 5
-* `hb_font_set_synthetic_slant`: 5
-* `hb_font_set_var_coords_design`: 5, 28
-* `hb_font_set_var_coords_normalized`: 5, 28
-* `hb_font_set_var_named_instance`: 5, 28
-* `hb_font_set_variation`: 5, 28
-* `hb_font_set_variations`: 5, 28, 37
-* `hb_font_t`: 4, 5, 6, 9, 37, 41
-* `hb_form_clusters`: 1, 8, 13
-* `hb_ft_font_create`: 5, 42
-* `hb_ft_font_set_funcs`: 5
-* `hb_ft_get_glyph_h_kerning`: 17
-* `HB_GLYF_MAX_POINTS`: 32
-* `hb_glyph_extents_t`: 6
-* `hb_glyph_info_get_glyph_flags`: 8
-* `_hb_glyph_info_is_default_ignorable`: 7
-* `_hb_glyph_info_is_zwj`: 7
-* `_hb_glyph_info_set_unicode_props`: 7
-* `hb_glyph_info_t`: 1, 8, 40
-* `hb_glyph_position_t`: 1, 8
-* `HB_GPU_ATLAS_2D`: 34
-* `hb_gpu_dilate`: 34
-* `hb_gpu_draw`: 34
-* `hb_gpu_draw_encode`: 34
-* `hb_gpu_draw_glyph`: 34
-* `HB_GPU_DRAW_MAX_CURVES`: 34
-* `hb_gpu_draw_shader_source`: 34
-* `hb_gpu_draw_t`: 34
-* `HB_GPU_NO_MSAA`: 34
-* `hb_gpu_paint`: 34
-* `hb_gpu_paint_encode`: 34
-* `hb_gpu_paint_glyph`: 34
-* `HB_GPU_PAINT_MAX_SUB_BYTES`: 34
-* `hb_gpu_paint_shader_source`: 34
-* `hb_gpu_paint_t`: 34
-* `_hb_gpu_slug_single`: 34
-* `hb_gpu_stem_darken`: 34
-* `HB_GPU_UNITS_PER_EM`: 34
-* `HB_HAS_CAIRO`: 34
-* `HB_HAS_GPU`: 34, 41
-* `HB_HAS_GRAPHITE`: 41
-* `HB_HAS_RASTER`: 34
-* `HB_HAS_VECTOR`: 34
-* `hb_indic_get_categories`: 22, 23
-* `hb_indic_would_substitute_feature_t`: 22
-* `hb_insert_dotted_circle`: 8, 13, 25
-* `hb_kern_machine_t`: 17, 18
-* `hb_language_from_string`: 10
-* `HB_LANGUAGE_INVALID`: 39
-* `hb_language_matches`: 39
-* `hb_language_t`: 1, 10, 12, 39
-* `hb_lazy_loader_t`: 4
-* `HB_LEAN`: 9, 17, 19, 27, 33, 34, 39, 41
-* `hb_malloc_impl`: 41
-* `hb_max`: 28
-* `HB_MAX_COMPOSITE_OPERATIONS_PER_GLYPH`: 35
-* `HB_MAX_CONTEXT_LENGTH`: 15, 26, 38
-* `HB_MAX_GRAPH_EDGE_COUNT`: 32, 33
-* `HB_MAX_NESTING_LEVEL`: 3, 15, 16, 32, 33, 35, 38
-* `HB_MAX_SYLLABLE_LENGTH`: 22
-* `HB_MEMORY_MODE_DUPLICATE`: 4
-* `HB_MEMORY_MODE_READONLY`: 4
-* `HB_MEMORY_MODE_READONLY_MAY_MAKE_WRITABLE`: 3, 4
-* `HB_MEMORY_MODE_WRITABLE`: 4
-* `hb_min`: 6
-* `HB_MINI`: 2, 18, 26, 27
-* `_hb_modified_combining_class`: 7
-* `HB_MODIFIED_COMBINING_CLASS_CCC22`: 20
-* `_hb_name_shape`: 9
-* `HB_NO_AAT`: 26, 27, 39
-* `HB_NO_AAT_LAYOUT_BLOCKLIST`: 26
-* `HB_NO_AAT_SHAPE`: 18, 26, 27
-* `HB_NO_BASE`: 39
-* `HB_NO_BEYOND_64K`: 2, 33, 42
-* `HB_NO_BITMAP`: 33
-* `HB_NO_COLOR`: 4, 33, 34
-* `HB_NO_CUBIC_GLYF`: 42
-* `HB_NO_DRAW`: 33, 34
-* `HB_NO_FALLBACK_SHAPE`: 9
-* `HB_NO_GETENV`: 9
-* `HB_NO_HINTING`: 16, 41
-* `HB_NO_LANGUAGE_PRIVATE_SUBTAG`: 12
-* `HB_NO_LAYOUT_FEATURE_PARAMS`: 39
-* `HB_NO_LEGACY`: 9, 17, 18, 25, 26
-* `HB_NO_MATH`: 39
-* `HB_NO_META`: 39
-* `HB_NO_MT`: 4
-* `HB_NO_NAME`: 39
-* `HB_NO_OT`: 9
-* `HB_NO_OT_FONT`: 5
-* `HB_NO_OT_FONT_BITMAP`: 33
-* `HB_NO_OT_KERN`: 17, 18
-* `HB_NO_OT_LAYOUT_BLOCKLIST`: 3
-* `HB_NO_OT_LAYOUT_LOOKUP_CACHE`: 16
-* `HB_NO_OT_NAME_LANGUAGE`: 39
-* `HB_NO_OT_NAME_LANGUAGE_AAT`: 26, 39
-* `HB_NO_OT_SHAPE`: 9, 25, 26
-* `HB_NO_OT_SHAPE_FALLBACK`: 17, 20, 21, 25
-* `HB_NO_OT_SHAPER_ARABIC_FALLBACK`: 20
-* `HB_NO_OT_SHAPER_HEBREW_FALLBACK`: 14, 21
-* `HB_NO_OT_SHAPER_MYANMAR_ZAWGYI`: 12
-* `HB_NO_OT_SHAPER_THAI_FALLBACK`: 12, 21
-* `HB_NO_OT_SHAPER_VOWEL_CONSTRAINTS`: 25
-* `HB_NO_PAINT`: 33, 34
-* `HB_NO_RASTER`: 34
-* `HB_NO_SHAPER`: 9, 26
-* `HB_NO_STYLE`: 27, 39
-* `HB_NO_SUBSET_DEPEND`: 38
-* `HB_NO_SUBSET_LAYOUT`: 35
-* `HB_NO_SVG`: 33
-* `hb_no_trace_t`: 41
-* `HB_NO_UCD`: 7, 42
-* `HB_NO_UCD_UNASSIGNED`: 7
-* `HB_NO_UNICODE_FUNCS`: 7
-* `HB_NO_VAR`: 10
-* `HB_NO_VAR_COMPOSITES`: 31, 42
-* `HB_NO_VERTICAL`: 4, 19
-* `HB_NO_WIN1256`: 20
-* `hb_nonnull_ptr_t`: 2
-* `_hb_NullPool`: 2
-* `hb_object_create`: 4
-* `HB_OBJECT_HEADER_STATIC`: 4
-* `hb_object_is_valid`: 10
-* `hb_objects`: 36
-* `HB_OPTIMIZE_SIZE`: 7, 24
-* `hb_ot_all_tags_from_script`: 12
-* `hb_ot_apply_context_t`: 2
-* `hb_ot_color_get_svg_document_count`: 33
-* `hb_ot_color_get_svg_document_glyph_range`: 33
-* `hb_ot_color_glyph_get_layers`: 33
-* `hb_ot_color_glyph_get_svg_document_index`: 33
-* `hb_ot_color_glyph_reference_png`: 33
-* `hb_ot_color_glyph_reference_svg`: 33
-* `hb_ot_color_has_palettes`: 33
-* `hb_ot_color_has_png`: 33
-* `hb_ot_color_palette_color_get_name_id`: 33
-* `hb_ot_color_palette_get_colors`: 33
-* `hb_ot_color_palette_get_count`: 33
-* `hb_ot_color_palette_get_flags`: 33
-* `hb_ot_color_palette_get_name_id`: 33
-* `hb_ot_draw_glyph_or_fail`: 32
-* `hb_ot_face_t`: 4
-* `hb_ot_font_advance_cache_t`: 29
-* `hb_ot_font_set_funcs`: 5
-* `hb_ot_font_t`: 5, 6
-* `hb_ot_get_glyph_h_advances`: 29
-* `hb_ot_hide_default_ignorables`: 7, 8, 13
-* `hb_ot_layout_collect_features`: 35
-* `hb_ot_layout_collect_features_map`: 11
-* `hb_ot_layout_feature_get_name_ids`: 39
-* `hb_ot_layout_feature_with_variations_get_lookups`: 11
-* `hb_ot_layout_get_baseline`: 39
-* `hb_ot_layout_get_baseline_with_fallback`: 39
-* `hb_ot_layout_get_font_extents`: 39
-* `hb_ot_layout_get_font_extents2`: 39
-* `hb_ot_layout_get_horizontal_baseline_tag_for_script`: 39
-* `hb_ot_layout_get_ligature_carets`: 40
-* `hb_ot_layout_get_size_params`: 39
-* `hb_ot_layout_has_kerning`: 18
-* `hb_ot_layout_has_positioning`: 17
-* `hb_ot_layout_kern`: 18
-* `hb_ot_layout_lookup_would_substitute_with_buffer`: 22
-* `hb_ot_layout_lookups_substitute_closure`: 35
-* `_hb_ot_layout_reverse_graphemes`: 8
-* `hb_ot_layout_script_select_language2`: 12
-* `_hb_ot_layout_set_glyph_props`: 15
-* `hb_ot_layout_substitute_start`: 25
-* `hb_ot_layout_substitute_start_with_digest`: 13
-* `_hb_ot_layout_table_get_feature_variations_state`: 10
-* `hb_ot_layout_table_select_script`: 12
-* `hb_ot_map_builder_t`: 11
-* `hb_ot_map_feature_flags_t`: 11
-* `hb_ot_map_glyphs_fast`: 1, 8, 13, 14
-* `HB_OT_MAP_MAX_BITS`: 11
-* `hb_ot_map_t`: 11
-* `hb_ot_math_get_constant`: 39
-* `hb_ot_math_get_glyph_assembly`: 39
-* `hb_ot_math_get_glyph_italics_correction`: 39
-* `hb_ot_math_get_glyph_kerning`: 39
-* `hb_ot_math_get_glyph_kernings`: 39
-* `hb_ot_math_get_glyph_top_accent_attachment`: 39
-* `hb_ot_math_get_glyph_variants`: 39
-* `hb_ot_math_get_min_connector_overlap`: 39
-* `HB_OT_MATH_GLYPH_PART_FLAG_EXTENDER`: 39
-* `hb_ot_math_has_data`: 39
-* `hb_ot_math_is_glyph_extended_shape`: 39
-* `hb_ot_math_kern_entry_t`: 39
-* `HB_OT_MAX_TAGS_PER_LANGUAGE`: 12
-* `HB_OT_MAX_TAGS_PER_SCRIPT`: 12
-* `hb_ot_meta_get_entry_tags`: 39
-* `hb_ot_meta_reference_entry`: 39
-* `hb_ot_meta_tag_t`: 39
-* `hb_ot_metrics_get_position`: 5, 6, 39
-* `hb_ot_metrics_get_position_with_fallback`: 6
-* `hb_ot_metrics_tag_t`: 29
-* `hb_ot_name_convert_utf`: 39
-* `hb_ot_name_entry_t`: 39
-* `hb_ot_name_get_utf16`: 39
-* `hb_ot_name_get_utf32`: 39
-* `hb_ot_name_get_utf8`: 39
-* `hb_ot_name_list_names`: 39
-* `hb_ot_old_tag_from_script`: 12
-* `hb_ot_paint_glyph_or_fail`: 33
-* `hb_ot_position`: 8, 13
-* `hb_ot_position_default`: 5, 13, 17, 19
-* `hb_ot_position_plan`: 13, 17
-* `hb_ot_rotate_chars`: 7, 13, 14, 19
-* `_hb_ot_shape`: 9
-* `hb_ot_shape_collect_features`: 11, 13
-* `hb_ot_shape_context_t`: 13
-* `_hb_ot_shape_fallback_kern`: 17
-* `_hb_ot_shape_fallback_mark_position`: 17
-* `_hb_ot_shape_fallback_mark_position_recategorize_marks`: 17
-* `_hb_ot_shape_fallback_spaces`: 14, 17
-* `hb_ot_shape_glyphs_closure`: 10, 14
-* `hb_ot_shape_internal`: 1, 7, 8, 9, 13, 19, 25
-* `HB_OT_SHAPE_MAX_COMBINING_MARKS`: 14
-* `hb_ot_shape_normalization_mode_t`: 14
+* `hb_collect_glyphs_context_t`: 4
+* `hb_color_lerp`: 37, 46
+* `hb_color_line_get_color_stops`: 35
+* `hb_color_line_get_extend`: 35
+* `hb_color_line_t`: 35
+* `hb_color_stop_t`: 35
+* `hb_color_t`: 35
+* `HB_CORETEXT_DEFAULT_FONT_SIZE`: 11, 29
+* `hb_coretext_face_create_from_file_or_fail`: 44
+* `hb_coretext_font_get_ct_font`: 44
+* `hb_coretext_font_set_funcs`: 7, 44
+* `HB_CUSTOM_MALLOC`: 46
+* `_hb_debug`: 46
+* `HB_DEBUG_APPLY`: 46
+* `HB_DEBUG_PAINT`: 46
+* `HB_DEBUG_SANITIZE`: 5, 46
+* `HB_DEBUG_SHAPE_PLAN`: 12, 46
+* `HB_DEBUG_SUBSET`: 40, 46
+* `HB_DEBUG_SUBSET_REPACK`: 40
+* `hb_decycler_t`: 35
+* `HB_DELETE_CREATE_COPY_ASSIGN`: 4
+* `HB_DEPEND_CONTEXT_SET_FLAG`: 42
+* `hb_depend_context_t`: 4, 42
+* `hb_depend_data_t`: 42
+* `HB_DIRECTION_BTT`: 21
+* `HB_DIRECTION_IS_BACKWARD`: 21
+* `HB_DIRECTION_IS_VERTICAL`: 21, 45
+* `HB_DIRECTION_REVERSE`: 21
+* `hb_direction_t`: 1, 21
+* `HB_DIRECTION_TTB`: 21
+* `hb_directwrite_face_create`: 44
+* `hb_directwrite_face_get_dw_font_face`: 44
+* `hb_directwrite_font_create`: 44
+* `hb_directwrite_font_get_dw_font`: 44
+* `hb_directwrite_font_get_dw_font_face`: 44
+* `hb_directwrite_font_set_funcs`: 44, 46
+* `HB_DISABLE_DEPRECATED`: 19
+* `hb_dispatch_context_t`: 4
+* `HB_DRAW`: 44
+* `hb_draw_circle`: 34
+* `hb_draw_funcs_t`: 34
+* `hb_draw_get_budget_remaining`: 34
+* `hb_draw_line`: 34
+* `hb_draw_rectangle`: 34
+* `hb_draw_session_t`: 34
+* `hb_draw_set_budget`: 34
+* `hb_draw_state_t`: 34
+* `hb_dual_accelerator_t`: 4
+* `hb_ensure_native_direction`: 10, 15, 21
+* `HB_EXPERIMENTAL_API`: 2, 39, 42
+* `hb_face_builder_add_table`: 6
+* `hb_face_builder_create`: 6
+* `hb_face_count`: 6
+* `hb_face_create`: 4, 6, 44
+* `hb_face_create_for_tables`: 6, 39
+* `hb_face_create_from_file_or_fail_using`: 6
+* `hb_face_create_or_fail`: 4, 6
+* `hb_face_create_or_fail_using`: 6
+* `hb_face_destroy`: 12
+* `_hb_face_for_data_reference_table`: 4, 6
+* `hb_face_get_empty`: 11, 12
+* `hb_face_lazy_loader_t`: 6
+* `hb_face_list_loaders`: 6
+* `HB_FACE_LOADER`: 3, 6, 46
+* `hb_face_reference_blob`: 6, 39
+* `hb_face_reference_table`: 6, 47
+* `hb_face_set_get_table_tags_func`: 6
+* `hb_face_set_glyph_count`: 6
+* `hb_face_set_index`: 6
+* `hb_face_set_upem`: 6
+* `hb_face_t`: 6, 11, 47
+* `HB_FAST_NUM_ACCESS`: 4
+* `hb_feature_from_string`: 3
+* `HB_FEATURE_GLOBAL_END`: 12
+* `hb_feature_t`: 1, 28, 43, 44
+* `HB_FEATURES_H`: 2, 46
+* `_hb_font_adopt_var_coords`: 7, 30
+* `hb_font_changed`: 7
+* `hb_font_create`: 4, 6, 7
+* `_hb_font_create`: 7
+* `hb_font_create_sub_font`: 7
+* `hb_font_draw_glyph`: 34, 47
+* `hb_font_draw_glyph_or_fail`: 34, 37, 38, 44
+* `hb_font_draw_glyph_or_fail_default`: 7
+* `hb_font_extents_t`: 8
+* `HB_FONT_FUNC_IMPLEMENT`: 7
+* `HB_FONT_FUNCS`: 3, 7
+* `hb_font_funcs_create`: 7
+* `_hb_font_funcs_default`: 7
+* `hb_font_funcs_get_empty`: 7, 9
+* `hb_font_funcs_set_glyph_h_kerning_func`: 19
+* `hb_font_funcs_t`: 7, 47
+* `hb_font_get_empty`: 7
+* `hb_font_get_glyph_extents`: 36
+* `hb_font_get_glyph_h_advance`: 7
+* `hb_font_get_nominal_glyph`: 42, 43, 47
+* `hb_font_get_serial`: 7
+* `hb_font_get_var_coords_design`: 30
+* `hb_font_get_variation_glyph`: 42
+* `hb_font_list_funcs`: 7
+* `hb_font_make_immutable`: 7
+* `HB_FONT_NO_VAR_NAMED_INSTANCE`: 7
+* `hb_font_paint_glyph`: 35, 36, 37, 38, 44, 47
+* `hb_font_paint_glyph_or_fail`: 35, 36, 37, 38
+* `hb_font_set_face`: 7
+* `hb_font_set_funcs`: 7
+* `hb_font_set_funcs_using`: 7
+* `hb_font_set_parent`: 7
+* `hb_font_set_scale`: 7, 44
+* `hb_font_set_synthetic_bold`: 7
+* `hb_font_set_synthetic_slant`: 7
+* `hb_font_set_var_coords_design`: 7, 30
+* `hb_font_set_var_coords_normalized`: 7, 30
+* `hb_font_set_var_named_instance`: 7, 30
+* `hb_font_set_variation`: 7, 30
+* `hb_font_set_variations`: 7, 30, 41
+* `hb_font_t`: 6, 7, 8, 11, 41, 44, 46, 47
+* `hb_form_clusters`: 1, 10, 15
+* `hb_ft_face_create`: 44
+* `hb_ft_face_create_cached`: 44
+* `hb_ft_face_create_from_blob_or_fail`: 44
+* `hb_ft_face_create_from_file_or_fail`: 44
+* `hb_ft_face_create_referenced`: 44
+* `hb_ft_font_changed`: 44
+* `hb_ft_font_create`: 7, 48
+* `hb_ft_font_create_referenced`: 36
+* `hb_ft_font_get_ft_face`: 44
+* `hb_ft_font_lock_face`: 44
+* `hb_ft_font_set_funcs`: 7, 44, 46
+* `hb_ft_font_set_load_flags`: 36, 44
+* `hb_ft_font_unlock_face`: 44
+* `hb_ft_get_glyph_h_kerning`: 19
+* `hb_ft_hb_font_changed`: 44, 46
+* `_hb_ft_hb_font_check_changed`: 44
+* `_hb_gdi_reference_table`: 46
+* `hb_glib_blob_create`: 44
+* `hb_glib_get_unicode_funcs`: 44
+* `hb_glib_script_from_script`: 44
+* `hb_glib_script_to_script`: 44
+* `HB_GLYF_MAX_POINTS`: 34
+* `hb_glyph_extents_t`: 8
+* `hb_glyph_info_get_glyph_flags`: 10
+* `_hb_glyph_info_is_default_ignorable`: 9
+* `_hb_glyph_info_is_zwj`: 9
+* `_hb_glyph_info_set_unicode_props`: 9
+* `hb_glyph_info_t`: 1, 10, 43
+* `hb_glyph_position_t`: 1, 10, 44
+* `hb_gpu_atlas`: 38
+* `HB_GPU_ATLAS_2D`: 38
+* `hb_gpu_atlas_width`: 38
+* `_hb_gpu_calc_coverage`: 38
+* `_hb_gpu_calc_root_code`: 38
+* `_hb_gpu_composite`: 38
+* `HB_GPU_CU2QU_MAX_DEPTH`: 38
+* `hb_gpu_dilate`: 38
+* `hb_gpu_draw`: 38
+* `hb_gpu_draw_encode`: 38
+* `hb_gpu_draw_get_funcs`: 38
+* `hb_gpu_draw_glyph`: 38
+* `HB_GPU_DRAW_MAX_CURVES`: 38
+* `hb_gpu_draw_recycle_blob`: 38
+* `hb_gpu_draw_set_scale`: 38
+* `hb_gpu_draw_shader_source`: 38
+* `hb_gpu_draw_t`: 38
+* `HB_GPU_NO_MSAA`: 38
+* `hb_gpu_paint`: 38
+* `hb_gpu_paint_encode`: 38
+* `hb_gpu_paint_get_funcs`: 38
+* `hb_gpu_paint_glyph`: 38
+* `hb_gpu_paint_glyph_or_fail`: 38
+* `HB_GPU_PAINT_MAX_CLIP_DEPTH`: 38
+* `HB_GPU_PAINT_MAX_GROUP_DEPTH`: 38
+* `HB_GPU_PAINT_MAX_OPS`: 38
+* `HB_GPU_PAINT_MAX_SUB_BLOBS`: 38
+* `HB_GPU_PAINT_MAX_SUB_BYTES`: 38
+* `hb_gpu_paint_set_custom_palette_color`: 38
+* `hb_gpu_paint_set_palette`: 38
+* `hb_gpu_paint_shader_source`: 38
+* `hb_gpu_paint_t`: 38
+* `hb_gpu_ppem`: 38
+* `_hb_gpu_slug`: 38
+* `_hb_gpu_slug_single`: 38
+* `hb_gpu_stem_darken`: 36
+* `HB_GPU_UNITS_PER_EM`: 38
+* `hb_graphite2_face_get_gr_face`: 44
+* `hb_graphite2_font_get_gr_font`: 44
+* `HB_GRAPHITE2_TAG_SILF`: 44
+* `HB_HAS_CAIRO`: 44
+* `HB_HAS_FREETYPE`: 2, 44
+* `HB_HAS_GPU`: 2, 38, 46
+* `HB_HAS_GRAPHITE`: 2, 44, 46
+* `HB_HAS_ICU`: 44
+* `HB_HAS_RASTER`: 2
+* `HB_HAS_SUBSET`: 2
+* `HB_HAS_VECTOR`: 2
+* `HB_HAVE_FREETYPE`: 2
+* `hb_icu_get_unicode_funcs`: 44
+* `hb_icu_script_from_script`: 44
+* `hb_icu_script_to_script`: 44
+* `hb_indic_get_categories`: 24, 25
+* `hb_indic_would_substitute_feature_t`: 24
+* `hb_insert_dotted_circle`: 10, 15, 27
+* `hb_kern_machine_t`: 19, 20
+* `hb_language_from_string`: 12
+* `HB_LANGUAGE_INVALID`: 45
+* `hb_language_matches`: 45
+* `hb_language_t`: 1, 12, 14, 45
+* `hb_lazy_loader_t`: 6
+* `HB_LEAN`: 2, 11, 19, 21, 29, 35, 45, 46
+* `hb_malloc_impl`: 46
+* `hb_max`: 30
+* `HB_MAX_COMPOSITE_OPERATIONS_PER_GLYPH`: 39
+* `HB_MAX_CONTEXT_LENGTH`: 17, 28, 42
+* `HB_MAX_GRAPH_EDGE_COUNT`: 34, 35
+* `HB_MAX_NESTING_LEVEL`: 5, 17, 18, 34, 35, 39, 42
+* `HB_MAX_SYLLABLE_LENGTH`: 24
+* `HB_MEMORY_MODE_DUPLICATE`: 6
+* `HB_MEMORY_MODE_READONLY`: 6
+* `HB_MEMORY_MODE_READONLY_MAY_MAKE_WRITABLE`: 5, 6
+* `HB_MEMORY_MODE_WRITABLE`: 6
+* `hb_min`: 8
+* `HB_MINI`: 2, 4, 20, 28, 29, 46
+* `_hb_modified_combining_class`: 9
+* `HB_MODIFIED_COMBINING_CLASS_CCC22`: 22
+* `_hb_name_shape`: 11
+* `HB_NO_AAT`: 28, 29, 45
+* `HB_NO_AAT_LAYOUT_BLOCKLIST`: 28
+* `HB_NO_AAT_SHAPE`: 20, 28, 29
+* `HB_NO_BASE`: 45
+* `HB_NO_BEYOND_64K`: 4, 35, 48
+* `HB_NO_BITMAP`: 35
+* `HB_NO_COLOR`: 6, 35
+* `HB_NO_CUBIC_GLYF`: 48
+* `HB_NO_DRAW`: 35
+* `HB_NO_FALLBACK_SHAPE`: 11
+* `HB_NO_GETENV`: 11
+* `HB_NO_HINTING`: 18, 46
+* `HB_NO_LANGUAGE_PRIVATE_SUBTAG`: 14
+* `HB_NO_LAYOUT_FEATURE_PARAMS`: 45
+* `HB_NO_LEGACY`: 11, 19, 20, 27, 28
+* `HB_NO_MATH`: 45
+* `HB_NO_META`: 45
+* `HB_NO_MT`: 6
+* `HB_NO_NAME`: 45
+* `HB_NO_OT`: 11
+* `HB_NO_OT_FONT`: 7
+* `HB_NO_OT_FONT_BITMAP`: 35
+* `HB_NO_OT_KERN`: 19, 20
+* `HB_NO_OT_LAYOUT_BLOCKLIST`: 5
+* `HB_NO_OT_LAYOUT_LOOKUP_CACHE`: 18
+* `HB_NO_OT_NAME_LANGUAGE`: 45
+* `HB_NO_OT_NAME_LANGUAGE_AAT`: 28, 45
+* `HB_NO_OT_SHAPE`: 11, 27, 28
+* `HB_NO_OT_SHAPE_FALLBACK`: 19, 22, 23, 27
+* `HB_NO_OT_SHAPER_ARABIC_FALLBACK`: 22
+* `HB_NO_OT_SHAPER_HEBREW_FALLBACK`: 16, 23
+* `HB_NO_OT_SHAPER_MYANMAR_ZAWGYI`: 14
+* `HB_NO_OT_SHAPER_THAI_FALLBACK`: 14, 23
+* `HB_NO_OT_SHAPER_VOWEL_CONSTRAINTS`: 27
+* `HB_NO_PAINT`: 35
+* `HB_NO_SHAPER`: 11, 28
+* `HB_NO_STYLE`: 29, 45
+* `HB_NO_SUBSET_DEPEND`: 42
+* `HB_NO_SUBSET_LAYOUT`: 39
+* `HB_NO_SVG`: 35
+* `hb_no_trace_t`: 46
+* `HB_NO_UCD`: 9, 44, 48
+* `HB_NO_UCD_UNASSIGNED`: 9
+* `HB_NO_UNICODE_FUNCS`: 9
+* `HB_NO_VAR`: 12
+* `HB_NO_VAR_COMPOSITES`: 33, 48
+* `HB_NO_VERTICAL`: 6, 21
+* `HB_NO_WIN1256`: 22
+* `hb_nonnull_ptr_t`: 4
+* `_hb_NullPool`: 4
+* `hb_object_create`: 6
+* `HB_OBJECT_HEADER_STATIC`: 6
+* `hb_object_is_valid`: 12
+* `hb_objects`: 40
+* `HB_OPTIMIZE_SIZE`: 9, 26
+* `hb_ot_all_tags_from_script`: 14
+* `hb_ot_apply_context_t`: 4
+* `hb_ot_color_get_svg_document_count`: 35
+* `hb_ot_color_get_svg_document_glyph_range`: 35
+* `hb_ot_color_glyph_get_layers`: 35
+* `hb_ot_color_glyph_get_svg_document_index`: 35
+* `hb_ot_color_glyph_reference_png`: 35
+* `hb_ot_color_glyph_reference_svg`: 35
+* `hb_ot_color_has_palettes`: 35
+* `hb_ot_color_has_png`: 35
+* `hb_ot_color_palette_color_get_name_id`: 35
+* `hb_ot_color_palette_get_colors`: 35
+* `hb_ot_color_palette_get_count`: 35
+* `hb_ot_color_palette_get_flags`: 35
+* `hb_ot_color_palette_get_name_id`: 35
+* `hb_ot_draw_glyph_or_fail`: 34
+* `hb_ot_face_t`: 6
+* `hb_ot_font_advance_cache_t`: 31
+* `hb_ot_font_set_funcs`: 7
+* `hb_ot_font_t`: 7, 8
+* `hb_ot_get_glyph_h_advances`: 31
+* `hb_ot_hide_default_ignorables`: 9, 10, 15
+* `hb_ot_layout_collect_features`: 39
+* `hb_ot_layout_collect_features_map`: 13
+* `hb_ot_layout_feature_get_name_ids`: 45
+* `hb_ot_layout_feature_with_variations_get_lookups`: 13
+* `hb_ot_layout_get_baseline`: 45
+* `hb_ot_layout_get_baseline_with_fallback`: 45
+* `hb_ot_layout_get_font_extents`: 45
+* `hb_ot_layout_get_font_extents2`: 45
+* `hb_ot_layout_get_horizontal_baseline_tag_for_script`: 45
+* `hb_ot_layout_get_ligature_carets`: 43
+* `hb_ot_layout_get_size_params`: 45
+* `hb_ot_layout_has_kerning`: 20
+* `hb_ot_layout_has_positioning`: 19
+* `hb_ot_layout_kern`: 20
+* `hb_ot_layout_lookup_would_substitute_with_buffer`: 24
+* `hb_ot_layout_lookups_substitute_closure`: 39
+* `_hb_ot_layout_reverse_graphemes`: 10
+* `hb_ot_layout_script_select_language2`: 14
+* `_hb_ot_layout_set_glyph_props`: 17
+* `hb_ot_layout_substitute_start`: 27
+* `hb_ot_layout_substitute_start_with_digest`: 15
+* `_hb_ot_layout_table_get_feature_variations_state`: 12
+* `hb_ot_layout_table_select_script`: 14
+* `hb_ot_map_builder_t`: 13
+* `hb_ot_map_feature_flags_t`: 13
+* `hb_ot_map_glyphs_fast`: 1, 10, 15, 16
+* `HB_OT_MAP_MAX_BITS`: 13
+* `hb_ot_map_t`: 13
+* `hb_ot_math_get_constant`: 45
+* `hb_ot_math_get_glyph_assembly`: 45
+* `hb_ot_math_get_glyph_italics_correction`: 45
+* `hb_ot_math_get_glyph_kerning`: 45
+* `hb_ot_math_get_glyph_kernings`: 45
+* `hb_ot_math_get_glyph_top_accent_attachment`: 45
+* `hb_ot_math_get_glyph_variants`: 45
+* `hb_ot_math_get_min_connector_overlap`: 45
+* `HB_OT_MATH_GLYPH_PART_FLAG_EXTENDER`: 45
+* `hb_ot_math_has_data`: 45
+* `hb_ot_math_is_glyph_extended_shape`: 45
+* `hb_ot_math_kern_entry_t`: 45
+* `HB_OT_MAX_TAGS_PER_LANGUAGE`: 14
+* `HB_OT_MAX_TAGS_PER_SCRIPT`: 14
+* `hb_ot_meta_get_entry_tags`: 45
+* `hb_ot_meta_reference_entry`: 45
+* `hb_ot_meta_tag_t`: 45
+* `hb_ot_metrics_get_position`: 7, 8, 45
+* `hb_ot_metrics_get_position_with_fallback`: 8
+* `hb_ot_metrics_tag_t`: 31
+* `hb_ot_name_convert_utf`: 45
+* `hb_ot_name_entry_t`: 45
+* `hb_ot_name_get_utf16`: 45
+* `hb_ot_name_get_utf32`: 45
+* `hb_ot_name_get_utf8`: 45
+* `hb_ot_name_list_names`: 45
+* `hb_ot_old_tag_from_script`: 14
+* `hb_ot_paint_glyph_or_fail`: 35
+* `hb_ot_position`: 10, 15
+* `hb_ot_position_default`: 7, 15, 19, 21
+* `hb_ot_position_plan`: 15, 19
+* `hb_ot_rotate_chars`: 9, 15, 16, 21
+* `_hb_ot_shape`: 11
+* `hb_ot_shape_collect_features`: 13, 15
+* `hb_ot_shape_context_t`: 15
+* `_hb_ot_shape_fallback_kern`: 19
+* `_hb_ot_shape_fallback_mark_position`: 19
+* `_hb_ot_shape_fallback_mark_position_recategorize_marks`: 19
+* `_hb_ot_shape_fallback_spaces`: 16, 19
+* `hb_ot_shape_glyphs_closure`: 12, 16
+* `hb_ot_shape_internal`: 1, 9, 10, 11, 15, 21, 27
+* `HB_OT_SHAPE_MAX_COMBINING_MARKS`: 16
+* `hb_ot_shape_normalization_mode_t`: 16
 * `_hb_ot_shape_normalize`: 1
-* `hb_ot_shape_plan_collect_lookups`: 10
-* `hb_ot_shape_plan_get_feature_tags`: 10
-* `hb_ot_shape_plan_key_t`: 10
-* `hb_ot_shape_plan_t`: 10
-* `hb_ot_shape_setup_masks`: 10, 11, 13
-* `HB_OT_SHAPE_ZERO_WIDTH_MARKS_BY_GDEF_EARLY`: 23, 24
-* `hb_ot_shaper_categorize`: 12
-* `hb_ot_shaper_t`: 9, 12
-* `hb_ot_substitute_default`: 8, 13, 14
-* `hb_ot_substitute_post`: 13
-* `hb_ot_substitute_pre`: 8, 13
-* `hb_ot_tag_from_language`: 12
-* `hb_ot_tags_from_complex_language`: 12
-* `hb_ot_tags_from_language`: 12
-* `hb_ot_tags_from_script`: 12
-* `hb_ot_tags_from_script_and_language`: 12
-* `hb_ot_tags_to_script_and_language`: 12
-* `hb_ot_var_get_axis_infos`: 28
-* `hb_ot_var_normalize_coords`: 28
-* `hb_ot_var_normalize_variations`: 28
-* `hb_ot_zero_width_default_ignorables`: 7, 13
-* `hb_paint_color_func_t`: 33
-* `hb_paint_composite_mode_t`: 33, 34
-* `hb_paint_context_t`: 33
-* `hb_paint_funcs_create`: 33
-* `hb_paint_funcs_make_immutable`: 33
-* `hb_paint_funcs_t`: 33
-* `HB_PAINT_IMAGE_FORMAT_BGRA`: 33
-* `HB_PAINT_IMAGE_FORMAT_PNG`: 33
-* `HB_PAINT_IMAGE_FORMAT_SVG`: 33
-* `hb_paint_normalize_color_line`: 33
-* `hb_paint_reduce_linear_anchors`: 33
-* `hb_paint_sweep_gradient_tiles`: 33, 34
-* `_hb_preprocess_text_vowel_constraints`: 25
-* `hb_propagate_flags`: 8, 13, 40
-* `hb_raster_draw_glyph`: 34
-* `hb_raster_draw_render`: 34
-* `hb_raster_draw_set_extents`: 34
-* `hb_raster_draw_t`: 34
-* `hb_raster_image_get_buffer`: 34
-* `hb_raster_image_serialize_to_png_or_fail`: 34
-* `hb_raster_image_t`: 34
-* `HB_RASTER_MAX_AUTO_DIMENSION`: 34
-* `HB_RASTER_MAX_BUFFER_SIZE`: 34
-* `HB_RASTER_MAX_DRAW_EDGES`: 34
-* `hb_raster_paint_glyph`: 34
-* `hb_raster_paint_render`: 34
-* `hb_raster_paint_t`: 34
-* `hb_realloc_impl`: 41
-* `HB_REPACKER_MAX_ITERATIONS`: 36
-* `HB_REPACKER_MAX_SPACES`: 36
-* `HB_REPACKER_MAX_VERTICES`: 36
-* `hb_resolve_graph_overflows`: 36
-* `hb_resolve_overflows`: 36
-* `hb_sanitize_context_t`: 2, 3
-* `HB_SANITIZE_MAX_EDITS`: 3
-* `HB_SANITIZE_MAX_OPS_FACTOR`: 3
-* `HB_SANITIZE_MAX_OPS_MAX`: 3
-* `HB_SANITIZE_MAX_OPS_MIN`: 3
-* `HB_SANITIZE_MAX_SUBTABLES`: 3
-* `hb_sanitize_with_object_t`: 3
-* `hb_scalar_cache_t`: 29
-* `HB_SCRIPT_DEVANAGARI`: 39
-* `hb_script_from_iso15924_tag`: 12
-* `HB_SCRIPT_INVALID`: 12
-* `hb_script_t`: 1, 12, 39
-* `HB_SCRIPT_THAI`: 21
-* `HB_SCRIPT_UNKNOWN`: 12
-* `hb_segment_properties_equal`: 10
+* `hb_ot_shape_plan_collect_lookups`: 12
+* `hb_ot_shape_plan_get_feature_tags`: 12
+* `hb_ot_shape_plan_key_t`: 12
+* `hb_ot_shape_plan_t`: 12
+* `hb_ot_shape_setup_masks`: 12, 13, 15
+* `HB_OT_SHAPE_ZERO_WIDTH_MARKS_BY_GDEF_EARLY`: 25, 26
+* `hb_ot_shaper_categorize`: 14
+* `hb_ot_shaper_t`: 11, 14
+* `hb_ot_substitute_default`: 10, 15, 16
+* `hb_ot_substitute_post`: 15
+* `hb_ot_substitute_pre`: 10, 15
+* `hb_ot_tag_from_language`: 14
+* `hb_ot_tags_from_complex_language`: 14
+* `hb_ot_tags_from_language`: 14
+* `hb_ot_tags_from_script`: 14
+* `hb_ot_tags_from_script_and_language`: 14
+* `hb_ot_tags_to_script_and_language`: 14
+* `hb_ot_var_get_axis_infos`: 30
+* `hb_ot_var_normalize_coords`: 30
+* `hb_ot_var_normalize_variations`: 30
+* `hb_ot_zero_width_default_ignorables`: 9, 15
+* `hb_paint_color_func_t`: 35
+* `hb_paint_composite_mode_t`: 35, 36, 38
+* `hb_paint_context_t`: 35
+* `hb_paint_funcs_create`: 35
+* `hb_paint_funcs_make_immutable`: 35
+* `hb_paint_funcs_t`: 35
+* `HB_PAINT_IMAGE_FORMAT_BGRA`: 35
+* `HB_PAINT_IMAGE_FORMAT_PNG`: 35
+* `HB_PAINT_IMAGE_FORMAT_SVG`: 35
+* `hb_paint_normalize_color_line`: 35, 37
+* `hb_paint_reduce_linear_anchors`: 35, 37
+* `hb_paint_sweep_gradient_tiles`: 35, 37
+* `_hb_preprocess_text_vowel_constraints`: 27
+* `hb_propagate_flags`: 10, 15, 43
+* `hb_raster_draw_glyph`: 36
+* `hb_raster_draw_render`: 36
+* `hb_raster_draw_set_extents`: 36
+* `hb_raster_draw_set_glyph_extents`: 36
+* `hb_raster_draw_t`: 36
+* `hb_raster_extents_t`: 36
+* `HB_RASTER_FORMAT_A8`: 36
+* `HB_RASTER_FORMAT_BGRA32`: 36
+* `hb_raster_image_deserialize_from_png_or_fail`: 36
+* `hb_raster_image_get_buffer`: 36
+* `hb_raster_image_serialize_to_png_or_fail`: 36
+* `hb_raster_image_t`: 36
+* `HB_RASTER_MAX_AUTO_DIMENSION`: 36
+* `HB_RASTER_MAX_BUFFER_SIZE`: 36
+* `HB_RASTER_MAX_DRAW_EDGES`: 36
+* `hb_raster_paint_clear_custom_palette_colors`: 36
+* `hb_raster_paint_glyph`: 36
+* `hb_raster_paint_render`: 36
+* `hb_raster_paint_set_custom_palette_color`: 36
+* `hb_raster_paint_set_palette`: 36
+* `hb_raster_paint_t`: 36
+* `hb_realloc_impl`: 46
+* `HB_REPACKER_MAX_ITERATIONS`: 40
+* `HB_REPACKER_MAX_SPACES`: 40
+* `HB_REPACKER_MAX_VERTICES`: 40
+* `hb_resolve_graph_overflows`: 40
+* `hb_resolve_overflows`: 40
+* `hb_sanitize_context_t`: 4, 5
+* `HB_SANITIZE_MAX_EDITS`: 5
+* `HB_SANITIZE_MAX_OPS_FACTOR`: 5
+* `HB_SANITIZE_MAX_OPS_MAX`: 5
+* `HB_SANITIZE_MAX_OPS_MIN`: 5
+* `HB_SANITIZE_MAX_SUBTABLES`: 5
+* `hb_sanitize_with_object_t`: 5
+* `hb_scalar_cache_t`: 31
+* `HB_SCRIPT_DEVANAGARI`: 45
+* `hb_script_from_iso15924_tag`: 14
+* `HB_SCRIPT_INVALID`: 14
+* `hb_script_t`: 1, 14, 44, 45
+* `HB_SCRIPT_THAI`: 23
+* `HB_SCRIPT_UNKNOWN`: 14
+* `hb_segment_properties_equal`: 12
 * `hb_segment_properties_t`: 1
-* `hb_serialize_context_t`: 2, 36
-* `HB_SERIALIZE_ERROR_ARRAY_OVERFLOW`: 36
-* `HB_SERIALIZE_ERROR_INT_OVERFLOW`: 36
-* `HB_SERIALIZE_ERROR_OFFSET_OVERFLOW`: 36
-* `HB_SERIALIZE_ERROR_OTHER`: 36
-* `HB_SERIALIZE_ERROR_OUT_OF_ROOM`: 36
-* `hb_set_invert`: 41
-* `hb_set_t`: 35, 38
-* `hb_set_unicode_props`: 7, 13
-* `hb_shape`: 4, 8, 9, 12, 13, 19, 39, 40, 41
-* `hb_shape_full`: 8, 9, 10, 28, 40, 41, 42
-* `hb_shape_func_t`: 9
-* `hb_shape_justify`: 40
-* `hb_shape_list_shapers`: 9
-* `hb_shape_plan_create`: 9, 10
-* `hb_shape_plan_create_cached`: 10
-* `hb_shape_plan_create_cached2`: 9, 10
-* `hb_shape_plan_create2`: 4, 9, 10
-* `hb_shape_plan_destroy`: 10
-* `hb_shape_plan_execute`: 8, 9, 10
-* `_hb_shape_plan_execute_internal`: 9
-* `hb_shape_plan_get_empty`: 10
-* `hb_shape_plan_get_shaper`: 10
-* `hb_shape_plan_key_t`: 10
-* `hb_shape_plan_set_user_data`: 10
-* `hb_shape_plan_t`: 10
-* `HB_SHAPER_DATA_SUCCEEDED`: 9
-* `HB_SHAPER_IMPLEMENT`: 9
-* `HB_SHAPER_LIST`: 9, 41
-* `hb_shaper_object_dataset_t`: 9
-* `HB_SHAPER_ORDER`: 9
-* `HB_SHAPER_ORDER_name`: 9
-* `_hb_shapers_get`: 9
-* `HB_SPLIT_KERN`: 16, 18
-* `hb_stable_sort`: 22
-* `hb_style_get_value`: 5, 39, 41
-* `HB_STYLE_TAG_ITALIC`: 39
-* `HB_STYLE_TAG_OPTICAL_SIZE`: 39
-* `HB_STYLE_TAG_SLANT_ANGLE`: 39
-* `HB_STYLE_TAG_SLANT_RATIO`: 39
-* `HB_STYLE_TAG_WEIGHT`: 39
-* `HB_STYLE_TAG_WIDTH`: 39
-* `hb_subset_accelerator_t`: 35
-* `hb_subset_axis_range_from_string`: 37
-* `hb_subset_context_t`: 2
-* `hb_subset_depend_entry_t`: 38
-* `hb_subset_depend_from_face_or_fail`: 38
-* `hb_subset_depend_t`: 38
-* `_hb_subset_estimate_table_size`: 35
-* `HB_SUBSET_FLAGS_DOWNGRADE_CFF2`: 37
-* `HB_SUBSET_FLAGS_OPTIMIZE_IUP_DELTAS`: 37
-* `hb_subset_flags_t`: 35
-* `HB_SUBSET_GLYF_MAX_BYTES_FACTOR`: 35
-* `hb_subset_input_get_axis_range`: 37
-* `hb_subset_input_keep_everything`: 35
-* `hb_subset_input_old_to_new_glyph_mapping`: 35
-* `hb_subset_input_override_name_table`: 35
-* `hb_subset_input_pin_all_axes_to_default`: 37
-* `hb_subset_input_pin_axis_location`: 35, 37
-* `hb_subset_input_pin_axis_to_default`: 37
-* `hb_subset_input_set`: 35
-* `hb_subset_input_set_axis_range`: 37
-* `hb_subset_input_set_flags`: 35
-* `hb_subset_input_t`: 35, 37
-* `hb_subset_or_fail`: 35
-* `hb_subset_plan_create_or_fail`: 35, 38
-* `hb_subset_plan_execute_or_fail`: 35
-* `hb_subset_plan_old_to_new_glyph_mapping`: 35
-* `hb_subset_plan_t`: 35
-* `hb_subset_preprocess`: 35
-* `_hb_subset_repack`: 36
-* `hb_subset_repack_or_fail`: 36
-* `hb_subset_serialize_link_t`: 36
-* `hb_subset_serialize_object_t`: 36
-* `hb_subset_serialize_or_fail`: 36
-* `hb_syllabic_clear_var`: 8, 22, 24
-* `hb_syllabic_insert_dotted_circles`: 25
-* `_hb_symbol_pua_map`: 35
-* `hb_synthesize_glyph_classes`: 15, 25
-* `hb_table_lazy_loader_t`: 4
-* `HB_TAG_NONE`: 4, 12, 36
-* `HB_TINY`: 7, 9
-* `hb_ucd_compose`: 7
-* `_hb_ucd_u16`: 7
-* `_hb_ucd_u8`: 7
-* `hb_unicode_funcs_create`: 7
-* `hb_unicode_funcs_get_default`: 7
-* `hb_unicode_funcs_get_empty`: 7
-* `hb_unicode_funcs_t`: 7
-* `hb_unsigned_mul_overflows`: 3
-* `hb_use_get_category`: 24
-* `HB_VAR_COMPOSITE_MAX_AXES`: 31
-* `hb_vector_draw_glyph`: 34
-* `hb_vector_draw_new_path`: 34
-* `hb_vector_draw_render`: 34
-* `hb_vector_draw_set_precision`: 34
-* `hb_vector_draw_t`: 34
-* `HB_VECTOR_EXTENTS_MODE_EXPAND`: 34
-* `HB_VECTOR_FORMAT_PDF`: 34
-* `HB_VECTOR_MAX_DOCUMENT_SIZE`: 34
-* `hb_vector_paint_get_funcs`: 34
-* `hb_vector_paint_glyph`: 34
-* `hb_vector_paint_render`: 34
-* `hb_vector_paint_set_svg_prefix`: 34
-* `hb_vector_paint_t`: 34
-* `HB_VERSION_STRING`: 42
-* `hb_would_apply_context_t`: 2
-* `hb-aat-layout-ankr-table.hh`: 27
-* `hb-aat-layout-common.hh`: 26, 27
-* `hb-aat-layout-feat-table.hh`: 26
-* `hb-aat-layout-kerx-table.hh`: 3, 18, 27, 40
-* `hb-aat-layout-morx-table.hh`: 3, 26, 40
-* `hb-aat-layout-trak-table.hh`: 5, 27
-* `hb-aat-layout.cc`: 3, 26, 27
-* `hb-aat-layout.hh`: 9, 27
-* `hb-aat-ltag-table.hh`: 26, 39
-* `hb-aat-map.cc`: 26
-* `hb-aat-map.hh`: 26
-* `hb-algs.hh`: 2, 11
-* `hb-array.hh`: 2, 33
-* `hb-atomic.hh`: 3
-* `hb-blob.cc`: 2, 3, 4
-* `hb-blob.h`: 4
-* `hb-blob.hh`: 4
-* `hb-buffer-serialize.cc`: 8
-* `hb-buffer-verify.cc`: 8, 40, 41
-* `hb-buffer.cc`: 1, 7, 8, 9, 10, 14, 19, 26, 40, 41
-* `hb-buffer.h`: 1, 8, 25, 40
-* `hb-buffer.hh`: 8, 14, 25, 40
-* `hb-cache.hh`: 4, 6
-* `hb-cff-interp-common.hh`: 32
-* `hb-cff-interp-cs-common.hh`: 32
-* `hb-cff1-interp-cs.hh`: 32
-* `hb-cff2-interp-cs.hh`: 30, 32
-* `hb-common.cc`: 12
-* `hb-common.h`: 1, 19
-* `hb-config.hh`: 7, 9, 17, 18, 25, 26, 27, 33, 34, 38, 39
-* `hb-coretext-font.cc`: 5
-* `hb-coretext-shape.cc`: 5, 9, 26
-* `hb-coretext.cc`: 9
-* `hb-debug.hh`: 8, 41
-* `hb-decycler.hh`: 33
-* `hb-depend-closure-parity.cc`: 38
-* `hb-depend-data.hh`: 38
-* `hb-depend.cc`: 38
-* `hb-depend.h`: 38
-* `hb-directwrite-font.cc`: 5
-* `hb-directwrite-shape.cc`: 9
-* `hb-dispatch.hh`: 2, 3
-* `hb-draw.cc`: 32
-* `hb-draw.h`: 32
-* `hb-draw.hh`: 32
-* `hb-face-builder.cc`: 4, 36
-* `hb-face.cc`: 2, 4, 10
-* `hb-face.hh`: 4, 9, 10
-* `hb-fallback-shape.cc`: 7, 9
-* `hb-features.h`: 34, 41
-* `hb-font.cc`: 4, 5, 6, 17, 28, 32, 33, 41
-* `hb-font.h`: 5
-* `hb-font.hh`: 5, 6, 9, 14, 19, 32, 33
-* `hb-ft.cc`: 5, 17, 20, 33
-* `hb-fuzzer.hh`: 41
-* `hb-geometry.hh`: 31
-* `hb-glib.cc`: 7
-* `hb-gpu-cu2qu.hh`: 34
-* `hb-gpu-draw.cc`: 34
-* `hb-gpu-draw.hh`: 34
-* `hb-gpu-paint.cc`: 34
-* `hb-gpu-paint.hh`: 34
-* `hb-gpu.cc`: 34
-* `hb-gpu.h`: 34
-* `hb-graphite2.cc`: 9
-* `hb-harfrust.cc`: 9, 42
-* `hb-icu.cc`: 7
-* `hb-kbts.cc`: 9, 10
-* `hb-kern.hh`: 17, 18, 27, 40
-* `hb-limits.hh`: 8, 15, 22, 26, 27, 31, 32, 34, 35, 36, 37
-* `hb-machinery.hh`: 2, 4, 9
-* `hb-meta.hh`: 2
-* `hb-null.hh`: 2
-* `hb-object.hh`: 4
-* `hb-open-file.hh`: 2, 4, 36
-* `hb-open-type.hh`: 2, 3, 31, 36
-* `hb-ot-cff1-table.cc`: 6, 32
-* `hb-ot-cff1-table.hh`: 38
-* `hb-ot-cff2-table.cc`: 6, 32
-* `hb-ot-cmap-table.hh`: 3, 20, 35, 36
-* `hb-ot-color.cc`: 33
-* `hb-ot-color.h`: 33
-* `hb-ot-dual.hh`: 2, 6
-* `hb-ot-face-table-list.hh`: 4
-* `hb-ot-face.cc`: 4
-* `hb-ot-face.hh`: 4
-* `hb-ot-font.cc`: 5, 6, 16, 19, 27, 28, 29, 31, 32, 33
-* `hb-ot-hdmx-table.hh`: 35
-* `hb-ot-head-table.hh`: 39
-* `hb-ot-hhea-table.hh`: 6
-* `hb-ot-hmtx-table.hh`: 3, 6, 29, 35
-* `hb-ot-kern-table.hh`: 18
-* `hb-ot-layout-base-table.hh`: 35, 39
-* `hb-ot-layout-common.hh`: 2, 3, 5, 10, 11, 12, 16, 29, 31, 33, 35, 37
-* `hb-ot-layout-gsub-table.hh`: 4, 38
-* `hb-ot-layout-gsubgpos.hh`: 2, 3, 4, 7, 8, 10, 11, 15, 16, 22, 35, 36, 38, 41
-* `hb-ot-layout.cc`: 1, 2, 3, 4, 8, 10, 11, 12, 13, 15, 16, 18, 35, 38, 39, 40, 41
-* `hb-ot-layout.h`: 12
-* `hb-ot-layout.hh`: 7, 8, 22
-* `hb-ot-map.cc`: 8, 10, 11, 12, 15, 19
-* `hb-ot-map.hh`: 11, 12, 15
-* `hb-ot-math-table.hh`: 35, 38, 39
-* `hb-ot-math.cc`: 39
-* `hb-ot-math.h`: 39
-* `hb-ot-maxp-table.hh`: 4, 35
-* `hb-ot-meta-table.hh`: 39
-* `hb-ot-meta.cc`: 39
-* `hb-ot-meta.h`: 39
-* `hb-ot-metrics.cc`: 5, 6, 29
-* `hb-ot-name-language-static.hh`: 39
-* `hb-ot-name.cc`: 39
-* `hb-ot-name.h`: 39
-* `hb-ot-os2-table.hh`: 6, 35, 37, 39
-* `hb-ot-post-table.hh`: 35, 39
-* `hb-ot-shape-fallback.cc`: 7, 13, 14, 17
-* `hb-ot-shape-normalize.cc`: 1, 7, 13, 14, 17, 21
-* `hb-ot-shape-normalize.hh`: 14
-* `hb-ot-shape.cc`: 1, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 18, 19, 21, 25, 26, 27, 29, 39, 40
-* `hb-ot-shape.hh`: 10, 17
-* `hb-ot-shaper-arabic-fallback.hh`: 20
-* `hb-ot-shaper-arabic-joining-list.hh`: 20
-* `hb-ot-shaper-arabic-pua.hh`: 20
-* `hb-ot-shaper-arabic-table.hh`: 20
-* `hb-ot-shaper-arabic-win1256.hh`: 20
-* `hb-ot-shaper-arabic.cc`: 1, 7, 8, 10, 11, 13, 14, 20, 24, 40
-* `hb-ot-shaper-default.cc`: 12
-* `hb-ot-shaper-hangul.cc`: 1, 8, 11, 21, 25, 40
-* `hb-ot-shaper-hebrew.cc`: 14, 21
-* `hb-ot-shaper-indic-machine.hh`: 22
-* `hb-ot-shaper-indic-machine.rl`: 22, 25
-* `hb-ot-shaper-indic-table.cc`: 22, 23, 25
-* `hb-ot-shaper-indic.cc`: 1, 8, 10, 11, 12, 14, 15, 22, 25, 35
-* `hb-ot-shaper-indic.hh`: 22
-* `hb-ot-shaper-khmer-machine.hh`: 23
-* `hb-ot-shaper-khmer-machine.rl`: 23
-* `hb-ot-shaper-khmer.cc`: 1, 11, 14, 23
-* `hb-ot-shaper-myanmar-machine.hh`: 23
-* `hb-ot-shaper-myanmar-machine.rl`: 23
-* `hb-ot-shaper-myanmar.cc`: 12, 23
-* `hb-ot-shaper-syllabic.cc`: 8, 22, 24, 25
-* `hb-ot-shaper-thai.cc`: 7, 12, 21
-* `hb-ot-shaper-use-machine.hh`: 24
-* `hb-ot-shaper-use-machine.rl`: 24
-* `hb-ot-shaper-use-table.hh`: 24
-* `hb-ot-shaper-use.cc`: 14, 20, 24, 25
-* `hb-ot-shaper-vowel-constraints.cc`: 25
-* `hb-ot-shaper.hh`: 8, 9, 12, 13, 14, 19, 23
-* `hb-ot-stat-table.hh`: 37, 39
-* `hb-ot-tag-table.hh`: 12, 21
-* `hb-ot-tag.cc`: 1, 12
-* `hb-ot-var-avar-table.hh`: 28, 37
-* `hb-ot-var-common.hh`: 30, 37
-* `hb-ot-var-cvar-table.hh`: 4, 30
-* `hb-ot-var-fvar-table.hh`: 28, 37
-* `hb-ot-var-gvar-table.hh`: 30, 32, 35, 37
-* `hb-ot-var-hvar-table.hh`: 6, 29, 35
-* `hb-ot-var-mvar-table.hh`: 6, 29
-* `hb-ot-var.cc`: 28
-* `hb-ot-vorg-table.hh`: 6, 35
-* `hb-outline.cc`: 5
-* `hb-paint-bounded.cc`: 33
-* `hb-paint-bounded.hh`: 33
-* `hb-paint-extents.cc`: 33
-* `hb-paint-extents.hh`: 6
-* `hb-paint.cc`: 33
-* `hb-paint.h`: 33
-* `hb-paint.hh`: 33
-* `hb-raster-draw.cc`: 34
-* `hb-raster-image.cc`: 34
-* `hb-raster-paint.cc`: 34
-* `hb-raster-paint.hh`: 34
-* `hb-raster.h`: 34
-* `hb-raster.hh`: 34
-* `hb-repacker.hh`: 36
-* `hb-sanitize.hh`: 2, 3, 4
-* `hb-script-list.h`: 7
-* `hb-serialize.hh`: 36
-* `hb-set-digest.hh`: 15
-* `hb-shape-fuzzer.cc`: 41
-* `hb-shape-input.hh`: 41
-* `hb-shape-plan.cc`: 4, 8, 9, 10, 41
-* `hb-shape-plan.hh`: 9, 10
-* `hb-shape-threads.cc`: 41
-* `hb-shape.cc`: 8, 9, 10, 28, 40, 41
-* `hb-shaper-list.hh`: 9
-* `hb-shaper.cc`: 9
-* `hb-shaper.hh`: 9
-* `hb-static.cc`: 2, 4
-* `hb-style.cc`: 5, 39
-* `hb-style.h`: 39
-* `hb-subset-accelerator.hh`: 35
-* `hb-subset-cff-common.hh`: 35, 36
-* `hb-subset-cff1.cc`: 35, 36
-* `hb-subset-cff2.cc`: 35, 37
-* `hb-subset-depend.h`: 38
-* `hb-subset-input.cc`: 11, 35, 37
-* `hb-subset-instancer-iup.cc`: 37
-* `hb-subset-instancer-solver.cc`: 37
-* `hb-subset-plan-layout.cc`: 35
-* `hb-subset-plan-member-list.hh`: 35
-* `hb-subset-plan-var.cc`: 37
-* `hb-subset-plan.cc`: 35, 38
-* `hb-subset-plan.hh`: 3
-* `hb-subset-serialize.cc`: 36
-* `hb-subset-serialize.h`: 36
-* `hb-subset-table.hh`: 35, 36
-* `hb-subset-threads.cc`: 41
-* `hb-subset.cc`: 30, 35, 37
-* `hb-subset.h`: 35, 37, 38
-* `hb-subset.hh`: 2, 37
-* `hb-test.h`: 41
-* `hb-ucd-table.hh`: 7
-* `hb-ucd.cc`: 7
-* `hb-unicode-emoji-table.hh`: 7
-* `hb-unicode.cc`: 7
-* `hb-unicode.h`: 7
-* `hb-unicode.hh`: 7, 14, 17, 19, 21
-* `hb-uniscribe.cc`: 9
-* `hb-utf.hh`: 39
-* `hb-vector-buf.hh`: 34
-* `hb-vector-draw.cc`: 32, 34
-* `hb-vector-draw.hh`: 34
-* `hb-vector-paint-pdf.cc`: 34
-* `hb-vector-paint-svg.cc`: 33, 34
-* `hb-vector-paint.cc`: 34
-* `hb-vector.cc`: 34
-* `hb-vector.h`: 34
-* `hb-wasm-api-shape.hh`: 9
-* `hb-wasm-shape.cc`: 9
-* `hb.hh`: 9
-* `HBGlyphID16`: 2
-* `HBGlyphID24`: 2
-* `HBINT16`: 2
-* `HBINT32`: 2
-* `HBINT64`: 2
-* `HBINT8`: 2
-* `HBSUBFZ2`: 41
-* `HBUINT16`: 2, 15, 18
-* `HBUINT24`: 2
-* `HBUINT32`: 2
-* `HBUINT32VAR`: 31
-* `HBUINT64`: 2
-* `HBUINT8`: 2
-* `HeadlessArray16Of`: 2, 15
-* `HeadlessArrayOf`: 2
-* `HintingDevice`: 16
-* `hr-hb.h`: 42
-* `HYE0`: 12
-* `IgnoreMarks`: 15, 16, 18
-* `IndicPositionalCategory.txt`: 22, 24
-* `IndicShapingInvalidCluster.txt`: 24
-* `IndicSyllabicCategory.txt`: 22, 24
-* `INT32_MAX`: 39
-* `ItemVariationStore`: 29
-* `ItemVarStoreInstancer`: 29
-* `iup.py`: 37
-* `KernAATSubTableHeader`: 18
-* `KernOTSubTableHeader`: 18
-* `KernSubTable`: 18
-* `KernSubTableFormat3`: 18
-* `KerxSubTableFormat0`: 18
-* `KerxSubTableFormat1`: 18
-* `KerxSubTableFormat2`: 18
-* `KerxSubTableHeader`: 27
-* `KerxTable`: 18, 27
-* `L0`: 35
-* `L1`: 35
-* `L19`: 35
-* `layout.py`: 36
-* `ligature-graph.hh`: 36
-* `Ligature.hh`: 38
-* `LigatureSet`: 3
-* `LigatureSubst`: 3
-* `LigatureSubstFormat1_2`: 2, 15
-* `List16OfOffsetTo`: 2
-* `LongMetric`: 6
-* `LookupVariationRecord`: 10, 11
-* `main.cc`: 41
-* `MapViewOfFile`: 4
-* `MarkArray`: 3
-* `MarkArray.hh`: 16, 19, 27
-* `MarkBasePos`: 3
-* `markbasepos-graph.hh`: 36
-* `MarkBasePosFormat1.hh`: 16, 25
-* `MarkLigPos`: 3
-* `MarkLigPosFormat1.hh`: 16
-* `MarkMarkPos`: 3
-* `MarkMarkPosFormat1.hh`: 16
-* `MathConstants`: 39
-* `MathGlyphConstruction`: 39
-* `MathGlyphInfo`: 39
-* `MathKern`: 39
-* `MathValueRecord`: 39
-* `MathVariants`: 39
-* `MaxCoord`: 39
-* `MediumTypes`: 2, 15, 30
-* `meson_options.txt`: 9, 34
-* `meson.build`: 22, 41
-* `MinCoord`: 39
-* `MinMax`: 39
-* `ms-use/IndicPositionalCategory-Additional.txt`: 24
-* `ms-use/IndicShapingInvalidCluster.txt`: 25
-* `ms-use/IndicSyllabicCategory-Additional.txt`: 24
-* `MultiItemVariationStore`: 29
-* `MultiItemVarStoreInstancer`: 31
-* `MultiVarData`: 31
-* `NNOffset16To`: 2
-* `notes/upstream-bug-reports.md`: 41
-* `NumType`: 2
-* `ObsoleteTypes`: 18, 26
-* `Offset16`: 2
-* `Offset24`: 2
-* `Offset32`: 2
-* `OffsetTo`: 2, 3, 36
-* `OpenTypeFontFile`: 2, 4
-* `OpenTypeOffsetTable`: 2
-* `OT::ClipRecord`: 2
-* `OT::CmapSubtableLongGroup`: 2
-* `OT::head`: 4
-* `OT::Index`: 2
-* `OT::LangSys`: 2
-* `OT::RangeRecord`: 2
-* `OT::VarIdx`: 2
-* `OT/Color/CBDT/CBDT.hh`: 6, 33, 35
-* `OT/Color/COLR/COLR.hh`: 2, 3, 5, 6, 33, 35, 38
-* `OT/Color/COLR/colrv1-depend.hh`: 38
-* `OT/Color/CPAL/CPAL.hh`: 33, 35
-* `OT/Color/sbix/sbix.hh`: 6, 33, 35
-* `OT/Color/svg/svg.hh`: 33
-* `OT/glyf/CompositeGlyph.hh`: 30, 32
-* `OT/glyf/glyf.hh`: 3, 6, 29, 30, 32, 35, 37, 38
-* `OT/glyf/Glyph.hh`: 6, 30, 32, 37
-* `OT/glyf/GlyphHeader.hh`: 6
-* `OT/glyf/path-builder.hh`: 32
-* `OT/glyf/SimpleGlyph.hh`: 6, 32
-* `OT/Layout/Common/Coverage.hh`: 2, 3
-* `OT/Layout/Common/CoverageFormat2.hh`: 2
-* `OT/Layout/Common/RangeRecord.hh`: 2
-* `OT/Layout/GDEF/GDEF.hh`: 35, 36
-* `OT/Layout/GPOS/Common.hh`: 8, 16
-* `OT/Layout/GPOS/CursivePosFormat1.hh`: 16, 19
-* `OT/Layout/GPOS/GPOS.hh`: 5, 8, 13, 16, 27
-* `OT/Layout/GPOS/MarkArray.hh`: 19, 27
-* `OT/Layout/GPOS/PairSet.hh`: 35
-* `OT/Layout/GPOS/ValueFormat.hh`: 2, 19
-* `OT/Layout/GSUB/Ligature.hh`: 36
-* `OT/Layout/GSUB/LigatureSubst.hh`: 3
-* `OT/Layout/GSUB/LigatureSubstFormat1.hh`: 36
-* `OT/Layout/GSUB/SingleSubst.hh`: 2
-* `OT/Layout/GSUB/SingleSubstFormat1.hh`: 2
-* `OT/Layout/GSUB/SubstLookup.hh`: 35
-* `OT/Layout/GSUB/SubstLookupSubTable.hh`: 2
-* `OT/name/name.hh`: 26, 35, 36, 39
-* `OT/Var/VARC/coord-setter.hh`: 31
-* `OT/Var/VARC/VARC-subset.hh`: 35, 37
-* `OT/Var/VARC/VARC.cc`: 31, 38
-* `OT/Var/VARC/VARC.hh`: 31
-* `PaintColrGlyph`: 38
-* `PaintComposite`: 3
-* `PaintGlyph`: 38
-* `PaintTranslate`: 33
-* `PaintVarTranslate`: 33
-* `PairPos`: 3
-* `pairpos-graph.hh`: 36
-* `PairPosFormat2.hh`: 3, 16
-* `PairSet.hh`: 3, 16, 35
-* `path-builder.hh`: 32
-* `PosLookupSubTable`: 2
-* `RangeRecord`: 2
-* `README.md`: 1, 34, 42
-* `README.python.md`: 42
-* `ResourceForkHeader`: 2
-* `run-repack-tests.py`: 41
-* `run-tests.py`: 41
-* `rust/font.rs`: 5, 42
-* `rust/shape.rs`: 9, 42
-* `sbix.hh`: 33
-* `Scripts-18.0.0.txt`: 25
-* `Scripts.txt`: 20, 24, 25
-* `serialize-example.cc`: 36
-* `shape.rs`: 9
-* `SimpleGlyph.hh`: 32
-* `SinglePos`: 3
-* `SinglePosFormat1.hh`: 3
-* `SingleSubst`: 2
-* `SingleSubstFormat1.hh`: 3
-* `SmallTypes`: 2, 15, 30
-* `SortedArray16Of`: 2
-* `SortedArrayOf`: 2
-* `SortedUnsizedArrayOf`: 2
-* `SparseVarRegionAxis`: 31
-* `StateTable`: 26
-* `StateTableDriver`: 26
-* `StructAfter`: 2
-* `StructAtOffset`: 2
-* `SubstLookup.hh`: 35
-* `SubstLookupSubTable`: 2
-* `svg.hh`: 33
-* `TableRecord`: 2
-* `test-graphite2-buffer.cc`: 9
-* `test-use-table.cc`: 24
-* `test/api/hb-test.h`: 41
-* `test/api/meson.build`: 41
-* `test/fuzzing/hb-depend-closure-parity.cc`: 38
-* `test/fuzzing/main.cc`: 41
-* `test/fuzzing/meson.build`: 41
-* `test/fuzzing/README.md`: 38
-* `test/shape/meson.build`: 41
-* `test/shape/README.md`: 41
-* `test/shape/run-tests.py`: 41
-* `test/subset/generate-expected-outputs.py`: 41
-* `test/subset/run-tests.py`: 41
-* `third_party/blink/renderer/platform/fonts/opentype/open_type_math_support.cc`: 39
-* `tools/build-var-test-fonts.py`: 28
-* `TTCHeaderVersion1`: 2
-* `TupleValues`: 31
-* `UnicodeData.txt`: 20, 24
-* `UnsizedArrayOf`: 2
-* `update.py`: 41
-* `util/font-options.hh`: 5
-* `util/hb-ft-raster.cc`: 34
-* `util/hb-gpu.cc`: 34
-* `util/hb-info.cc`: 28, 39
-* `util/hb-raster.cc`: 34
-* `util/hb-subset-depend.cc`: 38
-* `util/hb-vector.cc`: 34
-* `util/helper-subset.hh`: 37
-* `util/shape-options.hh`: 9, 40
-* `util/shape-output.hh`: 41
-* `util/vector-output.hh`: 34
-* `ValueBase`: 2
-* `ValueFormat.hh`: 3, 5, 16, 19, 27
-* `ValuesAreLong`: 27
-* `varc-dump.py`: 31
-* `VARC.cc`: 31
-* `VARC.hh`: 31
-* `VarData`: 29, 37
-* `VariationDevice`: 16
-* `VarIdx`: 2
-* `VarRegionAxis`: 29
-* `VarRegionList`: 29
-* `VarSizedBinSearchArrayOf`: 2
-* `WheresData`: 4
+* `hb_serialize_context_t`: 4, 40
+* `HB_SERIALIZE_ERROR_ARRAY_OVERFLOW`: 40
+* `HB_SERIALIZE_ERROR_INT_OVERFLOW`: 40
+* `HB_SERIALIZE_ERROR_OFFSET_OVERFLOW`: 40
+* `HB_SERIALIZE_ERROR_OTHER`: 40
+* `HB_SERIALIZE_ERROR_OUT_OF_ROOM`: 40
+* `hb_set_invert`: 46
+* `hb_set_t`: 39, 42
+* `hb_set_unicode_props`: 9, 15
+* `hb_shape`: 6, 10, 11, 14, 15, 21, 43, 44, 45, 46, 47
+* `hb_shape_full`: 10, 11, 12, 30, 43, 46, 48
+* `hb_shape_func_t`: 11
+* `hb_shape_justify`: 2, 43
+* `hb_shape_list_shapers`: 11
+* `hb_shape_plan_create`: 11, 12
+* `hb_shape_plan_create_cached`: 12
+* `hb_shape_plan_create_cached2`: 11, 12
+* `hb_shape_plan_create2`: 6, 11, 12
+* `hb_shape_plan_destroy`: 12
+* `hb_shape_plan_execute`: 10, 11, 12
+* `_hb_shape_plan_execute_internal`: 11
+* `hb_shape_plan_get_empty`: 12
+* `hb_shape_plan_get_shaper`: 12
+* `hb_shape_plan_key_t`: 12
+* `hb_shape_plan_set_user_data`: 12
+* `hb_shape_plan_t`: 12, 47
+* `HB_SHAPER_DATA_SUCCEEDED`: 11
+* `HB_SHAPER_IMPLEMENT`: 11
+* `HB_SHAPER_LIST`: 3, 11, 46
+* `hb_shaper_object_dataset_t`: 11
+* `HB_SHAPER_ORDER`: 11
+* `HB_SHAPER_ORDER_name`: 11
+* `_hb_shapers_get`: 11
+* `HB_SPLIT_KERN`: 18, 20
+* `hb_stable_sort`: 24
+* `hb_style_get_value`: 7, 45, 46
+* `HB_STYLE_TAG_ITALIC`: 45
+* `HB_STYLE_TAG_OPTICAL_SIZE`: 45
+* `HB_STYLE_TAG_SLANT_ANGLE`: 45
+* `HB_STYLE_TAG_SLANT_RATIO`: 45
+* `HB_STYLE_TAG_WEIGHT`: 45
+* `HB_STYLE_TAG_WIDTH`: 45
+* `hb_subset_accelerator_t`: 39
+* `hb_subset_axis_range_from_string`: 41
+* `hb_subset_context_t`: 4
+* `hb_subset_depend_entry_t`: 42
+* `hb_subset_depend_from_face_or_fail`: 42
+* `hb_subset_depend_t`: 42
+* `_hb_subset_estimate_table_size`: 39
+* `HB_SUBSET_FLAGS_DOWNGRADE_CFF2`: 41
+* `HB_SUBSET_FLAGS_OPTIMIZE_IUP_DELTAS`: 41
+* `hb_subset_flags_t`: 39
+* `HB_SUBSET_GLYF_MAX_BYTES_FACTOR`: 39
+* `hb_subset_input_get_axis_range`: 41
+* `hb_subset_input_keep_everything`: 39
+* `hb_subset_input_old_to_new_glyph_mapping`: 39
+* `hb_subset_input_override_name_table`: 39
+* `hb_subset_input_pin_all_axes_to_default`: 41
+* `hb_subset_input_pin_axis_location`: 39, 41
+* `hb_subset_input_pin_axis_to_default`: 41
+* `hb_subset_input_set`: 39
+* `hb_subset_input_set_axis_range`: 41
+* `hb_subset_input_set_flags`: 39
+* `hb_subset_input_t`: 39, 41
+* `hb_subset_or_fail`: 39, 47
+* `hb_subset_plan_create_or_fail`: 39, 42, 47
+* `hb_subset_plan_execute_or_fail`: 39, 47
+* `hb_subset_plan_old_to_new_glyph_mapping`: 39
+* `hb_subset_plan_t`: 39
+* `hb_subset_preprocess`: 39
+* `_hb_subset_repack`: 40
+* `hb_subset_repack_or_fail`: 40
+* `hb_subset_serialize_link_t`: 40
+* `hb_subset_serialize_object_t`: 40
+* `hb_subset_serialize_or_fail`: 40
+* `hb_syllabic_clear_var`: 10, 24, 26
+* `hb_syllabic_insert_dotted_circles`: 27
+* `_hb_symbol_pua_map`: 39
+* `hb_synthesize_glyph_classes`: 17, 27
+* `hb_table_lazy_loader_t`: 6
+* `HB_TAG_NONE`: 6, 14, 40
+* `HB_TINY`: 2, 9, 11
+* `hb_ucd_compose`: 9
+* `_hb_ucd_u16`: 9
+* `_hb_ucd_u8`: 9
+* `hb_unicode_funcs_create`: 9
+* `hb_unicode_funcs_get_default`: 9, 44
+* `hb_unicode_funcs_get_empty`: 9
+* `hb_unicode_funcs_t`: 9, 44
+* `hb_uniscribe_font_get_hfont`: 44
+* `hb_uniscribe_font_get_logfontw`: 44
+* `hb_unsigned_mul_overflows`: 5
+* `hb_use_get_category`: 26
+* `HB_VAR_COMPOSITE_MAX_AXES`: 33
+* `hb_vector_draw_glyph`: 37
+* `hb_vector_draw_new_path`: 37
+* `hb_vector_draw_set_precision`: 37
+* `hb_vector_draw_t`: 37
+* `HB_VECTOR_EXTENTS_MODE_EXPAND`: 37
+* `HB_VECTOR_FORMAT_PDF`: 37
+* `HB_VECTOR_FORMAT_SVG`: 37
+* `HB_VECTOR_MAX_DOCUMENT_SIZE`: 37
+* `hb_vector_paint_glyph`: 37
+* `hb_vector_paint_glyph_or_fail`: 37
+* `hb_vector_paint_set_custom_palette_color`: 37
+* `hb_vector_paint_set_foreground`: 37
+* `hb_vector_paint_set_palette`: 37
+* `hb_vector_paint_set_svg_prefix`: 37
+* `hb_vector_paint_t`: 37
+* `HB_VERSION_STRING`: 47
+* `hb_would_apply_context_t`: 4
+* `hb-aat-layout-ankr-table.hh`: 29
+* `hb-aat-layout-common.hh`: 28, 29
+* `hb-aat-layout-feat-table.hh`: 28
+* `hb-aat-layout-kerx-table.hh`: 5, 20, 29, 43, 47
+* `hb-aat-layout-morx-table.hh`: 5, 28, 43, 47
+* `hb-aat-layout-trak-table.hh`: 7, 29
+* `hb-aat-layout.cc`: 5, 28, 29
+* `hb-aat-layout.hh`: 11, 29
+* `hb-aat-ltag-table.hh`: 28, 45
+* `hb-aat-map.cc`: 28
+* `hb-aat-map.hh`: 28
+* `hb-algs.hh`: 4, 13
+* `hb-array.hh`: 4, 35
+* `hb-atomic.hh`: 5
+* `hb-blob.cc`: 4, 5, 6
+* `hb-blob.h`: 6
+* `hb-blob.hh`: 6, 38
+* `hb-buffer-serialize.cc`: 3, 10
+* `hb-buffer-verify.cc`: 10, 43, 46
+* `hb-buffer.cc`: 1, 9, 10, 11, 12, 16, 21, 28, 43, 46, 47
+* `hb-buffer.h`: 1, 10, 27, 43
+* `hb-buffer.hh`: 10, 16, 27, 43, 47
+* `hb-cache.hh`: 6, 8
+* `hb-cairo-utils.cc`: 44
+* `hb-cairo.cc`: 44
+* `hb-cairo.h`: 44
+* `hb-cff-interp-common.hh`: 34
+* `hb-cff-interp-cs-common.hh`: 34, 36
+* `hb-cff1-interp-cs.hh`: 34
+* `hb-cff2-interp-cs.hh`: 32, 34
+* `hb-common.cc`: 14
+* `hb-common.h`: 1, 21
+* `hb-config.hh`: 9, 11, 19, 20, 27, 28, 29, 35, 42, 45
+* `hb-coretext-font.cc`: 7, 44
+* `hb-coretext-shape.cc`: 7, 11, 28, 44
+* `hb-coretext.cc`: 11, 44
+* `hb-coretext.h`: 44
+* `hb-debug.hh`: 2, 10, 46
+* `hb-decycler.hh`: 35
+* `hb-depend-closure-parity.cc`: 42
+* `hb-depend-data.hh`: 42
+* `hb-depend.cc`: 42
+* `hb-depend.h`: 42
+* `hb-directwrite-font.cc`: 7, 44
+* `hb-directwrite-shape.cc`: 11
+* `hb-directwrite.cc`: 44
+* `hb-directwrite.h`: 44
+* `hb-dispatch.hh`: 4, 5
+* `hb-draw.cc`: 34
+* `hb-draw.h`: 34
+* `hb-draw.hh`: 34
+* `hb-face-builder.cc`: 6, 40
+* `hb-face.cc`: 4, 6, 12
+* `hb-face.hh`: 6, 11, 12
+* `hb-fallback-shape.cc`: 9, 11
+* `hb-features.h`: 2, 38, 44, 46
+* `hb-font.cc`: 6, 7, 8, 19, 30, 34, 35, 46
+* `hb-font.h`: 7
+* `hb-font.hh`: 7, 8, 11, 16, 21, 34, 35, 44
+* `hb-ft.cc`: 2, 7, 19, 22, 35, 36, 44
+* `hb-ft.h`: 44
+* `hb-fuzzer.hh`: 46
+* `hb-gdi.cc`: 44
+* `hb-gdi.h`: 44
+* `hb-geometry.hh`: 33
+* `hb-glib.cc`: 9, 44
+* `hb-glib.h`: 44
+* `hb-gobject-structs.cc`: 44
+* `hb-gobject.h`: 44
+* `hb-gpu-cu2qu.hh`: 38
+* `hb-gpu-draw.cc`: 38
+* `hb-gpu-draw.hh`: 38
+* `hb-gpu-paint.cc`: 38
+* `hb-gpu-paint.hh`: 38
+* `hb-gpu.cc`: 3, 36, 38
+* `hb-gpu.h`: 38
+* `hb-graphite2.cc`: 11, 44
+* `hb-graphite2.h`: 44
+* `hb-harfrust.cc`: 11, 47, 48
+* `hb-icu.cc`: 9, 44
+* `hb-icu.h`: 44
+* `hb-info.cc`: 3
+* `hb-kbts.cc`: 11, 12
+* `hb-kern.hh`: 19, 20, 29, 43
+* `hb-limits.hh`: 10, 17, 24, 28, 29, 33, 34, 36, 37, 38, 39, 40, 41
+* `hb-machinery.hh`: 4, 6, 11
+* `hb-meta.hh`: 4
+* `hb-null.hh`: 4
+* `hb-object.hh`: 6
+* `hb-open-file.hh`: 4, 6, 40
+* `hb-open-type.hh`: 4, 5, 33, 40
+* `hb-ot-cff1-table.cc`: 8, 34
+* `hb-ot-cff1-table.hh`: 42
+* `hb-ot-cff2-table.cc`: 8, 34
+* `hb-ot-cmap-table.hh`: 5, 22, 39, 40
+* `hb-ot-color.cc`: 35
+* `hb-ot-color.h`: 35
+* `hb-ot-dual.hh`: 4, 8
+* `hb-ot-face-table-list.hh`: 6
+* `hb-ot-face.cc`: 6
+* `hb-ot-face.hh`: 6
+* `hb-ot-font.cc`: 7, 8, 18, 21, 29, 30, 31, 33, 34, 35
+* `hb-ot-hdmx-table.hh`: 39
+* `hb-ot-head-table.hh`: 45
+* `hb-ot-hhea-table.hh`: 8
+* `hb-ot-hmtx-table.hh`: 5, 8, 31, 39
+* `hb-ot-kern-table.hh`: 20
+* `hb-ot-layout-base-table.hh`: 39, 45
+* `hb-ot-layout-common.hh`: 4, 5, 7, 12, 13, 14, 18, 31, 33, 35, 39, 41
+* `hb-ot-layout-gsub-table.hh`: 6, 42
+* `hb-ot-layout-gsubgpos.hh`: 4, 5, 6, 9, 10, 12, 13, 17, 18, 24, 39, 40, 42, 46, 47
+* `hb-ot-layout.cc`: 1, 3, 4, 5, 6, 10, 12, 13, 14, 15, 17, 18, 20, 39, 42, 43, 45, 46
+* `hb-ot-layout.h`: 14
+* `hb-ot-layout.hh`: 9, 10, 24
+* `hb-ot-map.cc`: 10, 12, 13, 14, 17, 21, 47
+* `hb-ot-map.hh`: 13, 14, 17
+* `hb-ot-math-table.hh`: 39, 42, 45
+* `hb-ot-math.cc`: 45
+* `hb-ot-math.h`: 45
+* `hb-ot-maxp-table.hh`: 6, 39
+* `hb-ot-meta-table.hh`: 45
+* `hb-ot-meta.cc`: 45
+* `hb-ot-meta.h`: 45
+* `hb-ot-metrics.cc`: 7, 8, 31
+* `hb-ot-name-language-static.hh`: 45
+* `hb-ot-name.cc`: 45
+* `hb-ot-name.h`: 45
+* `hb-ot-os2-table.hh`: 8, 39, 41, 45
+* `hb-ot-post-table.hh`: 39, 45
+* `hb-ot-shape-fallback.cc`: 9, 15, 16, 19, 47
+* `hb-ot-shape-normalize.cc`: 1, 9, 15, 16, 19, 23, 47
+* `hb-ot-shape-normalize.hh`: 16
+* `hb-ot-shape.cc`: 1, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 19, 20, 21, 23, 27, 28, 29, 31, 43, 45, 47
+* `hb-ot-shape.hh`: 12, 19
+* `hb-ot-shaper-arabic-fallback.hh`: 22
+* `hb-ot-shaper-arabic-joining-list.hh`: 22
+* `hb-ot-shaper-arabic-pua.hh`: 22
+* `hb-ot-shaper-arabic-table.hh`: 22
+* `hb-ot-shaper-arabic-win1256.hh`: 22
+* `hb-ot-shaper-arabic.cc`: 1, 9, 10, 12, 13, 15, 16, 22, 26, 43
+* `hb-ot-shaper-default.cc`: 14
+* `hb-ot-shaper-hangul.cc`: 1, 10, 13, 23, 27, 43
+* `hb-ot-shaper-hebrew.cc`: 16, 23
+* `hb-ot-shaper-indic-machine.hh`: 24
+* `hb-ot-shaper-indic-machine.rl`: 24, 27
+* `hb-ot-shaper-indic-table.cc`: 24, 25, 27, 47
+* `hb-ot-shaper-indic.cc`: 1, 10, 12, 13, 14, 16, 17, 24, 27, 39
+* `hb-ot-shaper-indic.hh`: 24
+* `hb-ot-shaper-khmer-machine.hh`: 25
+* `hb-ot-shaper-khmer-machine.rl`: 25
+* `hb-ot-shaper-khmer.cc`: 1, 13, 16, 25
+* `hb-ot-shaper-myanmar-machine.hh`: 25
+* `hb-ot-shaper-myanmar-machine.rl`: 25
+* `hb-ot-shaper-myanmar.cc`: 14, 25
+* `hb-ot-shaper-syllabic.cc`: 10, 24, 26, 27
+* `hb-ot-shaper-thai.cc`: 9, 14, 23
+* `hb-ot-shaper-use-machine.hh`: 26
+* `hb-ot-shaper-use-machine.rl`: 26
+* `hb-ot-shaper-use-table.hh`: 2, 26
+* `hb-ot-shaper-use.cc`: 16, 22, 26, 27
+* `hb-ot-shaper-vowel-constraints.cc`: 27
+* `hb-ot-shaper.hh`: 10, 11, 14, 15, 16, 21, 25
+* `hb-ot-stat-table.hh`: 41, 45
+* `hb-ot-tag-table.hh`: 14, 23, 47
+* `hb-ot-tag.cc`: 1, 14
+* `hb-ot-var-avar-table.hh`: 30, 41
+* `hb-ot-var-common.hh`: 32, 41
+* `hb-ot-var-cvar-table.hh`: 6, 32, 36
+* `hb-ot-var-fvar-table.hh`: 30, 41
+* `hb-ot-var-gvar-table.hh`: 32, 34, 39, 41
+* `hb-ot-var-hvar-table.hh`: 8, 31, 39
+* `hb-ot-var-mvar-table.hh`: 8, 31
+* `hb-ot-var.cc`: 30
+* `hb-ot-vorg-table.hh`: 8, 39
+* `hb-outline.cc`: 7
+* `hb-paint-bounded.cc`: 35
+* `hb-paint-bounded.hh`: 35
+* `hb-paint-extents.cc`: 35
+* `hb-paint-extents.hh`: 8
+* `hb-paint.cc`: 35
+* `hb-paint.h`: 35
+* `hb-paint.hh`: 35, 37
+* `hb-raster-draw.cc`: 36
+* `hb-raster-image.cc`: 36
+* `hb-raster-paint.cc`: 36
+* `hb-raster-paint.hh`: 36
+* `hb-raster.cc`: 3
+* `hb-raster.h`: 36
+* `hb-raster.hh`: 36
+* `hb-repacker.hh`: 40
+* `hb-sanitize.hh`: 4, 5, 6
+* `hb-script-list.h`: 9
+* `hb-serialize.hh`: 40
+* `hb-set-digest.hh`: 17
+* `hb-shape-fuzzer.cc`: 46
+* `hb-shape-input.hh`: 46
+* `hb-shape-plan.cc`: 6, 10, 11, 12, 46
+* `hb-shape-plan.hh`: 11, 12
+* `hb-shape-threads.cc`: 46
+* `hb-shape.cc`: 3, 10, 11, 12, 30, 43, 46
+* `hb-shaper-list.hh`: 11, 47
+* `hb-shaper.cc`: 11
+* `hb-shaper.hh`: 11
+* `hb-static.cc`: 4, 6
+* `hb-style.cc`: 7, 45
+* `hb-style.h`: 45
+* `hb-subset-accelerator.hh`: 39
+* `hb-subset-cff-common.hh`: 39, 40
+* `hb-subset-cff1.cc`: 39, 40
+* `hb-subset-cff2.cc`: 39, 41
+* `hb-subset-depend.cc`: 3
+* `hb-subset-depend.h`: 42
+* `hb-subset-input.cc`: 13, 39, 41, 47
+* `hb-subset-instancer-iup.cc`: 41
+* `hb-subset-instancer-solver.cc`: 41
+* `hb-subset-plan-layout.cc`: 39
+* `hb-subset-plan-member-list.hh`: 39
+* `hb-subset-plan-var.cc`: 41
+* `hb-subset-plan.cc`: 39, 42
+* `hb-subset-plan.hh`: 5
+* `hb-subset-serialize.cc`: 40
+* `hb-subset-serialize.h`: 40
+* `hb-subset-table.hh`: 39, 40
+* `hb-subset-threads.cc`: 46
+* `hb-subset.cc`: 3, 32, 39, 41
+* `hb-subset.h`: 39, 41, 42
+* `hb-subset.hh`: 4, 41
+* `hb-test.h`: 46
+* `hb-ucd-table.hh`: 2, 9, 47
+* `hb-ucd.cc`: 9
+* `hb-unicode-emoji-table.hh`: 9
+* `hb-unicode.cc`: 9, 44
+* `hb-unicode.h`: 9
+* `hb-unicode.hh`: 9, 16, 19, 21, 23
+* `hb-uniscribe.cc`: 11, 44
+* `hb-uniscribe.h`: 44
+* `hb-utf.hh`: 45
+* `hb-vector-buf.hh`: 37
+* `hb-vector-draw.cc`: 34, 37
+* `hb-vector-draw.hh`: 37
+* `hb-vector-internal.hh`: 37
+* `hb-vector-paint-pdf.cc`: 37
+* `hb-vector-paint-svg.cc`: 35, 37
+* `hb-vector-paint.cc`: 37
+* `hb-vector-paint.hh`: 37
+* `hb-vector-path.cc`: 37
+* `hb-vector-path.hh`: 37
+* `hb-vector.cc`: 37
+* `hb-vector.h`: 37
+* `hb-wasm-api-shape.hh`: 11
+* `hb-wasm-shape.cc`: 11
+* `hb.h`: 47
+* `hb.hh`: 11
+* `HBGlyphID16`: 4
+* `HBGlyphID24`: 4
+* `HBINT16`: 4
+* `HBINT32`: 4
+* `HBINT64`: 4
+* `HBINT8`: 4
+* `HBSUBFZ2`: 46
+* `HBUINT16`: 4, 17, 20
+* `HBUINT24`: 4
+* `HBUINT32`: 4
+* `HBUINT32VAR`: 33
+* `HBUINT64`: 4
+* `HBUINT8`: 4
+* `HeadlessArray16Of`: 4, 17
+* `HeadlessArrayOf`: 4
+* `helper-cairo.hh`: 3, 44
+* `helper-extents-overlay.hh`: 3
+* `helper-image-output.hh`: 3
+* `helper-subset.hh`: 3
+* `HintingDevice`: 18
+* `hr-hb-draw.h`: 47
+* `hr-hb-paint.h`: 47
+* `hr-hb-subset.h`: 47
+* `hr-hb.h`: 47
+* `hr-shape/README.md`: 47
+* `HYE0`: 14
+* `IgnoreMarks`: 17, 18, 20
+* `indic_table.rs`: 47
+* `IndicPositionalCategory.txt`: 24, 26
+* `IndicShapingInvalidCluster.txt`: 26
+* `IndicSyllabicCategory.txt`: 24, 26
+* `INT32_MAX`: 45
+* `ItemVariationStore`: 31
+* `ItemVarStoreInstancer`: 31
+* `iup.py`: 41
+* `kern.rs`: 47
+* `KernAATSubTableHeader`: 20
+* `KernOTSubTableHeader`: 20
+* `KernSubTable`: 20
+* `KernSubTableFormat3`: 20
+* `kerx.rs`: 47
+* `KerxSubTableFormat0`: 20
+* `KerxSubTableFormat1`: 20
+* `KerxSubTableFormat2`: 20
+* `KerxSubTableHeader`: 29
+* `KerxTable`: 20, 29
+* `L0`: 39
+* `L1`: 39
+* `L19`: 39
+* `layout.py`: 40
+* `lib.rs`: 36
+* `ligature-graph.hh`: 40
+* `Ligature.hh`: 42
+* `LigatureSet`: 5
+* `LigatureSubst`: 5
+* `LigatureSubstFormat1_2`: 4, 17
+* `List16OfOffsetTo`: 4
+* `LongMetric`: 8
+* `LookupVariationRecord`: 12, 13
+* `main-font-text.hh`: 3
+* `main.cc`: 46
+* `MapViewOfFile`: 6
+* `MarkArray`: 5
+* `MarkArray.hh`: 18, 21, 29
+* `MarkBasePos`: 5
+* `markbasepos-graph.hh`: 40
+* `MarkBasePosFormat1.hh`: 18, 27
+* `MarkLigPos`: 5
+* `MarkLigPosFormat1.hh`: 18
+* `MarkMarkPos`: 5
+* `MarkMarkPosFormat1.hh`: 18
+* `MathConstants`: 45
+* `MathGlyphConstruction`: 45
+* `MathGlyphInfo`: 45
+* `MathKern`: 45
+* `MathValueRecord`: 45
+* `MathVariants`: 45
+* `MaxCoord`: 45
+* `MediumTypes`: 4, 17, 32
+* `meson_options.txt`: 2, 11, 36, 37, 38, 44, 47
+* `meson.build`: 2, 24, 36, 38, 44, 46
+* `mesonbuild/envconfig.py`: 2
+* `MinCoord`: 45
+* `MinMax`: 45
+* `ms-use/IndicPositionalCategory-Additional.txt`: 26
+* `ms-use/IndicShapingInvalidCluster.txt`: 27
+* `ms-use/IndicSyllabicCategory-Additional.txt`: 26
+* `MultiItemVariationStore`: 31
+* `MultiItemVarStoreInstancer`: 33
+* `MultiVarData`: 33
+* `NNOffset16To`: 4
+* `normalize.rs`: 47
+* `notes/harfrust-differences.md`: 47
+* `notes/upstream-bug-reports.md`: 46
+* `NumType`: 4
+* `ObsoleteTypes`: 20, 28
+* `Offset16`: 4
+* `Offset24`: 4
+* `Offset32`: 4
+* `OffsetTo`: 4, 5, 40
+* `OpenTypeFontFile`: 4, 6
+* `OpenTypeOffsetTable`: 4
+* `options.hh`: 3
+* `OT::ClipRecord`: 4
+* `OT::CmapSubtableLongGroup`: 4
+* `OT::head`: 6
+* `OT::Index`: 4
+* `OT::LangSys`: 4
+* `OT::RangeRecord`: 4
+* `OT::VarIdx`: 4
+* `ot/apply.rs`: 47
+* `OT/Color/CBDT/CBDT.hh`: 8, 35, 39
+* `OT/Color/COLR/COLR.hh`: 4, 5, 7, 8, 35, 39, 42
+* `OT/Color/COLR/colrv1-depend.hh`: 42
+* `OT/Color/CPAL/CPAL.hh`: 35, 39
+* `OT/Color/sbix/sbix.hh`: 8, 35, 39
+* `OT/Color/svg/svg.hh`: 35
+* `OT/glyf/CompositeGlyph.hh`: 32, 34
+* `OT/glyf/glyf.hh`: 5, 8, 31, 32, 34, 39, 41, 42
+* `OT/glyf/Glyph.hh`: 8, 32, 34, 41
+* `OT/glyf/GlyphHeader.hh`: 8
+* `OT/glyf/path-builder.hh`: 34
+* `OT/glyf/SimpleGlyph.hh`: 8, 34
+* `OT/Layout/Common/Coverage.hh`: 4, 5
+* `OT/Layout/Common/CoverageFormat2.hh`: 4
+* `OT/Layout/Common/RangeRecord.hh`: 4
+* `OT/Layout/GDEF/GDEF.hh`: 39, 40
+* `OT/Layout/GPOS/Common.hh`: 10, 18
+* `OT/Layout/GPOS/CursivePosFormat1.hh`: 18, 21
+* `OT/Layout/GPOS/GPOS.hh`: 7, 10, 15, 18, 29, 47
+* `OT/Layout/GPOS/MarkArray.hh`: 21, 29
+* `OT/Layout/GPOS/PairSet.hh`: 39
+* `OT/Layout/GPOS/ValueFormat.hh`: 4, 21
+* `OT/Layout/GSUB/Ligature.hh`: 40
+* `OT/Layout/GSUB/LigatureSubst.hh`: 5
+* `OT/Layout/GSUB/LigatureSubstFormat1.hh`: 40
+* `OT/Layout/GSUB/SingleSubst.hh`: 4
+* `OT/Layout/GSUB/SingleSubstFormat1.hh`: 4
+* `OT/Layout/GSUB/SubstLookup.hh`: 39
+* `OT/Layout/GSUB/SubstLookupSubTable.hh`: 4
+* `ot/lookup/context.rs`: 47
+* `ot/lookup/gpos.rs`: 47
+* `ot/lookup/gsub.rs`: 47
+* `ot/map.rs`: 47
+* `OT/name/name.hh`: 28, 39, 40, 45
+* `ot/shaper/indic_table.rs`: 47
+* `OT/Var/VARC/coord-setter.hh`: 33
+* `OT/Var/VARC/VARC-subset.hh`: 39, 41
+* `OT/Var/VARC/VARC.cc`: 33, 42
+* `OT/Var/VARC/VARC.hh`: 33
+* `OutlinePen`: 47
+* `output-options.hh`: 3
+* `paint/backend.rs`: 47
+* `PaintColrGlyph`: 42
+* `PaintComposite`: 5
+* `PaintGlyph`: 42
+* `PaintSink`: 47
+* `PaintTranslate`: 35
+* `PaintVarTranslate`: 35
+* `PairPos`: 5
+* `pairpos-graph.hh`: 40
+* `PairPosFormat2.hh`: 5, 18
+* `PairSet.hh`: 5, 18, 39
+* `path-builder.hh`: 34
+* `PathSink`: 47
+* `plan.rs`: 47
+* `PosLookupSubTable`: 4
+* `RangeRecord`: 4
+* `raster-output.hh`: 3
+* `read-fonts/README.md`: 47
+* `read-fonts/src/font_data.rs`: 47
+* `read-fonts/src/lib.rs`: 47
+* `read-fonts/src/model/glyph/color.rs`: 47
+* `read-fonts/src/model/glyph/outline/path.rs`: 47
+* `README.md`: 1, 2, 36, 44, 47, 48
+* `README.mingw.md`: 2
+* `README.python.md`: 2, 44, 48
+* `ReleaseDC`: 46
+* `ResourceForkHeader`: 4
+* `run-repack-tests.py`: 46
+* `run-tests.py`: 46
+* `rust/font.rs`: 7, 36, 48
+* `rust/meson.build`: 47
+* `rust/shape.rs`: 11, 47, 48
+* `sample.py`: 2, 44
+* `sbix.hh`: 35
+* `ScalerFont`: 47
+* `ScriptPlace`: 44
+* `Scripts-18.0.0.txt`: 27
+* `Scripts.txt`: 22, 26, 27
+* `scripts/gen-shaping-tests.py`: 47
+* `scripts/README.md`: 47
+* `ScriptShape`: 44
+* `SelectObject`: 46
+* `serialize-example.cc`: 40
+* `shape-consumer.hh`: 3
+* `shape-format.hh`: 3
+* `shape-options.hh`: 3
+* `shape-output.hh`: 3
+* `shape.rs`: 11, 47
+* `ShapeOptions`: 47
+* `ShapePlan`: 47
+* `ShapePlanKey`: 47
+* `shaper_font.rs`: 47
+* `ShaperFont`: 47
+* `SimpleGlyph.hh`: 34
+* `SinglePos`: 5
+* `SinglePosFormat1.hh`: 5
+* `SingleSubst`: 4
+* `SingleSubstFormat1.hh`: 5
+* `skera/README.md`: 47
+* `skera/src/lib.rs`: 47
+* `skrifa/README.md`: 47
+* `skrifa/src/font.rs`: 47
+* `skrifa/src/lib.rs`: 47
+* `skrifa/src/outline/pen.rs`: 47
+* `skrifa/src/scaler/hinting.rs`: 47
+* `SmallTypes`: 4, 17, 32
+* `SortedArray16Of`: 4
+* `SortedArrayOf`: 4
+* `SortedUnsizedArrayOf`: 4
+* `SparseVarRegionAxis`: 33
+* `StateTable`: 28
+* `StateTableDriver`: 28
+* `StructAfter`: 4
+* `StructAtOffset`: 4
+* `StructuredBuffer`: 38
+* `subset/mod.rs`: 47
+* `SUBSETTING.md`: 47
+* `SubstLookup.hh`: 39
+* `SubstLookupSubTable`: 4
+* `svg.hh`: 35
+* `TableRecord`: 4
+* `tag_table.rs`: 47
+* `test-graphite2-buffer.cc`: 11
+* `test-use-table.cc`: 26
+* `test/api/hb-test.h`: 46
+* `test/api/meson.build`: 2, 46
+* `test/fuzzing/hb-depend-closure-parity.cc`: 42
+* `test/fuzzing/main.cc`: 46
+* `test/fuzzing/meson.build`: 46
+* `test/fuzzing/README.md`: 42
+* `test/meson.build`: 2
+* `test/shape/meson.build`: 46
+* `test/shape/README.md`: 46
+* `test/shape/run-tests.py`: 3, 46
+* `test/subset/generate-expected-outputs.py`: 46
+* `test/subset/meson.build`: 2
+* `test/subset/run-tests.py`: 46
+* `TESTING.md`: 2
+* `text-options.hh`: 3
+* `third_party/blink/renderer/platform/fonts/opentype/open_type_math_support.cc`: 45
+* `tools/build-var-test-fonts.py`: 30
+* `trak.rs`: 47
+* `TTCHeaderVersion1`: 4
+* `TupleValues`: 33
+* `unicode/ucd_table.rs`: 47
+* `UnicodeData.txt`: 22, 26
+* `UnsizedArrayOf`: 4
+* `update.py`: 46
+* `util/batch.hh`: 3
+* `util/face-options.hh`: 3
+* `util/font-options.hh`: 3, 7, 36, 44
+* `util/gpu-output.hh`: 3, 38
+* `util/gpu/demo-view.cc`: 3
+* `util/gpu/web/config.h`: 2
+* `util/hb-ft-raster.cc`: 36
+* `util/hb-gpu-encode-all.cc`: 38
+* `util/hb-gpu.cc`: 3
+* `util/hb-info.cc`: 3, 30, 45
+* `util/hb-raster.cc`: 36
+* `util/hb-subset-depend.cc`: 42
+* `util/hb-subset.cc`: 3
+* `util/hb-vector.cc`: 37
+* `util/helper-cairo.hh`: 44
+* `util/helper-subset.hh`: 3, 41
+* `util/main-font-text.hh`: 3
+* `util/meson.build`: 2, 3, 38
+* `util/options.hh`: 2, 3
+* `util/raster-output.hh`: 3, 36
+* `util/shape-consumer.hh`: 3
+* `util/shape-format.hh`: 3
+* `util/shape-options.hh`: 3, 11, 43
+* `util/shape-output.hh`: 3, 46
+* `util/text-options.hh`: 3
+* `util/vector-output.hh`: 3, 37
+* `util/view-cairo.hh`: 3
+* `util/view-options.hh`: 3
+* `ValueBase`: 4
+* `ValueFormat.hh`: 5, 7, 18, 21, 29
+* `ValuesAreLong`: 29
+* `varc-dump.py`: 33
+* `VARC.cc`: 33
+* `VARC.hh`: 33
+* `VarData`: 31, 41
+* `VariationDevice`: 18
+* `VarIdx`: 4
+* `VarRegionAxis`: 31
+* `VarRegionList`: 31
+* `VarSizedBinSearchArrayOf`: 4
+* `vector-output.hh`: 3
+* `VerticalLcd`: 47
+* `view-options.hh`: 3
+* `WheresData`: 6

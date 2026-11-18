@@ -1,6 +1,6 @@
 # Blobs, faces and lazy tables
 
-The [last two chapters](fonts-as-bytes.html) showed how HarfBuzz reads a table: it lays a struct over the bytes, and [the sanitizer](trust-nothing-the-sanitizer.html) checks those bytes once so that the struct can be trusted afterwards. This chapter is about where the bytes come from, and when each table is checked. The answer to the second question is: as late as possible, and only once.
+The [last two chapters](fonts-as-bytes.html) showed how HarfBuzz reads a table: it lays a struct over the bytes, and [the sanitizer](trust-nothing-the-sanitizer.html) checks those bytes once so that the struct can be trusted afterward. This chapter is about where the bytes come from, and when each table is checked. The answer to the second question is: as late as possible, and only once.
 
 Two objects hold a font before it has a size. A **blob** is a run of bytes with a reference count and a way to free them. A **face** is a blob seen as one font in an sfnt file: it knows how to find a table by its tag, and it keeps, for each table HarfBuzz uses, a slot that stays empty until something asks for that table. The first request fills the slot, sanitizing the table and often building a faster structure to read it with, and every later request just reads the pointer. There are no locks. If two threads ask at once, both do the work and one of them throws its copy away. If the table is missing or broken, the slot is filled with an empty table, so the work isn’t done again.
 
@@ -86,7 +86,7 @@ struct hb_object_header_t
 };
 ```
 
-The reference count is an atomic integer. `hb_object_create` starts it at one, `reference` adds one, and `destroy` takes one away and frees the object when it reaches zero. A count of *zero* has a special meaning: it marks a static object, such as an empty singleton, which `reference` and `destroy` leave alone. The empty blob and the empty face are made with `HB_OBJECT_HEADER_STATIC`, which is all zeros, so they are never counted, never freed, and, since `writable` is false, always immutable. `hb_face_create_or_fail` uses that last fact to recognise the empty face: an immutable face straight from `hb_face_create` can only be the singleton.
+The reference count is an atomic integer. `hb_object_create` starts it at one, `reference` adds one, and `destroy` takes one away and frees the object when it reaches zero. A count of *zero* has a special meaning: it marks a static object, such as an empty singleton, which `reference` and `destroy` leave alone. The empty blob and the empty face are made with `HB_OBJECT_HEADER_STATIC`, which is all zeros, so they are never counted, never freed, and, since `writable` is false, always immutable. `hb_face_create_or_fail` uses that last fact to recognize the empty face: an immutable face straight from `hb_face_create` can only be the singleton.
 
 `writable` is the immutability flag: `make_immutable` clears it, and setters check it. `user_data` lets an application hang its own pointers on any object, each under a key, with a destroy function that runs when the object dies. The array is allocated on first use, published with the same compare-and-swap that the lazy loaders below use, and the array itself is guarded by a mutex. It is the one place in this chapter with a lock in it.
 
@@ -254,7 +254,7 @@ Data * get_data () const
 
 `head` is first in the enum, so its loader is one pointer after `face`. That is why the comment insists that `face` comes “JUST before” the loaders, and why the enum starts with a dummy `ORDER_ZERO`. With about forty tables on the list in a full build, the trick halves the size of the table slots. The list’s own header comment is blunt about the cost that remains: “Don’t add a table unless it’s used though. This is not exactly zero-cost.”
 
-The list is cut down at compile time. A build with `HB_NO_VERTICAL` has no `vhea`, `vmtx` or `VORG` slots, one with `HB_NO_COLOR` none for the colour tables, and so on. Some tables a face uses aren’t on it at all, because an accelerator loads them for itself: `HVAR` and `VVAR` are loaded by the `hmtx` and `vmtx` accelerators, and the 24-bit `GLYF` and `LOCA` by the `glyf` accelerator.
+The list is cut down at compile time. A build with `HB_NO_VERTICAL` has no `vhea`, `vmtx` or `VORG` slots, one with `HB_NO_COLOR` none for the color tables, and so on. Some tables a face uses aren’t on it at all, because an accelerator loads them for itself: `HVAR` and `VVAR` are loaded by the `hmtx` and `vmtx` accelerators, and the 24-bit `GLYF` and `LOCA` by the `glyf` accelerator.
 
 ### Loading without a lock
 
@@ -334,7 +334,7 @@ broken-gsub.ttf  --list-features
 
 > For type designers: if a font shapes as though it had no layout at all, though `hb-info --list-tables` shows the table, a table that failed sanitizing is the likely reason.
 
-For accelerators, the failure that matters is of a different kind. An accelerator is built even when its table is missing: it’s an accelerator for an empty table. What can fail is allocating it. Then `create` returns `NULL`, which can’t be stored, since `NULL` means “not loaded yet”. So the loader stores a **tagged Null** instead: the address of the accelerator’s Null object with its lowest bit set (`hb-machinery.hh:273`). Readers clear the bit and get the Null accelerator, and the destroy code recognises the tag and frees nothing. A comment explains why it checks the bit and not the address: the Null pool is internal to each of HarfBuzz’s libraries (`libharfbuzz`, `libharfbuzz-subset` and the rest each have their own copy), so another library sharing the face would not recognise the Null object by its address. The same tagging is used for the per-shaper data on faces and fonts, whose Null is `NULL` itself.
+For accelerators, the failure that matters is of a different kind. An accelerator is built even when its table is missing: it’s an accelerator for an empty table. What can fail is allocating it. Then `create` returns `NULL`, which can’t be stored, since `NULL` means “not loaded yet”. So the loader stores a **tagged Null** instead: the address of the accelerator’s Null object with its lowest bit set (`hb-machinery.hh:273`). Readers clear the bit and get the Null accelerator, and the destroy code recognizes the tag and frees nothing. A comment explains why it checks the bit and not the address: the Null pool is internal to each of HarfBuzz’s libraries (`libharfbuzz`, `libharfbuzz-subset` and the rest each have their own copy), so another library sharing the face would not recognize the Null object by its address. The same tagging is used for the per-shaper data on faces and fonts, whose Null is `NULL` itself.
 
 ## The first GSUB access, step by step
 

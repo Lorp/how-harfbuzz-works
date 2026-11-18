@@ -109,7 +109,7 @@ Underneath, everything comes down to a few checks on the context, `hb_sanitize_c
 
 `check_struct` is used on every struct with a fixed part (the `min_size` comes from the `DEFINE_SIZE_*` macros described in [Fonts as bytes](fonts-as-bytes.html)), so it is made as cheap as possible. On a 64-bit machine it only checks that the struct’s *end* is in the table (`hb-sanitize.hh:396`). Every multiplication of a count by a size goes through `hb_unsigned_mul_overflows`, so a count of 0x80000000 records of 2 bytes can’t pass as a small number.
 
-After almost every check comes `hb_barrier ()`. It’s a compiler memory barrier (`hb-atomic.hh:188`) and generates no instructions. No comment says what it is for, but from the code its purpose appears to be to stop the compiler from moving a read of a field to before the check that makes the read safe, which an optimiser is otherwise entitled to do when it can see that the check doesn’t change the field.
+After almost every check comes `hb_barrier ()`. It’s a compiler memory barrier (`hb-atomic.hh:188`) and generates no instructions. No comment says what it is for, but from the code its purpose appears to be to stop the compiler from moving a read of a field to before the check that makes the read safe, which an optimizer is otherwise entitled to do when it can see that the check doesn’t change the field.
 
 ### Formats and dispatch
 

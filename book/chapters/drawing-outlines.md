@@ -2,7 +2,7 @@
 
 Shaping ends with glyph IDs and positions. Something still has to turn each glyph ID into a shape, and HarfBuzz can do that too. Its draw API hands a glyph’s outline to the client one segment at a time, as moves, lines and curves, with variations, synthetic bold and slant, and the font’s scale already applied. It doesn’t rasterize anything, and it doesn’t hint: as the manual says, the outlines are “as they are defined in the font, without applying hinting to fit the curves to the pixel grid” (`docs/usermanual-fonts-and-faces.xml`).
 
-This chapter starts with the API as a client sees it, then takes the outline formats in the order HarfBuzz tries them: `glyf`, with its quadratic curves, composites and, in the newer `GLYF` table, cubic curves; then the CFF and CFF2 charstring interpreter. It ends with the limits that stop a hostile font from making one glyph take forever, and the budget shared between them. How gvar moves the points is in [Varying outlines](varying-outlines.html), VARC is in [Variable components](variable-components.html), and colour glyphs, which are painted rather than drawn, are in [Colour](colour.html). The figures are drawn by `hb-vector`, itself a client of the draw API, from test fonts in `fonts/drawing-outlines/`.
+This chapter starts with the API as a client sees it, then takes the outline formats in the order HarfBuzz tries them: `glyf`, with its quadratic curves, composites and, in the newer `GLYF` table, cubic curves; then the CFF and CFF2 charstring interpreter. It ends with the limits that stop a hostile font from making one glyph take forever, and the budget shared between them. How gvar moves the points is in [Varying outlines](varying-outlines.html), VARC is in [Variable components](variable-components.html), and color glyphs, which are painted rather than drawn, are in [Color](color.html). The figures are drawn by `hb-vector`, itself a client of the draw API, from test fonts in `fonts/drawing-outlines/`.
 
 ## The draw API
 
@@ -54,7 +54,7 @@ dfuncs->emit_cubic_to (draw_data, *st,
                        to_x, to_y);
 ```
 
-(trimmed). The two cubic control points lie two thirds of the way from each end towards the quadratic one, which gives exactly the same curve. It is computed in doubles, so that, says the comment, “the result does not depend on how the compiler evaluates float expressions”.
+(trimmed). The two cubic control points lie two thirds of the way from each end toward the quadratic one, which gives exactly the same curve. It is computed in doubles, so that, says the comment, “the result does not depend on how the compiler evaluates float expressions”.
 
 | The client leaves out | What happens |
 |---|---|
@@ -94,7 +94,7 @@ return false;
 
 “Has the glyph” means a glyph ID within the table’s range. A `glyf` glyph with no contours, like a space, counts: `glyf` draws nothing and returns true, and CFF isn’t asked. So does a glyph whose `loca` entry is broken, which `glyf` treats as empty (`OT/glyf/glyf.hh:574`). Only a glyph past the end of `loca` falls through to the next table.
 
-Bitmaps and colour glyphs aren’t on this list. They are painted, through a different callback; when a colour glyph has no paint data, painting falls back to the outline. [Colour](colour.html) covers that side. [Glyph extents](where-metrics-come-from.html#glyph-extents) are found in yet another order, with bitmaps and colour first.
+Bitmaps and color glyphs aren’t on this list. They are painted, through a different callback; when a color glyph has no paint data, painting falls back to the outline. [Color](color.html) covers that side. [Glyph extents](where-metrics-come-from.html#glyph-extents) are found in yet another order, with bitmaps and color first.
 
 ## glyf: from points to a path
 
@@ -194,7 +194,7 @@ In `glyf`, `cubic` is drawn like `offcurve`, with quadratics. In `GLYF`, its fou
 
 ## CFF and CFF2: running charstrings
 
-A CFF glyph is a **charstring**, a small program in Adobe’s Type 2 format: numbers pushed on a stack, and operators that use them to move, draw lines and draw cubic curves. HarfBuzz runs it with an interpreter built from templates, shared between drawing, extents and subsetting:
+A CFF glyph is a **charstring**, a small program in Adobe’s Type 2 format: numbers pushed on a stack, and operators that use them to move, draw lines and draw cubic curves. HarfBuzz runs it with an interpreter built from templates, shared between drawing, extents and subsetting. The CFF and CFF2 code was contributed by Adobe, and merged in 2.3.0, mostly for the subsetter but also for glyph extents (`NEWS`):
 
 | Layer | Where | What it adds |
 |---|---|---|
@@ -327,4 +327,4 @@ Thirty-two are drawn. The thirty-third runs the budget out, and from there on no
 * `glyf` points become curves through implied on-curve points between off-curve ones. Composites are transformed and flattened before anything is drawn; `ROUND_XY_TO_GRID` and the overlap flags are ignored. Point matching inside a nested composite counts points from the wrong place in 15.1.0.
 * Cubic `glyf` curves use flag bit 0x80, in pairs, and HarfBuzz reads the bit only in `GLYF`, not `glyf`.
 * CFF and CFF2 charstrings run in one templated interpreter that ignores hints, follows subroutines 10 deep, draws `seac` accents, and applies CFF2 blends unrounded. A charstring that fails half-way has already drawn part of its glyph.
-* Nesting, components, points and operators each have a limit, and since 14.5.0 a shared budget of 2²⁴ units bounds a whole drawing session, per glyph for most clients, and per output for HarfBuzz’s own renderers, like `hb-vector`. Those renderers are the subject of [Rendering](rendering.html).
+* Nesting, components, points and operators each have a limit, and since 14.5.0 a shared budget of 2²⁴ units bounds a whole drawing session, per glyph for most clients, and per output for HarfBuzz’s own renderers, like `hb-vector`. Those renderers are the subjects of [hb-raster](hb-raster.html), [hb-vector](hb-vector.html) and [hb-gpu](hb-gpu.html).

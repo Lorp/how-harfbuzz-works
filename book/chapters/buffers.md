@@ -218,7 +218,7 @@ for (unsigned int i = start; i < end; i++)
 
 The merged cluster takes the smallest value, and the range always grows to whole clusters: if a cluster at either end carries on past the range, the rest of it is merged too, including any part already written to the output. Otherwise a merge could split a cluster in two. `merge_out_clusters_impl` (`:610`) is the mirror image, for a range of the output. `set_cluster` (`hb-buffer.hh:642`) also replaces the glyph flags of any glyph whose cluster it changes, with none unless it is given some.
 
-Deleting a glyph has to merge too, or a character could vanish with no cluster to say where it went. `delete_glyph` (`hb-buffer.cc:652`) does nothing if a neighbour shares the glyph’s cluster. Otherwise it merges the cluster backward into the glyph before, if that glyph’s cluster is larger, or, at the start of the buffer, forward into the glyph after. `delete_glyphs_inplace` (`:694`) does the same once positions exist. Removing a ZWNJ shows both cases:
+Deleting a glyph has to merge too, or a character could vanish with no cluster to say where it went. `delete_glyph` (`hb-buffer.cc:652`) does nothing if a neighbor shares the glyph’s cluster. Otherwise it merges the cluster backward into the glyph before, if that glyph’s cluster is larger, or, at the start of the buffer, forward into the glyph after. `delete_glyphs_inplace` (`:694`) does the same once positions exist. Removing a ZWNJ shows both cases:
 
 ```shape
 buffers.ttf  a\u200Ce  --remove-default-ignorables
@@ -370,7 +370,7 @@ The budget is charged by work that a font can make expensive: merging clusters, 
 
 ### Messages
 
-`hb_buffer_set_message_func` installs a callback that HarfBuzz calls at each step, with a message such as `start lookup 3 feature 'calt'`. It is how `hb-shape --trace`, and this book’s traces, work. If the callback returns false, HarfBuzz skips the step it was about to start: a whole GSUB or GPOS table, one lookup, normalization, a shaper’s preprocessing. Steps can be turned off one at a time to find which is responsible for a result.
+`hb_buffer_set_message_func` installs a callback that HarfBuzz calls at each step, with a message such as `start lookup 3 feature 'calt'`. It is how [`hb-shape --trace`](command-line-tools.html#traces), and this book’s traces, work. If the callback returns false, HarfBuzz skips the step it was about to start: a whole GSUB or GPOS table, one lookup, normalization, a shaper’s preprocessing. Steps can be turned off one at a time to find which is responsible for a result.
 
 Messages are formatted into 100 bytes (`hb-buffer.cc:2445`) and only sent when the buffer is in sync. While a callback runs, it may not install another (`:2396`), and `hb_buffer_get_glyph_positions` returns null rather than create positions that don’t exist yet. A callback that changes glyph IDs must call `hb_buffer_changed` (new in 13.0.0) to refresh the buffer’s digest. Since 12.0.0 the detailed messages from inside lookups need a build with `HB_BUFFER_MESSAGE_MORE` (`hb-debug.hh:452`). More is in [Testing HarfBuzz](testing-harfbuzz.html).
 
@@ -382,7 +382,7 @@ With `HB_BUFFER_FLAG_VERIFY`, `hb_shape_full` keeps a copy of the text and check
 2. **Safe to break is safe**: the text is cut at every cluster boundary not marked unsafe to break, each piece is shaped alone, and the pieces together must equal the whole, apart from the flags.
 3. **Safe to concat is safe**, if unsafe-to-concat flags were asked for: the text is cut at every boundary not marked unsafe to concat, the odd and the even pieces are shaped as two texts, and interleaving the results must give the whole again.
 
-Failures go to the message callback, or to standard error, with the text, and a failed reshaping check replaces the buffer with the reconstruction so the difference can be seen. `hb-shape --verify` arrived with unsafe to break in 1.5.0, `NEWS` for 1.5.1 says “All our tests pass with --verify now”, and since 3.4.0 the checks are in the library itself.
+Failures go to the message callback, or to standard error, with the text, and a failed reshaping check replaces the buffer with the reconstruction so the difference can be seen. [`hb-shape --verify`](command-line-tools.html#verifying) arrived with unsafe to break in 1.5.0, `NEWS` for 1.5.1 says “All our tests pass with --verify now”, and since 3.4.0 the checks are in the library itself.
 
 ```shape
 buffers.ttf  क\u094Dष\u093F  --verify

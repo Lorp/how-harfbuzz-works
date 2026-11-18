@@ -184,7 +184,7 @@ anchors.ttf  A\u0301o\u0301  --language=en
 anchors.ttf  A\u0301o\u0301  --language=en  --features=-kern
 ```
 
-On A the acute moves up 80 units, to A’s higher anchor; on the narrower o it moves right by 50, to o’s centre. Format 4 doesn’t look at the `kern` feature or the kerning mask at all (`:713`), so `-kern` changes nothing.
+On A the acute moves up 80 units, to A’s higher anchor; on the narrower o it moves right by 50, to o’s center. Format 4 doesn’t look at the `kern` feature or the kerning mask at all (`:713`), so `-kern` changes nothing.
 
 ```draw
 font: anchors.ttf
@@ -339,7 +339,7 @@ At 3 points the letters get 6 points’ +50; at 9, halfway between 6 and 12, +25
 
 ### Where the space goes
 
-`trak::apply` (`:220`) adds the value to the advance of the first glyph of each grapheme, found by the continuation bits that [Unicode inside HarfBuzz](unicode-inside-harfbuzz.html#continuations-just-enough-of-graphemes) describes. A mark doesn’t start a grapheme, so it gets nothing. (The acute’s offset here is fallback mark positioning’s, which runs later and centres it over the tracked A.)
+`trak::apply` (`:220`) adds the value to the advance of the first glyph of each grapheme, found by the continuation bits that [Unicode inside HarfBuzz](unicode-inside-harfbuzz.html#continuations-just-enough-of-graphemes) describes. A mark doesn’t start a grapheme, so it gets nothing. (The acute’s offset here is fallback mark positioning’s, which runs later and centers it over the tracked A.)
 
 ```shape
 trak.ttf  A\u0301V  --language=en  --font-ptem=6
@@ -358,7 +358,7 @@ In vertical text the value comes from the vertical track table and is added to t
 trak.ttf  AV  --language=en  --direction=ttb
 ```
 
-The advance has gone from −1,000 to −900. Vertical advances are negative, growing downwards, so adding a positive value brings the glyphs *closer*. GPOS negates a vertical advance from a value record for this reason, “y_advance values grow downward but font-space grows upward” (`ValueFormat.hh:114`); `trak` doesn’t. A positive value, which loosens horizontal text, tightens a column, which looks like a bug (inferred: Core Text’s behaviour in vertical text hasn’t been checked here).
+The advance has gone from −1,000 to −900. Vertical advances are negative, growing downwards, so adding a positive value brings the glyphs *closer*. GPOS negates a vertical advance from a value record for this reason, “y_advance values grow downward but font-space grows upward” (`ValueFormat.hh:114`); `trak` doesn’t. A positive value, which loosens horizontal text, tightens a column, which looks like a bug (inferred: Core Text’s behavior in vertical text hasn’t been checked here).
 
 ### When it applies
 

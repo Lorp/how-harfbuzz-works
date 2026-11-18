@@ -1,4 +1,4 @@
-# Variable components: VARC
+# VARC: variable components
 
 A CJK font has tens of thousands of glyphs, but far fewer distinct parts: the same radicals and strokes appear again and again, in different sizes and positions, and often slightly reshaped to fit. A TrueType composite glyph can reuse a part, but only as it is, moved and perhaps scaled. **VARC**, the variable composites table, lets a glyph be built from components that are each placed with a full transform, rotation and skew included, and each drawn at *its own* position in the design space. A component can be bolder, narrower, or bent differently from the glyph it’s part of, and it can have axes of its own that no user ever sees.
 
@@ -13,7 +13,7 @@ A TrueType [composite glyph](drawing-outlines.html#composite-glyphs) is a list o
 * **Only the offset can vary.** Under gvar, each component of a composite counts as one point, its offset ([Varying outlines](varying-outlines.html#composites)). Nothing varies its scale or matrix, so a part can’t get wider, or turn further, as the weight changes.
 * **The component is drawn where the composite is.** At weight 600, a composite’s components are at weight 600 too. The ㄱ of 가 shares its width with ㅏ; the ㄱ of 고 has the whole width. To composites, those are two glyphs, and the font must store both, and every other shape of ㄱ it needs.
 
-VARC removes both limits. A component’s transform is stored as separate numbers (translation, rotation, scales, skews and a centre), each of which can vary. And each component sets some axes to values of its own, which can vary too, to say where in the design space its glyph is drawn. So a font stores each part once, as a small variable glyph whose axes are the ways it can change, and each glyph that uses it says where on those axes to draw it.
+VARC removes both limits. A component’s transform is stored as separate numbers (translation, rotation, scales, skews and a center), each of which can vary. And each component sets some axes to values of its own, which can vary too, to say where in the design space its glyph is drawn. So a font stores each part once, as a small variable glyph whose axes are the ways it can change, and each glyph that uses it says where on those axes to draw it.
 
 > For type designers: HarfBuzz’s NEWS for 12.0.0 compares VARC to the “smart components” some font editors offer. Without VARC, a compiled font can hold them only as plain outlines or composites.
 
@@ -102,14 +102,14 @@ VARC comes first. When HarfBuzz’s font functions draw a glyph, they try VARC b
                                        &draw_session.get_budget ())) return true;
 ```
 
-A glyph that VARC covers is drawn from VARC, whatever `glyf` or CFF has for it. A glyph it doesn’t cover falls through to the usual formats. Extents are worked out the same way, after the colour and bitmap tables.
+A glyph that VARC covers is drawn from VARC, whatever `glyf` or CFF has for it. A glyph it doesn’t cover falls through to the usual formats. Extents are worked out the same way, after the color and bitmap tables.
 
 A VARC glyph is a list of **components**. Each is a packed record (`VarComponent::decompile_record`, `OT/Var/VARC/VARC.cc:31`): flags, a glyph ID, and only the fields the flags say are there:
 
 * a **condition**, which decides whether the component is drawn at all;
 * **axis values**: settings for some of the axes, to draw the component at;
 * indices into VARC’s own variation store, for variations of those values and of the transform;
-* a **transform**: translation, rotation, scale, skew, and a centre for rotating and scaling around.
+* a **transform**: translation, rotation, scale, skew, and a center for rotating and scaling around.
 
 `VarComponent::get_path_at` (`VARC.cc:343`) takes a component through six steps. Here they are for glyph 3’s component, 가’s ㄱ, at weight 598.4.
 
@@ -196,9 +196,9 @@ t.skew (-skewX, skewY);
 t.translate (-tCenterX, -tCenterY);
 ```
 
-That is the standard’s pseudo-code exactly, negated horizontal skew included. Read upwards, it is what happens to a point: move the centre to the origin, skew, scale, rotate, move back and translate. A missing field is 0, or 1 for a scale, except that a horizontal scale with no vertical one is used for both (`VARC.cc:444`). The result is multiplied onto the levels above (`VARC.cc:451`); for the ㄱ, it is simply a move by (−10, 24).
+That is the standard’s pseudo-code exactly, negated horizontal skew included. Read upwards, it is what happens to a point: move the center to the origin, skew, scale, rotate, move back and translate. A missing field is 0, or 1 for a scale, except that a horizontal scale with no vertical one is used for both (`VARC.cc:444`). The result is multiplied onto the levels above (`VARC.cc:451`); for the ㄱ, it is simply a move by (−10, 24).
 
-`varc-6868.ttf`, a single Chinese character, 桨, uses much more: components rotated by 52°, 90° and −231°, scaled unevenly, transformed about a centre, and three levels deep, with 31 axes, 29 of them private:
+`varc-6868.ttf`, a single Chinese character, 桨, uses much more: components rotated by 52°, 90° and −231°, scaled unevenly, transformed about a center, and three levels deep, with 31 axes, 29 of them private:
 
 ```draw
 font: hb:test/api/fonts/varc-6868.ttf
@@ -355,7 +355,7 @@ region 27 (0021 0…1…1): [280, 0, -5, 41]
 (and 20 more regions, all 0)
 ```
 
-On `0018`, `translateX` moves the stem left by half as much as `scaleX` widens it, keeping it centred; on `0019`, `scaleY` shrinks. The numbers are packed in runs, like gvar’s deltas, so empty regions cost little.
+On `0018`, `translateX` moves the stem left by half as much as `scaleX` widens it, keeping it centered; on `0019`, `scaleY` shrinks. The numbers are packed in runs, like gvar’s deltas, so empty regions cost little.
 
 HarfBuzz 14.6.0 changed VARC to “the revised variation-store format. The new format is incompatible with the previous one.” A VARC font made for HarfBuzz before 14.6.0 doesn’t draw correctly in later versions.
 
@@ -380,7 +380,7 @@ Seventeen bytes, for three varying axes and a varying offset.
 
 **Variable-length integers.** The flags and indices are each an `HBUINT32VAR` (`hb-open-type.hh:149`), one to five bytes. The first byte’s leading 1 bits say how many follow: below `0x80`, none; `10`, one; `110`, two; `1110`, three; `11110000`, a plain 32-bit number. Most indices take one byte; in 桨, whose store has four data lists, they carry an outer part and take three (196608, outer 3 and inner 0, is `c3 00 00`).
 
-**Flags ordered by frequency.** The commonest flags are the low 7 bits, which fit in one byte: resetting, having axes, the two kinds of variation, translations and rotation (`VarComponent::flags_t`, `VARC.hh:51`). A condition, scales, a centre, skews or a 24-bit glyph ID need two: 木’s first stroke’s flags, `0xf7f`, are `8f 7f`. For each reserved bit (15 and up) that is set, HarfBuzz skips one more variable-length integer (`VARC.cc:139`), so later fields can be stepped over.
+**Flags ordered by frequency.** The commonest flags are the low 7 bits, which fit in one byte: resetting, having axes, the two kinds of variation, translations and rotation (`VarComponent::flags_t`, `VARC.hh:51`). A condition, scales, a center, skews or a 24-bit glyph ID need two: 木’s first stroke’s flags, `0xf7f`, are `8f 7f`. For each reserved bit (15 and up) that is set, HarfBuzz skips one more variable-length integer (`VARC.cc:139`), so later fields can be stepped over.
 
 **Only the fields that are there.** The glyph ID is 16 bits unless `GID_IS_24BIT` is set; each 16-bit transform field is stored only if flagged. A record doesn’t store its length: decoding it finds the next.
 
