@@ -8,7 +8,7 @@ The chapter is in two parts, [Outlines](#outlines) and [Color glyphs](#color-gly
 
 ## The library
 
-hb-raster is a shared library of its own, `libharfbuzz-raster`, with one header, `hb-raster.h`. It is built unless the [Meson option](building-harfbuzz.html#optional-dependencies-and-backends) `raster` is disabled (`meson_options.txt:36`), and uses libpng when it is found (`src/meson.build:757`). It is a young library. It arrived in 13.0.0, its API was reviewed and changed in 14.2.0, and it has been covered by HarfBuzz’s API and ABI stability only since 15.0.0, so code and articles written for earlier versions may not match it (`NEWS`):
+hb-raster is a shared library of its own, `libharfbuzz-raster`, with one header, `hb-raster.h`. It is built unless the [Meson option](building-harfbuzz.html#optional-dependencies-and-backends) `raster` is disabled (`meson_options.txt:36`), and uses libpng when it is found (`src/meson.build:757`). Its history is short and all of it in 2026 (`NEWS`):
 
 | Version | What happened |
 |---|---|

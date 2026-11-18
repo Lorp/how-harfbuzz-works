@@ -10,7 +10,7 @@ Nothing here can run in the book’s build, which has no GPU. The shader code is
 
 The library is `libharfbuzz-gpu`, with the header `hb-gpu.h`, built when the [Meson option](building-harfbuzz.html#optional-dependencies-and-backends) `gpu` is enabled, as it is by default (`meson_options.txt:40`). The option `gpu_demo`, `auto` by default (`:42`), adds `hb-gpu`, an interactive viewer for shaped text that needs GLEW, GLFW, OpenGL and GLib (`util/meson.build:231`). It isn’t built here, because GLEW isn’t installed. An uninstalled tool, `hb-gpu-encode-all`, encodes every glyph of a font and reports sizes and times. `hb-features.h` is meant to define `HB_HAS_GPU` when the library is built, but in {{hb}} Meson never sets it: the book’s build has `#undef HB_HAS_GPU` there (`build/src/hb-features.h:100`).
 
-It is the youngest of the three rendering libraries. It arrived in 14.0.0, its API was reviewed and changed in 14.2.0, and it has been covered by HarfBuzz’s API and ABI stability only since 15.0.0 (`NEWS`):
+Its history, from `NEWS`, is short:
 
 | Version | What happened |
 |---|---|

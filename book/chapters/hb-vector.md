@@ -8,7 +8,7 @@ The chapter has two halves. The first, Outlines, is all that a client drawing or
 
 ## The library
 
-hb-vector is its own shared library, `libharfbuzz-vector`, with one header, `hb-vector.h`, and a [Meson feature option](building-harfbuzz.html#optional-dependencies-and-backends), `vector`, enabled by default (`meson_options.txt:38`). It is a young library. It arrived in 13.0.0, its API was reviewed and changed in 14.2.0, and it has been covered by HarfBuzz’s API and ABI stability only since 15.0.0, so code and articles written for earlier versions may not match it (`NEWS`):
+hb-vector is its own shared library, `libharfbuzz-vector`, with one header, `hb-vector.h`, and a [Meson feature option](building-harfbuzz.html#optional-dependencies-and-backends), `vector`, enabled by default (`meson_options.txt:38`). Its history, from `NEWS`, all in 2026:
 
 | Version | What happened |
 |---|---|
