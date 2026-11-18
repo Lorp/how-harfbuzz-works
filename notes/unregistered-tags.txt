@@ -20,6 +20,7 @@
 `appl`  unregistered  meta: Apple’s, named as such in Other tables
 `bild`  unregistered  meta: Apple’s, named as such in Other tables
 `bng3`  unregistered  script: as `dev3`
+`knd3`  unregistered  script: as `dev3`
 `dev3`  unregistered  script: HarfBuzz and Core Text only; Choosing a script shaper says so
 `jstf`  unregistered  axis: HarfBuzz’s experimental justification; For applications says so
 `mym3`  unregistered  script: doesn’t exist, and the book says so

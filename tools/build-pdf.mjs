@@ -194,7 +194,9 @@ section.part-first { break-before: auto; }
 h1 { margin-top: 0; }
 h2, h3, h4 { break-after: avoid; }
 p, li { orphans: 3; widows: 3; }
-pre { white-space: pre-wrap; overflow-wrap: anywhere; break-inside: avoid; }
+/* Code may run across pages, with at least three lines on each side of a break,
+   so a short block stays whole. */
+pre { white-space: pre-wrap; overflow-wrap: anywhere; break-inside: auto; orphans: 3; widows: 3; }
 table { width: 100%; }
 td, th { overflow-wrap: anywhere; }
 figure, .shape, .trace, .info, .draw { break-inside: avoid; max-width: 100% !important; overflow: hidden; }

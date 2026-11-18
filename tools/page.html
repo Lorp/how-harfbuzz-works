@@ -127,7 +127,8 @@ th, td { text-align: left; vertical-align: top; padding: .35rem .75rem .35rem 0;
 th { font: 600 .78rem var(--font-head); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
 pre { margin: 0; overflow-x: auto; }
 pre code { font-size: .82rem; line-height: 1.55; }
-.flow > pre { background: var(--well); padding: .9rem 1rem; border-radius: 6px; margin-bottom: 1.25rem; }
+/* In the PDF, each chapter is a <section> inside .flow. */
+.flow > pre, .flow > section > pre { background: var(--well); padding: .9rem 1rem; border-radius: 6px; margin-bottom: 1.25rem; }
 
 /* Figures: views of a lookup */
 .views { margin: .5rem 0 1.75rem; border: 1px solid var(--rule); border-radius: 6px; background: var(--well); }

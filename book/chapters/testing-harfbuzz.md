@@ -211,7 +211,7 @@ void* hb_malloc_impl (size_t size)
 
 ## The bugs this book found
 
-Writing this book meant building small fonts that exercise one thing each, shaping text with them, and checking every result against the code and the specifications. Some results didn’t match. Those are drafted as bug reports in [`notes/upstream-bug-reports.md`](https://github.com/Lorp/how-harfbuzz-works/blob/main/notes/upstream-bug-reports.md), in the book’s repository, eighty-one so far, each reproduced on HarfBuzz {{hb}} (commit `3df40d9b`), most with a font or a command that needs nothing from this book.
+Writing this book meant building small fonts that exercise one thing each, shaping text with them, and checking every result against the code and the specifications. Some results didn’t match. Those are drafted as bug reports in [`notes/upstream-bug-reports.md`](https://github.com/Lorp/how-harfbuzz-works/blob/main/notes/upstream-bug-reports.md), in the book’s repository, eighty-two so far, each reproduced on HarfBuzz {{hb}} (commit `3df40d9b`), most with a font or a command that needs nothing from this book.
 
 **None is yet on HarfBuzz’s issue tracker.** The first sixty-five went to HarfBuzz’s author directly, and many are already fixed (see the last column below), but they are still drafts, written by the book’s authors. Some are certainly bugs, some are matters of policy that HarfBuzz’s developers may well decide the other way, and a few were found by reading code and have no example yet.
 
@@ -333,6 +333,7 @@ The same thing done differently in two places, or defined differently in two doc
 | 77 | Smaller things in the build: Graphite in the single-file build, the `libs` target without hb-gpu, `meson build` without `setup`, an undefined `HAVE_ISATTY` | [Building HarfBuzz](building-harfbuzz.html#single-file-builds) | Run | The Graphite item is fixed by commit [`506cc94`](https://github.com/harfbuzz/harfbuzz/commit/506cc943b3c2ad82c5398361afdaf6e9eaad6b0f) (pull request #6722) |
 | 79 | `hb_directwrite_font_set_funcs` takes a reference to the DirectWrite font face that nothing releases, where the Core Text version takes none | [Integrations](integrations.html#directwrite) | Read | |
 | 80 | `_hb_gdi_reference_table` returns before its `ReleaseDC` guard when `SelectObject` fails, leaking the screen DC | [Integrations](integrations.html#gdi-and-uniscribe) | Read | |
+| 82 | USE: the generator’s list of generic bases (U+2015, U+2022, U+25FB to U+25FE) never applies, and they come out `O` | [The Universal Shaping Engine](the-universal-shaping-engine.html#the-categories) | Run | |
 
 </div>
 
@@ -359,11 +360,11 @@ The same thing done differently in two places, or defined differently in two doc
 
 </div>
 
-Of the eighty-one, forty-three are shown live in the book, twenty-three were run outside it, and fifteen were found by reading. On `main`, twenty-seven are fixed and six partly fixed, three behave differently but aren’t fixed, and ten have a pull request open; the other thirty-five still apply. The live blocks are built from {{hb}}, so they still show the bugs that `main` has fixed.
+Of the eighty-two, forty-three are shown live in the book, twenty-four were run outside it, and fifteen were found by reading. On `main`, twenty-seven are fixed and six partly fixed, three behave differently but aren’t fixed, and ten have a pull request open; the other thirty-six still apply. The live blocks are built from {{hb}}, so they still show the bugs that `main` has fixed.
 
 ## Where the bugs are
 
-None of the eighty-one is a crash, a hang or a read out of bounds, though the book’s fonts include broken ones on purpose. That part of HarfBuzz is well defended: a decade of continuous fuzzing has turned every such failure into a test, and the sanitizer and the budgets stop the rest. What is left is output that is wrong but well formed, and, in two Windows integrations read but not run, a reference that is never released (79, 80). No fuzzer can see it, because nothing tells a fuzzer what the right answer is, and [verification](#verification) can’t either if the answer is consistently wrong. Only a test with an expected answer catches it, and only on the paths the tests take.
+None of the eighty-two is a crash, a hang or a read out of bounds, though the book’s fonts include broken ones on purpose. That part of HarfBuzz is well defended: a decade of continuous fuzzing has turned every such failure into a test, and the sanitizer and the budgets stop the rest. What is left is output that is wrong but well formed, and, in two Windows integrations read but not run, a reference that is never released (79, 80). No fuzzer can see it, because nothing tells a fuzzer what the right answer is, and [verification](#verification) can’t either if the answer is consistently wrong. Only a test with an expected answer catches it, and only on the paths the tests take.
 
 The drafts show where those paths stop.
 
@@ -404,4 +405,4 @@ The pattern suggests where to look next. Most of these drafts came from fonts sm
 * `test/shape` holds about 6,300 test lines in three sets. Each runs with verification, once for every kind of font functions the build has, through one `hb-shape --batch` process.
 * `test/api` checks the C API with GLib’s framework; `test/subset` compares subset fonts byte for byte with expected fonts that fontTools agrees with.
 * The fuzzers look for crashes, hangs and runaway memory, with allocations that fail at random. Every failure they find is kept and rerun as a test on every build.
-* The book’s eighty-one draft bug reports, none filed yet, are nearly all wrong-but-valid output: combinations no test has, branches the tests miss, copies that drifted apart, limits real text can reach, and comments that no longer match the code. Checked against `main` on 18 November 2026, twenty-seven were fixed, six partly, and ten had pull requests open.
+* The book’s eighty-two draft bug reports, none filed yet, are nearly all wrong-but-valid output: combinations no test has, branches the tests miss, copies that drifted apart, limits real text can reach, and comments that no longer match the code. Checked against `main` on 18 November 2026, twenty-seven were fixed, six partly, and ten had pull requests open.

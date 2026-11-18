@@ -1,6 +1,6 @@
 # Introduction
 
-Type the word “office” in a good serif font and you get five glyphs, not six: the *f*, *f* and *i* have become one ligature. Type an Arabic word and each letter takes a different shape depending on whether it joins the letters on either side. In Devanagari, a vowel sign that is typed after a consonant is drawn before it. None of this is in the text. The text is a sequence of Unicode characters, and Unicode deliberately says nothing about how they look. Turning characters into the right glyphs, in the right order and in the right places, is **shaping**, and HarfBuzz is the program that does it for most of the world’s software.
+Type the word “office” in a good serif font and you get four glyphs, not six: the *f*, *f* and *i* have become one ligature. Type an Arabic word and each letter takes a different shape depending on whether it joins the letters on either side. In Devanagari, a vowel sign that is typed after a consonant is drawn before it. None of this is in the text. The text is a sequence of Unicode characters, and Unicode deliberately says nothing about how they look. Turning characters into the right glyphs, in the right order and in the right places, is **shaping**, and HarfBuzz is the program that does it for most of the world’s software.
 
 ## What HarfBuzz is given, and what it gives back
 

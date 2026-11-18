@@ -1,14 +1,18 @@
 # The Universal Shaping Engine
 
-The **Universal Shaping Engine** (**USE**) is Microsoft’s answer to a problem of numbers. Unicode encodes dozens of scripts built like Devanagari, a consonant with marks above, below and around it, and each dedicated shaper like the Indic one in [the last chapters](the-indic-model.html) took years of script-by-script rules. USE replaces the rules with data: every character gets a class derived from Unicode’s properties, one grammar says which sequences make a cluster, and one short reordering step moves the few things that must move. Microsoft announced it in 2015, and HarfBuzz implemented it in version 1.0.0, whose `NEWS` links to Microsoft’s specification and its announcement.
+The **Universal Shaping Engine** (**USE**) is Microsoft’s answer to a problem of numbers. Unicode encodes dozens of scripts built like Devanagari, a consonant with marks above, below and around it, and each dedicated shaper like the Indic one in [the last chapters](the-indic-model.html) took years of script-by-script rules. USE replaces the rules with data: every character gets a class derived from Unicode’s properties, one grammar says which sequences make a cluster, and one short reordering step moves the few things that must move. Microsoft announced it in 2015.
 
-HarfBuzz’s USE is the Indic model with most of the model taken out. It keeps the four parts: categories from a generated table, syllables from a Ragel machine, GSUB features in stages with pauses between them, and a reordering pass. It drops the base consonant, the positions, the questions put to the font, the per-script table and the second reordering. What is left is about 500 lines of C++ (`hb-ot-shaper-use.cc`) and a 300-line grammar, and they serve 91 scripts, from Tibetan to the Unicode 18.0 additions, as well as the nine Indic scripts when a font uses their `3` tags ([Choosing a script shaper](choosing-a-script-shaper.html#from-tags-to-a-shaper)).
+HarfBuzz implemented USE in version 1.0.0, whose `NEWS` links to Microsoft’s specification and its announcement. HarfBuzz USE follows that specification, but it isn’t the same as Microsoft USE. It has categories and cluster types of its own, it departs from the specification in places, some on purpose, and it takes scripts that Microsoft USE doesn’t. Where the specification is silent, the two engines can differ, and Core Text, Apple’s implementation, sometimes differs from both.
 
-The examples use two families of test fonts with plain boxes for glyphs, built by `fonts/the-universal-shaping-engine/build-fonts.py`. The Devanagari fonts come in pairs, compiled from one feature file under `dev2` (the Indic shaper) or `dev3` (USE): `deva2.ttf` and `deva3.ttf` have lookups for `rphf`, `akhn`, `blwf`, `half`, `init` and `pres`; the `-half-first` pair has the same lookups with `half`’s first in the LookupList; the `-no-half` pair has no `half`. `balinese.ttf` has a few Balinese letters and signs, and a `blwf` that makes two subjoined consonants; `balinese-no-blwf.ttf` doesn’t. Every result and trace on this page was produced by running HarfBuzz {{hb}} on them when the page was built.
+> This chapter describes HarfBuzz USE. Where it parts from the specification or from Microsoft’s engine, the chapter says so.
+
+HarfBuzz USE is the Indic model with most of the model taken out. It keeps the four parts: categories from a generated table, syllables from a Ragel machine, GSUB features in stages with pauses between them, and a reordering pass. It drops the base consonant, the positions, the questions put to the font, the per-script table and the second reordering. What is left is about 500 lines of C++ (`hb-ot-shaper-use.cc`) and a 300-line grammar, and they serve 91 scripts, from Tibetan to the Unicode 18.0 additions, the same 91 that Microsoft’s specification lists. HarfBuzz also sends it the nine Indic scripts when a font uses their `3` tags ([Choosing a script shaper](choosing-a-script-shaper.html#from-tags-to-a-shaper)), as Apple’s Core Text does; Microsoft USE doesn’t take them, and on Windows they go to the Indic engine.
+
+The examples use two families of test fonts with plain boxes for glyphs, built by `fonts/the-universal-shaping-engine/build-fonts.py`. The Devanagari fonts come in pairs, compiled from one feature file under `dev2` (the Indic shaper) or `dev3` (HarfBuzz USE, since Microsoft USE doesn’t support it): `deva2.ttf` and `deva3.ttf` have lookups for `rphf`, `akhn`, `blwf`, `half`, `init` and `pres`; the `-half-first` pair has the same lookups with `half`’s first in the LookupList; the `-no-half` pair has no `half`. `balinese.ttf` has a few Balinese letters and signs, and a `blwf` that makes two subjoined consonants; `balinese-no-blwf.ttf` doesn’t. Every result and trace on this page was produced by running HarfBuzz {{hb}} on them when the page was built.
 
 ## What USE keeps, and what it drops
 
-| | Indic shaper | USE |
+| | Indic shaper | HarfBuzz USE |
 |---|---|---|
 | table | category and position, from three Unicode files | one category, positions folded in, from nine files |
 | syllables | Ragel scanner, six types | Ragel scanner, nine types, over a filtered buffer |
@@ -31,6 +35,8 @@ The rest of this chapter takes those rows in turn.
 
 The Microsoft files do two things. They override Unicode’s values where they don’t suit shaping, each with its reason: DOTTED CIRCLE is a `Consonant`, “Reassigned to allow it to cluster as a generic base”; TIBETAN VOWEL SIGN I is `Bottom`, “Not really below, but need to override to fit into Universal model”. And they give values to scripts that Unicode’s Indic properties don’t cover at all, such as Mongolian, N’Ko, Adlam and the Egyptian hieroglyph format controls.
 
+Microsoft publishes the files in its [font-tools repository](https://github.com/microsoft/font-tools/tree/master/USE), and that is where a character’s category is questioned and corrected: most problems are found by David Corbett, who develops HarfBuzz USE, and fixed by Glass, who updates the files once for each Unicode version; HarfBuzz’s copies in {{hb}} are the same as the repository’s. Questions about the specification itself go to Microsoft’s [typography-issues](https://github.com/MicrosoftDocs/typography-issues/issues/?q=%5BUSE%5D) tracker, where many have been open since 2019, and HarfBuzz’s own choices are argued in HarfBuzz’s issues. The rest of this chapter cites all three where the specification, Microsoft’s engine and HarfBuzz part company.
+
 The generator reads the files into one record per code point (`:59`–`:108`), and drops five scripts that never reach USE, `DISABLED_SCRIPTS` (`:40`): Arabic, Lao, Samaritan, Syriac and Thai. A character in no file is `O`. Then, for each character, it asks a list of predicates, `is_BASE`, `is_HALANT` and so on, which follow the derivations in Microsoft’s specification, and asserts that exactly one says yes (`map_to_use`, `:382`). If the category has positions, a suffix from the positional category is added (`use_positions`, `:334`): `Top` gives `Abv`, `Bottom` or `Overstruck` `Blw`, `Right` `Pst`, `Left` `Pre`. A vowel sign in two or three places takes the first of pre, above and below that it has a part in: `Left_And_Right` is `VPre`, `Top_And_Bottom` `VAbv`, `Bottom_And_Right` `VBlw`.
 
 ### HarfBuzz’s own changes
@@ -45,10 +51,12 @@ The predicates don’t follow the specification everywhere. The differences, wit
 | `:408` | U+11302, U+11303 (Grantha) and U+114C1 (Tirhuta) are `Top`, citing HarfBuzz pull request 1037 and issue 1631 |
 | `:218` | a joining letter (types C, D, L, R) is a base, but not if it is a joiner: ZWJ has joining type C (“TODO”, typography-issues #484) |
 | `:227` | `CGJ` takes in ZWJ, the variation selectors and every default-ignorable mark, not only U+034F: “Also includes VARIATION_SELECTOR and ZWJ”. This beats the Microsoft file, which makes VS1 to VS16 isolated bases |
-| `:246`–`:286` | three kinds of virama are split off from `H`: `HVM` for U+0DCA SINHALA SIGN AL-LAKUNA, `Sk` for U+1A60 TAI THAM SIGN SAKOT, and `IS` for the other invisible stackers |
+| `:246`–`:286` | three kinds of virama are split off from `H`, which in the specification covers viramas and invisible stackers alike: `HVM` for U+0DCA SINHALA SIGN AL-LAKUNA, `Sk` for U+1A60 TAI THAM SIGN SAKOT, and `IS` for the other invisible stackers. `HVM` began with the Brahmi virama, which also marks short vowels (“Should be properly reported to Unicode and USE”, [HarfBuzz #1102](https://github.com/harfbuzz/harfbuzz/issues/1102)); `Sk` came with Tai Tham ([#170](https://github.com/harfbuzz/harfbuzz/issues/170)), whose support the specification still calls “currently limited” ([#2061](https://github.com/harfbuzz/harfbuzz/issues/2061), open) |
+| `:236` | `Consonant_Initial_Postfixed` is a medial consonant: “new in Unicode 11; not in the spec” ([typography-issues #916](https://github.com/MicrosoftDocs/typography-issues/issues/916), open) |
 | `:271` | `O` takes in the specification’s `IND` (independent bases) and `S` (symbols): “Also includes BASE_IND and SYM” |
 | `:295` | `WJ` takes in other default ignorables and every unassigned code point, the specification’s `Rsv` |
 | `:288` | symbol modifiers are a class of their own, `SMAbv` and `SMBlw`; the specification counts them as consonant modifiers |
+| `:340`–`:348` | positions the specification’s subclasses don’t list: a medial consonant `Bottom_And_Left` or `Bottom_And_Right` is `MBlw`, and `Top_And_Bottom_And_Left` `MPre`; a consonant modifier `Overstruck` is `CMBlw` ([typography-issues #928](https://github.com/MicrosoftDocs/typography-issues/issues/928), [#1078](https://github.com/MicrosoftDocs/typography-issues/issues/1078), both open) |
 
 With `--rust` the generator writes HarfRust’s copy, and with `HB_OPTIMIZE_SIZE` the table is packed harder (`:493`).
 
@@ -58,8 +66,8 @@ The machine’s categories (`hb-ot-shaper-use-machine.rl:65`) are numbered, and 
 
 | Category | What it is | Examples (Balinese, Devanagari, Tibetan) |
 |---|---|---|
-| `B` | a base: consonant, independent vowel, digit, joining letter | KA U+1B13, A U+1B05; KA U+0915, RA U+0930, digit zero U+0966 |
-| `GB` | a generic base | NO-BREAK SPACE, DOTTED CIRCLE, U+2022 BULLET |
+| `B` | a base: consonant, independent vowel, digit, joining letter | KA U+1B13, A U+1B05; KA U+0915, RA U+0930, digit zero U+0966; DOTTED CIRCLE U+25CC |
+| `GB` | a generic base | NO-BREAK SPACE, U+00D7 MULTIPLICATION SIGN, U+2010 HYPHEN |
 | `R` | an encoded repha | MALAYALAM LETTER DOT REPH U+0D4E |
 | `CS` | a consonant with stacker | |
 | `H`, `IS`, `HVM`, `Sk` | viramas: visible, invisible, Sinhala’s, Tai Tham’s | adeg-adeg U+1B44; virama U+094D |
@@ -75,13 +83,17 @@ The machine’s categories (`hb-ot-shaper-use-machine.rl:65`) are numbered, and 
 | `G`, `J`, `SB`, `SE`, `HR`, `HM` | Egyptian hieroglyphs, joiners, segment and mark brackets, mirror, modifiers | |
 | `RK` | a reordering killer | |
 | `ZWNJ`, `WJ`, `CGJ` | non-joiner; word joiner and unassigned; ignorables | ZWNJ; U+2060; ZWJ, CGJ, variation selectors |
-| `O` | everything else | space, danda U+0964 |
+| `O` | everything else | space, danda U+0964, U+2022 BULLET |
 
-(The examples were looked up with HarfBuzz’s `test-use-table.cc`, compiled separately, not when the book is built.) Two things in this table matter later. RA is a plain `B`: nothing in the category says it can be a reph, which the font must say instead. And ZWJ is `CGJ`, which the grammar never sees.
+(The examples were looked up with HarfBuzz’s `test-use-table.cc`, compiled separately, not when the book is built.)
+
+DOTTED CIRCLE is a `B`, not a `GB`. Microsoft’s file made it a `Consonant` in 2019 so that, in Glass’s words, it can “appear in subjoined forms also” ([typography-issues #289](https://github.com/MicrosoftDocs/typography-issues/issues/289)), but the specification still calls it a generic base ([#482](https://github.com/MicrosoftDocs/typography-issues/issues/482), open). The specification also names U+2015, U+2022 and U+25FB to U+25FE as generic bases, and so does the generator’s `is_BASE_OTHER` (`gen-use-table.py:224`), but they come out `O`: the generator makes a record only for a character that is in one of Unicode’s Indic, joining or default-ignorable files (`:101`–`:108`), and these are in none of them (draft 82 in [Testing HarfBuzz](testing-harfbuzz.html#the-bugs-this-book-found)).
+
+Two things in this table matter later. RA is a plain `B`: nothing in the category says it can be a reph, which the font must say instead. And ZWJ is `CGJ`, which the grammar never sees.
 
 ## Syllables
 
-The first GSUB pause, before any lookup, finds the syllables (`setup_syllables_use`, `hb-ot-shaper-use.cc:297`), marks each one unsafe to break, and sets two kinds of mask, for `rphf` and for the topographical features, both described below. `found_syllable` writes the type and a serial number into the `syllable` byte, exactly as the Indic machine does ([Finding syllables](the-indic-model.html#finding-syllables)), and `foreach_syllable` hands out at most 64 glyphs at a time ([A limit on syllable length](the-indic-model.html#a-limit-on-syllable-length)). Microsoft’s specification gives “a practical maximum cluster length” of 31 characters.
+The first GSUB pause, before any lookup, finds the syllables (`setup_syllables_use`, `hb-ot-shaper-use.cc:297`), marks each one unsafe to break, and sets two kinds of mask, for `rphf` and for the topographical features, both described below. `found_syllable` writes the type and a serial number into the `syllable` byte, exactly as the Indic machine does ([Finding syllables](the-indic-model.html#finding-syllables)), and `foreach_syllable` hands out at most 64 glyphs at a time ([A limit on syllable length](the-indic-model.html#a-limit-on-syllable-length)). That limit is HarfBuzz’s. The specification gives “a practical maximum cluster length” of 31 characters, after which “a cluster break may be forced”; HarfBuzz forces no break, and only processes a syllable longer than 64 glyphs in pieces.
 
 ### The grammar
 
@@ -122,7 +134,7 @@ broken_cluster = R? (tail | number_joiner_terminated_cluster_tail | numeral_clus
 symbol_cluster = (O | GB | SB) tail?;
 ```
 
-(Line breaks are trimmed.) Where the Indic grammar is built around how Indic syllables are spelled, this one is a single template, the specification’s “maximal cluster scheme”: an optional repha, a base, consonants joined to it by viramas or subjoined, then one medial in each place, vowel signs in the order pre, above, below, post, vowel modifiers in the same order, final consonants, and a final modifier. Each group is optional, and their order is fixed. A visible virama counts as a vowel sign, “Treat visible viramas like dependent vowels” (`NEWS` for 4.1.0), so a syllable can end in one. Every syllable may end in a ZWNJ (`:173`).
+(Line breaks are trimmed.) Where the Indic grammar is built around how Indic syllables are spelled, this one is a single template, the specification’s “maximal cluster scheme”: an optional repha, a base, consonants joined to it by viramas or subjoined, then one medial in each place, vowel signs in the order pre, above, below, post, vowel modifiers in the same order, final consonants, and a final modifier. Each group is optional, and their order is fixed. A visible virama counts as a vowel sign, “Treat visible viramas like dependent vowels” (`NEWS` for 4.1.0), so a syllable can end in one. Every syllable may end in a ZWNJ (`:173`). Three parts of the template are HarfBuzz’s, not the specification’s: the virama among the vowel signs, `HVM` before the vowel modifiers, and the sakot groups, `(Sk B)*` and the sakot-terminated cluster. Under the specification’s own grammar, a Tai Tham syllable with a sakot after its vowel isn’t valid.
 
 The syllable types, and what HarfBuzz does with each:
 
@@ -137,6 +149,8 @@ The syllable types, and what HarfBuzz does with each:
 | broken cluster | a tail with no base | yes | yes |
 | non-cluster | anything else, and a lone `FMPst` | no | no |
 
+Six of these are the specification’s seven, not always with the same members. Its seventh, the independent cluster, for spaces, punctuation and other characters that stand alone, HarfBuzz folds into the symbol cluster ([Spaces as bases](#spaces-as-bases)). Its virama-terminated cluster can end in a visible virama; HarfBuzz’s can’t, since it counts a visible virama as a vowel sign, so such a syllable is a standard cluster. The sakot-terminated cluster is HarfBuzz’s alone. And the specification has no broken cluster or non-cluster as types: it describes invalid text in words (“Defective clusters”), while HarfBuzz’s machine needs a type for everything it reads.
+
 The order is strict. In Balinese, suku (below) may follow ulu (above), but not the other way round; and a final consonant such as surang comes after the vowel signs:
 
 ```shape
@@ -146,7 +160,7 @@ balinese.ttf  ᬓ\u1B38\u1B03  --language=ban
 balinese.ttf  ᬓ\u1B03\u1B38  --language=ban
 ```
 
-In the second and fourth lines, the syllable ends where the order breaks, and the mark left over is a broken cluster, given a dotted circle ([Dotted circles and broken clusters](dotted-circles-and-broken-clusters.html) covers that, and the vowel constraints that USE’s `preprocess_text` applies). Unicode’s canonical ordering doesn’t help: these signs all have combining class 0, so normalization leaves them as typed.
+In the second and fourth lines, the syllable ends where the order breaks, and the mark left over is a broken cluster, given a dotted circle ([Dotted circles and broken clusters](dotted-circles-and-broken-clusters.html) covers that, and the vowel constraints that USE’s `preprocess_text` applies). Unicode’s canonical ordering doesn’t help: these signs all have combining class 0, so normalization leaves them as typed. Where marks do have combining classes, Microsoft gives them positions that make the canonical order a valid one (“standard procedure”, Glass says in [font-tools #53](https://github.com/microsoft/font-tools/issues/53)), since the specification assumes no normalization: CGJ “will need to be updated if USE is modified to support normalization”. HarfBuzz normalizes, and changes three combining classes so that the order comes out right: TAI THAM SIGN SAKOT goes after the tone marks, TIBETAN SYMBOL PADMA GDAN after the vowel signs, and TIBETAN MARK TSA -PHRU before U+0F74 TIBETAN VOWEL SIGN U (`hb-unicode.hh:108`).
 
 ### What the machine doesn’t see
 
@@ -171,7 +185,7 @@ auto p =
   ;
 ```
 
-The first filter drops every `CGJ`, so CGJ, ZWJ and the variation selectors can stand anywhere: the specification says CGJ “may occur anywhere in a cluster with no effect”. The second drops a ZWNJ that is followed, past any of those, by a mark: such a ZWNJ continues the cluster instead of ending it, as the specification says it should. The syllable types are then written back over the ranges of original indices, so the hidden characters get the syllable of their neighbors. A ZWNJ between KA and suku doesn’t leave the suku without a base:
+The first filter drops every `CGJ`, so CGJ, ZWJ and the variation selectors can stand anywhere: the specification says CGJ “may occur anywhere in a cluster with no effect”. The second drops a ZWNJ that is followed, past any of those, by a mark: such a ZWNJ continues the cluster instead of ending it, as the specification says it should. This is Microsoft’s ruling on a question the specification left open: “CGJ is ignored and the ZWJ/ZWNJ should not see it when determining a cluster break” ([typography-issues #216](https://github.com/MicrosoftDocs/typography-issues/issues/216)). The syllable types are then written back over the ranges of original indices, so the hidden characters get the syllable of their neighbors. A ZWNJ between KA and suku doesn’t leave the suku without a base:
 
 ```shape
 balinese.ttf  ᬓ\u1B38  --language=ban
@@ -179,6 +193,8 @@ balinese.ttf  ᬓ\u200C\u1B38  --language=ban
 ```
 
 (The ZWNJ is shown as the font’s space glyph with no advance, as HarfBuzz shows every default ignorable it keeps.)
+
+ZWJ is where HarfBuzz and the specification part. The specification says ZWJ “continues a preceding cluster and joins it to a following character”, so two letters with a ZWJ between them would be one cluster. HarfBuzz hides ZWJ from the grammar, and the two letters stay two clusters. Microsoft’s engine doesn’t join them either: Glass confirmed what the specification means, and called the engine’s behavior a known issue (“the spec is correct, the implementation is lacking”, [typography-issues #232](https://github.com/MicrosoftDocs/typography-issues/issues/232)). On HarfBuzz’s side, Corbett has said that its USE “intentionally ignores a few misguided requirements of the USE specification” ([HarfBuzz #542](https://github.com/harfbuzz/harfbuzz/issues/542)). So in practice the two engines agree, and both differ from the text.
 
 ### Spaces as bases
 
@@ -190,11 +206,13 @@ deva3.ttf  क \u093F  --language=hi
 balinese.ttf  \u0020\u1B3E  --language=ban
 ```
 
-The Indic shaper shows the stray vowel sign on a dotted circle; USE draws it on the space, or before it. The specification has an **independent cluster** for `O`, which takes nothing but a variation selector, and a symbol cluster only for symbols (`S`) and generic bases; HarfBuzz has merged the specification’s `O`, `IND` and `S` into one category (`gen-use-table.py:271`), and so they all take marks. That looks unintended for spaces (inferred: the source gives no reason).
+The Indic shaper shows the stray vowel sign on a dotted circle; USE draws it on the space, or before it. The specification has an **independent cluster** for `O`, which takes nothing but a variation selector, and a symbol cluster only for symbols (`S`) and generic bases; HarfBuzz has merged the specification’s `O`, `IND` and `S` into one category (`gen-use-table.py:271`), and so they all take marks.
+
+The wide tail is deliberate. The specification’s symbol cluster takes only consonant modifiers, `< S | GB > [VS] (CMAbv)* (CMBlw)*`, but HarfBuzz chose “any non-numeric tail”, and Microsoft’s engine is permissive too: when the specification was widened in 2024, Glass said the engine “has always been this way” ([typography-issues #1179](https://github.com/MicrosoftDocs/typography-issues/issues/1179)). Core Text, by a report in the same issue, shows dotted circles instead. What no discussion explains is the space: the specification puts white space in `O`, an independent cluster that takes no marks, and only HarfBuzz’s merging lets it take them (draft 30 in [Testing HarfBuzz](testing-harfbuzz.html#the-bugs-this-book-found)).
 
 ## Features and stages
 
-`collect_features_use` (`hb-ot-shaper-use.cc:110`) lays out the stages, under the names of the specification’s groups:
+`collect_features_use` (`hb-ot-shaper-use.cc:110`) lays out the stages. The middle rows are the specification’s groups, under its names. The first row is HarfBuzz’s, as are `Buzz` and `BUZZ` in the last: the specification has nothing before its pre-processing group, and doesn’t mention the direction features, `frac`, `numr`, `dnom` or `rand`.
 
 | Stage | Features | Pause after it |
 |---|---|---|
@@ -208,9 +226,9 @@ The Indic shaper shows the stray vowel sign on a dotted circle; USE draws it on 
 
 ([From features to lookups](from-features-to-lookups.html#stages-and-pauses) explains `rvrn`, `Harf` and `Buzz`.) Within each group, lookups run in LookupList order, whatever their features. The specification says so: “it is, therefore, up to the font developer to specify the order of lookups for these features in the font’s OTL. The order given here is recommended but not required.” Only `rphf` and `pref` have stages of their own, because what each did must be recorded before the next.
 
-The flags differ from the Indic shaper’s too:
+The flags differ from the Indic shaper’s too. They are HarfBuzz’s choices, since the specification doesn’t say how lookups treat joiners:
 
-* Every feature up to the reordering is per syllable, but the topographical and presentation features are not: the syllables have been released before they run. An Indic font’s `pres` cannot ligate across syllables; a USE font’s can. `deva2.ttf` and `deva3.ttf` have a `pres` ligature of TA + TA, here two syllables:
+* Every feature up to the reordering is per syllable, but the topographical and presentation features are not: the syllables have been released before they run. Per syllable is HarfBuzz’s reading of the specification’s “applied together, one cluster at a time”, and it is strict: a rule’s backtrack and lookahead must also be inside the syllable. Core Text, by one report, requires only the input to be ([typography-issues #296](https://github.com/MicrosoftDocs/typography-issues/issues/296), open). An Indic font’s `pres` cannot ligate across syllables; a USE font’s can. `deva2.ttf` and `deva3.ttf` have a `pres` ligature of TA + TA, here two syllables:
 
 ```shape
 deva2.ttf  तत  --language=hi
@@ -221,7 +239,7 @@ deva3.ttf  तत  --language=hi
 * `rphf` and the topographical features are added with `add_feature`, so they have mask bits and apply only where the shaper sets them. Everything else is on everywhere: there is no mask for `half`, `blwf` or `pstf`, because there is no base to say which consonants should take them.
 * `liga` stays on. The Indic shaper turns it off.
 
-The shaper zeroes the advances of GDEF marks before GPOS (`HB_OT_SHAPE_ZERO_WIDTH_MARKS_BY_GDEF_EARLY`, `:509`), “what Windows does” (`NEWS` for 1.2.0); the Indic shaper zeroes none. Its normalization is the Indic shaper’s, with one rule in `compose_use` (`:482`), “Avoid recomposing split matras”, explained in [Normalization](normalization.html). So a split vowel sign such as Balinese taling tedung, U+1B40, is always split into taling and tedung, and taling moves:
+The shaper zeroes the advances of GDEF marks before GPOS (`HB_OT_SHAPE_ZERO_WIDTH_MARKS_BY_GDEF_EARLY`, `:509`), “what Windows does” (`NEWS` for 1.2.0); the Indic shaper zeroes none. The specification now says so too: “OT processing cancels the width associated with a mark”, so a base classed as a mark, to keep it out of contextual lookups, needs its width back from `dist`. It wasn’t the original plan. As Behdad Esfahbod tells it, Microsoft zeroed the widths because its Tibetan shaper did, and Tibetan was moving to USE ([typography-issues #271](https://github.com/MicrosoftDocs/typography-issues/issues/271)). Its normalization is the Indic shaper’s, with one rule in `compose_use` (`:482`), “Avoid recomposing split matras”, explained in [Normalization](normalization.html). So a split vowel sign such as Balinese taling tedung, U+1B40, is always split into taling and tedung, and taling moves:
 
 ```shape
 balinese.ttf  ᬓ\u1B40  --language=ban
@@ -233,7 +251,7 @@ USE reorders once, after the basic features, and only three kinds of glyph move:
 
 ### What the font did
 
-Before any lookup, `setup_rphf_mask` (`:213`) gives the `rphf` bit to the first three glyphs of each syllable, or only to the first if it is an encoded repha (`R`). The three are the specification’s: “Feature application is scoped to the first three glyphs in a cluster.” After `rphf`, `record_rphf_use` (`:311`) finds the first glyph in that prefix that a substitution produced, and makes it `R`. The pause before `rphf` cleared every glyph’s substituted flag, so only `rphf`’s own work counts. In `deva3.ttf`, `rphf` ligates RA and virama, and the ligature is `R` from then on.
+Before any lookup, `setup_rphf_mask` (`:213`) gives the `rphf` bit to the first three glyphs of each syllable, or only to the first if it is an encoded repha (`R`). The three are the specification’s: “Feature application is scoped to the first three glyphs in a cluster.” It doesn’t say whether characters the grammar never sees, such as ZWJ or CGJ, count among them. In HarfBuzz they do, so a ZWJ after RA takes one of the three places ([typography-issues #279](https://github.com/MicrosoftDocs/typography-issues/issues/279), open since 2019). After `rphf`, `record_rphf_use` (`:311`) finds the first glyph in that prefix that a substitution produced, and makes it `R`. The pause before `rphf` cleared every glyph’s substituted flag, so only `rphf`’s own work counts. In `deva3.ttf`, `rphf` ligates RA and virama, and the ligature is `R` from then on.
 
 `pref` is on for the whole syllable. `record_pref_use` (`:335`) makes the first glyph in each syllable that `pref` substituted a `VPre`, “as they behave the same way”. The specification’s example is Javanese, which “may reorder a medial consonant to the beginning of a cluster based on context”, and leaves the context to the font.
 
@@ -281,7 +299,7 @@ for (unsigned int i = start; i < end; i++)
 }
 ```
 
-(trimmed). A **post-base glyph** is any final, medial or vowel sign, any vowel modifier (`POST_BASE_FLAGS64`, `:377`), or a virama that wasn’t ligated (`is_halant_use`, `:355`, which counts `H`, `HVM` and `IS` but not the sakot). A reph moves forward past everything else, bases, half forms and subjoined forms, and stops before the first post-base glyph, or goes to the end. A pre-base vowel sign or modifier moves back to the start of the syllable, or to just after the last unligated virama before it. Each move merges the clusters it passes. This is the specification’s rule that “reordering components do not reorder past an explicit virama”, and its advice follows: a font that wants the reph or vowel sign to pass a virama should ligate or replace the virama during the basic features.
+(trimmed). A **post-base glyph** is any final, medial or vowel sign, any vowel modifier (`POST_BASE_FLAGS64`, `:377`), or a virama that wasn’t ligated (`is_halant_use`, `:355`, which counts `H`, `HVM` and `IS` but not the sakot). A reph moves forward past everything else, bases, half forms and subjoined forms, and stops before the first post-base glyph, or goes to the end. A pre-base vowel sign or modifier moves back to the start of the syllable, or to just after the last unligated virama before it. Each move merges the clusters it passes. This is the specification’s rule that “reordering components do not reorder past an explicit virama”. Its advice follows: a font that wants the reph or vowel sign to pass a virama can “substitute the virama for an alternate glyph” during the basic features. In HarfBuzz that isn’t enough. A substituted glyph keeps the virama’s category, and `is_halant_use` lets it pass only if it was ligated, so the virama must be ligated with something, as Balinese’s `blwf` does below. Behdad Esfahbod said in 2019 that HarfBuzz “should probably change that” ([typography-issues #270](https://github.com/MicrosoftDocs/typography-issues/issues/270)); {{hb}} hasn’t.
 
 Balinese shows the virama rule. The adeg-adeg is a virama, and with `blwf` it is ligated into the subjoined form of TA; without, it stays:
 
@@ -301,7 +319,11 @@ from: start table GSUB
 to: end table GSUB
 ```
 
+Two pre-base vowel signs in one syllable come out in reverse order. Each moves back to the same place, `j`, ahead of the one moved before it, so the second typed ends up first, outermost from the base. The specification doesn’t say what should happen. Glass agreed in 2021 that this, “ordering outward from the nucleus”, is right, and that DirectWrite, which doesn’t do it, should be fixed ([typography-issues #750](https://github.com/MicrosoftDocs/typography-issues/issues/750), open).
+
 The reordering inserts dotted circles first, before the moves (`reorder_use`, `:448`), into broken clusters, after any leading `R`, as a `B`. At its end it releases `use_category`, and the next pause releases `syllable`.
+
+When dotted circles should go in is the longest-running question about USE. The specification doesn’t say. Glass has said after GSUB and before GPOS, so that a font can’t substitute the warning away. Tests in 2019 found Core Text and DirectWrite inserting them before any GSUB, so that `ccmp` and `blwf` see them. HarfBuzz inserts them midway, after the basic features, and its issue to move them earlier is still open: Corbett’s case for midway is that a font can then tell an inserted circle from a typed one ([typography-issues #281](https://github.com/MicrosoftDocs/typography-issues/issues/281), [HarfBuzz #1924](https://github.com/harfbuzz/harfbuzz/issues/1924)). HarfBuzz also gives a run of stray marks one circle, where the specification says “a sequence of marks without a valid base forms separate clusters for each mark”; Glass closed that as not worth making consistent ([typography-issues #289](https://github.com/MicrosoftDocs/typography-issues/issues/289)). [Dotted circles and broken clusters](dotted-circles-and-broken-clusters.html) has the rest of the story.
 
 ## Topographical forms
 
@@ -324,7 +346,9 @@ Alone, the cluster is isolated, and the vowel sign keeps its ordinary form. Befo
 
 ## The nine Indic scripts under `dev3`
 
-[Choosing a script shaper](choosing-a-script-shaper.html#the-same-text-in-seven-fonts) showed three Devanagari syllables shaped alike under `dev2` and `dev3`, and that the `3` tags are HarfBuzz’s and Apple’s, not the OpenType registry’s ([Choosing a script shaper](choosing-a-script-shaper.html#from-a-script-to-script-tags)). That is the common case, but not the only one. The same lookups, under the two tags:
+Shaping the nine Indic scripts with USE is HarfBuzz’s and Apple’s extension of it, not part of USE as Microsoft specifies it. The specification’s list of scripts doesn’t include them, and the `3` tags that select it aren’t in the OpenType registry ([Choosing a script shaper](choosing-a-script-shaper.html#from-a-script-to-script-tags)). HarfBuzz added them in 2018 because “Apple does that and we want to put it in OpenType itself” ([HarfBuzz #539](https://github.com/harfbuzz/harfbuzz/issues/539)), and that hasn’t happened. HarfBuzz’s own developers treat the route as secondary: asked about a `knd3` font in 2019, Corbett replied that “'knd2' already does what you want and is more widely supported”, and that “The USE and the Kannada shaper were never meant to be identical” ([#1677](https://github.com/harfbuzz/harfbuzz/issues/1677)).
+
+[Choosing a script shaper](choosing-a-script-shaper.html#the-same-text-in-seven-fonts) showed three Devanagari syllables shaped alike under `dev2` and `dev3`. That is the common case, but not the only one. The same lookups, under the two tags:
 
 ```shape
 deva2.ttf  क\u094Dत  --language=hi
@@ -350,9 +374,9 @@ deva2.ttf  र\u094D\u200Dक  --language=hi
 deva3.ttf  र\u094D\u200Dक  --language=hi
 ```
 
-KA, virama, ZWNJ is how a visible virama is written inside a word. The Indic shaper honors it: ZWNJ clears the `half` mask. USE has no `half` mask, the ZWNJ comes after the two glyphs the half form needs, and the half form forms. A font can’t stop it with a lookahead either, since USE’s lookups pass over ZWNJ in their context (read from the code; not tried with a font). RA, virama, ZWJ asks for an eyelash RA rather than a reph. The Indic shaper won’t make a reph when a joiner follows the virama; USE doesn’t look, and makes one. Both look like differences a `dev3` font can’t easily work round (inferred), and Microsoft’s specification doesn’t say how its engine treats them.
+KA, virama, ZWNJ is how a visible virama is written inside a word. The Indic shaper honors it: ZWNJ clears the `half` mask. USE has no `half` mask, the ZWNJ comes after the two glyphs the half form needs, and the half form forms. A font can’t stop it with a lookahead either, since USE’s lookups pass over ZWNJ in their context (read from the code; not tried with a font). RA, virama, ZWJ asks for an eyelash RA rather than a reph. The Indic shaper won’t make a reph when a joiner follows the virama; USE doesn’t look, and makes one. Both look like differences a `dev3` font can’t easily work round (inferred), and Microsoft’s specification doesn’t say how its engine treats them. HarfBuzz’s position is that text “should be renderable with either an Indic2 or Indic3 font”, but the two shapers disagree about which strings are valid, and the issue that says so is still open ([#1746](https://github.com/harfbuzz/harfbuzz/issues/1746)). Kannada shows the cost. Under `knd3`, a bare RA and virama form a reph, where Kannada writers expect one only inside a word, and a font can’t test for the letter before, since `rphf` sees only its own cluster. Behdad Esfahbod pointed to HarfBuzz’s own `HARF` feature as a way round, and noted that, since “indic3 is not part of OpenType (yet)”, there was nowhere official to report the problem ([HarfBuzz #1683](https://github.com/harfbuzz/harfbuzz/issues/1683)).
 
-Everything the Indic chapter’s [Script by script](the-indic-model.html#script-by-script) table lists is absent under `3` tags, as are the reph positions, the `blwf` modes and the Uniscribe heuristics. A Malayalam dot reph is an `R` and moves like any other reph.
+Everything the Indic chapter’s [Script by script](the-indic-model.html#script-by-script) table lists is absent under `3` tags, as are the reph positions, the `blwf` modes and the Uniscribe heuristics. A Malayalam dot reph is an `R` and moves like any other reph, in HarfBuzz. The specification still says that “the category REPHA is not currently supported by USE”, a note that, as an open issue points out, seems to describe Microsoft’s engine ([typography-issues #696](https://github.com/MicrosoftDocs/typography-issues/issues/696)).
 
 > For type designers: under a `3` tag, the shaper tells your lookups nothing about which consonant is the base. `half`, `blwf`, `pstf` and the other basic features apply to every glyph of the syllable, together, in the order of your LookupList, so their lookups must say themselves, by context and order, where each form belongs. The shaper only moves what your `rphf` and `pref` produced, and pre-base vowel signs, and never past a virama your lookups left standing.
 
@@ -378,4 +402,5 @@ Everything the Indic chapter’s [Script by script](the-indic-model.html#script-
 * There is no base consonant and no question put to the font. The basic features apply together, to the whole syllable, in LookupList order; only `rphf` (on the first three glyphs) and `pref` have stages of their own, and what they substitute is recorded as a reph or a pre-base glyph.
 * One reordering pass moves the reph forward to before the first post-base glyph, and pre-base vowel signs, modifiers and `pref` forms back to the start of the syllable, neither past an unligated virama.
 * Non-joining USE scripts get HarfBuzz’s own topographical forms, cluster by cluster, which spaces and ZWNJ don’t interrupt.
+* HarfBuzz departs from Microsoft’s specification in places, some deliberately: ZWJ doesn’t join clusters (nor does Microsoft’s engine), a virama must be ligated, not just substituted, to let things pass it, and dotted circles go in midway through GSUB. Where the specification is silent, as on two pre-base vowels, Microsoft has sometimes agreed HarfBuzz is right. The discussion is in Microsoft’s typography-issues and font-tools repositories and in HarfBuzz’s issues.
 * Under `dev3` and the other `3` tags, Devanagari and its kin follow all of this: LookupList order decides forms, the reph lands earlier, and ZWNJ and ZWJ after a virama don’t stop a half form or a reph.

@@ -1,6 +1,6 @@
 # Draft bug reports for HarfBuzz
 
-Eighty-one possible bugs found while writing the book, drafted for the HarfBuzz issue tracker. None has been filed. Each report carries a tag naming the batch it was sent in, to go with it when it’s filed: 1–65 are `hhw-20261117`, the batch shown to Behdad Esfahbod on 17 November 2026. 66–81, found later, are `hhw-20261118`, the second batch, of 18 November 2026. Each was reproduced on HarfBuzz 15.1.0 (commit `3df40d9b`), built by `tools/build-harfbuzz.sh` (meson, with FreeType, ICU and cairo off), on macOS. Repros use `test/subset/data/fonts/Roboto-Regular.ttf` from HarfBuzz’s own repository where they can, so they need nothing from this book.
+Eighty-two possible bugs found while writing the book, drafted for the HarfBuzz issue tracker. None has been filed. Each report carries a tag naming the batch it was sent in, to go with it when it’s filed: 1–65 are `hhw-20261117`, the batch shown to Behdad Esfahbod on 17 November 2026. 66–82, found later, are `hhw-20261118`, the second batch, of 18 November 2026. Each was reproduced on HarfBuzz 15.1.0 (commit `3df40d9b`), built by `tools/build-harfbuzz.sh` (meson, with FreeType, ICU and cairo off), on macOS. Repros use `test/subset/data/fonts/Roboto-Regular.ttf` from HarfBuzz’s own repository where they can, so they need nothing from this book.
 
 Since 17 November many of them have been fixed on HarfBuzz’s `main` branch, and others have open pull requests. On 18 November 2026 every report was rechecked against `main` at commit `454f9c49c` (17 November 2026), built with the same options, by rerunning its repro or, for those read from the code, reading the code again. Each report ends with the result, under **On main.**: fixed (with the commit and pull request), changed, in progress (with the open pull request and its branch), or still present.
 
@@ -651,6 +651,8 @@ $ hb-shape deva2.ttf $'\u0915 \u093F'
 
 **On main.** Still present: the output is unchanged.
 
+**Background** (added 18 November 2026). The permissive tail is deliberate: “allow any non-numeric tail in a symbol cluster” (`NEWS` for 4.0.1), and Microsoft’s engine lets symbol clusters take consonant modifiers too, which the specification was changed to allow in 2024 (MicrosoftDocs/typography-issues#1179). This report is about the space only. The specification puts white space (UGC=Zs) in `O`, an independent cluster, which takes nothing but a variation selector; HarfBuzz merges `O` with `IND` and `S` (`gen-use-table.py:271`), and so a space takes marks.
+
 ---
 
 ## 31. USE: a space doesn’t end a word for topographical forms
@@ -1167,7 +1169,7 @@ harfbuzz buffer verify error: unsafe-to-break test failed.
 
 ## Found while writing the chapters on building, the tools and the renderers, November 2026
 
-These were found after the batch tagged `hhw-20261117`: 66–78 while writing the chapters on hb-raster, hb-vector, hb-gpu, building HarfBuzz and the command-line tools, and 79–81 while writing the chapter on integrations. Each was reproduced on HarfBuzz 15.1.0 (commit `3df40d9b`), or is marked as read from the code, and checked against `main` at commit `454f9c49c` (17 November 2026), built with the same options. On 18 November `main` was still at that commit, and no open pull request addresses any of them. File and line references are to 15.1.0. They are tagged `hhw-20261118`.
+These were found after the batch tagged `hhw-20261117`: 66–78 while writing the chapters on hb-raster, hb-vector, hb-gpu, building HarfBuzz and the command-line tools, 79–81 while writing the chapter on integrations, and 82 while revising the chapter on the Universal Shaping Engine. Each was reproduced on HarfBuzz 15.1.0 (commit `3df40d9b`), or is marked as read from the code, and checked against `main` at commit `454f9c49c` (17 November 2026), built with the same options. On 18 November `main` was still at that commit, and no open pull request addresses any of them. File and line references are to 15.1.0. They are tagged `hhw-20261118`.
 
 ---
 
@@ -1473,6 +1475,34 @@ $ hb-raster test/subset/data/fonts/Roboto-Regular.ttf Wave --font-size=32 --show
 * `docs/usermanual-integration.xml`: the FreeType example calls `hb_ft_font_create(face)` (`:216`) with one argument, where the function takes a destroy callback as well (`hb-ft.h:109`), as the paragraph after the example says; it names `hb_ft_font_get_face()` (`:259`), deprecated since 10.4.0 for `hb_ft_font_get_ft_face`; it gives the autotools option `--with-icu=builtin` (`:609`), where the Meson build has `-Dicu_builtin=true` (`meson.options:61`); and it says the Python bindings “support Python 2 and Python 3” (`:630`).
 
 **On main.** All still present (`hb-ft.cc:1918`, `hb-cairo.cc:936`).
+
+
+---
+
+## 82. USE: the generator’s list of generic bases is dead code
+
+**Tag:** `hhw-20261118`
+
+**Summary.** `is_BASE_OTHER` (`src/gen-use-table.py:224`) makes U+2015 HORIZONTAL BAR, U+2022 BULLET and U+25FB to U+25FE (medium squares) generic bases (`GB`), as Microsoft’s USE specification does. They come out `O` in the generated table. The generator makes a record only for a code point that appears in one of the first four files it reads, `IndicSyllabicCategory.txt`, `IndicPositionalCategory.txt`, `ArabicShaping.txt` and the default ignorables of `DerivedCoreProperties.txt` (`:101`–`:108`, `if i >= 4: continue`), and these six are in none of them, so the predicates never see them.
+
+**Repro.** Build `src/test-use-table.cc` against the source tree and print the categories:
+
+```
+$ ./test-use-table | grep -E '^U\+(00A0|2010|2015|2022|25FB) '
+U+00A0 5
+U+2010 5
+U+2015 0
+U+2022 0
+U+25FB 0
+```
+
+5 is `GB`, 0 is `O`. U+00A0 and U+2010 are `GB` because Unicode gives them `Consonant_Placeholder`.
+
+**Effect.** Small. An `O` starts a symbol cluster, which in HarfBuzz takes the same tail as a standard cluster, so most text shapes alike. What differs is what can come before the base: a standard cluster may start with a repha or a consonant with stacker, and a symbol cluster can’t.
+
+**Expected.** Either the six code points are given records so that `is_BASE_OTHER` applies, or the list is removed and the difference from the specification noted.
+
+**On main.** Still present (`test-use-table` built from `main` at `454f9c49c` gives the same categories).
 
 ---
 
