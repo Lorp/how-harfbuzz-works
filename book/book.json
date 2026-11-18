@@ -3,5 +3,6 @@
   "subtitle": "From Unicode to positioned glyphs, and everything in between",
   "author": "Laurence Penney",
   "with": "Claude",
-  "harfbuzz": "15.1.0"
+  "harfbuzz": "15.1.0",
+  "publisher": "Penney / Claude Press"
 }

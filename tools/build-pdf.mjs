@@ -79,6 +79,33 @@ function content(slug) {
       : `<span class="unwritten">${text}</span>`);
   html = html.replace(/<a href="#([^"]+)"/g, (m, frag) =>
     frag.includes("--") || written.has(frag) ? m : `<a href="#${slug}--${frag}"`);
+  // Links have to survive printing. A cross-reference gets the page it points
+  // to, “(p. 123)”: printed first with a placeholder of about the same width,
+  // so that the numbers, filled in for the final printing, don't move the
+  // text (see “Cross-references” below). Not in the indexes, which have their
+  // own numbers, or the contents.
+  if (!INDEXES.has(slug) && slug !== "title") {
+    html = html.replace(/<a href="#([^"]+)"([^>]*)>([\s\S]*?)<\/a>/g, (m, target, rest, text) => {
+      if (/class="(loc|src)"/.test(rest)) return m;
+      const id = `xr-${++xrefs}`;
+      return `${m}<span class="pref" id="${id}" data-target="${target}"> (p.&nbsp;000)</span>`;
+    });
+  }
+  // A link out of the book gets a note number, and its address is listed at
+  // the end of the page: “Links”. Links whose text is the address itself, and
+  // the source references (\`hb-ot-map.cc:389\`, which say where they point),
+  // don't.
+  const notes = [];
+  html = html.replace(/<a href="(https?:\/\/[^"]+)"([^>]*)>([\s\S]*?)<\/a>/g, (m, url, rest, text) => {
+    if (/class="src"/.test(rest) || text.replace(/<[^>]+>/g, "").trim() === url.replace(/&amp;/g, "&")) return m;
+    let n = notes.indexOf(url) + 1;
+    if (!n) n = notes.push(url);
+    return `${m}<sup class="lnote">${n}</sup>`;
+  });
+  if (notes.length) {
+    html += `\n<div class="link-notes"><p class="link-notes-head">Links</p><ol>` +
+      notes.map((u) => `<li>${u}</li>`).join("") + `</ol></div>`;
+  }
   // A part opens on a right-hand page of its own, then a blank page, so its
   // first chapter starts on a right-hand page too.
   const opener = page.startsPart
@@ -99,8 +126,10 @@ const front = [
   blank, blank, blank,
   `<div class="front half-title"><p>${esc(meta.title)}</p></div>`,
   blank,
-  `<div class="front title-page"><h1>${esc(meta.title)}</h1><p class="subtitle">${esc(meta.subtitle)}</p>
-<p class="author">${esc(meta.author)}${meta.with ? ` <span>with ${esc(meta.with)}</span>` : ""}</p></div>`,
+  // The subtitle breaks after “glyphs,”.
+  `<div class="front title-page"><h1>${esc(meta.title)}</h1><p class="subtitle">${esc(meta.subtitle).replace(/glyphs,? /, "glyphs,<br>")}</p>
+<p class="author">${esc(meta.author)}${meta.with ? ` <span>with ${esc(meta.with)}</span>` : ""}</p>
+<p class="publisher">${esc(meta.publisher || "")}<br>${new Date().getFullYear()}</p></div>`,
   `<div class="front imprint">
 <p><i>${esc(meta.title)}</i>: ${esc(meta.subtitle).replace(/^./, (c) => c.toLowerCase())}</p>
 <p>By ${esc(meta.author)}${meta.with ? ` with ${esc(meta.with)}` : ""}</p>
@@ -148,11 +177,14 @@ section.part-first { break-before: auto; }
 .front { page: front; break-after: page; box-sizing: border-box; height: 7.4in; }
 .half-title { padding-top: 1.6in; }
 .half-title p { margin: 0; text-align: center; font: 500 1.1rem var(--font-head); letter-spacing: .02em; }
-.title-page { padding-top: 1.4in; text-align: center; }
-.title-page h1 { margin: 0 0 1rem; font-size: 3rem; font-weight: 500; }
-.title-page .subtitle { margin: 0 auto; max-width: 3.6in; font: 400 1.3rem/1.4 var(--font-text); font-style: italic; }
-.title-page .author { margin: 1.2in 0 0; font: 500 1.15rem var(--font-head); }
+/* Title page: left aligned. The title is 4.5rem; subtitle, author, and the
+   publisher and date below them, are half that. */
+.title-page { padding-top: 1.2in; text-align: left; display: flex; flex-direction: column; height: 7.4in; box-sizing: border-box; }
+.title-page h1 { margin: 0 0 1.2rem; font-size: 4.5rem; line-height: 1.05; font-weight: 500; }
+.title-page .subtitle { margin: 0; font: italic 400 2.25rem/1.3 var(--font-text); }
+.title-page .author { margin: 1in 0 0; font: 500 2.25rem/1.3 var(--font-head); }
 .title-page .author span { color: #5a6373; }
+.title-page .publisher { margin: auto 0 0; font: 400 2.25rem/1.3 var(--font-text); }
 .imprint { display: flex; flex-direction: column; justify-content: flex-end; font-size: .85rem; line-height: 1.5; }
 .imprint p { margin: 0 0 .6rem; }
 /* The title page is printed above, so the web title page gives only its
@@ -192,6 +224,16 @@ td code { overflow-wrap: break-word; }
 .print-only { display: revert !important; }
 .draw svg { max-width: 100%; height: auto; }
 a { color: inherit; text-decoration: none; }
+/* Links that survive printing: cross-references in the accent color, with the
+   page they point to; links out with a note number, and their addresses in a
+   list at the end of the page. Source references keep their own style. */
+.flow a:not(.src):not(.loc) { color: #2c48c9; }
+.pref { white-space: nowrap; font-size: .85em; color: #5a6373; }
+sup.lnote { font-size: .62em; line-height: 0; color: #2c48c9; margin-left: .05em; }
+.link-notes { margin-top: 1.6rem; border-top: 1px solid #c9ced8; padding-top: .5rem; font-size: .72rem; line-height: 1.35; }
+.link-notes-head { font: 600 .72rem var(--font-head); text-transform: uppercase; letter-spacing: .08em; color: #5a6373; margin: 0 0 .3rem !important; }
+.link-notes ol { margin: 0; padding-left: 1.6rem; }
+.link-notes li { overflow-wrap: anywhere; word-break: break-all; }
 .unwritten { color: inherit; }
 /* The indexes: two columns of small type. */
 .index ul { columns: 2; column-gap: 1.4rem; }
@@ -206,13 +248,35 @@ a { color: inherit; text-decoration: none; }
 // pages go into the indexes, which are added for the second, final printing.
 // They come after every page they cite, so adding them moves none of them.
 const INDEXES = new Set(["general-index", "code-index"]);
-const doc = (main) => `<!doctype html>
+let xrefs = 0;
+// The text column and the size body text actually prints at, measured from a
+// printing: Chrome shrinks the whole book to fit, so neither is what the CSS
+// says. The column's left edge is where most lines begin; it is centered, so
+// the right edge mirrors it. pdftotext's word boxes for Source Serif 4 are
+// 1.664 times the font size (measured: 9 pt gives 14.98), and most words on
+// the pages measured are body text, so the commonest height is its.
+function measure(pdf, from) {
+  const bbox = spawnSync("pdftotext", ["-bbox", "-f", String(from), "-l", String(from + 38), pdf, "-"], { encoding: "utf8", maxBuffer: 1 << 28 }).stdout;
+  const starts = new Map(), heights = new Map();
+  for (const m of bbox.matchAll(/<word xMin="([\d.]+)" yMin="([\d.]+)" xMax="[\d.]+" yMax="([\d.]+)"/g)) {
+    const x = (+m[1]).toFixed(1), h = (+m[3] - +m[2]).toFixed(2);
+    starts.set(x, (starts.get(x) || 0) + 1);
+    heights.set(h, (heights.get(h) || 0) + 1);
+  }
+  const columnLeft = Math.min(...[...starts].filter(([, n]) => n >= 50).map(([x]) => +x));
+  const bodySize = +([...heights].sort((a, b) => b[1] - a[1])[0][0] / 1.664).toFixed(2);
+  if (!isFinite(columnLeft) || !bodySize) { console.error("measure: can't find the text column"); process.exit(1); }
+  return { columnLeft, bodySize };
+}
+
+const doc = (main, extra = "") => `<!doctype html>
 <html lang="en" data-theme="light">
 <head>
 <meta charset="utf-8">
 <title>How HarfBuzz Works</title>
 ${head}
 ${print}
+${extra ? `<style>${extra}</style>` : ""}
 </head>
 <body>
 <div class="cover"><img src="${cover}" alt="How HarfBuzz Works"></div>
@@ -246,6 +310,8 @@ const indexes = [...bodies].filter(([slug]) => INDEXES.has(slug));
 let mainHtml = [...bodies].filter(([slug]) => !INDEXES.has(slug)).map(([, b]) => b).join("\n");
 const partIds = [...new Set(pages.filter((p) => p.startsPart).map((p) => `part-${p.part.label.split(" ")[1]}`))];
 const targets = new Set([...partIds, ...indexes.flatMap(([, b]) => [...b.matchAll(LOC)].map((m) => m[1]))]);
+// and every cross-reference, and where it points
+for (const m of mainHtml.matchAll(/<span class="pref" id="(xr-\d+)" data-target="([^"]+)">/g)) { targets.add(m[1]); targets.add(m[2]); }
 const firstPdf = path.join(printDir, "without-indexes.pdf");
 printPdf(doc(mainHtml + `\n<section class="index-targets" style="font-size:1px">` +
   [...targets].map((t) => `<a href="#${t}">.</a>`).join(" ") + "</section>"), firstPdf, "without-indexes.html");
@@ -269,6 +335,10 @@ const pageOf = new Map([...firstPages].map(([t, n]) => [t, n + turns.filter((p) 
 const ROMAN_FROM = 5; // cover, three blanks, then the half-title
 const ARABIC_FROM = pageOf.get(partIds[0]);
 if (!ARABIC_FROM) { console.error("pages: can't find the first part's page"); process.exit(1); }
+const { columnLeft, bodySize } = measure(firstPdf, firstPages.get(partIds[0]) + 2);
+// How much Chrome shrinks the book: body text is 1.0625rem at 8.5pt a rem.
+const shrink = bodySize / (1.0625 * 8.5);
+console.log(`measured: text column from ${columnLeft} pt, body text ${bodySize} pt (${Math.round(shrink * 100)}% of its CSS size)`);
 const roman = (n) => [[1000, "m"], [900, "cm"], [500, "d"], [400, "cd"], [100, "c"], [90, "xc"], [50, "l"], [40, "xl"], [10, "x"], [9, "ix"], [5, "v"], [4, "iv"], [1, "i"]]
   .reduce((acc, [v, r]) => { while (n >= v) { acc += r; n -= v; } return acc; }, "");
 const label = (n) => n >= ARABIC_FROM ? String(n - ARABIC_FROM + 1) : n >= ROMAN_FROM ? roman(n - ROMAN_FROM + 1) : "";
@@ -278,8 +348,9 @@ const unnumbered = new Set(partIds.flatMap((id) => [pageOf.get(id), pageOf.get(i
 for (let n = 1; n < ROMAN_FROM + 4; n++) unnumbered.add(n); // through the imprint
 
 if (indexes.length) {
-  const places = targets.size - partIds.length;
-  const missing = [...targets].filter((t) => !pageOf.has(t));
+  const indexTargets = new Set(indexes.flatMap(([, b]) => [...b.matchAll(LOC)].map((m) => m[1])));
+  const places = indexTargets.size;
+  const missing = [...indexTargets].filter((t) => !pageOf.has(t));
   console.log(`index: ${places} places, ${places - missing.length} found in the first printing`);
   if (missing.length) console.error(`index: no page found for ${missing.length} places, e.g. ${missing.slice(0, 3).join(", ")}`);
   // Each entry's places become page numbers: in book order, one per page,
@@ -302,7 +373,21 @@ if (indexes.length) {
   }));
   mainHtml += "\n" + numbered.join("\n");
 }
-const htmlFile = printPdf(doc(mainHtml), OUT, "book.html");
+// Cross-references: each placeholder becomes the printed number of the page
+// its target is on, or goes, if that is the page the reference is on.
+{
+  let same = 0, lost = 0;
+  mainHtml = mainHtml.replace(/<span class="pref" id="(xr-\d+)" data-target="([^"]+)"> \(p\.&nbsp;000\)<\/span>/g, (m, id, target) => {
+    const at = pageOf.get(id), to = pageOf.get(target);
+    if (to == null) { lost++; return ""; }
+    if (at === to) { same++; return ""; }
+    return `<span class="pref"> (p.&nbsp;${label(to)})</span>`;
+  });
+  console.log(`cross-references: ${xrefs}, ${same} on their own page, ${lost} with no page found`);
+}
+// The title page fills the text area, so its last lines sit on the bottom
+// margin: 7.55in on paper (9in less the margins), in CSS inches before Chrome shrinks it.
+const htmlFile = printPdf(doc(mainHtml, `.title-page { height: ${(7.55 / shrink - 0.05).toFixed(3)}in; }`), OUT, "book.html");
 
 // The cover, full bleed: printed alone, it fills the page, so it replaces the
 // placeholder page 1. qpdf keeps the rest of the book's pages, outline, links
@@ -350,10 +435,11 @@ for (let n = 1; n <= total; n++) {
 const foliosPdf = path.join(printDir, "folios.pdf");
 printPdf(`<!doctype html><html><head><meta charset="utf-8">${head.match(/<link[^>]*fonts\.googleapis[^>]*>/g)?.join("\n") || ""}<style>
 @page { size: 6in 9in; margin: 0; } html, body { margin: 0; }
+/* In the body text's style: its face, size and color. */
 .pg { position: relative; width: 6in; height: 9in; break-after: page; overflow: hidden;
-  font: 500 8pt "Commissioner", sans-serif; color: #5a6373; }
-.pg.r { text-align: right; padding: 0 0.6in; box-sizing: border-box; line-height: 0.75in; padding-top: 8.25in; }
-.pg.l { text-align: left; padding: 0 0.6in; box-sizing: border-box; line-height: 0.75in; padding-top: 8.25in; }
+  font: 400 ${bodySize}pt "Source Serif 4", Georgia, serif; font-optical-sizing: auto; color: #1a1e27; }
+.pg.r { text-align: right; padding: 0 ${columnLeft}pt; box-sizing: border-box; line-height: 0.75in; padding-top: calc(8.25in - 1em); }
+.pg.l { text-align: left; padding: 0 ${columnLeft}pt; box-sizing: border-box; line-height: 0.75in; padding-top: calc(8.25in - 1em); }
 </style></head><body>${folios.join("")}</body></html>`, foliosPdf, "folios.html");
 
 // The labels file, beside the PDF: one line where each numbering starts, as
