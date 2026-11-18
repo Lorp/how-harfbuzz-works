@@ -5,5 +5,6 @@
   "with": "Claude",
   "harfbuzz": "15.1.0",
   "publisher": "Penney / Claude Press",
+  "edition": "Draft",
   "repository": "https://github.com/Lorp/how-harfbuzz-works"
 }

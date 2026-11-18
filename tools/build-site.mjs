@@ -55,6 +55,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import MarkdownIt from "markdown-it";
 import { boldTerm, canon, identifier, readNotes } from "./index-lib.mjs";
+import { bookVersion } from "./version.mjs";
 
 const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const HB_TAG = "15.1.0";
@@ -1028,6 +1029,11 @@ function main(outDir, fragment) {
   const template = fs.readFileSync(path.join(ROOT, "tools", "page.html"), "utf8");
   const meta = JSON.parse(fs.readFileSync(path.join(ROOT, "book", "book.json"), "utf8"));
   const { pages, sections } = readToc();
+  // The book's own version, in every page's footer: the edition, and the
+  // date and commit it was built from, linked to that commit.
+  const version = bookVersion(ROOT);
+  const footer = `${esc(version.edition)}, <a href="${esc(version.url)}">${esc(version.stamp)}</a>. ` +
+    `It describes HarfBuzz ${HB_TAG}.`;
   const plain = new MarkdownIt({ html: true });
   const nav = contents(sections, plain, false);
   const fullContents = contents(sections, plain, true);
@@ -1037,7 +1043,7 @@ function main(outDir, fragment) {
     const src = p.planned ? plannedSource(p) : p.src;
     const fonts = path.join(ROOT, "fonts", slug);
     index.begin(p);
-    let body = makeRenderer(fonts, index).render(src.replaceAll("{{hb}}", HB_TAG))
+    let body = makeRenderer(fonts, index).render(src.replaceAll("{{hb}}", HB_TAG).replaceAll("{{version}}", version.label))
       .replace("<p>{{contents}}</p>", () => `<nav class="toc full">${fullContents}</nav>`)
       .replace("<p>{{index:general}}</p>", () => index.html("general"))
       .replace("<p>{{index:code}}</p>", () => index.html("code"));
@@ -1053,6 +1059,7 @@ function main(outDir, fragment) {
       .replaceAll("{{book}}", () => esc(meta.title))
       .replaceAll("{{subtitle}}", () => esc(meta.subtitle))
       .replaceAll("{{hb_version}}", HB_TAG)
+      .replaceAll("{{version}}", () => footer)
       .replaceAll("{{nav}}", () => nav)
       .replaceAll("{{prev}}", () => prevLink).replaceAll("{{next}}", () => nextLink)
       .replaceAll("{{body}}", () => body);

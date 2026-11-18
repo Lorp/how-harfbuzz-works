@@ -206,6 +206,8 @@ pre code { font-size: .82rem; line-height: 1.55; }
 .info td.out pre { margin: 0; }
 .info td.out code { white-space: pre; }
 
+footer.version { margin: 1.25rem 0 2rem; font: 400 .75rem var(--font-head); color: var(--muted); }
+footer.version a { color: inherit; }
 nav.pager { display: flex; justify-content: space-between; gap: 1rem; padding-top: 2rem; margin-top: 2rem; border-top: 1px solid var(--rule); font: 500 .95rem var(--font-head); }
 
 @media (max-width: 600px) {
@@ -242,6 +244,7 @@ nav.pager { display: flex; justify-content: space-between; gap: 1rem; padding-to
 {{body}}
   </main>
   <nav class="pager">{{prev}}{{next}}</nav>
+  <footer class="version">{{version}}</footer>
 </div>
 
 <script>

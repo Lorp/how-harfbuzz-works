@@ -4,43 +4,79 @@
 
 Read it [online](https://lorp.github.io/how-harfbuzz-works/) or as a [PDF](https://lorp.github.io/how-harfbuzz-works/print/how-harfbuzz-works.pdf).
 
-A book about the inside of [HarfBuzz](https://github.com/harfbuzz/harfbuzz), written from its source code (version 15.1.0), checked against the OpenType specification and other sources, for type designers, font engineers and programmers.
+**How HarfBuzz Works** is a book about the inside of [HarfBuzz](https://github.com/harfbuzz/harfbuzz), the text shaping engine in Chrome, Firefox, Android, GNOME, LibreOffice and most other modern software that puts text on a screen. It follows text through HarfBuzz 15.1.0, from Unicode characters to positioned glyphs, and on to the outlines, color glyphs and subset fonts HarfBuzz also makes. It’s for type designers and font engineers who want to know why their fonts shape the way they do, and for programmers who use HarfBuzz, port it or work on it.
 
 “I skimmed a few chapters. Genuinely useful to aspiring HarfBuzz developers.”  
-— *Behdad Esfahbod*
+— *Behdad Esfahbod*
 
-Every shaping result and trace in the book is made by running HarfBuzz on small test fonts when the book is built, and every view of a font table is made from the compiled font, so the text can’t drift from what HarfBuzz actually does.
+The book is a draft: 49 chapters in twelve parts, and four appendices. So far only Laurence Penney and Behdad Esfahbod, HarfBuzz’s author, have reviewed it. If you find a mistake, whether a false claim, a misleading phrase or something missing, please [open an issue](https://github.com/Lorp/how-harfbuzz-works/issues), quoting the version in the page’s footer.
+
+## How it’s made
+
+The book was drafted by Claude, Anthropic’s AI model, working in Claude Code. Laurence Penney planned it, directed its revisions and checked it. That was not one instruction but hundreds:
+
+* **Organization:** the order of the parts and chapters, which sections moved between them, and who each chapter is for.
+* **Wording:** headings, sentences and captions rewritten, plain wording chosen over clever wording, and errors of fact caught, down to a miscounted glyph.
+* **Style:** typographic quotes, American spelling, no padding, bold only for definitions.
+
+The rules that came out of those interventions are kept in the repository, so they hold for later drafting: `AGENTS.md`, and the style guide and method in `notes/writing-brief.md`.
+
+HarfBuzz’s source code is the main source. The book quotes it by file and line at the version it describes. The code shows what HarfBuzz does, but not whether that is standard, so the book also checks the OpenType specification and its registries, the ISO Open Font Format, Microsoft’s script development specifications, Apple’s TrueType Reference Manual, and HarfBuzz’s issues and pull requests, and says where HarfBuzz goes its own way. The [bibliography](https://lorp.github.io/how-harfbuzz-works/bibliography.html) lists these sources. `tools/check-tags.mjs` checks every tag the book quotes against the registries.
+
+Anything the book shows as HarfBuzz’s output is made by running HarfBuzz when the book is built, not typed in:
+
+* shaping results and `--trace` logs, from small test fonts built for each chapter from feature files;
+* views of font tables, made from the compiled fonts;
+* the output of HarfBuzz’s command-line tools;
+* whole example programs in C, JavaScript, Python and Rust, compiled and run, with what they draw.
+
+So if HarfBuzz changes, rebuilding the book shows what has changed. Writing it this way has turned up bugs in HarfBuzz, which `notes/upstream-bug-reports.md` records and the chapter “Testing HarfBuzz” describes. Behdad has fixed many of them.
 
 ## Layout
 
-* `book/toc.txt`: the order of the book
-* `book/front/`, `book/chapters/`, `book/end/`: one Markdown file per page
-* `book/book.json`: title, subtitle, and the HarfBuzz version described
+* `book/toc.txt`: the order of the book, including pages planned but not yet written
+* `book/front/`, `book/chapters/`, `book/appendices/`, `book/end/`: one Markdown file per page
+* `book/book.json`: title, subtitle, edition, and the HarfBuzz version described
 * `book/cover.png`, `book/cover-back.png`: the front and back covers, for the PDF
 * `fonts/<page>/`: each chapter’s feature files, the fonts built from them, and `build.sh`
-* `examples/`: whole example programs, in C, JavaScript, Python and Rust, which the build compiles and runs (needs a C compiler, npm, Python 3 and cargo)
-* `tools/`: building HarfBuzz (`build-harfbuzz.sh`), the site (`build-site.mjs`, Node), and the test fonts and their views (`build-test-font.py`, `font-views.py`, Python)
-* `notes/`: research toward the book, such as the survey of the source
+* `examples/`: whole programs, in C, JavaScript, Python and Rust, which the build compiles and runs
+* `tools/`:
+  * `build-harfbuzz.sh` builds HarfBuzz;
+  * `build-site.mjs`, `build-pdf.mjs` and `publish.mjs` build and publish the book;
+  * `build-test-font.py` and `font-views.py` make the test fonts and their views;
+  * `check-tags.mjs` and `index-terms.mjs` check tags and gather index terms
+* `notes/`: the writing brief, the outline, the bugs found, and research toward the book, such as the survey of the source
+* `AGENTS.md`: instructions for the AI agents that work on the book
+* `resources/` (not committed): local copies of reference material, such as the specifications
 
 ## Building
 
-The site is built with Node. Only the test fonts need Python.
+You’ll need:
+
+* **Node and npm**, for the site;
+* **`meson`, `ninja` and a C++ compiler**, for HarfBuzz itself (`brew install meson ninja` on a Mac);
+* **a C compiler, Python 3 and cargo**, for the example programs;
+* **Google Chrome, `qpdf` and `pdftotext`** (from Poppler), and the network, for the PDF.
 
 ```sh
 tools/build-harfbuzz.sh   # HarfBuzz 15.1.0 into .cache/harfbuzz (twice: plain, and with detailed traces)
 npm install               # once
 npm run build             # the book as HTML, into site/
-npm run pdf               # the book as a PDF, with its .pages.txt, into site/print/ (needs Chrome)
+npm run pdf               # the book as a PDF, with its .pages.txt, into site/print/
 ```
 
 ## Publishing
 
+Commit first, then publish:
+
 ```sh
-npm run pdf               # first, if the PDF should be updated too
-npm run publish           # builds the site afresh and pushes it, with site/print/'s PDF, to gh-pages
+git commit …              # the book's changes
+npm run publish           # makes the PDF if it's out of date, builds the site afresh, and pushes both to gh-pages
 ```
 
-GitHub Pages serves the `gh-pages` branch at <https://lorp.github.io/how-harfbuzz-works/>. The branch is replaced on each publish by a single commit, so it never grows; `main` holds only the source. `npm run publish` warns if `book/`, `fonts/` or `tools/` have changed since the PDF was made.
+Every page and the PDF carry a version: the edition from `book/book.json` (“Draft”), and the date and short commit the book was built from, such as “Draft, 18 November 2026 · 30688e6”. The site shows it in each page’s footer, linked to the commit; the PDF on its imprint page; and the colophon in both. A commit’s hash can’t be known until it’s made, so the PDF has to be made after committing: `npm run publish` makes it again whenever the one in `site/print/` wasn’t made from exactly the current commit and files, which takes a couple of minutes. It refuses to publish uncommitted changes in `book/`, `examples/`, `fonts/` or `tools/`; `npm run publish -- --dirty` publishes them anyway, and the version then ends “+ changes”. `npm run pdf` on its own still makes a PDF to look at.
+
+GitHub Pages serves the `gh-pages` branch at <https://lorp.github.io/how-harfbuzz-works/>. The branch is replaced on each publish by a single commit, so it never grows; `main` holds only the source.
 
 `tools/build-harfbuzz.sh` needs `meson`, `ninja` and a C++ compiler (`brew install meson ninja` on a Mac).
 

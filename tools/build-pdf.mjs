@@ -22,6 +22,7 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { RECORD, sourceHash } from "./source-hash.mjs";
+import { bookVersion } from "./version.mjs";
 
 const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const OUT = path.resolve(process.argv[2] || path.join(ROOT, "site", "print", "how-harfbuzz-works.pdf"));
@@ -116,7 +117,9 @@ function content(slug) {
 
 const meta = JSON.parse(fs.readFileSync(path.join(ROOT, "book", "book.json"), "utf8"));
 const esc = (t) => t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-const today = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+// The version the PDF is built from, taken once, before anything is built.
+const version = bookVersion(ROOT);
+const madeFrom = sourceHash(ROOT);
 
 // Front matter, after the cover: three blank pages, the half-title, a blank,
 // the title page and the imprint, none numbered. The cover is page 1, so the
@@ -133,7 +136,7 @@ const front = [
   `<div class="front imprint">
 <p><i>${esc(meta.title)}</i>: ${esc(meta.subtitle).replace(/^./, (c) => c.toLowerCase())}</p>
 <p>By ${esc(meta.author)}${meta.with ? ` with ${esc(meta.with)}` : ""}</p>
-<p>Working draft, ${today}. It describes HarfBuzz ${esc(meta.harfbuzz)}, and every example in it was run on that version.</p>
+<p>${esc(version.label)}. It describes HarfBuzz ${esc(meta.harfbuzz)}, and every example in it was run on that version.</p>
 <p>Set in Source Serif 4, Commissioner and JetBrains Mono.</p>
 </div>`,
 ].join("\n");
@@ -469,7 +472,8 @@ console.log(labelsFile);
 // What this PDF was made from, so that publishing can tell when it's stale.
 if (OUT === path.join(ROOT, "site", "print", "how-harfbuzz-works.pdf")) {
   fs.mkdirSync(path.join(ROOT, ".cache"), { recursive: true });
-  fs.writeFileSync(path.join(ROOT, RECORD), sourceHash(ROOT) + "\n");
+  fs.writeFileSync(path.join(ROOT, RECORD),
+    JSON.stringify({ stamp: version.stamp, commit: version.commit, changes: version.changes, source: madeFrom }) + "\n");
 }
 
 // The PDF's named destinations, as a map from name to page number.

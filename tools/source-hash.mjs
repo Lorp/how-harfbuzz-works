@@ -1,8 +1,9 @@
 // What the PDF is made from, as one hash: every file in book/, examples/, fonts/ and
 // tools/ (but not the publishing scripts), by path and content (not date,
 // which git checkouts change). The PDF build records it in
-// .cache/pdf-source.txt; publishing compares it with the current one, to
-// warn when the PDF is out of date.
+// .cache/pdf-source.txt, with the version stamp (tools/version.mjs);
+// publishing compares them with the book as it is, and rebuilds the PDF
+// when they differ.
 
 import crypto from "node:crypto";
 import fs from "node:fs";
