@@ -9,6 +9,8 @@ The [previous chapter](command-line-tools.html#what-does-this-text-look-like-in-
 
 Each program loads a font, shapes a string, and draws the glyphs where shaping put them, first as SVG and then as a PNG. The rest of the book explains what happens at each step; here the steps are just run.
 
+> This chapter is for programmers who want HarfBuzz in their own software, and for font engineers who script their work: the Python section is the place to start for tests and proofs that shape text in bulk. Type designers who want to see what HarfBuzz does with a font have what they need in the previous chapter’s tools, and can skip ahead. [How to read this book](introduction.html#how-to-read-this-book) says which other chapters a programmer needs.
+
 Every program below is in the book’s repository, in [`examples/quick-start/`](https://github.com/Lorp/how-harfbuzz-works/tree/main/examples/quick-start), and is compiled and run when the book is built: each picture under a listing is that program’s output. The commands around them are hand-written.
 
 All of them use Libre Baskerville, a Baskerville by Impallari Type under the SIL Open Font License, and the text “office coffee”, as the previous chapter did. The text is chosen so that shaping shows: the font’s standard ligatures turn the *ffi* of “office” and the *ff* of “coffee” into one glyph each, so the thirteen characters become ten glyphs. The font is in the book’s repository, in [`fonts/quick-start/`](https://github.com/Lorp/how-harfbuzz-works/tree/main/fonts/quick-start), and comes from Google Fonts, which is where to get it:
