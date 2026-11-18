@@ -15,7 +15,7 @@ General index:
 
 Code index:
 
-* API and macros (17): `_hb_ot_shape_normalize`, `hb_buffer_add_utf16`, `hb_buffer_add_utf32`, `hb_buffer_add_utf8`, `hb_buffer_cluster_level_t`, `hb_buffer_guess_segment_properties`, `hb_codepoint_t`, `hb_direction_t`, `hb_feature_t`, `hb_form_clusters`, `hb_glyph_info_t`, `hb_glyph_position_t`, `hb_language_t`, `hb_ot_map_glyphs_fast`, `hb_ot_shape_internal`, `hb_script_t`, `hb_segment_properties_t`
+* API and macros (15): `_hb_ot_shape_normalize`, `hb_buffer_add_utf8`, `hb_buffer_cluster_level_t`, `hb_buffer_guess_segment_properties`, `hb_codepoint_t`, `hb_direction_t`, `hb_feature_t`, `hb_form_clusters`, `hb_glyph_info_t`, `hb_glyph_position_t`, `hb_language_t`, `hb_ot_map_glyphs_fast`, `hb_ot_shape_internal`, `hb_script_t`, `hb_segment_properties_t`
 * Source files (12): `hb-buffer.cc`, `hb-buffer.h`, `hb-common.h`, `hb-ot-layout.cc`, `hb-ot-shape-normalize.cc`, `hb-ot-shape.cc`, `hb-ot-shaper-arabic.cc`, `hb-ot-shaper-hangul.cc`, `hb-ot-shaper-indic.cc`, `hb-ot-shaper-khmer.cc`, `hb-ot-tag.cc`, `README.md`
 
 ## 2. Building HarfBuzz
@@ -1562,8 +1562,6 @@ Each term, with the chapters it is in.
 * `HB_BUDGET_UNLIMITED`: 34
 * `hb_buffer_add`: 10, 43
 * `hb_buffer_add_utf`: 10, 43
-* `hb_buffer_add_utf16`: 1
-* `hb_buffer_add_utf32`: 1
 * `hb_buffer_add_utf8`: 1, 10, 43
 * `_hb_buffer_allocate_gsubgpos_vars`: 15
 * `HB_BUFFER_ALLOCATE_VAR`: 10
