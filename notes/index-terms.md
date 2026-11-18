@@ -11,7 +11,7 @@ The book has two indexes. The **general index** holds concepts, and OpenType tab
 General index:
 
 * Concepts (21): advance, canonically equivalent, character, cluster, cluster level, code point, context, direction, features, glyph, glyph ID, language, logical order, merges, nominal glyph, normalization, offset, run, script, script shaper, segment properties
-* Tables and tags (24): `akhn`, `Arab`, `calt`, `cmap`, `dev2`, `Deva`, `DFLT`, `fina`, `GDEF`, `GPOS`, `GSUB`, `init`, `kern`, `kerx`, `Latn`, `latn`, `liga`, `mark`, `medi`, `mort`, `morx`, `rlig`, `smcp`, `trak`
+* Tables and tags (25): `akhn`, `Arab`, `calt`, `cmap`, `dev2`, `Deva`, `DFLT`, `fina`, `GDEF`, `GPOS`, `GSUB`, `init`, `kern`, `kerx`, `lang`, `Latn`, `latn`, `liga`, `mark`, `medi`, `mort`, `morx`, `rlig`, `smcp`, `trak`
 
 Code index:
 
@@ -201,11 +201,11 @@ Code index:
 General index:
 
 * Concepts (5): chosen script, language system tags, private-use subtags, script tags, Zawgyi
-* Tables and tags (36): `akhn`, `Arab`, `arab`, `beng`, `blwf`, `bng2`, `bng3`, `cmap`, `dev2`, `dev3`, `Deva`, `deva`, `DFLT`, `dflt`, `fina`, `half`, `hebr`, `init`, `IPPH`, `kana`, `kern`, `latn`, `locl`, `mark`, `medi`, `mort`, `morx`, `mym2`, `mym3`, `mymr`, `pref`, `pres`, `Qaag`, `syrc`, `SYRE`, `thai`
+* Tables and tags (37): `akhn`, `Arab`, `arab`, `beng`, `blwf`, `bng2`, `bng3`, `cmap`, `dev2`, `dev3`, `Deva`, `deva`, `DFLT`, `dflt`, `fina`, `half`, `hebr`, `init`, `IPPH`, `kana`, `kern`, `lang`, `latn`, `locl`, `mark`, `medi`, `mort`, `morx`, `mym2`, `mym3`, `mymr`, `pref`, `pres`, `Qaag`, `syrc`, `SYRE`, `thai`
 
 Code index:
 
-* API and macros (26): `_hb_apply_morx`, `hb_buffer_guess_segment_properties`, `hb_language_t`, `HB_NO_LANGUAGE_PRIVATE_SUBTAG`, `HB_NO_OT_SHAPER_MYANMAR_ZAWGYI`, `HB_NO_OT_SHAPER_THAI_FALLBACK`, `hb_ot_all_tags_from_script`, `hb_ot_layout_script_select_language2`, `hb_ot_layout_table_select_script`, `HB_OT_MAX_TAGS_PER_LANGUAGE`, `HB_OT_MAX_TAGS_PER_SCRIPT`, `hb_ot_old_tag_from_script`, `hb_ot_shaper_categorize`, `hb_ot_shaper_t`, `hb_ot_tag_from_language`, `hb_ot_tags_from_complex_language`, `hb_ot_tags_from_language`, `hb_ot_tags_from_script`, `hb_ot_tags_from_script_and_language`, `hb_ot_tags_to_script_and_language`, `hb_script_from_iso15924_tag`, `HB_SCRIPT_INVALID`, `hb_script_t`, `HB_SCRIPT_UNKNOWN`, `hb_shape`, `HB_TAG_NONE`
+* API and macros (27): `_hb_apply_morx`, `hb_buffer_guess_segment_properties`, `hb_language_from_string`, `hb_language_t`, `HB_NO_LANGUAGE_PRIVATE_SUBTAG`, `HB_NO_OT_SHAPER_MYANMAR_ZAWGYI`, `HB_NO_OT_SHAPER_THAI_FALLBACK`, `hb_ot_all_tags_from_script`, `hb_ot_layout_script_select_language2`, `hb_ot_layout_table_select_script`, `HB_OT_MAX_TAGS_PER_LANGUAGE`, `HB_OT_MAX_TAGS_PER_SCRIPT`, `hb_ot_old_tag_from_script`, `hb_ot_shaper_categorize`, `hb_ot_shaper_t`, `hb_ot_tag_from_language`, `hb_ot_tags_from_complex_language`, `hb_ot_tags_from_language`, `hb_ot_tags_from_script`, `hb_ot_tags_from_script_and_language`, `hb_ot_tags_to_script_and_language`, `hb_script_from_iso15924_tag`, `HB_SCRIPT_INVALID`, `hb_script_t`, `HB_SCRIPT_UNKNOWN`, `hb_shape`, `HB_TAG_NONE`
 * Types and structs (1): `HYE0`
 * Source files (16): `fonts/choosing-a-script-shaper/build-fonts.py`, `gen-tag-table.py`, `hb-common.cc`, `hb-ot-layout-common.hh`, `hb-ot-layout.cc`, `hb-ot-layout.h`, `hb-ot-map.cc`, `hb-ot-map.hh`, `hb-ot-shape.cc`, `hb-ot-shaper-default.cc`, `hb-ot-shaper-indic.cc`, `hb-ot-shaper-myanmar.cc`, `hb-ot-shaper-thai.cc`, `hb-ot-shaper.hh`, `hb-ot-tag-table.hh`, `hb-ot-tag.cc`
 
@@ -1006,6 +1006,7 @@ Each term, with the chapters it is in.
 * Khmer consonant syllable: 25
 * `khmr`: 25
 * kinzi: 25
+* `lang`: 1, 14
 * `LANG`: 3
 * language: 1
 * language system tags: 14
@@ -1820,7 +1821,7 @@ Each term, with the chapters it is in.
 * `hb_indic_would_substitute_feature_t`: 24
 * `hb_insert_dotted_circle`: 10, 15, 27
 * `hb_kern_machine_t`: 19, 20
-* `hb_language_from_string`: 12
+* `hb_language_from_string`: 12, 14
 * `HB_LANGUAGE_INVALID`: 45
 * `hb_language_matches`: 45
 * `hb_language_t`: 1, 12, 14, 45

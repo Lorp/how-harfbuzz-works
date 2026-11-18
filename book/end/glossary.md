@@ -174,7 +174,9 @@
 
 **Kinzi.** In Myanmar, a NGA with ASAT and virama written above the next consonant; HarfBuzz moves it after the base, like a reph.
 
-**Language system tag.** OpenType’s four-letter name for a language under a script, such as `MAR` or `TRK`, with its own features.
+**Language.** What a run of text is written in, given to HarfBuzz as a BCP 47 tag such as `tr`, `ur` or `zh-Hant`, built from the subtags in [IANA’s registry](https://www.iana.org/assignments/language-subtag-registry). HarfBuzz ignores case and reads `_` as `-` (`hb-common.cc:167`), and maps the tag to OpenType language system tags: `tr` becomes `'TRK '`.
+
+**Language system tag.** OpenType’s name for a language under a script, such as `MAR` or `TRK`, with its own features. Like every OpenType tag it is four bytes: most language system tags are three letters padded with a space (`'TRK '`), and a few use all four (`'ZHTM'`, `'HYE0'`). The tags are [listed in the OpenType specification](https://learn.microsoft.com/en-us/typography/opentype/spec/languagetags).
 
 **Lazy loader.** A one-pointer slot on a face that is filled the first time a table or accelerator is asked for, without a lock.
 
@@ -290,7 +292,7 @@
 
 **Script shaper.** The part of HarfBuzz that knows one family of scripts’ rules: joining, reordering, which features apply to which glyphs.
 
-**Script tag.** OpenType’s four-letter name for a script in a font’s ScriptList, such as `latn` or `dev2`. One Unicode script can have several.
+**Script tag.** OpenType’s four-letter name for a script in a font’s ScriptList, such as `latn` or `dev2`; a few shorter ones are padded with spaces (`'nko '`, <code>'yi&nbsp;&nbsp;'</code>). One Unicode script can have several. The tags are [listed in the OpenType specification](https://learn.microsoft.com/en-us/typography/opentype/spec/scripttags).
 
 **Segment properties.** A buffer’s direction, script and language.
 

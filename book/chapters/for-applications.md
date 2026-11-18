@@ -164,7 +164,7 @@ Reshaping is cheap in another way as well: the plan is cached, so shaping a few 
 
 ## Runs the application must find
 
-HarfBuzz doesn’t itemize. Before it is called, the application splits each paragraph into runs of one script, one direction, one language and one font, with one set of features. The directions come from the Unicode bidirectional algorithm, the scripts from Unicode’s script property with the application’s own rules for characters such as spaces, digits and punctuation that belong to no one script, and the fonts from its own fallback, when the chosen font lacks a character.
+HarfBuzz doesn’t itemize. Before it is called, the application splits each paragraph into runs of one script, one direction, one language and one font, with one set of features. The directions come from the Unicode bidirectional algorithm, the scripts from Unicode’s script property with the application’s own rules for characters such as spaces, digits and punctuation that belong to no one script, the languages from the document’s markup or settings ([Why shaping exists](why-shaping-exists.html#runs-and-the-three-things-harfbuzz-must-be-told)), and the fonts from its own fallback, when the chosen font lacks a character.
 
 `hb_buffer_guess_segment_properties` (`hb-buffer.cc:746`) is not an itemizer. It looks for the first character whose script isn’t Common, Inherited or Unknown, takes the direction from that script, and the language from the locale ([Why shaping exists](why-shaping-exists.html#runs-and-the-three-things-harfbuzz-must-be-told)). Given mixed text, it calls the whole run by the first script it sees:
 

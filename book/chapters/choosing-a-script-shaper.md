@@ -8,7 +8,7 @@ The examples use test fonts built by `fonts/choosing-a-script-shaper/build-fonts
 
 ## From a script to script tags
 
-HarfBuzz’s scripts are ISO 15924 codes (`Deva`, `Arab`), as [Why shaping exists](why-shaping-exists.html#runs-and-the-three-things-harfbuzz-must-be-told) said. A font’s ScriptList uses OpenType’s own **script tags**, and one script can have several. `hb_ot_all_tags_from_script` (`hb-ot-tag.cc:157`) lists them, newest first:
+HarfBuzz’s scripts are [ISO 15924 codes](https://www.unicode.org/iso15924/iso15924-codes.html) (`Deva`, `Arab`), as [Why shaping exists](why-shaping-exists.html#runs-and-the-three-things-harfbuzz-must-be-told) said. A font’s ScriptList uses OpenType’s own **script tags**, [registered in the specification](https://learn.microsoft.com/en-us/typography/opentype/spec/scripttags), and one script can have several. `hb_ot_all_tags_from_script` (`hb-ot-tag.cc:157`) lists them, newest first:
 
 | Script | Tags tried, in order |
 |---|---|
@@ -24,7 +24,7 @@ The nine Indic scripts have three generations of tag. The old tags, such as `dev
 
 ## From a language to language system tags
 
-The language is turned into OpenType **language system tags**, also up to three (`HB_OT_MAX_TAGS_PER_LANGUAGE`, `hb-ot-layout.h:107`). `hb_ot_tags_from_language` (`hb-ot-tag.cc:322`) reads the BCP 47 string in this order:
+The language is turned into OpenType **language system tags**, [registered in the specification](https://learn.microsoft.com/en-us/typography/opentype/spec/languagetags), also up to three (`HB_OT_MAX_TAGS_PER_LANGUAGE`, `hb-ot-layout.h:107`). The language comes from the application, which usually takes it from the document, such as an HTML `lang` attribute ([Why shaping exists](why-shaping-exists.html#runs-and-the-three-things-harfbuzz-must-be-told)). It arrives as an `hb_language_t`, a BCP 47 string that `hb_language_from_string` has already lowercased, with `_` read as `-` (`hb-common.cc:167`; [Shape plans and their cache](shape-plans-and-their-cache.html) has more), so `TR`, `tr` and `tr_TR` are handled like `tr` and `tr-tr`. `hb_ot_tags_from_language` (`hb-ot-tag.cc:322`) reads it in this order:
 
 1. Some tags of several subtags have mappings of their own, tested first by `hb_ot_tags_from_complex_language`: `zh-Hant`, `zh-HK`, `el-polyton`, and variants such as `-fonipa` (`IPPH`) and `-syre` (`SYRE`).
 2. If the second subtag is a three-letter extended language subtag, as in `zh-yue`, it is used instead of the first.
