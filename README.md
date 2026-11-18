@@ -18,7 +18,7 @@ Every shaping result and trace in the book is made by running HarfBuzz on small 
 * `book/book.json`: title, subtitle, and the HarfBuzz version described
 * `book/cover.png`, `book/cover-back.png`: the front and back covers, for the PDF
 * `fonts/<page>/`: each chapter’s feature files, the fonts built from them, and `build.sh`
-* `examples/`: whole example programs, in C, JavaScript and Rust, which the build compiles and runs (needs a C compiler, npm and cargo)
+* `examples/`: whole example programs, in C, JavaScript, Python and Rust, which the build compiles and runs (needs a C compiler, npm, Python 3 and cargo)
 * `tools/`: building HarfBuzz (`build-harfbuzz.sh`), the site (`build-site.mjs`, Node), and the test fonts and their views (`build-test-font.py`, `font-views.py`, Python)
 * `notes/`: research toward the book, such as the survey of the source
 
@@ -103,14 +103,27 @@ cpp: LigatureSubstFormat1_2
 
 These views come from a `FONT.views.json` file next to each font, which the chapter’s `build.sh` writes. So after changing a feature file, rebuild that chapter’s fonts (see above); the site build stops and tells you if you forget.
 
+### Show a command and what it gives: `command`
+
+This shows one command line exactly as a reader would type it, runs it when the book is built, and shows what it produces under it: `hb-shape`’s output as text, or the SVG or PNG the command writes, captioned with the file’s name.
+
+````markdown
+```command
+font: quick-start/LibreBaskerville.ttf
+$ hb-raster LibreBaskerville.ttf "office coffee" --font-size=32 -o office.png
+```
+````
+
+`font:` says where the font named in the command really is (found as in the other blocks); a path starting `test/` is a font in HarfBuzz’s own source. `zoom:` enlarges a PNG (default 2), and `show: no` shows the command without running it. The tools it can run are `hb-shape`, `hb-vector`, `hb-raster` and `hb-info`.
+
 ### Show a whole program: `example`
 
-This shows a program from `examples/`, and what it outputs. The build compiles and runs it (C against the HarfBuzz in `.cache/harfbuzz`, JavaScript with npm, Rust with cargo, all built in `.cache/examples/`), so the listing and the picture can’t disagree:
+This shows a program from `examples/`, and what it outputs. The build compiles and runs it (C against the HarfBuzz in `.cache/harfbuzz`, JavaScript with npm, Python in a virtual environment from its `requirements.txt`, Rust with cargo, all built in `.cache/examples/`), so the listing and the picture can’t disagree:
 
 ````markdown
 ```example
 program: quick-start/c/text-to-svg.c
-args: hb:test/subset/data/fonts/Roboto-Regular.ttf  office coffee
+args: LibreBaskerville.ttf  office coffee
 output: svg
 ```
 ````
@@ -124,7 +137,7 @@ This runs a JavaScript module from `examples/` in the reader’s browser, with a
 ````markdown
 ```demo
 program: quick-start/js/text-to-canvas.mjs
-font: hb:test/subset/data/fonts/Roboto-Regular.ttf
+font: LibreBaskerville.ttf
 unicodes: 20-7E
 text: office coffee
 package: harfbuzzjs@1.6.4

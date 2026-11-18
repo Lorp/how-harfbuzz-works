@@ -125,3 +125,4 @@
 `zlib`  not-a-tag
 `Blob`  not-a-tag
 `Face`  not-a-tag
+`BGRa`  not-a-tag

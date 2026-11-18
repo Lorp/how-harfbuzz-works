@@ -2,6 +2,14 @@
 
 Most people get HarfBuzz already built: inside their operating system or their browser, or from a package manager. Building it yourself is for when you want to work on it, or at least to watch it work: to run the command-line tools on your own fonts, to see the traces this book shows, to run the test suites, and to change something and see what happens.
 
+To program with HarfBuzz, you don’t necessarily have to build it either. Three ready-made routes skip the build:
+
+* **JavaScript.** [harfbuzzjs](https://github.com/harfbuzz/harfbuzzjs), from the HarfBuzz project, is HarfBuzz compiled to WebAssembly, for Node and browsers, installed with `npm install harfbuzzjs`. Version 1.6.4 contains HarfBuzz 15.0.0. It has the shaper and the glyph outlines, but not hb-vector, hb-raster or the tools.
+* **Python.** [uharfbuzz](https://github.com/harfbuzz/uharfbuzz), also from the HarfBuzz project, comes ready-built for the common platforms with `pip install uharfbuzz`. Version 0.57.0 contains HarfBuzz 15.0.0.
+* **Rust.** The [HarfRust](https://crates.io/crates/harfrust) crate needs no C at all, but it isn’t HarfBuzz: it is a port of HarfBuzz’s shaping to Rust, which matches HarfBuzz {{hb}} closely but not exactly ([HarfRust](harfrust.html)).
+
+[Quick start](quick-start.html) uses harfbuzzjs and HarfRust. A package manager’s HarfBuzz is another way in, but check its version first, with `pkg-config --modversion harfbuzz`. This book describes HarfBuzz 15, and a packaged HarfBuzz can be much older: Linux distributions such as Debian and Ubuntu keep the version they shipped with for the life of a release, and Homebrew keeps the version you installed until you upgrade. An older HarfBuzz may not do what this book describes, and before 13.0.0 it has no hb-vector or hb-raster.
+
 This chapter follows a developer setting up such a build, in order: the source, a first build, a development build, a second build for detailed traces, and the daily work in the tree. It ends with a short tour of builds for shipping. Options are named where they are needed; [Compile-time configuration](compile-time-configuration.html), Appendix B, lists them all.
 
 Builds can’t run when the book is built, so the commands here are plain listings, and the little output shown was produced by hand, with HarfBuzz {{hb}} on a Mac.
@@ -34,6 +42,15 @@ A good part of `src/` was written by programs. The Unicode property tables, the 
 ## Meson and Ninja
 
 HarfBuzz is built with Meson. **Meson** is a build system: it reads a description of the project, written in its own small language in files called `meson.build`, looks at the machine (the compilers, which libraries are installed and where), and writes out the exact commands that will build everything. It doesn’t run those commands itself. It hands them to **Ninja**, a small, fast build tool whose only job is to run build steps in the right order, as many at once as the machine allows, and on the next run to repeat only the steps whose inputs have changed.
+
+Neither comes with macOS or with most Linux systems, but both are easy to get. HarfBuzz needs Meson 0.60.0 or later (`meson.build:2`), a C++ compiler, and `pkg-config`, which Meson uses to find libraries:
+
+* **macOS**, with [Homebrew](https://brew.sh): `brew install meson pkg-config`. Homebrew installs Ninja with Meson. The compiler comes with Apple’s command-line tools, `xcode-select --install`.
+* **Debian and Ubuntu**: `sudo apt install meson ninja-build pkg-config g++`. Debian calls its Ninja package `ninja-build`.
+* **Fedora**: `sudo dnf install meson ninja-build pkgconfig gcc-c++`.
+* **Anywhere with Python**: `pip install meson ninja`. Meson is written in Python, and the `ninja` package is Ninja ready-built. Where the system’s Python refuses to install packages, as recent Debian and Homebrew do, make a virtual environment for them (`python3 -m venv ~/hb-tools`, then `~/hb-tools/bin/pip install meson ninja`) and put its `bin` folder on your `PATH`. This book’s own build gets them that way.
+
+`BUILD.md` adds the libraries the optional parts need, such as FreeType, GLib and cairo, for each platform.
 
 The two meet in a **build directory**. Meson never writes into the source tree’s own directories (apart from the generated files above, which HarfBuzz copies back on purpose): everything it makes goes in a directory you name, by convention `build/`. You can have as many build directories as you like, each configured differently, side by side in one tree. This chapter will end up with three.
 

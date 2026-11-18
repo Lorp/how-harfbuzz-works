@@ -262,24 +262,53 @@ Among the flags, `--retain-gids` keeps glyph IDs unchanged, `--no-hinting` drops
 
 The three drawing tools shape the text, lay out its lines, and draw the glyphs. They share the view options (`view-options.hh:363`): `--foreground` and `--background` colors (`none` for a transparent background), `--margin`, `--line-space`, `--font-extents` to override ascent and descent, `--logical` and `--ink` to frame the picture by the line’s logical box or by the ink alone, `--font-palette` and `--custom-palette` for color fonts, `--rainbow` to color each glyph differently, and `--show-extents` to draw each glyph’s ink box and origin. `hb-vector` and `hb-raster` find out whether a font has color glyphs (COLR, or PNG bitmaps) and paint them in color; `--draw` forces plain outlines and `--paint` the color path (`raster-output.hh:79`, `vector-output.hh:225`).
 
-`hb-vector` writes SVG, or PDF with `-O pdf` (`vector-output.hh:40`); `--precision` sets the number of decimals in its coordinates. Its default size is the font’s units per em, so an SVG is in font units. Here it draws a variable font at three weights, with `--variations` as `hb-shape` takes it:
+`hb-vector` writes SVG, or PDF with `-O pdf` (`vector-output.hh:40`); `--precision` sets the number of decimals in its coordinates. Its default size is the font’s units per em, so an SVG is in font units. The commands in this section are run from the top of a HarfBuzz checkout, where these test fonts are. This one draws a word as SVG:
 
-```draw
-font: hb:test/subset/data/fonts/Roboto-Variable.ttf
-text: Wave
-at: wght=100; wght=400; wght=900
+```command
+$ hb-vector test/subset/data/fonts/Roboto-Variable.ttf Wave -o wave.svg
 ```
 
-`hb-raster` writes PNG, PPM, or `ansi`, a picture in the characters and colors of a terminal (`raster-output.hh:41`). Its default size is 256 pixels per em. Here it is at 32:
+`--variations` chooses a weight in a variable font, as it does for `hb-shape`:
 
-```raster
-zoom: 4
-hb:test/subset/data/fonts/Roboto-Regular.ttf  Wave  --font-size=32
+```command
+$ hb-vector test/subset/data/fonts/Roboto-Variable.ttf Wave --variations=wght=900 -o wave-900.svg
+```
+
+and `-O pdf` writes PDF instead:
+
+```command
+$ hb-vector test/subset/data/fonts/Roboto-Variable.ttf Wave -O pdf -o wave.pdf
+```
+
+`hb-raster` writes PNG, PPM, or `ansi`, a picture in the characters and colors of a terminal (`raster-output.hh:41`). Its default size is 256 pixels per em. This command writes a PNG at 32 pixels to the em:
+
+```command
+zoom: 3
+$ hb-raster test/subset/data/fonts/Roboto-Regular.ttf Wave --font-size=32 -o wave.png
+```
+
+Without `-o`, the picture goes to the terminal, as described below; `-O ansi` asks for it in characters, whatever the terminal:
+
+```command
+show: no
+$ hb-raster test/subset/data/fonts/Roboto-Regular.ttf Wave --font-size=32 -O ansi
 ```
 
 `--show-extents` should add each glyph’s ink box and origin to the picture, but in {{hb}} it puts most of them in the wrong place ([below](#a-bug-in-show-extents)).
 
-`hb-view` came first: `hb-vector` and `hb-raster` arrived in 13.0.0 with their libraries, and “share many of the same options as `hb-view`” (`NEWS`). It draws through cairo, using `libharfbuzz-cairo`, and so writes whatever cairo can: PNG, SVG, PDF, PostScript, EPS, cairo script and `ansi`, depending on how cairo was built (`helper-cairo.hh:374`). Its default size is 256. `hb-vector` and `hb-raster` do the same work with HarfBuzz’s own renderers and no cairo, and are described with their libraries, in [hb-vector](hb-vector.html) and [hb-raster](hb-raster.html).
+`hb-view` came first: `hb-vector` and `hb-raster` arrived in 13.0.0 with their libraries, and “share many of the same options as `hb-view`” (`NEWS`). It draws through cairo, using `libharfbuzz-cairo`, and so writes whatever cairo can: PNG, SVG, PDF, PostScript, EPS, cairo script and `ansi`, depending on how cairo was built (`helper-cairo.hh:374`). Its default size is 256. `hb-vector` and `hb-raster` do the same work with HarfBuzz’s own renderers and no cairo, and are described with their libraries, in [hb-vector](hb-vector.html) and [hb-raster](hb-raster.html). `hb-view` takes the format from the output file’s name:
+
+```
+$ hb-view test/subset/data/fonts/Roboto-Regular.ttf Wave -o wave.png
+```
+
+or from `-O`:
+
+```
+$ hb-view test/subset/data/fonts/Roboto-Regular.ttf Wave -O svg -o wave.svg
+```
+
+It is built only if both GLib and cairo are found (`util/meson.build:44`–`:45`, [Building HarfBuzz](building-harfbuzz.html#optional-dependencies-and-backends)); this book’s build leaves cairo out, so its pictures come from `hb-vector` and `hb-raster`.
 
 Written to a terminal without `-O`, `hb-raster` and `hb-view` show the picture there. In iTerm2, WezTerm and kitty, which can show images, they send a PNG in the terminal’s own protocol; elsewhere they print it as `ansi` (`helper-image-output.hh:76`), with the chafa library’s help if they were built with it.
 
@@ -287,9 +316,9 @@ Written to a terminal without `-O`, `hb-raster` and `hb-view` show the picture t
 
 In {{hb}}, `hb-raster` and `hb-vector` draw the box of every glyph but the first in the wrong place. Here is the picture above with `--show-extents`:
 
-```raster
-zoom: 4
-hb:test/subset/data/fonts/Roboto-Regular.ttf  Wave  --font-size=32  --show-extents
+```command
+zoom: 3
+$ hb-raster test/subset/data/fonts/Roboto-Regular.ttf Wave --font-size=32 --show-extents -o wave-extents.png
 ```
 
 Only the *W*’s box is where it should be. The box around the *v* and the *e* is the *a*’s, at twice the *a*’s pen position, and the boxes of the *v* and the *e* are further on still, outside the picture. Each glyph’s overlay is drawn with its transform already set to the pen position, and then moved by the pen position again (`raster-output.hh:251`, `vector-output.hh:292`, `helper-extents-overlay.hh:66`). The first glyph’s pen position is 0, so its box alone is right. `hb-shape --show-extents` gives the correct numbers. This is draft 75 in [Testing HarfBuzz](testing-harfbuzz.html#the-bugs-this-book-found).
@@ -308,6 +337,51 @@ The build makes a few more programs, for HarfBuzz’s own developers, and doesn�
 * `hb-fc-list`, in `util/hb-fc-list.c`, lists the fontconfig fonts that can draw a piece of text. Nothing in the build compiles it.
 
 ## Recipes
+
+### What does this text look like in this font?
+
+`hb-vector` and `hb-raster` draw it, one command each. The font here is Libre Baskerville, from Google Fonts under the SIL Open Font License, whose standard ligatures turn the *ffi* of “office” and the *ff* of “coffee” into one glyph each. First, download it:
+
+```
+$ curl -L -o LibreBaskerville.ttf "https://github.com/google/fonts/raw/main/ofl/librebaskerville/LibreBaskerville%5Bwght%5D.ttf"
+```
+
+`hb-shape` shows what the font does with the text. The thirteen characters become ten glyphs:
+
+```command
+font: quick-start/LibreBaskerville.ttf
+$ hb-shape LibreBaskerville.ttf "office coffee"
+```
+
+`hb-vector` draws the result as SVG, in font units unless `--font-size` is given:
+
+```command
+font: quick-start/LibreBaskerville.ttf
+$ hb-vector LibreBaskerville.ttf "office coffee" -o office.svg
+```
+
+and `hb-raster` as PNG, here at 32 pixels to the em:
+
+```command
+font: quick-start/LibreBaskerville.ttf
+$ hb-raster LibreBaskerville.ttf "office coffee" --font-size=32 -o office.png
+```
+
+Features work as in `hb-shape`. The font’s discretionary ligatures are off unless asked for, with `--features=dlig`:
+
+```command
+font: quick-start/LibreBaskerville.ttf
+$ hb-shape LibreBaskerville.ttf "act first" --features=dlig
+```
+
+The drawing tools take the same option:
+
+```command
+font: quick-start/LibreBaskerville.ttf
+$ hb-vector LibreBaskerville.ttf "act first" --features=dlig -o act.svg
+```
+
+Both tools arrived in HarfBuzz 13.0.0, and this book describes 15: if your package manager’s HarfBuzz is older, build 15.1.0 ([Building HarfBuzz](building-harfbuzz.html)). `hb-raster` writes PNG only if HarfBuzz was built with libpng. The [next chapter](quick-start.html) writes programs that do the same, in C, JavaScript and Rust.
 
 ### Does this font have these characters?
 

@@ -1,28 +1,24 @@
 # Quick start: from text to SVG and PNG
 
-This chapter puts a line of text on the screen, the shortest way there is, three times: in C with HarfBuzz itself, in JavaScript with harfbuzzjs, and in Rust with HarfRust. Each program loads a font, shapes a string, and draws the glyphs where shaping put them, first as SVG and then as a PNG. The rest of the book explains what happens at each step; here the steps are just run.
+The [previous chapter](command-line-tools.html#what-does-this-text-look-like-in-this-font) drew a line of text with `hb-vector` and `hb-raster`, one command each. This chapter writes programs that do the same, small versions of those two tools, in four languages:
+
+* **C**, with HarfBuzz itself;
+* **JavaScript**, with harfbuzzjs, HarfBuzz compiled to WebAssembly;
+* **Python**, with uharfbuzz, HarfBuzz’s Python bindings;
+* **Rust**, with HarfRust, a port of HarfBuzz’s shaping to Rust.
+
+Each program loads a font, shapes a string, and draws the glyphs where shaping put them, first as SVG and then as a PNG. The rest of the book explains what happens at each step; here the steps are just run.
 
 Every program below is in the book’s repository, in [`examples/quick-start/`](https://github.com/Lorp/how-harfbuzz-works/tree/main/examples/quick-start), and is compiled and run when the book is built: each picture under a listing is that program’s output. The commands around them are hand-written.
 
-All of them use Roboto Regular, which is in HarfBuzz’s source as `test/subset/data/fonts/Roboto-Regular.ttf`, and the text “office coffee”. The text is chosen so that shaping shows: Roboto has an *ffi* ligature, so “office” comes out as four glyphs, not six. Roboto has no *ff* ligature, and “coffee” keeps both its f’s.
-
-## From the command line
-
-With HarfBuzz’s tools installed ([Building HarfBuzz](building-harfbuzz.html) shows how, and most package managers have them), it takes one command for each:
+All of them use Libre Baskerville, a Baskerville by Impallari Type under the SIL Open Font License, and the text “office coffee”, as the previous chapter did. The text is chosen so that shaping shows: the font’s standard ligatures turn the *ffi* of “office” and the *ff* of “coffee” into one glyph each, so the thirteen characters become ten glyphs. The font is in the book’s repository, in [`fonts/quick-start/`](https://github.com/Lorp/how-harfbuzz-works/tree/main/fonts/quick-start), and comes from Google Fonts, which is where to get it:
 
 ```
-hb-vector Roboto-Regular.ttf "office coffee" -o office.svg
-hb-raster Roboto-Regular.ttf "office coffee" --font-size=32 -o office.png
+curl -L -o LibreBaskerville.ttf \
+  "https://github.com/google/fonts/raw/main/ofl/librebaskerville/LibreBaskerville%5Bwght%5D.ttf"
 ```
 
-`hb-vector` writes SVG, in font units unless `--font-size` is given. `hb-raster` writes PNG, at 32 pixels to the em here:
-
-```raster
-zoom: 2
-hb:test/subset/data/fonts/Roboto-Regular.ttf  office coffee  --font-size=32
-```
-
-Both tools arrived in HarfBuzz 13.0.0, and both libraries have been stable since 15.0.0, so a packaged HarfBuzz older than that doesn’t have them. `hb-raster` writes PNG only if HarfBuzz was built with libpng. [The command-line tools](command-line-tools.html) explains their options.
+It is a variable font, with weights from 400 to 700, and every program here draws its default, 400.
 
 ## In C
 
@@ -32,7 +28,7 @@ The C programs use HarfBuzz’s own drawing libraries: `libharfbuzz-vector` for 
 
 ```example
 program: quick-start/c/text-to-svg.c
-args: hb:test/subset/data/fonts/Roboto-Regular.ttf  office coffee
+args: LibreBaskerville.ttf  office coffee
 output: svg
 ```
 
@@ -46,34 +42,51 @@ The program does four things, and every HarfBuzz program does the first three.
 
 **Draw.** `hb_vector_draw_glyph` draws a glyph’s outline at the current transform, and `HB_VECTOR_EXTENTS_MODE_EXPAND` grows the SVG’s box to fit it. `hb_vector_draw_render` returns the document.
 
-To build it against an installed HarfBuzz, `pkg-config` supplies the flags:
-
-```
-cc text-to-svg.c $(pkg-config --cflags --libs harfbuzz-vector) -o text-to-svg
-./text-to-svg Roboto-Regular.ttf "office coffee" > office.svg
-```
-
-To build it against a HarfBuzz that was built but not installed, point `pkg-config` at the build’s `meson-uninstalled` folder ([Building HarfBuzz](building-harfbuzz.html#what-a-build-makes)), and tell the program where the libraries are:
-
-```
-export PKG_CONFIG_PATH=$HOME/harfbuzz/build/meson-uninstalled
-cc text-to-svg.c $(pkg-config --cflags --libs harfbuzz-vector) \
-   -Wl,-rpath,$HOME/harfbuzz/build/src -o text-to-svg
-```
-
 ### PNG with hb-raster
 
 The PNG version is the same program with a size and a different drawing context:
 
 ```example
 program: quick-start/c/text-to-png.c
-args: hb:test/subset/data/fonts/Roboto-Regular.ttf  office coffee  32
+args: LibreBaskerville.ttf  office coffee  32
 output: png
 ```
 
 Three things change. The font now has a size, set with `hb_font_set_scale` to 64 units a pixel, so that positions keep fractions of a pixel, and `hb_raster_paint_set_scale_factor` tells the rasterizer to divide by 64 again. The image’s size has to be given before drawing: here it is the line’s advance by the font’s ascender and descender, in whole pixels. And it uses a paint context, not a draw context, because only a painted image can be written as PNG (`hb_raster_image_serialize_to_png_or_fail` takes only color images). Painting has a bonus: a color font comes out in color, with no change to the program. [hb-raster](hb-raster.html) explains both contexts.
 
-It builds the same way, with `harfbuzz-raster` in place of `harfbuzz-vector`.
+### Building and running them
+
+The programs need HarfBuzz’s drawing libraries, `libharfbuzz-vector` and `libharfbuzz-raster`, which are stable only since HarfBuzz 15.0.0. First, ask `pkg-config` whether you have them:
+
+```
+pkg-config --modversion harfbuzz-vector
+```
+
+If it prints 15.0.0 or later, compile and run against it:
+
+```
+cc text-to-svg.c $(pkg-config --cflags --libs harfbuzz-vector) -o text-to-svg
+./text-to-svg LibreBaskerville.ttf "office coffee" > office.svg
+```
+
+If it prints an older version, or says the package wasn’t found, build HarfBuzz 15.1.0 yourself. It takes a minute or two, and doesn’t touch any HarfBuzz you have installed. You need a C++ compiler, `pkg-config`, Meson and Ninja (`brew install meson ninja pkg-config` on a Mac, `apt install meson ninja-build pkg-config` on Debian and Ubuntu), and for the PNG program, libpng (`brew install libpng`, or `apt install libpng-dev`). Then, in the folder with the programs:
+
+```
+git clone --depth 1 --branch 15.1.0 https://github.com/harfbuzz/harfbuzz.git
+meson setup harfbuzz/build harfbuzz
+ninja -C harfbuzz/build
+```
+
+Point `pkg-config` at the build’s `meson-uninstalled` folder ([Building HarfBuzz](building-harfbuzz.html#what-a-build-makes)), and tell the program where the libraries are:
+
+```
+export PKG_CONFIG_PATH=$PWD/harfbuzz/build/meson-uninstalled
+cc text-to-svg.c $(pkg-config --cflags --libs harfbuzz-vector) \
+   -Wl,-rpath,$PWD/harfbuzz/build/src -o text-to-svg
+./text-to-svg LibreBaskerville.ttf "office coffee" > office.svg
+```
+
+The PNG program builds the same way, with `harfbuzz-raster` in place of `harfbuzz-vector`, and takes a size in pixels as well: `./text-to-png LibreBaskerville.ttf "office coffee" 32 > office.png`. If HarfBuzz was built without libpng, it prints “nothing to write”: Meson uses libpng only if it finds it, and says whether it did in the summary it prints at the end of `meson setup`. [Building HarfBuzz](building-harfbuzz.html) explains the build in full, including Windows.
 
 ## In JavaScript
 
@@ -83,7 +96,7 @@ It builds the same way, with `harfbuzz-raster` in place of `harfbuzz-vector`.
 
 ```example
 program: quick-start/js/text-to-svg.mjs
-args: hb:test/subset/data/fonts/Roboto-Regular.ttf  office coffee
+args: LibreBaskerville.ttf  office coffee
 output: svg
 ```
 
@@ -91,7 +104,7 @@ It is the C program’s first three steps under other names: `Blob`, `Face`, `Fo
 
 ```
 npm install harfbuzzjs
-node text-to-svg.mjs Roboto-Regular.ttf "office coffee" > office.svg
+node text-to-svg.mjs LibreBaskerville.ttf "office coffee" > office.svg
 ```
 
 ### Pixels, in a browser
@@ -100,13 +113,13 @@ In a browser, the canvas does the rasterizing: the same path data becomes a `Pat
 
 ```example
 program: quick-start/js/text-to-canvas.mjs
-args: hb:test/subset/data/fonts/Roboto-Regular.ttf
+args: LibreBaskerville.ttf
 show: source
 ```
 
 ```demo
 program: quick-start/js/text-to-canvas.mjs
-font: hb:test/subset/data/fonts/Roboto-Regular.ttf
+font: LibreBaskerville.ttf
 unicodes: 20-7E
 text: office coffee
 package: harfbuzzjs@1.6.4
@@ -115,6 +128,42 @@ package: harfbuzzjs@1.6.4
 <p class="print-only">The web edition of this book runs this program on the page, with a box to type text into.</p>
 
 A canvas can be scaled and flipped once, so the glyphs are drawn in font units with y going up, and the canvas turns them into pixels. On a high-resolution screen, the canvas should have more pixels than it takes up on the page, `devicePixelRatio` times as many, or the text comes out blurred. The page above does that around `drawText`.
+
+## In Python
+
+[uharfbuzz](https://github.com/harfbuzz/uharfbuzz) is HarfBuzz’s Python binding, from the HarfBuzz project, and comes ready-built for the common platforms. Version 0.57.0, which these programs use, contains HarfBuzz 15.0.0, one release behind this book. Unlike harfbuzzjs, it includes hb-raster, though not hb-vector.
+
+### SVG
+
+```example
+program: quick-start/python/text-to-svg.py
+args: LibreBaskerville.ttf  office coffee
+output: svg
+```
+
+The same steps under Python names: `Blob`, `Face`, `Font`, `Buffer` and `shape`. `draw_glyph_with_pen` sends a glyph’s outline to a **pen**, an object whose `moveTo`, `lineTo`, `qCurveTo`, `curveTo` and `closePath` methods are called with each point, in font units and y up. It is the same kind of pen fontTools uses, so a fontTools pen works here too. This one collects the outline as SVG path data, and the rest is as in JavaScript.
+
+```
+pip install uharfbuzz
+python text-to-svg.py LibreBaskerville.ttf "office coffee" > office.svg
+```
+
+### PNG with hb-raster
+
+Because uharfbuzz includes hb-raster, the PNG version can do what the C program does: give the font a size, paint each glyph with a `RasterPaint`, and render the image. hb-raster’s image comes back as raw pixels, so [Pillow](https://python-pillow.org), Python’s usual imaging library, writes the PNG:
+
+```example
+program: quick-start/python/text-to-png.py
+args: LibreBaskerville.ttf  office coffee  32
+output: png
+```
+
+The pixels are blue, green, red and alpha, premultiplied, with the rows from the bottom up ([hb-raster](hb-raster.html)); Pillow’s `BGRa` mode and a negative stride, the `-1`, take them as they are.
+
+```
+pip install uharfbuzz pillow
+python text-to-png.py LibreBaskerville.ttf "office coffee" 32 > office.png
+```
 
 ## In Rust
 
@@ -126,14 +175,14 @@ The project’s `Cargo.toml` asks for `harfrust = "0.16.0"` and `skrifa = "0.50.
 
 ```example
 program: quick-start/rust/src/text-to-svg.rs
-args: hb:test/subset/data/fonts/Roboto-Regular.ttf  office coffee
+args: LibreBaskerville.ttf  office coffee
 output: svg
 ```
 
 The same steps again. HarfRust has no font size at all: it always shapes in font units, and a program scales the result. Skrifa’s `SvgPen` collects one glyph’s outline as path data, and the program writes the rest of the SVG as the JavaScript did.
 
 ```
-cargo run --release --bin text-to-svg -- Roboto-Regular.ttf "office coffee" > office.svg
+cargo run --release --bin text-to-svg -- LibreBaskerville.ttf "office coffee" > office.svg
 ```
 
 ### PNG with tiny-skia
@@ -142,7 +191,7 @@ For pixels, Skrifa draws each outline at the size wanted, and [tiny-skia](https:
 
 ```example
 program: quick-start/rust/src/text-to-png.rs
-args: hb:test/subset/data/fonts/Roboto-Regular.ttf  office coffee  32
+args: LibreBaskerville.ttf  office coffee  32
 output: png
 ```
 
@@ -158,13 +207,13 @@ They are as short as they can be, and a real program needs more. In rough order 
 * **Line breaking.** HarfBuzz shapes a line; deciding where lines end is the application’s job, helped by the safe-to-break flags ([For applications](for-applications.html)).
 * **Variable fonts**, set to a position with `hb_font_set_variations` ([The design space](design-space.html)).
 * **Hinting and small sizes.** hb-raster and tiny-skia don’t hint. For hinted text, FreeType draws the outlines ([hb-raster](hb-raster.html) explains the trade).
-* **Color fonts.** The C PNG program paints them already; the SVG programs would need hb-vector’s paint context, or a color library in JavaScript and Rust ([Color](color.html)).
+* **Color fonts.** The C and Python PNG programs paint them already, since they paint with hb-raster. The SVG programs would need hb-vector’s paint context in C, or a color library in the other languages ([Color](color.html)).
 
 ## Where to read the source
 
 | File | What it shows |
 |---|---|
-| [`examples/quick-start/`](https://github.com/Lorp/how-harfbuzz-works/tree/main/examples/quick-start) (in the book’s repository) | the programs on this page, with the JavaScript `package.json` and the Rust `Cargo.toml` |
+| [`examples/quick-start/`](https://github.com/Lorp/how-harfbuzz-works/tree/main/examples/quick-start) (in the book’s repository) | the programs on this page, with the JavaScript `package.json`, the Python `requirements.txt` and the Rust `Cargo.toml` |
 | `util/vector-output.hh` | how `hb-vector` draws: the C SVG program, with options |
 | `util/raster-output.hh` | how `hb-raster` draws, including its image sizes and margins |
 | `src/hb-vector.h`, `src/hb-raster.h` | the drawing libraries’ API |
@@ -175,5 +224,6 @@ They are as short as they can be, and a real program needs more. In rough order 
 * Every program does the same three things first: load the font (blob, face, font), shape the text in a buffer, and walk the glyphs, adding up advances and offsets.
 * In C, hb-vector draws the glyphs as SVG and hb-raster as pixels, and both are stable since HarfBuzz 15.0.0.
 * In JavaScript, harfbuzzjs shapes, and gives outlines as SVG path data, for an SVG file or a canvas.
+* In Python, uharfbuzz shapes, draws outlines through a pen, and paints with hb-raster; Pillow writes the PNG.
 * In Rust, HarfRust shapes, Skrifa gives the outlines, and a rasterizer such as tiny-skia makes pixels. HarfRust is a port, not HarfBuzz.
 * Real programs also set script, language and direction, split mixed text into runs, choose fallback fonts and break lines.

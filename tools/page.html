@@ -51,7 +51,7 @@ body::before {
 .flow { display: grid; min-width: 0; }
 .flow > * { width: 100%; max-width: var(--measure); justify-self: start; min-width: 0; }
 .flow > .views, .flow > .shape, .flow > .trace, .flow > table { max-width: var(--wide); }
-.flow > .macros, .flow > .listing { max-width: var(--wide); }
+.flow > .macros, .flow > .listing, .flow > .command-run { max-width: var(--wide); }
 .macros table { display: table; table-layout: fixed; font-size: .85rem; }
 .macros th:nth-child(1) { width: 25%; }
 .macros th:nth-child(2) { width: 35%; }
@@ -163,12 +163,23 @@ pre code { font-size: .82rem; line-height: 1.55; }
 .example-output img.vector { width: 24rem; }
 .example-output img.pixels { image-rendering: pixelated; }
 .example-output figcaption { font-size: .78rem; color: var(--muted); margin-top: .25rem; }
+/* What kind of picture an output is: vector or raster */
+.kind { display: inline-block; margin-right: .4em; padding: 0 .45em; border: 1px solid var(--rule); border-radius: 3px; font: 600 .7rem var(--font-head); letter-spacing: .04em; text-transform: uppercase; color: var(--ink); }
 .demo { margin: 0 0 1.75rem; padding: .75rem 1rem; border: 1px solid var(--rule); border-radius: 6px; font: 400 .85rem var(--font-head); }
 .demo input[type=text] { width: 16rem; max-width: 100%; font: inherit; }
 .demo input[type=number] { width: 4rem; font: inherit; }
 .demo-canvas { margin: .75rem 0 .25rem; overflow-x: auto; }
 .demo canvas { display: block; background: #fff; border: 1px solid var(--rule); }
 .demo-note { margin: 0; font-size: .78rem; color: var(--muted); }
+
+/* Figures: a command line, run when the page was built, and what it gives */
+.command-run { margin: .5rem 0 1.75rem; }
+.command-run pre { margin: 0; padding: .6rem 1rem; border-radius: 6px; background: var(--well); }
+.command-run pre.command-output { margin-top: .4rem; background: none; border: 1px solid var(--rule); }
+.command-run img { display: block; margin-top: .6rem; max-width: 100%; height: auto; background: #fff; border: 1px solid var(--rule); }
+.command-run img.vector { width: 24rem; padding: .5rem; box-sizing: content-box; }
+.command-run img.pixels { image-rendering: pixelated; }
+.command-run figcaption { font-size: .78rem; color: var(--muted); margin-top: .25rem; }
 
 /* Figures: outlines drawn by hb-vector */
 .rasters { margin: .5rem 0 1.75rem; }

@@ -17,13 +17,15 @@ export function drawText(canvas, fontData, text, pixels) {
   const positions = buffer.getGlyphPositions();
   let width = 0;
   for (const pos of positions) width += pos.xAdvance;
+  const top = Math.ceil(ascender * scale);
+  const bottom = Math.floor(descender * scale);
   canvas.width = Math.ceil(width * scale);
-  canvas.height = Math.ceil((ascender - descender) * scale);
+  canvas.height = top - bottom;
 
   // Draw in font units, y up, with the baseline below the ascender.
   const ctx = canvas.getContext("2d");
+  ctx.translate(0, top);
   ctx.scale(scale, -scale);
-  ctx.translate(0, -ascender);
 
   // Fill each glyph's outline at its pen position.
   const infos = buffer.getGlyphInfos();

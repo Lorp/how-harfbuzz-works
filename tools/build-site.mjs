@@ -469,7 +469,8 @@ function blockTable(body, fonts) {
 // book is built, so a listing can't drift from what it does. Each language
 // is built in .cache/examples/: C against HB_BUILD's own libraries, through
 // their uninstalled pkg-config files; JavaScript with npm, from the
-// program's package.json; Rust with cargo, from its Cargo.toml. Outputs are
+// program's package.json; Python in a virtual environment, from its
+// requirements.txt; Rust with cargo, from its Cargo.toml. Outputs are
 // kept by a hash of the program, its build files and its arguments, so an
 // unchanged example isn't run again.
 const EXAMPLES = path.join(ROOT, "examples");
@@ -511,6 +512,18 @@ function exampleCommand(program) {
     fs.copyFileSync(src, path.join(work, path.basename(src)));
     return [process.execPath, [path.join(work, path.basename(src))]];
   }
+  if (ext === ".py") {
+    // A virtual environment of its own, made again when requirements.txt changes.
+    const venv = path.join(EXAMPLES_CACHE, "python-venv");
+    const reqs = fs.readFileSync(path.join(dir, "requirements.txt"), "utf8");
+    const installed = path.join(venv, "requirements.txt");
+    if (!fs.existsSync(installed) || fs.readFileSync(installed, "utf8") !== reqs) {
+      run("python3", ["-m", "venv", venv], { encoding: "utf8" });
+      run(path.join(venv, "bin", "pip"), ["install", "--quiet", "-r", path.join(dir, "requirements.txt")], { encoding: "utf8" });
+      fs.writeFileSync(installed, reqs);
+    }
+    return [path.join(venv, "bin", "python"), ["-I", src]];
+  }
   if (ext === ".rs") {
     const manifest = path.join(dir, "..", "Cargo.toml");
     const target = path.join(EXAMPLES_CACHE, "rust-target");
@@ -526,7 +539,7 @@ function exampleCommand(program) {
 function runExample(program, args) {
   const src = path.join(EXAMPLES, program);
   const hash = createHash("sha256").update(program).update(fs.readFileSync(src));
-  for (const f of ["package.json", "../Cargo.toml"]) {
+  for (const f of ["package.json", "requirements.txt", "../Cargo.toml"]) {
     const p = path.join(path.dirname(src), f);
     if (fs.existsSync(p)) hash.update(fs.readFileSync(p));
   }
@@ -545,7 +558,7 @@ function runExample(program, args) {
 
 // ```example                one example program, run when the page is built
 // program: quick-start/c/text-to-svg.c   (in examples/)
-// args: hb:…/Roboto-Regular.ttf  office coffee   (the first is a font)
+// args: LibreBaskerville.ttf  office coffee   (the first is a font)
 // output: svg               (svg or png; png takes `zoom`, default 2)
 // show: both                (source, output or both; default both)
 // ```
@@ -557,7 +570,7 @@ function blockExample(body, fonts) {
   let html = "";
   if (show !== "output") {
     const src = fs.readFileSync(path.join(EXAMPLES, f.program), "utf8");
-    const lang = { ".c": "c", ".mjs": "javascript", ".rs": "rust" }[path.extname(f.program)];
+    const lang = { ".c": "c", ".mjs": "javascript", ".py": "python", ".rs": "rust" }[path.extname(f.program)];
     const url = `${REPOSITORY}/blob/main/examples/${f.program}`;
     html += `<figure class="listing"><figcaption><a href="${esc(url)}"><code>examples/${esc(f.program)}</code></a></figcaption>` +
             `<pre><code class="language-${lang}">${esc(src)}</code></pre></figure>\n`;
@@ -573,10 +586,10 @@ function blockExample(body, fonts) {
       const [w, h] = [stdout.readUInt32BE(16), stdout.readUInt32BE(20)];
       img = `<img class="pixels" src="data:image/png;base64,${stdout.toString("base64")}" ` +
             `width="${w * zoom}" height="${h * zoom}" alt="${esc(rest[0] || "")}">`;
-      img += `<figcaption>Its output for ${esc(shownArgs)}: ${w} × ${h} pixels, shown ${zoom} times larger</figcaption>`;
+      img += `<figcaption><span class="kind">Raster · PNG</span> Its output for ${esc(shownArgs)}: ${w} × ${h} pixels, shown ${zoom} times larger</figcaption>`;
     } else {
       img = `<img class="vector" src="data:image/svg+xml;base64,${stdout.toString("base64")}" alt="${esc(rest[0] || "")}">`;
-      img += `<figcaption>Its output for ${esc(shownArgs)}</figcaption>`;
+      img += `<figcaption><span class="kind">Vector · SVG</span> Its output for ${esc(shownArgs)}</figcaption>`;
     }
     html += `<figure class="example-output">${img}</figure>\n`;
   }
@@ -585,7 +598,7 @@ function blockExample(body, fonts) {
 
 // ```demo                   a live demo, on screen only: a browser module from
 // program: quick-start/js/text-to-canvas.mjs   examples/, which exports
-// font: hb:…/Roboto-Regular.ttf                drawText(canvas, fontData, text,
+// font: LibreBaskerville.ttf                     drawText(canvas, fontData, text,
 // unicodes: 20-7E                              pixels). The font is subset to
 // text: office coffee                          these code points with hb-subset
 // package: harfbuzzjs@1.6.4                    and carried in the page; the
@@ -607,7 +620,7 @@ function blockDemo(body, fonts) {
     `<label>Text <input type="text" value="${esc(f.text)}" spellcheck="false"></label> ` +
     `<label>Size <input type="number" value="32" min="6" max="200"> pixels</label>` +
     `<div class="demo-canvas"><canvas></canvas></div>` +
-    `<p class="demo-note">Drawn in your browser, by the program above. ` +
+    `<p class="demo-note"><span class="kind">Raster · canvas</span> Drawn in your browser, by the program above. ` +
     `The font is ${esc(path.basename(f.font))}, cut down to the characters ${esc(f.unicodes)} (hex).</p></div>\n` +
     `<script type="module">\n${module}\n` +
     `const root = document.getElementById("${id}");\n` +
@@ -621,7 +634,74 @@ function blockDemo(body, fonts) {
     `</script>\n`;
 }
 
-const BLOCKS = { views: blockViews, shape: blockShape, trace: blockTrace,
+// ```command               one command line, as a reader would type it, and
+// font: quick-start/LibreBaskerville.ttf   what it gives: the file it writes
+// $ hb-raster LibreBaskerville.ttf "office coffee" --font-size=32 -o office.png
+// ```
+// The command is run as shown, in a scratch folder, with the font named in
+// it replaced by `font:` (found as in the other blocks), or, for a path
+// such as test/subset/data/fonts/…, by that file in HarfBuzz's source.
+// hb-shape's output is shown as text; a written SVG or PNG as a picture
+// captioned with its file name (`zoom:` enlarges a PNG, default 2); any
+// other file only by its name. `show: no` shows the command alone.
+const COMMANDS = { "hb-shape": HB_SHAPE, "hb-vector": HB_VECTOR, "hb-raster": HB_RASTER, "hb-info": HB_INFO };
+
+function splitCommand(line) {
+  const out = [];
+  for (const m of line.matchAll(/"([^"]*)"|'([^']*)'|(\S+)/g)) out.push(m[1] ?? m[2] ?? m[3]);
+  return out;
+}
+
+function blockCommand(body, fonts) {
+  const lines = body.trim().split("\n");
+  const cmdLine = lines.find((l) => l.startsWith("$ ")).slice(2).trim();
+  const f = parseFields(lines.filter((l) => !l.startsWith("$ ")).join("\n"));
+  let html = `<pre class="command"><code>$ ${esc(cmdLine)}</code></pre>`;
+  if (f.show === "no") return `<figure class="command-run">${html}</figure>\n`;
+  const [tool, ...args] = splitCommand(cmdLine);
+  const exe = COMMANDS[tool];
+  if (!exe) throw new Error(`command block: can't run ${tool}`);
+  const real = args.map((a) => {
+    if (/\.(ttf|otf|ttc)$/.test(a)) {
+      if (f.font && path.basename(a) === path.basename(f.font)) return fontPath(f.font, fonts);
+      if (a.startsWith("test/")) return path.join(HB_BUILD, a);
+    }
+    return a;
+  });
+  const work = fs.mkdtempSync(path.join(EXAMPLES_CACHE, "command-"));
+  const r = runToolIn(exe, real, work);
+  const oi = real.findIndex((a) => a === "-o" || a.startsWith("--output-file"));
+  const outName = oi < 0 ? null : real[oi] === "-o" ? real[oi + 1] : real[oi].split("=")[1];
+  if (!outName) {
+    html += `<pre class="command-output"><code>${esc(r.stdout.toString("utf8").trimEnd())}</code></pre>`;
+  } else {
+    const data = fs.readFileSync(path.join(work, outName));
+    if (/\.svg$/.test(outName)) {
+      html += `<img class="vector" src="data:image/svg+xml;base64,${data.toString("base64")}" alt="${esc(outName)}">` +
+              `<figcaption><code>${esc(outName)}</code></figcaption>`;
+    } else if (/\.png$/.test(outName)) {
+      const zoom = Number(f.zoom || 2);
+      const [w, h] = [data.readUInt32BE(16), data.readUInt32BE(20)];
+      html += `<img class="pixels" src="data:image/png;base64,${data.toString("base64")}" width="${w * zoom}" height="${h * zoom}" alt="${esc(outName)}">` +
+              `<figcaption><code>${esc(outName)}</code>: ${w} × ${h} pixels${zoom === 1 ? "" : `, shown ${zoom} times larger`}</figcaption>`;
+    } else {
+      html += `<figcaption><code>${esc(outName)}</code></figcaption>`;
+    }
+  }
+  fs.rmSync(work, { recursive: true, force: true });
+  return `<figure class="command-run">${html}</figure>\n`;
+}
+
+// runTool, in a given working folder, so that -o writes there.
+function runToolIn(exe, args, cwd) {
+  if (!fs.existsSync(exe)) throw new Error(`${exe} not found: run tools/build-harfbuzz.sh`);
+  const env = { ...process.env, LC_ALL: "C.UTF-8" };
+  const r = spawnSync(exe, args, { cwd, maxBuffer: 64 << 20, env });
+  if (r.status !== 0) throw new Error(`${path.basename(exe)} ${args.join(" ")} failed:\n${r.stderr}`);
+  return r;
+}
+
+const BLOCKS = { views: blockViews, shape: blockShape, trace: blockTrace, command: blockCommand,
                  draw: blockDraw, info: blockInfo, table: blockTable, raster: blockRaster,
                  example: blockExample, demo: blockDemo };
 

@@ -56,8 +56,10 @@ fn main() {
         advance += pos.x_advance;
     }
     let width = (advance as f32 * scale).ceil() as u32;
-    let height = (metrics.ascent - metrics.descent).ceil() as u32;
-    let baseline = metrics.ascent.ceil();
+    let top = metrics.ascent.ceil();
+    let bottom = metrics.descent.floor();
+    let height = (top - bottom) as u32;
+    let baseline = top;
 
     // One path for the whole line, each glyph drawn at its pen position.
     let outlines = skrifa_font.outline_glyphs();
