@@ -290,6 +290,8 @@ The characters are KA (0), virama (1), SSA (2) and I (3). At the monotone levels
 
 The level matters in a few other places. When `hb_ensure_native_direction` reverses a run it keeps each grapheme’s characters in order, and at level 1 also merges each grapheme’s clusters (`_hb_ot_layout_reverse_graphemes`, `hb-ot-layout.hh:401`). The verifier runs only at the monotone levels. And when glyph flags are set across a range, the smallest cluster is found by scanning the whole range only at level 2 (`hb-buffer.hh:664`, `:694`); otherwise only the first and last glyphs are looked at, which is right when clusters are in order. Level 3 is not in order, but in {{hb}} it doesn’t get the full scan.
 
+> Since {{hb}}: fixed on HarfBuzz main by [`7f0fe35`](https://github.com/harfbuzz/harfbuzz/commit/7f0fe35618c08a7089af610b7546fa1cba484c29) (17 November 2026), so main scans the whole range at level 3 too.
+
 > For programmers: the header recommends level 1 for new programs, and calls level 0 the default only for backward compatibility. Level 1 gives marks their own clusters where it can. A program that copes with clusters out of order can use level 2, or level 3 for clusters that are whole graphemes.
 
 ## Glyph flags

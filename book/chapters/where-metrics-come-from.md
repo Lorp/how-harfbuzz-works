@@ -339,6 +339,8 @@ metrics.ttf  HLp  --font-size=13  --show-extents
 
 At 13 units per em, the `H` runs from 1.04 to 6.76 across, and is reported as 1 to 7: wider, so that it covers the ink. Up and down, the same rule has the opposite effect. Because y grows upwards, the top edge is the larger number, and taking its floor moves it down. The `p` runs from −2.73 to 6.5, and is reported as −2 to 6: smaller than its ink at both ends. The 14.2.1 release notes say that extents are scaled “so the reported box always covers the glyph”, and across, it does. Up and down, as of {{hb}}, it doesn’t.
 
+> Since {{hb}}: fixed on HarfBuzz main by [`f5e925c`](https://github.com/harfbuzz/harfbuzz/commit/f5e925cd256fd856f30298b89fe98772be5f6bf9) (17 November 2026), so main rounds the box outwards up and down too: the `p` is reported as −3 to 7.
+
 Bitmap extents are converted from the strike’s pixels in two steps, each rounded: from pixels to font units, then from font units to the font’s scale.
 
 ## Where to read the source
@@ -370,3 +372,5 @@ To see these numbers for any font, run `hb-shape` with `--show-extents`, with `-
 * Glyph extents are tried from `sbix`, `CBDT`, `COLR`, `VARC`, `glyf`, `CFF2` and `CFF`, in that order. Outline extents include control points.
 * Font extents are `OS/2`’s typographic metrics if `USE_TYPO_METRICS` is set, and `hhea`’s otherwise. The Windows metrics are never used for them. MVAR varies them.
 * Scaled extents are rounded outwards across, but inwards up and down.
+
+> Since {{hb}}: fixed on HarfBuzz main by [`f5e925c`](https://github.com/harfbuzz/harfbuzz/commit/f5e925cd256fd856f30298b89fe98772be5f6bf9) (17 November 2026), so main rounds scaled extents outwards in both directions (the item on scaled extents).

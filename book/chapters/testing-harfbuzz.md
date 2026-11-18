@@ -211,7 +211,7 @@ void* hb_malloc_impl (size_t size)
 
 ## The bugs this book found
 
-Writing this book meant building small fonts that exercise one thing each, shaping text with them, and checking every result against the code and the specifications. Some results didn’t match. Those are drafted as bug reports in `notes/upstream-bug-reports.md`, eighty-one so far, each reproduced on HarfBuzz {{hb}} (commit `3df40d9b`), most with a font or a command that needs nothing from this book.
+Writing this book meant building small fonts that exercise one thing each, shaping text with them, and checking every result against the code and the specifications. Some results didn’t match. Those are drafted as bug reports in [`notes/upstream-bug-reports.md`](https://github.com/Lorp/how-harfbuzz-works/blob/main/notes/upstream-bug-reports.md), in the book’s repository, eighty-one so far, each reproduced on HarfBuzz {{hb}} (commit `3df40d9b`), most with a font or a command that needs nothing from this book.
 
 **None has been filed upstream.** They are drafts, written by the book’s authors. Some are certainly bugs, some are matters of policy that HarfBuzz’s developers may well decide the other way, and a few were found by reading code and have no example yet.
 

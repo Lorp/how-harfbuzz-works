@@ -64,6 +64,8 @@ text: STPN
 
 hb-vector, like hb-raster, refuses SVG images (since 14.2.0, below), so `S` falls back to its outline and `T` to its bitmap, the green disc. The order isn’t the same everywhere. Glyph extents are tried from `sbix`, `CBDT`, then `COLR` ([Where metrics come from](where-metrics-come-from.html#glyph-extents)), and `hb_ot_color_glyph_reference_png` tries `sbix` before `CBDT` (`hb-ot-color.cc:417`). They only disagree for a glyph that is in more than one of these tables, which few fonts have.
 
+> Since {{hb}}: fixed on HarfBuzz main by [`7e97cd8`](https://github.com/harfbuzz/harfbuzz/commit/7e97cd8a182651f2ca3d2311f0910ca0ce64e927) (17 November 2026), so main paints from `sbix` before `CBDT`, the order the other two use.
+
 ## Palettes: CPAL
 
 `COLR` doesn’t store colors. It stores indices into a **palette**, and `CPAL` holds the palettes: a font may have several, each with the same number of entries, so that a glyph can be drawn in another color scheme by choosing another palette. Each entry is four bytes, blue, green, red, alpha. HarfBuzz reads it as a big-endian 32-bit number, which is exactly `hb_color_t`’s layout, so a palette is an array of colors with no conversion (`CPAL.hh:190`). Version 1 of the table adds, for each palette, a type (usable on a light background, on a dark one, or neither stated) and a name ID in the `name` table, and a name ID for each entry. `hb-info` lists them:
@@ -280,3 +282,5 @@ A build with `HB_NO_PAINT` has no paint API, and `HB_NO_DRAW` implies it. `HB_NO
 * COLR version 0 is a `fill_glyph` per layer. Version 1 is a graph of 33 Paint formats, walked in font units under the font transform, clipped to its ClipBox, and painted not at all if it is unbounded.
 * Variable paints read consecutive delta sets from `varIdxBase`. Depth, size, cycles and work are all limited while painting.
 * Bitmaps are handed over as PNG blobs from the chosen strike, with their extents. SVG documents are handed over whole, and HarfBuzz’s own renderers refuse them.
+
+> Since {{hb}}: fixed on HarfBuzz main by [`7e97cd8`](https://github.com/harfbuzz/harfbuzz/commit/7e97cd8a182651f2ca3d2311f0910ca0ce64e927) (17 November 2026), so main tries `sbix` before `CBDT` (the item on the order).

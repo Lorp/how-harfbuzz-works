@@ -107,6 +107,8 @@ gsub/ligatures.ttf   \u0020eeefi  --language=en  --features=liga,-liga[2:3]
 
 In the third run, `calt` stops at cluster 2 although nobody asked for that, and since its rule looks back at its own output, cluster 3 is left plain too. The other order, in the fourth run, does what was meant. This looks like a bug: the merge treats the global request as overriding the range, but `setup_masks` doesn’t know that it did.
 
+> Since {{hb}}: fixed on HarfBuzz main by [`5d9dfde`](https://github.com/harfbuzz/harfbuzz/commit/5d9dfde259979dd91439903d09e708d16a41bbf7) (17 November 2026), so on main the later global request supersedes the range, and the third run has `e.init` for all three `e`s.
+
 ## Finding the features in the font
 
 With duplicates merged, `compile` reads the chosen language system’s features into a map from tag to feature index, once per table (`hb_ot_layout_collect_features_map`, `hb-ot-layout.cc:1316`). If a language system lists two features with the same tag, the earlier one wins: the code loops backwards “such that earlier entries win”, because a font, `arialuni_t.ttf`, was found that only works that way (`:1328`).
@@ -177,6 +179,8 @@ bits.ttf   \u0020abcdefghijklmnopqrstuvwxyz0  --language=en  --no-positions  --n
 ```
 
 In the first run, 26 features fit and `zero` is lost, although it was asked for first. In the second, the same features asked for everywhere share the global bit and all apply. In the third, `ss20` with value 2 needs two bits when only bit 29 is left, so it is lost, and `zero`, which needs one, fits after it.
+
+> Since {{hb}}: fixed on HarfBuzz main by [`ec94764`](https://github.com/harfbuzz/harfbuzz/commit/ec9476415057f3437019eed9b773984438d1d802) (17 November 2026), so main hands out bit 30 too: 27 one-bit features fit, and in the first run `zero` applies.
 
 The planner itself uses few bits (`frac`, `numr`, `dnom`, `rtlm`, eight for `rand`, a few for a script shaper). It is applications that run out, such as an editor that applies stylistic sets and character variants to spans of text.
 

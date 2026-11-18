@@ -191,6 +191,8 @@ That is the layering in `forty-subset.ttf`: every Lookup is one 16-bit offset fr
 
 `docs/repacker.md` says plain Kahn’s algorithm is tried first, being faster. In {{hb}} there is only the distance sort.
 
+> Since {{hb}}: fixed on HarfBuzz main by [`4d41c69`](https://github.com/harfbuzz/harfbuzz/commit/4d41c69d42fa9e73885a93a6396acbb582c9dee8) (17 November 2026), so main’s `docs/repacker.md` describes only the distance sort.
+
 ### Round by round
 
 After sorting, `will_overflow` (`graph/serialize.hh:93`) works out each object’s position from the sizes and checks every real link against its width and signedness, collecting the ones that overflow. If there are none, the repacker is done. If there are, `hb_resolve_graph_overflows` (`hb-repacker.hh:402`) changes the graph and sorts again, round after round. In each round, starting with the overflow furthest down the table, it tries:
@@ -332,6 +334,8 @@ It runs at most 20 rounds, with GSUB and GPOS splitting and promotion on from th
 | `src/hb-subset-serialize.h`, `src/hb-subset-serialize.cc` | the public repacker |
 | `src/hb-limits.hh` | `HB_REPACKER_MAX_ITERATIONS`, `HB_REPACKER_MAX_VERTICES`, `HB_REPACKER_MAX_SPACES` |
 | `docs/serializer.md`, `docs/repacker.md` | the design notes; the repacker’s is partly out of date |
+
+> Since {{hb}}: fixed on HarfBuzz main by [`4d41c69`](https://github.com/harfbuzz/harfbuzz/commit/4d41c69d42fa9e73885a93a6396acbb582c9dee8) (17 November 2026), which brings both design notes up to date (the table’s last row).
 
 The fonts and scripts are in `fonts/writing-tables/`: `build-fonts.py` makes `forty.ttf` and `sixty.ttf`, `build.sh` subsets them and runs `layout.py`, and `serialize-example.cc` is the program behind the walk-through above.
 

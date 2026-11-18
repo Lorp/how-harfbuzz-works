@@ -292,6 +292,8 @@ kern-table.ttf  oo\u0301  --language=en
 
 The second `o` has an advance of 450 and is drawn 50 units left of its pen position, so its ink is centered 200 units from that position. The acute is centered 250 units from it, as if the `o` hadn’t moved. To be centered over the ink it would need an offset of −25, not 25. This looks like a bug.
 
+> Since {{hb}}: fixed on HarfBuzz main by [`641971d`](https://github.com/harfbuzz/harfbuzz/commit/641971dd14283a97f5e7cf8a7f12ac6337db74f7) (17 November 2026), so main includes the base’s x offset, and the acute over the kerned `o` is at −25.
+
 **Left and Right.** The comment in `position_mark` says “We don’t position LEFT and RIGHT marks”, but classes 224 and 226 fall into the `default` case of the horizontal switch, which centers the mark, and every placed mark loses its advance. The few characters in those classes are spacing marks, Mc, such as the Hangul tone marks and U+1D16D MUSICAL SYMBOL COMBINING AUGMENTATION DOT, which should follow its note:
 
 ```shape

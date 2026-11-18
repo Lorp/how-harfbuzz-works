@@ -226,6 +226,8 @@ Both closures answer the same question, and on valid fonts HarfBuzz tests that t
 
 The last two rows are where differences could appear. The subsetter runs its MATH stage before GSUB, so a glyph that GSUB adds doesn’t get its math variants. The reference closure, in the parity test, runs MATH after GSUB, and its comments say that this mirrors the subsetter’s order (`hb-depend-closure-parity.cc:27`), which it doesn’t. A font where a substitution produces a glyph with math variants would give the graph’s closure more glyphs (inferred from the code; not tried). Neither closure models lookup order, so both can keep glyphs that shaping never produces, as `f_i` above shows.
 
+> Since {{hb}}: changed on HarfBuzz main by [`0209ec2`](https://github.com/harfbuzz/harfbuzz/commit/0209ec2865b55e892897966e95dfb8915a1309e9) (17 November 2026): `HB_CLOSURE_MAX_STAGES` is 16, so the subsetter’s GSUB rounds (the table’s fourth row) stop at 18 passes.
+
 ## Status and limits
 
 The API is experimental. `hb-config.hh:38` defines `HB_NO_SUBSET_DEPEND` unless `HB_EXPERIMENTAL_API` is defined, and the Meson option `experimental_api` (off by default; [Building HarfBuzz](building-harfbuzz.html#a-build-for-development)) defines it. Only the public functions are guarded: the `depend()` methods are compiled into `libharfbuzz-subset` either way, and the book’s build has them, but not the functions that call them. The command-line `hb-subset-depend` utility (`util/hb-subset-depend.cc`) is built only with the same option. The documentation warns that the API “may change significantly in future releases”. In 14.4.0, NEWS records only “faster extraction of the experimental glyph dependency graph”. The code’s copyright line is Adobe’s, 2024, with Skef Iterum as author.
@@ -239,6 +241,8 @@ What the graph leaves out:
 * **No partial failure.** If memory runs out while the graph is built, `hb_subset_depend_from_face_or_fail()` returns `NULL` rather than a partial graph.
 
 A few of HarfBuzz’s own descriptions don’t match the code, which this chapter follows. The header says that `layout_tag` is 0 for edges from tables other than GSUB, but it is `HB_CODEPOINT_INVALID`, as `depend-api.md` says and the program above confirms. `depend-implementation.md` shows each edge taking only the first feature that uses its lookup, where the code makes one edge for each such feature. It names the header `hb-depend.h`, which is now `hb-subset-depend.h`, and calls the utility “TODO”, though it exists. And `test/fuzzing/README.md` asks for a meson option `depend_api`, which doesn’t exist: the option is `experimental_api`.
+
+> Since {{hb}}: fixed on HarfBuzz main by [`88bb79a`](https://github.com/harfbuzz/harfbuzz/commit/88bb79a408620943fb475857777c2eceabb76ffb) and [`202b3e2`](https://github.com/harfbuzz/harfbuzz/commit/202b3e2c282a36f710834e61f460d8f48e6a10b9) (17 November 2026), so main’s header, `depend-implementation.md` and fuzzing README match the code.
 
 ## Where to read the source
 

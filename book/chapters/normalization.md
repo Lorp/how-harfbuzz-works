@@ -238,6 +238,8 @@ With a selector after it, *ö* is not decomposed, and has no glyph. The selector
 
 The gap in the earlier example is here too. This path looks glyphs up with `set_glyph` (`:79`), which calls `get_nominal_glyph` without the not-found argument, so a missing character in a cluster with a variation selector gets glyph 0 whatever the buffer’s not-found glyph is. In the second line above it, `x` came out as `.notdef`, not `missing`. That looks like an oversight in HarfBuzz (inferred: nothing in the source says it is intended).
 
+> Since {{hb}}: fixed on HarfBuzz main by [`97d8794`](https://github.com/harfbuzz/harfbuzz/commit/97d879446fe4de6f09ece771ef645127947f7795) (17 November 2026), so on main the `x` in the second line is `missing`.
+
 ## Round two: reorder
 
 Marks of different combining classes can be typed in any order, and all the orders are equivalent. *a* with an acute (class 230) and a dot below (220) is the same text whichever is typed first. To make equivalent strings look the same to the font, the second round sorts each run of marks by class, in place (`:372`):
@@ -406,6 +408,8 @@ norm.ttf  ऩ\u093E  --no-positions
 ```
 
 NNNA, which the font has, comes out as NA and NUKTA when it is alone, and as NNNA when a vowel sign (a mark, category Mc) follows it. The difference is seldom visible, because Indic fonts usually compose the nukta forms themselves, with `nukt`, and because Indic text rarely goes long without a mark. It still looks unintended (inferred: the source gives no reason for it), since the mode’s own comment promises “Always fully decomposes and then recompose back” (`hb-ot-shape-normalize.hh:43`).
+
+> Since {{hb}}: fixed on HarfBuzz main by [`bc7dff9`](https://github.com/harfbuzz/harfbuzz/commit/bc7dff9a51e900d25d35ee1a903ab496caf0feae) (17 November 2026), so main recomposes what the first round decomposed: the second line gives *Å*, and NNNA alone stays NNNA.
 
 The `NONE` mode, in contrast, does short-circuit everywhere and never composes. Zawgyi, shaped as script `Qaag`, uses it ([Choosing a script shaper](choosing-a-script-shaper.html#myanmar-and-zawgyi)):
 

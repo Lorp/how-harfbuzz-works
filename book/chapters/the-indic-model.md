@@ -484,6 +484,8 @@ full.ttf  क\u093F  --language=hi  --text-before=क
 
 After KA it isn’t initial, and the two syllables become unsafe to break between. In the last line the earlier KA is given as pre-context, and the vowel sign is initial again: the test looks only inside the buffer. An application that splits a word into two runs, for a change of color say, gets the initial form mid-word even if it passes the first as context. That may be unintended (inferred: the source gives no reason, and the Arabic shaper’s joining does read context).
 
+> Since {{hb}}: fixed on HarfBuzz main by [`5795f86`](https://github.com/harfbuzz/harfbuzz/commit/5795f8699503de6c64206cb939eaae9086b279f1) (17 November 2026), so main reads the pre-context, and in the last line the vowel sign isn’t initial.
+
 ## The old model
 
 The old model’s virama move ([Choosing a script shaper](choosing-a-script-shaper.html#old-and-new-indic-tags)) takes the first virama after the base to after the last consonant (`:669`): KA, virama, RA, virama, with RA below-base, becomes KA, RA, virama, virama, except in Kannada. The old model also differs in three ways, all met above: its probes count contextual rules; glyphs before the base get no `blwf` mask, except Devanagari RA + virama; and after the sort everything from the base on is one cluster, because “we move halants around”.

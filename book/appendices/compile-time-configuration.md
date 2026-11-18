@@ -65,6 +65,8 @@ Two consequences are easy to miss. `HB_NO_DRAW` implies `HB_NO_OT_FONT_CFF` (`:1
 
 **When `HB_LEAN` keeps drawing.** The test at `hb-config.hh:85` asks whether `HB_HAS_CAIRO`, `HB_HAS_RASTER`, `HB_HAS_VECTOR` or `HB_HAS_GPU` is defined. Those come from `hb-features.h`, the header Meson generates for applications, and no library source includes it. `harfbuzz-world.cc`, the single-file build, does, if `HB_FEATURES_H` names it (`harfbuzz-world.cc:1`), and anyone can define the macros by hand. A Meson build doesn’t: `config.h` has `HAVE_RASTER`, not `HB_HAS_RASTER`. Preprocessing `hb.hh` with `-DHB_LEAN` against the book’s own Meson build, where the raster and vector libraries are on, gives `HB_NO_DRAW` defined. So in a Meson build `HB_LEAN` always removes drawing, painting and color, and the libraries that need them are left without (checked with the preprocessor only; what then happens to those libraries was not tried).
 
+> Since {{hb}}: fixed on HarfBuzz main by [`c90000d`](https://github.com/harfbuzz/harfbuzz/commit/c90000dd8ee5a593bc60e65930d3aed501aca5bf) (17 November 2026), so main’s test accepts the `HAVE_*` macros too, and in a Meson build with a renderer `HB_LEAN` keeps drawing.
+
 Many macros belong to no tier. Some are for unusual builds (`HB_NO_OT_SHAPE` for a library with only the Core Text backend, `HB_NO_UCD` for one that brings its own Unicode data); others are single features nobody has grouped: `HB_NO_AVAR2`, `HB_NO_BASE`, `HB_NO_CFF`, `HB_NO_EMOJI_SEQUENCES`, `HB_NO_LANGUAGE_LONG`, `HB_NO_OT_SHAPE_FRACTIONS`, `HB_NO_SUBSET_LAYOUT`, `HB_NO_WIN1256` and more. The table below marks them “—” in the third column.
 
 ## Size and speed
@@ -249,6 +251,8 @@ The options in `meson_options.txt` decide what is built and linked. Most of them
 
 Meson also writes `hb-features.h`, installed for applications, which defines an `HB_HAS_*` macro for each optional part that was built. Its list (`src/meson.build:587`) looks up `HAVE_GRAPHITE` and `HAVE_GPU`, which no Meson file sets (the option sets `HAVE_GRAPHITE2`, and the `gpu` option sets nothing). In the book’s build, where hb-gpu is built, `hb-features.h` has `#undef HB_HAS_GPU`.
 
+> Since {{hb}}: fixed on HarfBuzz main by [`2b873b8`](https://github.com/harfbuzz/harfbuzz/commit/2b873b805800dcad37827f90a5c28ccb6ccc4ba8) and [`506cc94`](https://github.com/harfbuzz/harfbuzz/commit/506cc943b3c2ad82c5398361afdaf6e9eaad6b0f) (17 November 2026), so main’s `hb-features.h` defines `HB_HAS_GPU` when hb-gpu is built, and `HB_HAS_GRAPHITE` when graphite2 is.
+
 ## Where to read the source
 
 | File | What’s there |
@@ -272,3 +276,5 @@ Meson also writes `hb-features.h`, installed for applications, which defines an 
 * `-Os` turns on `HB_OPTIMIZE_SIZE` by itself. It gives up forced inlining, unrolled loops, fast paths and the larger lookup tables.
 * `HB_BUFFER_MESSAGE_MORE` and the `HB_DEBUG_*` macros need a rebuild; `HB_EXPERIMENTAL_API` is the one macro with a Meson option.
 * In a Meson build, `HB_LEAN` always removes drawing, painting and color, because it can’t see `hb-features.h`.
+
+> Since {{hb}}: fixed on HarfBuzz main by [`c90000d`](https://github.com/harfbuzz/harfbuzz/commit/c90000dd8ee5a593bc60e65930d3aed501aca5bf) (17 November 2026), so in a Meson build with a renderer main’s `HB_LEAN` keeps drawing (the item on `HB_LEAN`).

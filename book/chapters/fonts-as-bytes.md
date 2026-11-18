@@ -340,6 +340,8 @@ null-coverage-f1.ttf  aex
 
 Made to lookup 0, a format 2 subtable, the change switched off one lookup. Made to lookup 1, a format 1 subtable, it switches off all of GSUB. Real fonts don’t have null coverage offsets, so this is unlikely to matter, but it shows what holds the Null pattern together: every method of every type, in its `default` case.
 
+> Since {{hb}}: fixed on HarfBuzz main by [`6426ee4`](https://github.com/harfbuzz/harfbuzz/commit/6426ee4ca8a218ecf7e8b8dd92997f6d435ff03f) (17 November 2026), so main’s `get_population` returns 0 for an unknown format, and a null coverage switches off only its own subtable.
+
 ### Crap: Null’s writable twin
 
 `Null (T)` is `const`. Code with a *writable* struct, such as the subsetter, sometimes follows an offset or an index that isn’t there, and needs something writable back. It gets `Crap (T)` (`hb-null.hh:174`–`188`): a second 640-byte pool, into which the Null object’s bytes are copied each time. The name is spelled out in a comment, “Common Region for Access Protection”: writing there only stops a bug from doing damage elsewhere. Nothing correct relies on what is in it, which is why threads can share it without a lock. `CrapOrNull (T)` picks whichever fits the constness, and `hb_nonnull_ptr_t<T>` (`hb-null.hh:205`) is a pointer that reads as `Null (T)` when it is null; `hb_blob_ptr_t`, which holds a loaded table, keeps its blob in one.

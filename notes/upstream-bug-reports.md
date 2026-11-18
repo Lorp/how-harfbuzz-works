@@ -1,6 +1,6 @@
 # Draft bug reports for HarfBuzz
 
-Eighty-one possible bugs found while writing the book, drafted for the HarfBuzz issue tracker. None has been filed. Each report carries a tag naming the batch it was sent in, to go with it when it’s filed: 1–65 are `hhw-20261117`, the batch shown to Behdad Esfahbod on 17 November 2026. 66–81, found later, have no tag yet. Each was reproduced on HarfBuzz 15.1.0 (commit `3df40d9b`), built by `tools/build-harfbuzz.sh` (meson, with FreeType, ICU and cairo off), on macOS. Repros use `test/subset/data/fonts/Roboto-Regular.ttf` from HarfBuzz’s own repository where they can, so they need nothing from this book.
+Eighty-one possible bugs found while writing the book, drafted for the HarfBuzz issue tracker. None has been filed. Each report carries a tag naming the batch it was sent in, to go with it when it’s filed: 1–65 are `hhw-20261117`, the batch shown to Behdad Esfahbod on 17 November 2026. 66–81, found later, are `hhw-20261118`, the second batch, of 18 November 2026. Each was reproduced on HarfBuzz 15.1.0 (commit `3df40d9b`), built by `tools/build-harfbuzz.sh` (meson, with FreeType, ICU and cairo off), on macOS. Repros use `test/subset/data/fonts/Roboto-Regular.ttf` from HarfBuzz’s own repository where they can, so they need nothing from this book.
 
 Since 17 November many of them have been fixed on HarfBuzz’s `main` branch, and others have open pull requests. On 18 November 2026 every report was rechecked against `main` at commit `454f9c49c` (17 November 2026), built with the same options, by rerunning its repro or, for those read from the code, reading the code again. Each report ends with the result, under **On main.**: fixed (with the commit and pull request), changed, in progress (with the open pull request and its branch), or still present.
 
@@ -1029,7 +1029,7 @@ None affects the generated tables.
 
 **Expected.** The budget clamped to `INT_MAX` (or computed in a wider type), so long texts shape fully.
 
-**On main.** Changed, still present. On `main` the budget still starts negative, and texts from 524,300 to 1,048,575 characters get no ligature at all, not even the first. The report’s 524,290 characters now shape fully, probably because the first charge takes the budget past `INT_MIN` and it wraps around to a large positive value: the undefined behavior the summary mentions.
+**On main.** Changed, still present. On `main` the budget still starts negative, and texts from 524,300 to 1,048,575 characters get no ligature at all, not even the first. The report’s 524,290 characters now shape fully, probably because the first charge takes the budget past `INT_MIN` and it wraps around to a large positive value: the undefined behavior the summary mentions. Bisecting 15.1.0..main puts the change at `339aa68`, “Charge each GSUB/GPOS lookup pass to max_ops” (11 November 2026).
 
 ---
 
@@ -1167,11 +1167,13 @@ harfbuzz buffer verify error: unsafe-to-break test failed.
 
 ## Found while writing the chapters on building, the tools and the renderers, November 2026
 
-These were found after the batch tagged `hhw-20261117`: 66–78 while writing the chapters on hb-raster, hb-vector, hb-gpu, building HarfBuzz and the command-line tools, and 79–81 while writing the chapter on integrations. Each was reproduced on HarfBuzz 15.1.0 (commit `3df40d9b`), or is marked as read from the code, and checked against `main` at commit `454f9c49c` (17 November 2026), built with the same options. On 18 November `main` was still at that commit, and no open pull request addresses any of them. File and line references are to 15.1.0. They have no tag yet: one is added when the batch is sent.
+These were found after the batch tagged `hhw-20261117`: 66–78 while writing the chapters on hb-raster, hb-vector, hb-gpu, building HarfBuzz and the command-line tools, and 79–81 while writing the chapter on integrations. Each was reproduced on HarfBuzz 15.1.0 (commit `3df40d9b`), or is marked as read from the code, and checked against `main` at commit `454f9c49c` (17 November 2026), built with the same options. On 18 November `main` was still at that commit, and no open pull request addresses any of them. File and line references are to 15.1.0. They are tagged `hhw-20261118`.
 
 ---
 
 ## 66. `hb_color_lerp` reverses a color’s bytes, so every PDF sweep gradient has the wrong colors
+
+**Tag:** `hhw-20261118`
 
 **Summary.** `hb_color_lerp` (`src/hb-paint.hh:292`) interpolates each byte of two `hb_color_t`s and returns `HB_COLOR (lerp (0), lerp (8), lerp (16), lerp (24))`. But `HB_COLOR` takes its arguments as blue, green, red, alpha (`hb-common.h:497`), and `lerp (0)` is alpha, so the result has its four bytes in reverse order: red becomes green, green becomes red, alpha becomes blue and blue becomes alpha.
 
@@ -1195,6 +1197,8 @@ For SVG, a font with a pad sweep from −90° to 270° between red and blue: `hb
 
 ## 67. hb-vector’s PDF sweeps leave a square hole at their center
 
+**Tag:** `hhw-20261118`
+
 **Summary.** A PDF sweep is a mesh of Coons patches, each running from 0.5 to 32,767 units from the center (`hb-vector-paint-pdf.cc:1335–1336`). Its points are written as 16-bit numbers over a `Decode` range 65,536 units wide (`:1291`, `:1513`), so they land on a grid of one unit. In `hb-vector`’s output, the mesh is painted under a 64× scale (`64 0 0 64 cm` before `sh`), so a grid step is 64 font units. The inner ends of the patches, half a unit from the center, are rounded onto the corners of one grid square, and that square is never painted.
 
 **Repro.** `colr1.ttf` in the book’s test fonts:
@@ -1212,6 +1216,8 @@ poppler and Ghostscript both leave a white square 64 units on a side beside the 
 ---
 
 ## 68. hb-vector’s PDF output ignores custom palette colors
+
+**Tag:** `hhw-20261118`
 
 **Summary.** The PDF paint funcs don’t set `custom_palette_color` (`hb-vector-paint-pdf.cc:1650`), so `hb_vector_paint_set_custom_palette_color` has no effect on PDF. The SVG funcs do (`hb-vector-paint-svg.cc:292`).
 
@@ -1232,6 +1238,8 @@ The SVG fills the disc with `#2E8B57`; the PDF with `0.1647 0.4353 0.8588 rg`, t
 
 ## 69. hb-vector’s PDF compositing isn’t isolated
 
+**Tag:** `hhw-20261118`
+
 **Summary.** `hb_pdf_paint_push_group_for` (`hb-vector-paint-pdf.cc:1607`) writes `q` and an ExtGState with the blend mode, and the group’s content follows in the page’s own content stream. There is no transparency group, so the source is blended with everything already on the page, the white background included, not only with the backdrop the COLR graph composites it onto.
 
 **Repro.** `modes.ttf` in the book’s test fonts (`fonts/hb-vector/`): each letter is a blue disc and a red disc joined by one PaintComposite.
@@ -1250,6 +1258,8 @@ In `S` (SCREEN), the part of the red disc outside the blue one disappears: red s
 ---
 
 ## 70. hb-gpu drops a fill whose only clip is a rectangle
+
+**Tag:** `hhw-20261118`
 
 **Summary.** The paint encoder ignores rectangle clips, and its comment says the result is merely bigger: “the encoder simply ignores the rectangle (output is bigger than it should be, but renders)” (`hb-gpu-paint.cc:1074`). But a layer is emitted only inside a glyph or path clip (`if (unlikely (c->clip_depth == 0)) return;`, `:673`, and the same in the gradient emitters), so a fill clipped only by a ClipBox or PaintClipBox is dropped, and a glyph made of one encodes as the empty blob.
 
@@ -1272,6 +1282,8 @@ L: 488 bytes, 61 texels
 
 ## 71. hb-gpu’s stem darkening is documented with pixels per unit for its ppem (inferred, from reading the code)
 
+**Tag:** `hhw-20261118`
+
 **Summary.** `hb_gpu_stem_darken (coverage, brightness, ppem)` fades out between 8 and 48 pixels per em (`hb-gpu-fragment.glsl:344`). Its documentation computes `ppem` as `1.0 / max (fwidth (v_texcoord).x, fwidth (v_texcoord).y)` (`hb-gpu.cc:349`, and the examples at `:357`, `:374` and `:511`), and so does the `hb-gpu` viewer (`util/gpu/demo-fragment.glsl:35`). The documentation sets texture coordinates up in font units, so that is pixels per font unit, smaller than pixels per em by the font’s scale: for a 1,000-unit font the darkening never fades out. `hb_gpu_ppem (renderCoord, glyphLoc)` (`:167`) divides by the scale stored in the blob and gives the right figure.
 
 Not run: the book’s build has no GPU.
@@ -1283,6 +1295,8 @@ Not run: the book’s build has no GPU.
 ---
 
 ## 72. `HB_FEATURES_H` is both `harfbuzz-world.cc`’s header name and `hb-features.h`’s include guard
+
+**Tag:** `hhw-20261118`
 
 **Summary.** `harfbuzz-world.cc` starts with `#ifdef HB_FEATURES_H` / `#include HB_FEATURES_H` (`src/harfbuzz-world.cc.in:1–3`), so that a project can name its own features header. `hb-features.h` uses the same macro as its include guard (`hb-features.h.in:25`). Naming the `hb-features.h` that Meson writes, or a copy of it, therefore includes a file whose whole body is skipped, and none of its `HB_HAS_*` macros is defined.
 
@@ -1301,6 +1315,8 @@ OFF
 ---
 
 ## 73. `hb-shape -v` turns on `--ned` as well as `--verbose`
+
+**Tag:** `hhw-20261118`
 
 **Summary.** `--verbose` and `--ned` both have the short name `v` (`util/shape-format.hh:187`, `:199`). GLib runs both callbacks for `-v`, so the clusters and advances disappear. The help lists `-v` only for `--verbose`.
 
@@ -1324,6 +1340,8 @@ $ hb-shape Roboto-Regular.ttf ab -v
 ---
 
 ## 74. `--features` and `--variations` split at spaces, so the CSS forms their help offers don’t work
+
+**Tag:** `hhw-20261118`
 
 **Summary.** The help for `--features` says “All valid CSS font-feature-settings values other than 'normal'” are accepted, and `--variations` says the same of `font-variation-settings`. `hb_feature_from_string` and `hb_variation_from_string` do accept `"liga" 0` and `wght 900`. But the tools split the argument at spaces as well as commas before parsing (`strpbrk (p, ", ")`, `util/shape-options.hh:339`, `:352`; `util/font-options.hh:179`, `:192`), so `"liga" 0` becomes `"liga"`, which turns the feature on, and `0`, which doesn’t parse and is dropped silently.
 
@@ -1350,6 +1368,8 @@ Asking for small caps off turns them on, and the weight is ignored with no messa
 
 ## 75. `hb-vector --show-extents` draws each box after the first at twice its pen position
 
+**Tag:** `hhw-20261118`
+
 **Summary.** `hb-vector` sets the glyph’s transform to the pen position (`util/vector-output.hh:265`, `:288`), then draws the extents overlay through it with the pen position added again (`:273`, `:296`; `util/helper-extents-overlay.hh:66`). The first glyph’s pen position is 0, so only the boxes after it are misplaced. `hb-raster` draws them in the right place.
 
 **Repro.** `var.ttf` in the book’s test fonts, whose `I` has an advance of 260 and a stem from 80 to 180:
@@ -1368,6 +1388,8 @@ The second `I` is drawn at x 340–440, but its box at 599–701 and its origin 
 
 ## 76. Smaller things in hb-raster, hb-vector and hb-gpu
 
+**Tag:** `hhw-20261118`
+
 * hb-raster computes luminosity for the HSL composite modes with the weights 0.299, 0.587 and 0.114 (`hb-raster-image.cc:297`). COLR takes its modes from the W3C Compositing and Blending specification, whose `Lum` uses 0.3, 0.59 and 0.11. Red over blue in HSL_LUMINOSITY comes out as `(0, 122, 192)` where the specification gives `(0, 123, 193)`.
 * The documentation of `hb_vector_paint_set_custom_palette_color` (`hb-vector-paint.cc:453`) says the overrides are consulted by “SVG glyph content using `var(--colorN)`”; nothing in HarfBuzz reads `var(--colorN)` (read from the code).
 * The documentation of `hb_gpu_draw_recycle_blob` (`hb-gpu-draw.cc:1160`) says that it “simply destroys the blob”; it keeps it and the next encode reuses its memory (`hb-blob.hh:220`).
@@ -1381,6 +1403,8 @@ The second `I` is drawn at x 340–440, but its box at 599–701 and its origin 
 
 ## 77. Smaller things in the build files and build documentation
 
+**Tag:** `hhw-20261118`
+
 * `harfbuzz-world.cc` maps `HB_HAS_GRAPHITE` to `HAVE_GRAPHITE` (`src/harfbuzz-world.cc.in:20–22`), but the Graphite code tests `HAVE_GRAPHITE2` (`hb-graphite2.cc:31`, `hb-shaper-list.hh:41`), so the single-file build can’t include the Graphite backend. Preprocessing `harfbuzz-world.cc` with a features header that defines `HB_HAS_GRAPHITE` gives no Graphite code. **Fixed on main** by `506cc943b`, which renames `HAVE_GRAPHITE2` to `HAVE_GRAPHITE` throughout (the follow-up to report 56).
 * The `libs` alias target (`meson.build:449–459`) lists the core, subset, raster and vector libraries but not `libharfbuzz-gpu`: `ninja -C build -t query libs` doesn’t list it, though it is built by default. Still present on main (`:463`).
 * `BUILD.md:38` and `:42` and `TESTING.md:4` and `:36` use `meson build`, without `setup`; Meson 1.12 warns that this form is “ambiguous and deprecated”. Still present on main.
@@ -1389,6 +1413,8 @@ The second `I` is drawn at x 340–440, but its box at 599–701 and its origin 
 ---
 
 ## 78. Smaller things in the command-line tools
+
+**Tag:** `hhw-20261118`
 
 * `--font-size` is described as “1/2 integers or 'upem'” (`util/font-options.hh:319`), but is parsed with `%lf` (`:214`) and used as a fraction. Its error message says “one or two space-separated numbers” (`:219`), but a comma separates them too: `--font-size=500,250` works.
 * `output_options_t::refuse_tty` (`util/output-options.hh:124`) is tested (`:103`) but never set, so no tool refuses to write binary output to a terminal through it (read from the code).
@@ -1399,6 +1425,8 @@ The second `I` is drawn at x 340–440, but its box at 599–701 and its origin 
 ---
 
 ## 79. `hb_directwrite_font_set_funcs` leaks a reference to the DirectWrite font face
+
+**Tag:** `hhw-20261118`
 
 *Found by reading the code; Windows only, not run.*
 
@@ -1414,6 +1442,8 @@ The second `I` is drawn at x 340–440, but its box at 599–701 and its origin 
 
 ## 80. `_hb_gdi_reference_table` leaks the screen DC when `SelectObject` fails
 
+**Tag:** `hhw-20261118`
+
 *Found by reading the code; Windows only, not run.*
 
 **Summary.** `_hb_gdi_reference_table` (`src/hb-gdi.cc:42`), the table loader behind `hb_gdi_face_create`, gets the screen’s device context with `GetDC (nullptr)` and selects the font into it. If `SelectObject` fails, it returns at once (`:48`–`:49`), before the `HB_SCOPE_GUARD (ReleaseDC (nullptr, hdc))` on the next line (`:50`), so the DC is never released. The loader runs once for each table HarfBuzz asks for, so a font whose `HFONT` can’t be selected leaks a DC each time.
@@ -1425,6 +1455,8 @@ The second `I` is drawn at x 340–440, but its box at 599–701 and its origin 
 ---
 
 ## 81. Smaller things in the integration documentation
+
+**Tag:** `hhw-20261118`
 
 *Found by reading the code and the documentation.*
 

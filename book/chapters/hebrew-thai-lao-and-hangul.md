@@ -306,6 +306,8 @@ hangul.ttf  \u302E  --language=ko  --bot
 
 The dotted circle is made by `replace_glyphs`, which copies the tone mark’s buffer entry, Unicode properties and all (`:245`). So the circle is a spacing mark too, and when it follows a base, as it does after a lone KIYEOK in the second line, the fallback positioner treats it as one: it loses its advance and is placed over the KIYEOK. The generic dotted circle, inserted at the start of text, gets the properties of U+25CC instead (`hb-ot-shape.cc:567`). And that generic circle comes first: at the beginning of text (`--bot`), HarfBuzz has already put a dotted circle before the tone mark, but to the Hangul shaper that circle isn’t a syllable, so it adds a second.
 
+> Since {{hb}}: fixed on HarfBuzz main by [`2831a8a`](https://github.com/harfbuzz/harfbuzz/commit/2831a8a45c77c180373987312958d31b3575a72c) and [`59fa8f0`](https://github.com/harfbuzz/harfbuzz/commit/59fa8f0c28df047b6786a60febf2c8b53a694e05) (17 November 2026), so main gives the circle U+25CC’s own properties, and it keeps its advance; with `--bot`, the circle already there serves as the tone mark’s base, and there is one.
+
 ### Old Hangul and `KOH`
 
 The shaper never looks at the language. OpenType has a language system tag for Old Hangul, `KOH`, and HarfBuzz maps the language `ko` to `KOR` and then `KOH`, and `okm`, Middle Korean, to `KOH` (`hb-ot-tag-table.hh:113`, `:933`; [Choosing a script shaper](choosing-a-script-shaper.html#from-a-language-to-language-system-tags)). So a font that keeps its jamo features under `KOH` alone still gets them for Korean text, unless it also has a `KOR` language system. `hangul-koh.ttf` registers `ljmo`, `vjmo` and `tjmo` only under `KOH`:
@@ -340,3 +342,5 @@ None of this chapter’s tables is generated: the Hebrew presentation forms, the
 * Lao shares the Thai shaper because its block mirrors Thai’s, 0x80 higher; the PUA fallback is Thai only.
 * Hangul: each syllable becomes a precomposed glyph if the font has the whole of it, and jamo with `ljmo`, `vjmo` and `tjmo` otherwise. `calt` is kept off jamo only.
 * Hangul tone marks move before their syllable unless they have zero width. The dotted circle the shaper adds for a stray tone mark is given the tone mark’s properties, which looks like a bug.
+
+> Since {{hb}}: fixed on HarfBuzz main by [`2831a8a`](https://github.com/harfbuzz/harfbuzz/commit/2831a8a45c77c180373987312958d31b3575a72c) (17 November 2026), so main gives the tone mark’s dotted circle U+25CC’s own properties (the item on Hangul tone marks).

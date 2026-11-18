@@ -360,6 +360,8 @@ trak.ttf  AV  --language=en  --direction=ttb
 
 The advance has gone from −1,000 to −900. Vertical advances are negative, growing downwards, so adding a positive value brings the glyphs *closer*. GPOS negates a vertical advance from a value record for this reason, “y_advance values grow downward but font-space grows upward” (`ValueFormat.hh:114`); `trak` doesn’t. A positive value, which loosens horizontal text, tightens a column, which looks like a bug (inferred: Core Text’s behavior in vertical text hasn’t been checked here).
 
+> Since {{hb}}: fixed on HarfBuzz main by [`45c7759`](https://github.com/harfbuzz/harfbuzz/commit/45c7759a025ace1fd7ca632114ec7111808d5fc5) and [`1e2cf5d`](https://github.com/harfbuzz/harfbuzz/commit/1e2cf5dafa790d809dec0ef05850b1dd3703d1b5) (17 November 2026), so main adds vertical tracking in the direction of the advance: here the advances become −1,100.
+
 ### When it applies
 
 The plan applies `trak` when the font has one and also has a STAT table (`hb-ot-shape.cc:216`):

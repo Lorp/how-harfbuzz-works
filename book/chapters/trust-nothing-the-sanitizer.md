@@ -268,6 +268,8 @@ A few things in the source make sense only as remains of the old design:
 * `may_edit`, the edit counter and the second, writable pass are gone. There’s no `try_set` or `neuter` anywhere in `src/`.
 * The blob memory mode `HB_MEMORY_MODE_READONLY_MAY_MAKE_WRITABLE`, and `try_make_writable_inplace_unix`, which calls `mprotect` (`hb-blob.cc:415`), are still there, and fonts opened from a file are still mapped in that mode (`hb-blob.cc:654`). But the sanitizer never asks for writable bytes now. [Blobs, faces and lazy tables](blobs-faces-and-lazy-tables.html#writable-copies-and-why-little-needs-them-now) covers what does.
 
+> Since {{hb}}: fixed on HarfBuzz main by [`9172214`](https://github.com/harfbuzz/harfbuzz/commit/91722141bb48a8414284cb3b4001b0c98cce9a19) (17 November 2026), which removes `HB_SANITIZE_MAX_EDITS` (the first item).
+
 ## Checks that wait
 
 The contract allows a table to leave checks to the code that reads it, as long as that code makes them. Some tables do that for everything, and `GPOS` does it for a few parts.
