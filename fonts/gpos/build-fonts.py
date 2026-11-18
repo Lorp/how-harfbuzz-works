@@ -16,6 +16,8 @@ Fonts written:
   var-kern.ttf      variations/var.ttf, the shared variable font, with a
                     GDEF and a GPOS added: one kerning pair, H V, whose
                     value varies with wght through a VariationIndex table
+  context.ttf       the same glyphs, from context.fea: a kerning pair, T o,
+                    and a contextual rule that changes it before n
 
 Every glyph is a box, as in tools/build-test-font.py.
 """
@@ -48,7 +50,7 @@ def box(width):
     return pen.glyph()
 
 
-def build_gpos():
+def build_gpos(fea="gpos.fea", out="gpos.ttf"):
     order = list(GLYPHS)
     fb = FontBuilder(1000, isTTF=True)
     fb.setupGlyphOrder(order)
@@ -59,8 +61,8 @@ def build_gpos():
     fb.setupNameTable({"familyName": "HBBook GPOS Test", "styleName": "Regular"})
     fb.setupOS2(sTypoAscender=800, usWinAscent=800, usWinDescent=200)
     fb.setupPost()
-    addOpenTypeFeatures(fb.font, "gpos.fea")
-    fb.save("gpos.ttf")
+    addOpenTypeFeatures(fb.font, fea)
+    fb.save(out)
 
 
 def kern_lookup(font):
@@ -106,6 +108,7 @@ def build_var_kern():
 
 if __name__ == "__main__":
     build_gpos()
+    build_gpos("context.fea", "context.ttf")
     build_class_first()
     build_second_value()
     build_var_kern()

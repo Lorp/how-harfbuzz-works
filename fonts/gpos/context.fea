@@ -1,0 +1,9 @@
+# Test font for the GPOS chapter: a kerning triplet. T o is kerned as a
+# pair, and a contextual rule gives some of it back when n follows.
+languagesystem DFLT dflt;
+languagesystem latn dflt;
+
+feature kern {
+  pos T o -100;
+  pos T' 40 o n;
+} kern;

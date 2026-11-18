@@ -23,7 +23,7 @@ Then the text. [Part III](unicode-inside-harfbuzz.html) is about the buffer: wha
 
 Then a plan. Shaping the same kind of text with the same font is common, so HarfBuzz works out once which features apply, which lookups they use and in what order, and keeps the result as a **shape plan**. [Part IV](shape-plans-and-their-cache.html) covers planning, including how the script shaper is chosen.
 
-Then the pipeline itself, in [Part V](the-pipeline-step-by-step.html). Characters are normalized and mapped to glyphs. GSUB substitutes glyphs, GPOS positions them, and fallbacks step in where the font has no tables for something. Each of those steps has its own chapter.
+Then the pipeline itself, in [Part V](pipeline-step-by-step.html). Characters are normalized and mapped to glyphs. GSUB substitutes glyphs, GPOS positions them, and fallbacks step in where the font has no tables for something. Each of those steps has its own chapter.
 
 Some scripts need more than the font’s tables can say on their own: Arabic letters have to know which of their neighbors they join, and Indic syllables have to be found and reordered before any lookup sees them. [Part VI](joining-scripts.html) covers the script shapers. [Part VII](aat-inside-harfbuzz.html) covers Apple’s own layout tables, which HarfBuzz runs in place of GSUB and GPOS when a font has them.
 

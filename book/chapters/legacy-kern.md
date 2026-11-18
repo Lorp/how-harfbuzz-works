@@ -118,7 +118,7 @@ cross.ttf  AVAV  --language=en
 cross.ttf  AVTo  --language=en
 ```
 
-The V is raised by 100, and so is everything after it, until another pair raises it again. The ordinary subtable before it has still kerned A V along the line. The specification says “The value 0x8000 in the kerning data resets the cross-stream kerning back to 0.” Only the format 1 state machine knows that (`hb-aat-layout-kerx-table.hh:360`). The kern machine, which runs formats 0, 2 and 3, takes 0x8000 as −32,768, so the `o` ends up 32,668 units below the line instead of on it. That looks like a HarfBuzz bug. A plan with cross-stream `kern` doesn’t move marks back by their advance when it zeroes them, nor position them itself (`hb-ot-shape.cc:198`), and a plan with a format 1 subtable doesn’t zero marks at all (`:189`). [The pipeline, step by step](the-pipeline-step-by-step.html#gpos-and-what-surrounds-it) shows where those steps are.
+The V is raised by 100, and so is everything after it, until another pair raises it again. The ordinary subtable before it has still kerned A V along the line. The specification says “The value 0x8000 in the kerning data resets the cross-stream kerning back to 0.” Only the format 1 state machine knows that (`hb-aat-layout-kerx-table.hh:360`). The kern machine, which runs formats 0, 2 and 3, takes 0x8000 as −32,768, so the `o` ends up 32,668 units below the line instead of on it. That looks like a HarfBuzz bug. A plan with cross-stream `kern` doesn’t move marks back by their advance when it zeroes them, nor position them itself (`hb-ot-shape.cc:198`), and a plan with a format 1 subtable doesn’t zero marks at all (`:189`). [The pipeline, step by step](pipeline-step-by-step.html#gpos-and-what-surrounds-it) shows where those steps are.
 
 ### Vertical subtables
 
@@ -139,6 +139,8 @@ Whether `kern` runs is decided when the shape plan is made, in `hb_ot_shape_plan
 3. The font has a `kern` table with at least one subtable.
 4. The script shaper allows it: its `fallback_position` setting is true.
 
+None of the four looks at the outlines. The specification says that “Fonts containing CFF outlines are not supported by the 'kern' table and require use of the GPOS table to provide kerning” ([kern](https://learn.microsoft.com/en-us/typography/opentype/spec/kern)), but HarfBuzz applies a `kern` table in a CFF font just as in a TrueType one (`hb_ot_layout_has_kerning`, `hb-ot-layout.cc:88`, checks only that the table has data). A CFF font that relies on that kerns in HarfBuzz, but the specification gives no reason to expect other engines to do the same.
+
 `plan->position` (`hb-ot-shape.cc:271`) then runs GPOS or `kerx`, and after it `kern` or fallback kerning. GPOS and `kern` aren’t exclusive. When both are applied, each does its own part, and `kern` comes second.
 
 ### Alongside GPOS
@@ -151,7 +153,7 @@ both.ttf  AVTo  --language=tr
 both.ttf  A\u0301V  --language=tr
 ```
 
-In English, GPOS has a `kern` feature, so the `kern` table is left alone: A V gets GPOS’s −50, and T o isn’t kerned, because GPOS doesn’t kern it. In Turkish, the same text in the same font gets the `kern` table’s values. With an acute, GPOS places the mark and the `kern` table kerns A V across it: the two tables have each done part of the job. The mark stays over the A, though the A’s advance shrank after GPOS had placed it. That’s because `kern` runs before attachments are resolved, and resolving them adds up the advances as they are then ([Resolving attachments](positioning-glyphs-gpos.html#resolving-attachments)).
+In English, GPOS has a `kern` feature, so the `kern` table is left alone: A V gets GPOS’s −50, and T o isn’t kerned, because GPOS doesn’t kern it. In Turkish, the same text in the same font gets the `kern` table’s values. With an acute, GPOS places the mark and the `kern` table kerns A V across it: the two tables have each done part of the job. The mark stays over the A, though the A’s advance shrank after GPOS had placed it. That’s because `kern` runs before attachments are resolved, and resolving them adds up the advances as they are then ([Resolving attachments](gpos.html#resolving-attachments)).
 
 This is the behavior since HarfBuzz 2.0.0. Before it, the `kern` table was used only in a font with no GPOS at all. The commit that changed it says why: it applies to “Arial, Times New Roman, etc in Win7”, which have a GPOS without kerning in it, and were “not kerning before” (commit e655fd38, October 2018).
 
@@ -257,7 +259,7 @@ for (unsigned int idx = 0; idx < count;)
 
 Five things follow from it.
 
-**It is GPOS’s iterator.** The context is made for table 1, GPOS, with the lookup flag `IgnoreMarks` and the kerning mask. So the second glyph of a pair is found as a GPOS pair lookup with `IgnoreMarks` would find it: marks are passed over, and so are ZWJ, ZWNJ and the other default ignorables ([What a lookup passes over](positioning-glyphs-gpos.html#what-a-lookup-passes-over)). A `kern` table has no lookup flags of its own; this is HarfBuzz’s choice for it:
+**It is GPOS’s iterator.** The context is made for table 1, GPOS, with the lookup flag `IgnoreMarks` and the kerning mask. So the second glyph of a pair is found as a GPOS pair lookup with `IgnoreMarks` would find it: marks are passed over, and so are ZWJ, ZWNJ and the other default ignorables ([What a lookup passes over](gpos.html#what-a-lookup-passes-over)). A `kern` table has no lookup flags of its own; this is HarfBuzz’s choice for it:
 
 ```shape
 kern.ttf  A\u0301V  --language=en
@@ -267,7 +269,7 @@ kern.ttf  A V  --language=en
 
 A space is a glyph like any other, so A and V either side of one aren’t a pair.
 
-**The value is split.** Half goes on the first glyph’s advance, rounded down; the rest goes on the second glyph’s advance and, to put it back where it would have been, on its offset. Every glyph after the pair moves by the whole value, and so does the second glyph’s drawing, so it looks the same as GPOS’s kerning; but the change is shared between the two glyphs’ advances, which moves the boundary between them, where a caret goes, halfway. That was the reason 4.0.0’s `NEWS` gave for splitting GPOS kerning the same way, “for improved cursor positioning”. GPOS does it now only in a build with `HB_SPLIT_KERN`, which is off ([Safe to break](positioning-glyphs-gpos.html#safe-to-break)); the kern machine always does it. Compare the English and Turkish results for `both.ttf` above: −50 all on A from GPOS, −80 shared from `kern`.
+**The value is split.** Half goes on the first glyph’s advance, rounded down; the rest goes on the second glyph’s advance and, to put it back where it would have been, on its offset. Every glyph after the pair moves by the whole value, and so does the second glyph’s drawing, so it looks the same as GPOS’s kerning; but the change is shared between the two glyphs’ advances, which moves the boundary between them, where a caret goes, halfway. That was the reason 4.0.0’s `NEWS` gave for splitting GPOS kerning the same way, “for improved cursor positioning”. GPOS does it now only in a build with `HB_SPLIT_KERN`, which is off ([Safe to break](gpos.html#safe-to-break)); the kern machine always does it. Compare the English and Turkish results for `both.ttf` above: −50 all on A from GPOS, −80 shared from `kern`.
 
 **Every glyph starts a pair.** After a pair, the loop moves to its second glyph, which then starts the next: A V A V is tried as A V, V A and A V. Each subtable runs over the whole buffer in its own pass, from `KerxTable::apply` (`hb-aat-layout-kerx-table.hh:1055`).
 

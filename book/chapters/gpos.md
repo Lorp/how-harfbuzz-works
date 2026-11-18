@@ -1,10 +1,10 @@
 # GPOS: positioning glyphs
 
-When GPOS starts, the glyphs are settled. GSUB has chosen them, and the positions array has been cleared and filled with each glyph’s advance from the font ([The pipeline, step by step](the-pipeline-step-by-step.html#advances)). GPOS never changes which glyphs there are. It changes four numbers per glyph, the advance and the offset in each direction, and it records which glyph is attached to which, so that the attachments can be worked out once all its lookups have run.
+When GPOS starts, the glyphs are settled. GSUB has chosen them, and the positions array has been cleared and filled with each glyph’s advance from the font ([The pipeline, step by step](pipeline-step-by-step.html#advances)). GPOS never changes which glyphs there are. It changes four numbers per glyph, the advance and the offset in each direction, and it records which glyph is attached to which, so that the attachments can be worked out once all its lookups have run.
 
-GPOS has the same structure as GSUB, and HarfBuzz runs it with the same machinery, so this chapter covers only what is different: the nine lookup types as HarfBuzz runs them, then the last step, in which a tree of attachments becomes offsets an application can draw with.
+GPOS has the same structure as GSUB, and HarfBuzz runs it with the same machinery, so this chapter covers only what is different: the nine lookup types as HarfBuzz runs them, then the last step, in which a tree of attachments becomes offsets an application can draw with. For how to write each type in a feature file, with Nastaliq cursive attachment and Thai mark-to-ligature among the examples, see “Types of Positioning Rule” in Simon Cozens’ [*Fonts and Layout for Global Scripts*](https://simoncozens.github.io/fonts-and-layout/features-2.html#types-of-positioning-rule).
 
-The examples come from one test font, `gpos.ttf`, built from `fonts/positioning-glyphs-gpos/gpos.fea`, and three variants of it. It has the GSUB chapter’s `f`, `i` and their ligatures, a few letters to kern, two combining marks, and letters that join in a cursive chain. Its glyphs are boxes. Every shaping result and trace on this page was produced by running HarfBuzz {{hb}} on those fonts when the page was built.
+The examples come from one test font, `gpos.ttf`, built from `fonts/gpos/gpos.fea`, and three variants of it. It has the GSUB chapter’s `f`, `i` and their ligatures, a few letters to kern, two combining marks, and letters that join in a cursive chain. Its glyphs are boxes. Every shaping result and trace on this page was produced by running HarfBuzz {{hb}} on those fonts when the page was built.
 
 ## What changes from GSUB
 
@@ -339,9 +339,44 @@ The first two stack the second acute on the first, 150 units up. In the third, t
 
 Types 7 to 9 are the same code as GSUB’s types 5 to 7 ([Context and chained context](gsub.html#context-and-chained-context)). Nested positioning lookups never change the buffer’s length, so the guessing that `apply_lookup` does after a nested GSUB lookup never comes up.
 
+Their commonest use is kerning that depends on a third glyph, a **kerning triplet**. A pair can only say how far apart two glyphs are; a triplet changes that when a particular glyph comes before or after them. The test font `context.ttf`, from `context.fea`, kerns *T o* by −100 as a pair, and gives 40 of it back when *n* follows:
+
+```
+feature kern {
+  pos T o -100;
+  pos T' 40 o n;
+} kern;
+```
+
+As with substitutions ([What a feature file compiles to](gsub.html#what-a-feature-file-compiles-to)), the second rule becomes two lookups: a chained-context lookup whose rule matches *T* before *o n*, and a single adjustment, lookup 2, that it calls:
+
+```views
+font: context.ttf
+lookup: 1
+fea: context.fea kern
+print: ttx
+```
+
+Both lookups run, the pair first, and their values add up. *T* before *o* loses 100 units of advance, and before *o n* it loses 60:
+
+```shape
+context.ttf  To  --language=en
+context.ttf  Ton  --language=en
+```
+
+```trace
+font: context.ttf
+text: Ton
+options: --language=en
+from: start lookup 0
+to: end lookup 1
+```
+
+So a triplet is usually a correction on top of the pair, written as a later lookup. Written the other way round, before the pair, it would still add, because positioning values accumulate: unlike a substitution, an earlier adjustment doesn’t stop a later one from matching.
+
 ## Resolving attachments
 
-After GPOS, and after the shaper has zeroed the advances of marks ([The pipeline, step by step](the-pipeline-step-by-step.html#gpos-and-what-surrounds-it)), `position_finish_offsets` (`OT/Layout/GPOS/GPOS.hh:164`) turns relative offsets into offsets from each glyph’s own pen position, if an attachment set the buffer’s `HAS_GPOS_ATTACHMENT` scratch flag. For each glyph with an `attach_chain`, `propagate_attachment_offsets` (`:75`) resolves the parent first, recursively, and then:
+After GPOS, and after the shaper has zeroed the advances of marks ([The pipeline, step by step](pipeline-step-by-step.html#gpos-and-what-surrounds-it)), `position_finish_offsets` (`OT/Layout/GPOS/GPOS.hh:164`) turns relative offsets into offsets from each glyph’s own pen position, if an attachment set the buffer’s `HAS_GPOS_ATTACHMENT` scratch flag. For each glyph with an `attach_chain`, `propagate_attachment_offsets` (`:75`) resolves the parent first, recursively, and then:
 
 * for a cursive child, adds the parent’s offset across the line;
 * for a mark, adds the base’s offset along the line, and subtracts the advances from the base to the mark: in forward text the base’s and any between; in backward text those after the base up to and including the mark’s own, since the mark will be drawn left of the base.

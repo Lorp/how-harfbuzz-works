@@ -57,7 +57,7 @@ Read from the top, the glyphs and positions are the same. Only the clusters run 
 
 ### Mirroring a column
 
-The brackets were swapped by step 7, `hb_ot_rotate_chars`, which mirrors characters when the *target* direction, the one the application asked for, is backward ([The pipeline, step by step](the-pipeline-step-by-step.html#mirroring)). BTT is backward, so U+300C 「 became its mirror U+300D 」 before the `cmap` was read, and the other way round. The trace shows it at the first point a trace can see, with the order already reversed:
+The brackets were swapped by step 7, `hb_ot_rotate_chars`, which mirrors characters when the *target* direction, the one the application asked for, is backward ([The pipeline, step by step](pipeline-step-by-step.html#mirroring)). BTT is backward, so U+300C 「 became its mirror U+300D 」 before the `cmap` was read, and the other way round. The trace shows it at the first point a trace can see, with the order already reversed:
 
 ```trace
 font: vertical.ttf
@@ -212,7 +212,7 @@ The fallback is the only part of the presentation forms HarfBuzz knows. It never
 
 ### Which shaper
 
-The script shaper is chosen with the direction in hand. Arabic and Syriac get the default shaper in vertical text, because “Arabic shaping is applicable only to horizontal layout” (`hb-ot-shaper.hh:195`; [Choosing a script shaper](choosing-a-script-shaper.html#arabic-and-syriac)). No other script’s choice depends on the direction: Mongolian, which is written in columns, gets the same shaper either way ([The Universal Shaping Engine](the-universal-shaping-engine.html)).
+The script shaper is chosen with the direction in hand. Arabic and Syriac get the default shaper in vertical text, because “Arabic shaping is applicable only to horizontal layout” (`hb-ot-shaper.hh:195`; [Choosing a script shaper](choosing-a-script-shaper.html#arabic-and-syriac)). No other script’s choice depends on the direction: Mongolian, which is written in columns, gets the same shaper either way ([The Universal Shaping Engine](universal-shaping-engine.html)).
 
 A font with a `morx` table is shaped with it in vertical text only if it has no GSUB (`hb-ot-shape.cc:64`, HarfBuzz issue #2124). In horizontal text `morx` is preferred whenever it is there ([AAT inside HarfBuzz](aat-inside-harfbuzz.html)).
 

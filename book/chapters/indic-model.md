@@ -4,7 +4,7 @@ The Indic shaper serves nine scripts: Bengali, Devanagari, Gujarati, Gurmukhi, K
 
 There are four parts. Each character is given a **category** and a **position** from a table generated from Unicode’s data. A state machine, compiled by Ragel, divides the run into syllables. An **initial reordering** before the basic features finds each syllable’s base consonant, sorts the syllable by position and sets each glyph’s feature masks. A **final reordering** after them moves the reph, the pre-base vowel signs and the pre-base-reordering consonants to where the basic features’ results say they belong. In between, HarfBuzz decides what each consonant does by asking the font’s own lookups.
 
-The examples use seven Devanagari test fonts with plain boxes for glyphs, built by `fonts/the-indic-model/build-fonts.py` from one feature file. `full.ttf` has one lookup each for `rphf`, `blwf`, `half`, `pstf` and `init`; the others leave out or change one or two. An eighth, `scripts.ttf`, has a few glyphs each of Bengali, Telugu, Kannada and Malayalam. All have their lookups under the new tags, `dev2` and the like, so the shaper runs in its new mode ([Choosing a script shaper](choosing-a-script-shaper.html)). Every result and trace on this page was produced by running HarfBuzz {{hb}} on them when the page was built.
+The examples use seven Devanagari test fonts with plain boxes for glyphs, built by `fonts/indic-model/build-fonts.py` from one feature file. `full.ttf` has one lookup each for `rphf`, `blwf`, `half`, `pstf` and `init`; the others leave out or change one or two. An eighth, `scripts.ttf`, has a few glyphs each of Bengali, Telugu, Kannada and Malayalam. All have their lookups under the new tags, `dev2` and the like, so the shaper runs in its new mode ([Choosing a script shaper](choosing-a-script-shaper.html)). Every result and trace on this page was produced by running HarfBuzz {{hb}} on them when the page was built.
 
 ## Categories and positions
 
@@ -228,7 +228,7 @@ no-blwf-half.ttf  क\u094Dर\u093F  --language=hi
 
 In `full.ttf`, `blwf` makes RA below-base, so KA is the base: the vowel sign goes before KA and RA below it. Without `blwf`, RA is the base and KA takes its half form. `old-order.ttf`’s `blwf` is written RA + virama; the probe accepts that, so KA is the base, but the lookup never matches the new order, and nothing forms: KA, a visible virama, a full RA. In `no-blwf-half.ttf` RA is the base, KA has no half form, and the vowel sign ends up between them, as the final reordering explains.
 
-> For type designers: the Indic shaper reads a consonant’s role from your `blwf`, `vatu`, `pstf` and `pref` lookups, by asking whether each would substitute the virama + consonant pair on its own. A consonant whose below-base form is made only by a contextual rule, or only by a lookup under some other feature, is a base consonant to HarfBuzz. For the new Indic tags (except Malayalam), a rule with backtrack or lookahead doesn’t count.
+> For type designers: the Indic shaper reads a consonant’s role from your `blwf`, `vatu`, `pstf` and `pref` lookups, by asking whether each would substitute the virama + consonant pair on its own. A consonant whose below-base form is made only by a contextual rule, or only by a lookup under some other feature, is a base consonant to HarfBuzz. For the new Indic tags (except Malayalam), a rule with backtrack or lookahead doesn’t count. “Other complex scripts” in Simon Cozens’ [*Fonts and Layout for Global Scripts*](https://simoncozens.github.io/fonts-and-layout/localisation.html#other-complex-scripts) walks through the same exchange from the font’s side, with Devanagari.
 
 ## Initial reordering
 
@@ -415,7 +415,7 @@ if (start + 1 < end &&
      _hb_glyph_info_ligated_and_didnt_multiply (&info[start])))
 ```
 
-RA + virama moves if `rphf` ligated it; an encoded repha moves if it did *not*: “If it ligated, it’s probably the font trying to make it work without the reordering.” Where to depends on the reph position, through the specification’s six steps:
+RA + virama moves if `rphf` ligated it; an encoded repha moves if it did *not*: “If it ligated, it’s probably the font trying to make it work without the reordering.” The reph glyph’s GDEF class plays no part: a reph that `rphf` formed moves whether or not the font puts it in a mark class. Where to depends on the reph position, through the specification’s six steps:
 
 1. After post-base forms: go to step 5.
 2. Otherwise, after the first unligated virama between the reph and the base, or a joiner after it.

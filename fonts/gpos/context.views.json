@@ -1,0 +1,18 @@
+{
+ "font": "context.ttf",
+ "sha256": "3519499fd4ef0a769d544912132ea966a3589b4d8e482936464ea73ab3469305",
+ "lookups": {
+  "0": {
+   "ttx": "<Lookup index=\"0\">\n  <LookupType value=\"2\"/>\n  <LookupFlag value=\"0\"/>\n  <!-- SubTableCount=1 -->\n  <PairPos index=\"0\" Format=\"1\">\n    <Coverage>\n      <Glyph value=\"T\"/>\n    </Coverage>\n    <ValueFormat1 value=\"4\"/>\n    <ValueFormat2 value=\"0\"/>\n    <!-- PairSetCount=1 -->\n    <PairSet index=\"0\">\n      <!-- PairValueCount=1 -->\n      <PairValueRecord index=\"0\">\n        <SecondGlyph value=\"o\"/>\n        <Value1 XAdvance=\"-100\"/>\n      </PairValueRecord>\n    </PairSet>\n  </PairPos>\n</Lookup>",
+   "spec": "Lookup 0: Pair adjustment (type 2)\n  lookupFlag: none\n  subtable 0: PairPosFormat1\n    coverage: [T]\n    valueFormat[0]: xAdvance\n    valueFormat[1]: none\n    pairSet:\n      (T)\n        o: <xAdvance -100>"
+  },
+  "1": {
+   "ttx": "<Lookup index=\"1\">\n  <LookupType value=\"8\"/>\n  <LookupFlag value=\"0\"/>\n  <!-- SubTableCount=1 -->\n  <ChainContextPos index=\"0\" Format=\"1\">\n    <Coverage>\n      <Glyph value=\"T\"/>\n    </Coverage>\n    <!-- ChainPosRuleSetCount=1 -->\n    <ChainPosRuleSet index=\"0\">\n      <!-- ChainPosRuleCount=1 -->\n      <ChainPosRule index=\"0\">\n        <!-- BacktrackGlyphCount=0 -->\n        <!-- InputGlyphCount=1 -->\n        <!-- LookAheadGlyphCount=2 -->\n        <LookAhead index=\"0\" value=\"o\"/>\n        <LookAhead index=\"1\" value=\"n\"/>\n        <!-- PosCount=1 -->\n        <PosLookupRecord index=\"0\">\n          <SequenceIndex value=\"0\"/>\n          <LookupListIndex value=\"2\"/>\n        </PosLookupRecord>\n      </ChainPosRule>\n    </ChainPosRuleSet>\n  </ChainContextPos>\n</Lookup>"
+  },
+  "2": {
+   "ttx": "<Lookup index=\"2\">\n  <LookupType value=\"1\"/>\n  <LookupFlag value=\"0\"/>\n  <!-- SubTableCount=1 -->\n  <SinglePos index=\"0\" Format=\"1\">\n    <Coverage>\n      <Glyph value=\"T\"/>\n    </Coverage>\n    <ValueFormat value=\"4\"/>\n    <Value XAdvance=\"40\"/>\n  </SinglePos>\n</Lookup>",
+   "spec": "Lookup 2: Single adjustment (type 1)\n  lookupFlag: none\n  subtable 0: SinglePosFormat1\n    coverage: [T]\n    valueFormat: xAdvance\n    value: <xAdvance 40>"
+  }
+ },
+ "tables": {}
+}

@@ -1,6 +1,6 @@
 # Joining scripts
 
-In a joining script, a letter’s shape depends on whether it connects to its neighbors. [Why shaping exists](why-shaping-exists.html#one-character-many-shapes-joining-and-contextual-forms) showed beh taking four forms, and [The pipeline, step by step](the-pipeline-step-by-step.html#masks) showed where the decision is made: in the Arabic shaper’s `setup_masks` hook, before any glyph exists, a state machine reads each character’s joining type and sets one feature bit in its mask. This chapter takes that machine apart, then covers the rest of the Arabic shaper: its feature order, Syriac Alaph, mark reordering, `stch`, and shaping from presentation forms when a font has no Arabic `GSUB`.
+In a joining script, a letter’s shape depends on whether it connects to its neighbors. [Why shaping exists](why-shaping-exists.html#one-character-many-shapes-joining-and-contextual-forms) showed beh taking four forms, and [The pipeline, step by step](pipeline-step-by-step.html#masks) showed where the decision is made: in the Arabic shaper’s `setup_masks` hook, before any glyph exists, a state machine reads each character’s joining type and sets one feature bit in its mask. This chapter takes that machine apart, then covers the rest of the Arabic shaper: its feature order, Syriac Alaph, mark reordering, `stch`, and shaping from presentation forms when a font has no Arabic `GSUB`.
 
 Only Arabic and Syriac get the Arabic shaper ([Choosing a script shaper](choosing-a-script-shaper.html#arabic-and-syriac)). Mongolian, N’Ko and the other joining scripts go to the Universal Shaping Engine, which borrows the same state machine; the last section is about that.
 
@@ -139,6 +139,8 @@ joining.ttf  ܠܐ  --language=syr
 The Arabic lam-alef reaches `calt` and is changed. The Syriac lamadh-alaph is made in the same stage as `calt`, after `calt`’s lookup has run, and stays as it is.
 
 The pause after `calt` (issue 1573) is left out if the font has an `rclt` feature (`:238`): `has_feature` asks the font, not the plan.
+
+> For type designers: “Arabic, Urdu and Sindhi” in Simon Cozens’ [*Fonts and Layout for Global Scripts*](https://simoncozens.github.io/fonts-and-layout/localisation.html#arabic-urdu-and-sindhi) shows how a calligraphic Arabic font uses chained contextual substitutions where ligatures would get in each other’s way, with Amiri as the example.
 
 ## Reordering marks
 
@@ -288,7 +290,7 @@ joining-DFLT.ttf  ᠠᠠᠠ  --language=mn
 
 Mongolian A takes its three forms. Mongolian is the one script the machine knows: after joining, `mongolian_variation_selectors` (`hb-ot-shaper-arabic.cc:380`) copies each character’s action onto a free variation selector, U+180B to U+180D or U+180F, after it. A variation selector is transparent, so otherwise it would get no mask, and a lookup in `init` matching the letter and the selector together, as `joining.ttf` has for FVS1, would fail at the selector. The narrow no-break space Mongolian uses before suffixes is non-joining in HarfBuzz’s data, and so the letters on either side of it are isolated. The last line is the same lookups under `DFLT` only, which sends Mongolian to the default shaper ([Choosing a script shaper](choosing-a-script-shaper.html#from-tags-to-a-shaper)): there is no joining at all.
 
-The same machine, but less around it. USE adds only `isol`, `init`, `medi` and `fina` (`:62`), in one stage after its reordering, so they run in LookupList order, with no pause between them and nothing for `fin2`, `fin3` or `med2`. It has no `stch`, no fallback from presentation forms (`do_fallback` needs Arabic script), and no pause between `rlig` and `calt`. Scripts not on the list get USE’s own topographical forms, from syllables rather than joining types (`setup_topographical_masks`, `:232`); that, and the rest of USE, is in [The Universal Shaping Engine](the-universal-shaping-engine.html).
+The same machine, but less around it. USE adds only `isol`, `init`, `medi` and `fina` (`:62`), in one stage after its reordering, so they run in LookupList order, with no pause between them and nothing for `fin2`, `fin3` or `med2`. It has no `stch`, no fallback from presentation forms (`do_fallback` needs Arabic script), and no pause between `rlig` and `calt`. Scripts not on the list get USE’s own topographical forms, from syllables rather than joining types (`setup_topographical_masks`, `:232`); that, and the rest of USE, is in [The Universal Shaping Engine](universal-shaping-engine.html).
 
 ## Configuration
 

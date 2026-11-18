@@ -1,0 +1,23 @@
+# Test font for “Choosing a script shaper”: a Turkish i through locl.
+# In Turkish, locl turns i into i.TRK, which looks the same but is a
+# different glyph: liga has no f i.TRK ligature, and smcp turns it into a
+# small capital with its dot. turkish-late.ttf is built from the same file
+# with the locl block moved to the end, after liga.
+languagesystem DFLT dflt;
+languagesystem latn dflt;
+languagesystem latn TRK;
+
+feature locl {
+  script latn;
+  language TRK exclude_dflt;
+  sub i by i.TRK;
+} locl;
+
+feature liga {
+  sub f i by f_i;
+} liga;
+
+feature smcp {
+  sub i by i.sc;
+  sub i.TRK by i.TRK.sc;
+} smcp;

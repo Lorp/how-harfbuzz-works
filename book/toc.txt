@@ -42,10 +42,10 @@ chapters/from-features-to-lookups.md
 chapters/choosing-a-script-shaper.md
 
 [part] The pipeline
-chapters/the-pipeline-step-by-step.md
+chapters/pipeline-step-by-step.md
 chapters/normalization.md
 chapters/gsub.md
-chapters/positioning-glyphs-gpos.md
+chapters/gpos.md
 chapters/fallbacks.md
 chapters/legacy-kern.md
 chapters/vertical-text.md
@@ -53,9 +53,9 @@ chapters/vertical-text.md
 [part] Scripts
 chapters/joining-scripts.md
 chapters/hebrew-thai-lao-and-hangul.md
-chapters/the-indic-model.md
+chapters/indic-model.md
 chapters/khmer-and-myanmar.md
-chapters/the-universal-shaping-engine.md
+chapters/universal-shaping-engine.md
 chapters/dotted-circles-and-broken-clusters.md
 
 [part] Apple Advanced Typography
@@ -89,13 +89,14 @@ chapters/other-tables.md
 [part] HarfBuzz and its relatives
 chapters/testing-harfbuzz.md
 chapters/harfrust.md
-chapters/the-family.md
+chapters/family.md
 
 [appendices]
 appendices/reading-harfbuzz-cpp.md
 appendices/compile-time-configuration.md
 appendices/regenerating-the-unicode-and-shaping-tables.md
 appendices/limits.md
+appendices/feature-order.md
 
 [end]
 end/glossary.md

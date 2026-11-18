@@ -210,7 +210,7 @@ from: start table GSUB
 to: end table GSUB
 ```
 
-`liga` has two lookups in this font, `ff` then `fi`, and the trace shows the second one making the ligature. The book’s traces come from a build with `HB_BUFFER_MESSAGE_MORE`, which adds the lines inside lookups, such as “ligating glyphs at 0,1”; an ordinary build prints only the starts and ends. [The pipeline, step by step](the-pipeline-step-by-step.html) reads a whole trace, and [Testing HarfBuzz](testing-harfbuzz.html#buffer-messages) explains the messages.
+`liga` has two lookups in this font, `ff` then `fi`, and the trace shows the second one making the ligature. The book’s traces come from a build with `HB_BUFFER_MESSAGE_MORE`, which adds the lines inside lookups, such as “ligating glyphs at 0,1”; an ordinary build prints only the starts and ends. [The pipeline, step by step](pipeline-step-by-step.html) reads a whole trace, and [Testing HarfBuzz](testing-harfbuzz.html#buffer-messages) explains the messages.
 
 ### Verifying
 

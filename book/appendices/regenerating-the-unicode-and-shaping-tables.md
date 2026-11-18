@@ -13,12 +13,12 @@ The scripts live in `src/`, and are of two kinds. The **data generators** read t
 | `hb-ot-shaper-arabic-table.hh` | `gen-arabic-table.py` | `ArabicShaping.txt`, `UnicodeData.txt`, `Blocks.txt` | [Joining scripts](joining-scripts.html#joining-types), [and fallback shaping](joining-scripts.html#shaping-without-gsub) |
 | `hb-ot-shaper-arabic-joining-list.hh` | `gen-arabic-joining-list.py` | `ArabicShaping.txt`, `Scripts.txt` | [Joining scripts](joining-scripts.html#joining-scripts-under-use) |
 | `hb-ot-shaper-arabic-pua.hh` | `gen-arabic-pua.py` | `ArabicPUASimplified.txt`, `ArabicPUATraditional.txt` (committed) | [Joining scripts](joining-scripts.html#legacy-encodings) |
-| `hb-ot-shaper-indic-table.cc` | `gen-indic-table.py` | `IndicSyllabicCategory.txt`, `IndicPositionalCategory.txt`, `Blocks.txt` | [The Indic model](the-indic-model.html#where-the-table-comes-from), [Khmer and Myanmar](khmer-and-myanmar.html#categories) |
-| `hb-ot-shaper-use-table.hh` | `gen-use-table.py` | seven UCD files and two of Microsoft’s (below) | [The Universal Shaping Engine](the-universal-shaping-engine.html#where-they-come-from) |
+| `hb-ot-shaper-indic-table.cc` | `gen-indic-table.py` | `IndicSyllabicCategory.txt`, `IndicPositionalCategory.txt`, `Blocks.txt` | [The Indic model](indic-model.html#where-the-table-comes-from), [Khmer and Myanmar](khmer-and-myanmar.html#categories) |
+| `hb-ot-shaper-use-table.hh` | `gen-use-table.py` | seven UCD files and two of Microsoft’s (below) | [The Universal Shaping Engine](universal-shaping-engine.html#where-they-come-from) |
 | `hb-ot-shaper-vowel-constraints.cc` | `gen-vowel-constraints.py` | `ms-use/IndicShapingInvalidCluster.txt` (committed), `Scripts.txt` | [Dotted circles and broken clusters](dotted-circles-and-broken-clusters.html#vowel-constraints) |
 | `hb-ot-tag-table.hh` | `gen-tag-table.py` | the OpenType language system tag page (HTML), the IANA language subtag registry | [Choosing a script shaper](choosing-a-script-shaper.html#from-a-language-to-language-system-tags) |
 | the array in `hb-ot-os2-unicode-ranges.hh` | `gen-os2-unicode-ranges.py` | a tab-separated copy of the `OS/2` Unicode range list, not in the repository | [Subsetting](subsetting.html#table-by-table) |
-| `hb-ot-shaper-*-machine.hh`, `hb-buffer-deserialize-*.hh` | `gen-ragel-artifacts.py`, run by meson | the `.rl` grammars | [The Indic model](the-indic-model.html#ragel), [below](#the-ragel-machines) |
+| `hb-ot-shaper-*-machine.hh`, `hb-buffer-deserialize-*.hh` | `gen-ragel-artifacts.py`, run by meson | the `.rl` grammars | [The Indic model](indic-model.html#ragel), [below](#the-ragel-machines) |
 
 All the data generators except `gen-arabic-joining-list.py` and `gen-os2-unicode-ranges.py` take a first argument `--rust`, which writes the same data as Rust for HarfRust, the Rust port. The Rust output goes to standard output like the C, and lives in HarfRust’s repository, not HarfBuzz’s.
 
@@ -84,7 +84,7 @@ Reads the two committed files, “Legacy Simplified Arabic encoding” and “Le
 
 ### gen-indic-table.py
 
-One table serves the Indic, Khmer and Myanmar shapers: a 16-bit value per code point, a category in the low byte and a position in the high byte. Only some blocks are kept (`ALLOWED_BLOCKS`, `gen-indic-table.py:25`), plus U+00A0 and U+25CC. The steps, from Unicode’s two Indic properties to HarfBuzz’s categories and positions, are described in [The Indic model](the-indic-model.html#where-the-table-comes-from).
+One table serves the Indic, Khmer and Myanmar shapers: a 16-bit value per code point, a category in the low byte and a position in the high byte. Only some blocks are kept (`ALLOWED_BLOCKS`, `gen-indic-table.py:25`), plus U+00A0 and U+25CC. The steps, from Unicode’s two Indic properties to HarfBuzz’s categories and positions, are described in [The Indic model](indic-model.html#where-the-table-comes-from).
 
 The hand-written parts are larger than the derivation:
 
@@ -106,7 +106,7 @@ HarfBuzz’s own corrections, in the order of the source:
 * joining letters and joiners, the generic bases (the same six characters as the Indic table’s placeholders, `:224`), three viramas with classes of their own (U+0DCA, U+1A60 and the other invisible stackers), and which default ignorables are `WJ` (excluding the Hangul fillers and U+1BCA0 to U+1BCA3, `:297`) are all decided in the predicates;
 * in `map_to_use` (`:382`), U+1CE2 to U+1CE8, four Tibetan signs and U+1CED get syllabic categories, and U+11302, U+11303 and U+114C1 the position `Top`; U+0F7F is excused from the check that a positioned category has a position (`:411`).
 
-[The Universal Shaping Engine](the-universal-shaping-engine.html#harfbuzzs-own-changes) has the full table, with what each comment says. Two of the TODOs explain themselves as missing values “in Unicode 13.0.0” (`:389`, `:393`). Whether Unicode 18.0 has since assigned them can’t be checked without the data files, which aren’t in the repository; if it has, the overrides are now redundant.
+[The Universal Shaping Engine](universal-shaping-engine.html#harfbuzzs-own-changes) has the full table, with what each comment says. Two of the TODOs explain themselves as missing values “in Unicode 13.0.0” (`:389`, `:393`). Whether Unicode 18.0 has since assigned them can’t be checked without the data files, which aren’t in the repository; if it has, the overrides are now redundant.
 
 The table is written twice, at packTab compression 5 and, under `HB_OPTIMIZE_SIZE`, 9. Its category names are macros for `USE(…)`, the export numbers of `hb-ot-shaper-use-machine.rl`, so the table and the machine must be regenerated together when a category is added. `src/test-use-table.cc` prints the category of every code point, which makes a before-and-after comparison of a regeneration easy (inferred use).
 
@@ -149,10 +149,10 @@ The helpers that write into `src/` do it so that the committed copies stay curre
 
 | Grammar | Generated header (lines) | Used by |
 |---|---|---|
-| `hb-ot-shaper-indic-machine.rl` | 1,302 | [The Indic model](the-indic-model.html#ragel) |
+| `hb-ot-shaper-indic-machine.rl` | 1,302 | [The Indic model](indic-model.html#ragel) |
 | `hb-ot-shaper-khmer-machine.rl` | 428 | [Khmer and Myanmar](khmer-and-myanmar.html#syllables) |
 | `hb-ot-shaper-myanmar-machine.rl` | 683 | [Khmer and Myanmar](khmer-and-myanmar.html) |
-| `hb-ot-shaper-use-machine.rl` | 1,112 | [The Universal Shaping Engine](the-universal-shaping-engine.html#the-grammar) |
+| `hb-ot-shaper-use-machine.rl` | 1,112 | [The Universal Shaping Engine](universal-shaping-engine.html#the-grammar) |
 | `hb-buffer-deserialize-json.rl` | 735 | `hb_buffer_deserialize_glyphs`, JSON ([Buffers](buffers.html#comparing-and-writing-out)) |
 | `hb-buffer-deserialize-text-glyphs.rl` | 591 | `hb_buffer_deserialize_glyphs`, text |
 | `hb-buffer-deserialize-text-unicode.rl` | 256 | `hb_buffer_deserialize_unicode` |

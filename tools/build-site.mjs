@@ -292,6 +292,77 @@ function blockTrace(body, fonts) {
   return `<div class="trace">${head}<table><tbody>${rows.join("")}</tbody></table></div>`;
 }
 
+// ```order: the order HarfBuzz runs features in, for one script.
+//
+//   fonts: order-dev2          (a pair, order-dev2-a.ttf and order-dev2-b.ttf)
+//   text: कि
+//   options: --features=smcp   (optional)
+//
+// The two fonts (fonts/feature-order/build-fonts.py) have one lookup per
+// feature, numbered alphabetically by tag in -a and in reverse in -b. The
+// trace lists every lookup in the plan in the order it runs. Within a stage
+// that is LookupList order, so the two fonts disagree; across stages they
+// agree. So a stage ends exactly where the lookups run so far are the same
+// set in both. The other steps the trace reports (normalization, reordering,
+// fallbacks) are shown between the stages, where they happen.
+function blockOrder(body, fonts) {
+  const f = parseFields(body);
+  const text = decode(f.text);
+  const opts = (f.options || "").split(/\s+/).filter(Boolean);
+  const steps = (suffix) => {
+    const out = runShape(fontPath(`${f.fonts}-${suffix}.ttf`, fonts), text, [...opts, "--trace"], true);
+    const seq = [];
+    let table = null;
+    for (const l of out.split("\n")) {
+      const m = l.match(/^trace: start (.*?)(?:\tbuffer: |$)/);
+      if (!m) continue;
+      const what = m[1];
+      const t = what.match(/^table (\w+)/);
+      const lk = what.match(/^lookup \d+ feature '(.{4})'/);
+      if (t) table = t[1];
+      else if (lk) seq.push({ table, tag: lk[1] });
+      else seq.push({ table: null, event: what });
+    }
+    return seq;
+  };
+  const a = steps("a"), b = steps("b");
+  const tagsOf = (s) => s.filter((x) => x.tag).map((x) => `${x.table} ${x.tag}`);
+  if ([...tagsOf(a)].sort().join() !== [...tagsOf(b)].sort().join())
+    throw new Error(`order: ${f.fonts}-a and -b ran different features`);
+  // Walk -a; a stage closes when the lookups seen so far, in this table, are
+  // the same set in -b's sequence up to the same count.
+  const bTags = tagsOf(b);
+  const rows = [];
+  let stage = [], seen = 0, table = null;
+  const counts = {};
+  const close = () => {
+    if (!stage.length) return;
+    counts[table] = (counts[table] || 0) + 1;
+    rows.push(`<tr><td class="stage">${table} ${counts[table]}</td><td>` +
+      stage.sort().map((t) => `<code>${esc(t)}</code>`).join(" ") + "</td></tr>");
+    stage = [];
+  };
+  const aSet = new Set();
+  for (const x of a) {
+    if (x.event) {
+      close();
+      rows.push(`<tr class="event"><td></td><td><i>${esc(x.event)}</i></td></tr>`);
+      continue;
+    }
+    if (x.table !== table) { close(); table = x.table; }
+    stage.push(x.tag);
+    aSet.add(`${x.table} ${x.tag}`);
+    seen++;
+    const bSet = new Set(bTags.slice(0, seen));
+    if ([...aSet].every((k) => bSet.has(k))) close();
+  }
+  close();
+  const head = `<div class="trace-head"><code>hb-shape ${esc(f.fonts)}-a.ttf ` +
+               `"${esc(shown(text))}" ${esc(opts.join(" "))} --trace</code>, and the same with ${esc(f.fonts)}-b.ttf</div>`;
+  return `<div class="trace order">${head}<table><thead><tr><th>Stage</th>` +
+         `<th>Features, or another step</th></tr></thead><tbody>${rows.join("")}</tbody></table></div>`;
+}
+
 // ```draw: outlines drawn by hb-vector, with hb-shape's output beneath.
 //
 //   font: variations/var.ttf
@@ -703,7 +774,7 @@ function runToolIn(exe, args, cwd) {
 }
 
 const BLOCKS = { views: blockViews, shape: blockShape, trace: blockTrace, command: blockCommand,
-                 draw: blockDraw, info: blockInfo, table: blockTable, raster: blockRaster,
+                 draw: blockDraw, info: blockInfo, table: blockTable, raster: blockRaster, order: blockOrder,
                  example: blockExample, demo: blockDemo };
 
 // Heading ids, made the way Python-Markdown's toc extension made them, so

@@ -2,7 +2,7 @@
 
 A font doesn’t have to have GPOS. Plenty of fonts in use have no layout tables at all, or a GSUB and no GPOS, or a `kern` table from the 1990s and nothing else. HarfBuzz still has to put the accent somewhere, give an em space its width and, where it can, kern. It does each of these itself, from Unicode properties and the font’s metrics, when the font doesn’t.
 
-This chapter is about those **fallbacks** inside the `ot` backend: what HarfBuzz does in place of a table the font lacks. There are four. Marks are placed over and under their bases from glyph extents (steps 10 and 20 in [The pipeline, step by step](the-pipeline-step-by-step.html)). Marks lose their advance, and are moved back to make up for it (step 18). Space characters the font has no glyph for get suitable widths (step 15). And kerning can come from the font funcs (step 17). They are not the `fallback` *backend*, which maps characters to glyphs and does nothing else ([hb_shape and its backends](hb_shape-and-its-backends.html#fallback)). Two other fallbacks belong to script shapers: Arabic shaped from the presentation forms in the `cmap` when GSUB lacks the joining features is in [Joining scripts](joining-scripts.html), and Thai shaped with the private-use glyphs of old Thai fonts is in [Hebrew, Thai, Lao and Hangul](hebrew-thai-lao-and-hangul.html).
+This chapter is about those **fallbacks** inside the `ot` backend: what HarfBuzz does in place of a table the font lacks. There are four. Marks are placed over and under their bases from glyph extents (steps 10 and 20 in [The pipeline, step by step](pipeline-step-by-step.html)). Marks lose their advance, and are moved back to make up for it (step 18). Space characters the font has no glyph for get suitable widths (step 15). And kerning can come from the font funcs (step 17). They are not the `fallback` *backend*, which maps characters to glyphs and does nothing else ([hb_shape and its backends](hb_shape-and-its-backends.html#fallback)). Two other fallbacks belong to script shapers: Arabic shaped from the presentation forms in the `cmap` when GSUB lacks the joining features is in [Joining scripts](joining-scripts.html), and Thai shaped with the private-use glyphs of old Thai fonts is in [Hebrew, Thai, Lao and Hangul](hebrew-thai-lao-and-hangul.html).
 
 The examples use a test font, `fonts/fallbacks/fallback.ttf`, with no GDEF, no GPOS and no `kern`, and variants of it with one table added. Unlike the other chapters’ fonts, its marks have outlines, drawn where a designer might draw them, because fallback positioning works from the boxes around glyphs’ ink. Its bases are boxes of different heights: `o` is 500 units tall, `l` and `f` 750. Every result on this page was produced by HarfBuzz {{hb}} when the page was built.
 
@@ -266,7 +266,7 @@ fallback.ttf  fi\u0301  --language=en
 fallback.ttf  f\u0301f\u0301i\u0301  --language=en
 ```
 
-The acute over the first half of `f_i` is 325 units, half of 650, to the left of the one over the second half. The three on `f_f_i` are a third of 1050 apart. GPOS, with an anchor for each component, can do better, as [GPOS: positioning glyphs](positioning-glyphs-gpos.html#mark-to-ligature) shows.
+The acute over the first half of `f_i` is 325 units, half of 650, to the left of the one over the second half. The three on `f_f_i` are a third of 1050 apart. GPOS, with an anchor for each component, can do better, as [GPOS: positioning glyphs](gpos.html#mark-to-ligature) shows.
 
 ### Hebrew and Arabic
 

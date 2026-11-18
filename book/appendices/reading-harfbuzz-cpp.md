@@ -267,7 +267,7 @@ What to watch for:
 * **`len ()` may walk.** A filtered iterator doesn’t know its length without counting.
 * **Lambdas that capture by reference tie the pipe to what they capture.** A pipe kept in `auto it` that holds a `[&]` lambda must not outlive the variables the lambda refers to.
 
-A good pipe to read next is in [the Universal Shaping Engine](the-universal-shaping-engine.html#what-the-machine-doesnt-see), where `hb_enumerate` numbers the glyphs before the filters drop some, so that results can be written back to the right positions.
+A good pipe to read next is in [the Universal Shaping Engine](universal-shaping-engine.html#what-the-machine-doesnt-see), where `hb_enumerate` numbers the glyphs before the filters drop some, so that results can be written back to the right positions.
 
 ## Small idioms
 

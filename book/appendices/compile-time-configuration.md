@@ -79,7 +79,7 @@ Four macros change how the code is compiled rather than what it can do.
 |---|---|
 | `HB_ALWAYS_INLINE` is dropped from hot functions, leaving inlining to the compiler | the sanitizer’s range checks (`hb-sanitize.hh:273`), the skipping iterator and `match_input`, `match_backtrack`, `match_lookahead` (`hb-ot-layout-gsubgpos.hh:865`–`:2235`), the AAT state-machine transitions (`hb-aat-layout-common.hh:57`), `unsafe_to_concat` (`hb-buffer.hh:523`), `Coverage::sanitize`, the priority queue |
 | loops unrolled four times are left rolled | delta decoding and adding (`hb-open-type.hh:1807`–`:2087`), `gvar` (`hb-ot-var-gvar-table.hh:691`) |
-| smaller, slower lookup tables | the Unicode tables (`hb-ucd-table.hh:764`) and the USE categories (`hb-ot-shaper-use-table.hh:106`): [Unicode inside HarfBuzz](unicode-inside-harfbuzz.html#three-sizes), [The Universal Shaping Engine](the-universal-shaping-engine.html#where-they-come-from) |
+| smaller, slower lookup tables | the Unicode tables (`hb-ucd-table.hh:764`) and the USE categories (`hb-ot-shaper-use-table.hh:106`): [Unicode inside HarfBuzz](unicode-inside-harfbuzz.html#three-sizes), [The Universal Shaping Engine](universal-shaping-engine.html#where-they-come-from) |
 | fast paths that test for special cases are skipped | context rule sets search linearly (`hb-ot-layout-gsubgpos.hh:3356`); ligature sets don’t filter on the second glyph (`LigatureSet.hh:100`, [GSUB](gsub.html#the-second-glyph-fast-path)); the region scalar doesn’t skip zero peaks eight bytes at a time (`hb-ot-var-common.hh:161`); hashing doesn’t take an aligned path (`hb-algs.hh:464`) |
 
 The comment at `hb-aat-layout-common.hh:52` puts a figure on one of these: forcing the AAT transitions inline “is worth 3-10% instructions on morx/kerx-heavy fonts, for about 16KB of code”.
@@ -120,7 +120,7 @@ These are all the `HB_NO_*` macros that the {{hb}} source in `src/` tests or def
 | `HB_NO_FALLBACK_SHAPE` | the `fallback` backend (`hb-shaper-list.hh:68`) | `HB_NO_LEGACY` (`HB_MINI`) | [hb_shape and its backends](hb_shape-and-its-backends.html#fallback) |
 | `HB_NO_GDEF_CACHE` | GDEF’s cache of glyph properties and its mark-glyph-set bitmaps (`GDEF.hh:990`) | `HB_MINIMIZE_MEMORY_USAGE` (`HB_TINY`) | [GSUB](gsub.html#glyph-properties) |
 | `HB_NO_GETENV` | reading `HB_SHAPER_LIST`, `HB_FONT_FUNCS` and `HB_FACE_LOADER`: `getenv` returns null (`hb.hh:439`) | `HB_LEAN`; Windows CE and non-desktop Windows (`hb.hh:422`) | [hb_shape and its backends](hb_shape-and-its-backends.html#hb_shaper_list), [Blobs, faces and lazy tables](blobs-faces-and-lazy-tables.html#face-loaders) |
-| `HB_NO_HINTING` | hinting Device tables and anchor format 2’s contour points (`hb-ot-layout-common.hh:6410`, `AnchorFormat2.hh:30`) | `HB_LEAN` | [GPOS](positioning-glyphs-gpos.html#device-tables) |
+| `HB_NO_HINTING` | hinting Device tables and anchor format 2’s contour points (`hb-ot-layout-common.hh:6410`, `AnchorFormat2.hh:30`) | `HB_LEAN` | [GPOS](gpos.html#device-tables) |
 | `HB_NO_LANGUAGE_LONG` | complex BCP 47 tags and three-letter language codes in tag conversion (`hb-ot-tag.cc:328`) | — | [Choosing a script shaper](choosing-a-script-shaper.html#from-a-language-to-language-system-tags) |
 | `HB_NO_LANGUAGE_PRIVATE_SUBTAG` | the `-hbsc-` and `-hbot-` private-use subtags (`hb-ot-tag.cc:450`) | — | [Choosing a script shaper](choosing-a-script-shaper.html#naming-the-tags-directly) |
 | `HB_NO_LAYOUT_COLLECT_GLYPHS` | `hb_ot_layout_lookup_collect_glyphs` (`hb-ot-layout.cc:1386`) | `HB_LEAN` | — |
@@ -145,7 +145,7 @@ These are all the `HB_NO_*` macros that the {{hb}} source in `src/` tests or def
 | `HB_NO_OT_KERN` | the `kern` table slot and `hb_ot_layout_has_kerning` | `HB_NO_LEGACY` (`HB_MINI`) | [Legacy kern](legacy-kern.html) |
 | `HB_NO_OT_LAYOUT` | the GDEF, GSUB and GPOS slots and `hb-ot-layout.cc` | `HB_NO_OT` | [GSUB](gsub.html) |
 | `HB_NO_OT_LAYOUT_BLOCKLIST` | the check for known-broken GDEF, GSUB and GPOS tables (`hb-ot-layout.cc:156`) | `HB_NO_LEGACY` (`HB_MINI`) | [Trust nothing: the sanitizer](trust-nothing-the-sanitizer.html#a-list-of-known-bad-fonts) |
-| `HB_NO_OT_LAYOUT_LOOKUP_CACHE` | the per-subtable caches of the first eight subtables (`hb-ot-layout-gsubgpos.hh:1443`) | `HB_MINIMIZE_MEMORY_USAGE` (`HB_TINY`) | [GPOS](positioning-glyphs-gpos.html#pair-adjustment) |
+| `HB_NO_OT_LAYOUT_LOOKUP_CACHE` | the per-subtable caches of the first eight subtables (`hb-ot-layout-gsubgpos.hh:1443`) | `HB_MINIMIZE_MEMORY_USAGE` (`HB_TINY`) | [GPOS](gpos.html#pair-adjustment) |
 | `HB_NO_OT_NAME_LANGUAGE` | turning a `name` record’s language ID into an `hb_language_t` (`OT/name/name.hh:99`) | `HB_NO_NAME` (`HB_LEAN`) | [Other tables](other-tables.html) |
 | `HB_NO_OT_NAME_LANGUAGE_AAT` | the same through `ltag` (`OT/name/name.hh:109`) | `HB_NO_AAT` (`HB_MINI`) | [AAT inside HarfBuzz](aat-inside-harfbuzz.html#feat-and-ltag) |
 | `HB_NO_OT_RULESETS_FAST_PATH` | the second-glyph filter in context rule sets and ligature sets (`hb-ot-layout-gsubgpos.hh:3355`, `LigatureSet.hh:99`) | `HB_OPTIMIZE_SIZE_MORE` (`HB_TINY`) | [GSUB](gsub.html#the-second-glyph-fast-path) |
@@ -245,7 +245,7 @@ The options in `meson_options.txt` decide what is built and linked. Most of them
 | `tests`, `benchmark` | enabled, disabled | the test suites ([Testing HarfBuzz](testing-harfbuzz.html)) and the benchmarks |
 | `docs`, `doc_tests` | auto, false | the gtk-doc reference, and its checks |
 | `with_libstdcxx` | false | links with a C++ linker; by default HarfBuzz is linked with a C linker and doesn’t depend on libstdc++ (`src/meson.build:497`) |
-| `ragel_subproject` | false | builds Ragel if no suitable one is installed ([The Indic model](the-indic-model.html#ragel)) |
+| `ragel_subproject` | false | builds Ragel if no suitable one is installed ([The Indic model](indic-model.html#ragel)) |
 | `fuzzer_ldflags` | empty | extra link flags for the fuzzers |
 | `cmakepackagedir` | `libdir/cmake` | where the CMake package files go |
 

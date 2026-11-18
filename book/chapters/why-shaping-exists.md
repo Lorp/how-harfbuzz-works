@@ -196,7 +196,7 @@ from: start table GSUB
 to: end table GSUB
 ```
 
-The reordering appears in the trace as two steps of its own, “reordering indic initial” and “reordering indic final”, which run between stages of lookups (this font’s one Devanagari lookup, `akhn`, has nothing to do here, so the trace leaves it out). How the shaper decides what is a base, and how the font’s own lookups steer that, is in [The Indic model](the-indic-model.html). The shaper is chosen by the script tag the font has as well as by the text: a Devanagari font with only `DFLT` or `latn` scripts in its `GSUB` gets the default shaper and no reordering at all, as [Choosing a script shaper](choosing-a-script-shaper.html) explains.
+The reordering appears in the trace as two steps of its own, “reordering indic initial” and “reordering indic final”, which run between stages of lookups (this font’s one Devanagari lookup, `akhn`, has nothing to do here, so the trace leaves it out). How the shaper decides what is a base, and how the font’s own lookups steer that, is in [The Indic model](indic-model.html). The shaper is chosen by the script tag the font has as well as by the text: a Devanagari font with only `DFLT` or `latn` scripts in its `GSUB` gets the default shaper and no reordering at all, as [Choosing a script shaper](choosing-a-script-shaper.html) explains.
 
 ### Glyphs placed on other glyphs: marks
 
@@ -282,7 +282,7 @@ Microsoft took the other road. Its TrueType Open, developed further with Adobe a
 
 Because the script knowledge lived in Uniscribe, Uniscribe’s behavior became, in practice, part of the specification. Fonts were made and tested on Windows, so they worked with what Uniscribe did, including where it differed from what the documents said. Any other engine that wanted those fonts to work had to find out what Uniscribe did, often by testing it. HarfBuzz’s source is full of the results. The Indic shaper corrects a sentence of Microsoft’s Devanagari specification with “Testing, with Windows 7 Uniscribe and Devanagari shows that the behavior is best described as…” (`hb-ot-shaper-indic.cc:1111`). The Khmer shaper applies its basic features without pauses because “testing suggests that Uniscribe does NOT pause between basic features” (`hb-ot-shaper-khmer.cc:110`). The Hangul shaper leaves `calt` off for jamo because Uniscribe does (`hb-ot-shaper-hangul.cc:69`). The [GSUB chapter](gsub.html#multiple-substitution) showed another: a multiple substitution may delete a glyph, though the specification says it can’t, because Uniscribe allows it.
 
-Microsoft later added a single engine for many of the scripts its other engines didn’t cover, the Universal Shaping Engine, driven by Unicode character properties instead of rules written for each script. HarfBuzz implemented it in its 1.0.0 release, in July 2015, and its `NEWS` file for that release links to Microsoft’s announcement. It has its own chapter, [The Universal Shaping Engine](the-universal-shaping-engine.html).
+Microsoft later added a single engine for many of the scripts its other engines didn’t cover, the Universal Shaping Engine, driven by Unicode character properties instead of rules written for each script. HarfBuzz implemented it in its 1.0.0 release, in July 2015, and its `NEWS` file for that release links to Microsoft’s announcement. It has its own chapter, [The Universal Shaping Engine](universal-shaping-engine.html).
 
 ### ICU’s LayoutEngine
 

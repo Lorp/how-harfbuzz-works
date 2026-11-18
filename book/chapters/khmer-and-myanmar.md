@@ -1,6 +1,6 @@
 # Khmer and Myanmar
 
-Khmer and Myanmar are written with scripts of the Brahmi family, like the nine of [the Indic model](the-indic-model.html), and each has a shaper of its own. Both began inside the Indic shaper: `NEWS` for 0.9.2 announces a “New Indic shaper, supporting main Indic scripts, Sinhala, and Khmer”, 0.9.13 a “New Win8-style Myanmar shaper”, and 1.7.5 says “Separate Khmer shaper from Indic.” What they kept is the machinery: the generated table of categories, a Ragel scanner over them, the `syllable` byte, `foreach_syllable`, a stable sort by position, and dotted circles for broken clusters.
+Khmer and Myanmar are written with scripts of the Brahmi family, like the nine of [the Indic model](indic-model.html), and each has a shaper of its own. Both began inside the Indic shaper: `NEWS` for 0.9.2 announces a “New Indic shaper, supporting main Indic scripts, Sinhala, and Khmer”, 0.9.13 a “New Win8-style Myanmar shaper”, and 1.7.5 says “Separate Khmer shaper from Indic.” What they kept is the machinery: the generated table of categories, a Ragel scanner over them, the `syllable` byte, `foreach_syllable`, a stable sort by position, and dotted circles for broken clusters.
 
 What they dropped is most of the Indic shaper’s cleverness. Neither asks the font which consonant is the base, neither has a final reordering, and neither sets more than a handful of mask bits. Each reorders a syllable once, before its basic features, in the order Microsoft’s specification for the script gives, and then lets the font’s lookups do the rest. The two differ from each other in one way that matters to fonts: Khmer’s basic features run together, Myanmar’s one at a time.
 
@@ -254,7 +254,7 @@ main := |*
 *|;
 ```
 
-A **kinzi** is NGA (or RA, or MON NGA) + ASAT + VIRAMA before a consonant, which writes the first consonant as a small mark above the second: it is Myanmar’s counterpart of the reph. A **Myanmar consonant syllable** is an optional kinzi, a consonant, independent vowel or placeholder, any number of stacked consonants (VIRAMA + consonant), then ASATs, the medials in their Unicode order, the vowel signs, the anusvaras and dot below, any number of post-base vowel groups and tone groups, and a joiner at the end. The tone groups repeat since 10.2.0, which `NEWS` records as “Allow all Myanmar tone marks (including visarga) in any order.” The pattern follows the specification’s cluster rule nearly term for term, without its limit of 31 characters to a sequence; HarfBuzz’s own limit, 64 glyphs to a syllable, applies here as in the Indic shaper ([A limit on syllable length](the-indic-model.html#a-limit-on-syllable-length)). A joiner, or a post-base syllable modifier, alone is a **non-Myanmar cluster**, not a broken one: it comes before `broken_cluster` in the scanner, and the two match the same length.
+A **kinzi** is NGA (or RA, or MON NGA) + ASAT + VIRAMA before a consonant, which writes the first consonant as a small mark above the second: it is Myanmar’s counterpart of the reph. A **Myanmar consonant syllable** is an optional kinzi, a consonant, independent vowel or placeholder, any number of stacked consonants (VIRAMA + consonant), then ASATs, the medials in their Unicode order, the vowel signs, the anusvaras and dot below, any number of post-base vowel groups and tone groups, and a joiner at the end. The tone groups repeat since 10.2.0, which `NEWS` records as “Allow all Myanmar tone marks (including visarga) in any order.” The pattern follows the specification’s cluster rule nearly term for term, without its limit of 31 characters to a sequence; HarfBuzz’s own limit, 64 glyphs to a syllable, applies here as in the Indic shaper ([A limit on syllable length](indic-model.html#a-limit-on-syllable-length)). A joiner, or a post-base syllable modifier, alone is a **non-Myanmar cluster**, not a broken one: it comes before `broken_cluster` in the scanner, and the two match the same length.
 
 ### Features and stages
 
@@ -271,7 +271,7 @@ A **kinzi** is NGA (or RA, or MON NGA) + ASAT + VIRAMA before a consonant, which
 
 First the kinzi and the base. If the syllable starts with `Ra`, `As`, `H`, those three are a kinzi: no font is asked, as the Indic shaper asks `rphf` about a reph. The base is the *first* consonant after it (`:203`), where the Indic base search takes the last that has no below-base or post-base form. Myanmar’s stacked consonants always go below the first, so there is nothing to decide.
 
-Then every glyph gets a position from the Indic list ([Categories and positions](the-indic-model.html#categories-and-positions)), in a loop that “may be ugly, but it implements all of Myanmar reordering!” (`:213`):
+Then every glyph gets a position from the Indic list ([Categories and positions](indic-model.html#categories-and-positions)), in a loop that “may be ugly, but it implements all of Myanmar reordering!” (`:213`):
 
 | Glyphs | Position |
 |---|---|

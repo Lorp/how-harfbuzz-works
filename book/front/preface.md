@@ -1,6 +1,8 @@
 # Preface
 
-In 2007 Yannis Haralambous’s *Fonts & Encodings* gave a generation of type designers and programmers one place to learn how characters become glyphs. Much of it has aged well, but its picture of shaping hasn’t. Uniscribe and ATSUI have given way to one open-source engine, HarfBuzz, which now shapes text for almost everything.
+In 2007 Yannis Haralambous’ *Fonts & Encodings* gave a generation of type designers and programmers one place to learn how characters become glyphs. Much of its 1,000 pages has aged well, but its picture of shaping hasn’t. Uniscribe and ATSUI have given way to one open-source engine, HarfBuzz, which now shapes text for almost everything.
+
+Simon Cozens’ [*Fonts and Layout for Global Scripts*](https://simoncozens.github.io/fonts-and-layout/) is the closest book since, written 2016–2021 and published on GitHub. It teaches the font maker’s side: how to write OpenType features for the world’s scripts, and check them with HarfBuzz. It was to go on to the programs that use fonts, with a chapter on HarfBuzz, but that half was never written. This book is about that side.
 
 HarfBuzz is well documented as a library to call. This book is about what happens inside it. It follows a buffer of characters through HarfBuzz, from the moment text arrives to the moment positioned glyphs leave, and explains each step from the code that does it.
 

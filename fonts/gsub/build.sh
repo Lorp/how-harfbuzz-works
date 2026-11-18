@@ -7,4 +7,5 @@ T=../../tools
 ${PYTHON:-python3} $T/build-test-font.py ligatures.fea ligatures.ttf
 ${PYTHON:-python3} $T/build-test-font.py ccmp-first.fea ccmp-first.ttf
 ${PYTHON:-python3} $T/build-test-font.py ligatures.fea shortest-first.ttf --shortest-first
+${PYTHON:-python3} $T/build-test-font.py constructs.fea constructs.ttf
 ${PYTHON:-python3} $T/font-views.py *.ttf

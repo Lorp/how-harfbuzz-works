@@ -61,7 +61,7 @@ HarfBuzz’s normalization changes only the characters it asks the font for. The
 
 ## Where it runs
 
-Normalization is the second thing `hb_ot_substitute_default` does (`hb-ot-shape.cc:882`), after mirroring and vertical forms (`hb_ot_rotate_chars`) and before the shaper sets its feature masks. By then the text is in the script’s native direction and the shaper’s `preprocess_text` has run. [The pipeline, step by step](the-pipeline-step-by-step.html) shows where this sits in the whole of shaping. In outline (`:882`, trimmed):
+Normalization is the second thing `hb_ot_substitute_default` does (`hb-ot-shape.cc:882`), after mirroring and vertical forms (`hb_ot_rotate_chars`) and before the shaper sets its feature masks. By then the text is in the script’s native direction and the shaper’s `preprocess_text` has run. [The pipeline, step by step](pipeline-step-by-step.html) shows where this sits in the whole of shaping. In outline (`:882`, trimmed):
 
 ```c++
   hb_ot_rotate_chars (c);
@@ -371,7 +371,7 @@ norm.ttf  o\u0308\u0304  --no-positions
 
 Typed precomposed, *ȫ* has its glyph. Typed as *o*, dieresis, macron, it doesn’t: *o* and the dieresis would make *ö*, which the font lacks, so they stay apart, and the dieresis then blocks the macron. This is the case the design comment means when it says that rendering all equivalent strings alike would need a search HarfBuzz doesn’t do.
 
-> For type designers: if a font has a precomposed glyph for a letter with two marks, it should also have the letter with the first of them. Otherwise, text typed with combining marks won’t reach the precomposed glyph.
+> For type designers: if a font has a precomposed glyph for a letter with two marks, it should also have the letter with the first of them. Otherwise, text typed with combining marks won’t reach the precomposed glyph. “A detour about diacritics” in Simon Cozens’ [*Fonts and Layout for Global Scripts*](https://simoncozens.github.io/fonts-and-layout/localisation.html#a-detour-about-diacritics) gives a font maker’s reasons for drawing precomposed glyphs at all.
 
 ### Clusters when composing
 
@@ -386,7 +386,7 @@ A shaper can replace both of the Unicode funcs’ functions used here, with its 
 * **USE.** Its `compose` (`hb-ot-shaper-use.cc:482`) has the same rule about marks.
 * **Hebrew.** The shaper composes the presentation forms that Unicode’s composition excludes, such as YOD + HIRIQ into U+FB1D, for “old fonts”: only when Unicode composition fails, and only if the plan has no `mark` feature (`hb-ot-shaper-hebrew.cc:81`). That is the one use of `has_gpos_mark` left in normalization. `HB_NO_OT_SHAPER_HEBREW_FALLBACK` leaves it out.
 
-The script chapters, [The Indic model](the-indic-model.html), [Khmer and Myanmar](khmer-and-myanmar.html) and [The Universal Shaping Engine](the-universal-shaping-engine.html), say why each script needs them.
+The script chapters, [The Indic model](indic-model.html), [Khmer and Myanmar](khmer-and-myanmar.html) and [The Universal Shaping Engine](universal-shaping-engine.html), say why each script needs them.
 
 ## The short circuit, and its price
 

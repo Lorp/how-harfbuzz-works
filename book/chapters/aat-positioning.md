@@ -1,6 +1,6 @@
 # AAT positioning
 
-Apple’s fonts position glyphs with tables of their own. `kerx`, the extended kerning table, does what Apple’s `kern` did and more: pairs, classes, state machines, and attaching one glyph to a point on another, with `ankr` holding the points. `trak` adds space between letters, or takes it away, by an amount that depends on the point size. HarfBuzz reads all three, in the same step of the pipeline as GPOS ([The pipeline, step by step](the-pipeline-step-by-step.html), step 17).
+Apple’s fonts position glyphs with tables of their own. `kerx`, the extended kerning table, does what Apple’s `kern` did and more: pairs, classes, state machines, and attaching one glyph to a point on another, with `ankr` holding the points. `trak` adds space between letters, or takes it away, by an amount that depends on the point size. HarfBuzz reads all three, in the same step of the pipeline as GPOS ([The pipeline, step by step](pipeline-step-by-step.html), step 17).
 
 `kerx` is mostly `kern` with wider fields, and HarfBuzz runs both with the same code. [Legacy kern](legacy-kern.html) explains that code: the subtable loop, the kern machine that applies a pair, the coverage bits, cross-stream kerning. This chapter says what is different for `kerx`, then covers what only `kerx` has, when the plan uses it, and `trak`. The state-machine driver that `kerx` formats 1 and 4 run on is in [AAT inside HarfBuzz](aat-inside-harfbuzz.html).
 
@@ -169,7 +169,7 @@ o.attach_type() = ATTACH_TYPE_MARK;
 o.attach_chain() = (int) mark - (int) buffer->idx;
 ```
 
-So the acute’s offset becomes the difference between the two anchors, and it is linked to the marked glyph as a GPOS mark is linked to its base. When attachments are resolved after positioning, the advances between the two are taken off ([Resolving attachments](positioning-glyphs-gpos.html#resolving-attachments)). The trace shows the offsets as the subtable leaves them, before that:
+So the acute’s offset becomes the difference between the two anchors, and it is linked to the marked glyph as a GPOS mark is linked to its base. When attachments are resolved after positioning, the advances between the two are taken off ([Resolving attachments](gpos.html#resolving-attachments)). The trace shows the offsets as the subtable leaves them, before that:
 
 ```trace
 font: anchors.ttf
@@ -206,7 +206,7 @@ Control point actions ask the font funcs for a point of the glyph’s outline, w
 points.ttf  A\u0301o\u0301  --language=en
 ```
 
-With the default funcs, nothing is attached, and the acutes are left where their outlines put them. This book’s build of HarfBuzz has no FreeType, so the same font with `--font-funcs=ft` can’t be shown here. GPOS’s anchor format 2, which also names an outline point, falls back to its x and y when the point can’t be found ([Anchors](positioning-glyphs-gpos.html#anchors)); a `kerx` control point action has nothing to fall back to.
+With the default funcs, nothing is attached, and the acutes are left where their outlines put them. This book’s build of HarfBuzz has no FreeType, so the same font with `--font-funcs=ft` can’t be shown here. GPOS’s anchor format 2, which also names an outline point, falls back to its x and y when the point can’t be found ([Anchors](gpos.html#anchors)); a `kerx` control point action has nothing to fall back to.
 
 ### Before and after
 

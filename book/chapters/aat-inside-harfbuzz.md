@@ -29,12 +29,12 @@ latin-gsub.ttf  fi fl  --direction=ttb
 
 Horizontally, only `morx`’s ligature is made. Vertically, the font’s GSUB rules out `morx`, and only GSUB’s is.
 
-When the plan uses `morx`, step 13 of [the pipeline](the-pipeline-step-by-step.html#substituting) calls `hb_aat_layout_substitute` (`hb-ot-shape.cc:916`) instead of the GSUB lookups. Four things follow:
+When the plan uses `morx`, step 13 of [the pipeline](pipeline-step-by-step.html#substituting) calls `hb_aat_layout_substitute` (`hb-ot-shape.cc:916`) instead of the GSUB lookups. Four things follow:
 
 * **No GSUB.** Not one GSUB lookup runs, not even `ccmp` or `rvrn`. The OpenType map is still built, from the same features, because GPOS may still use it.
 * **The `dumber` shaper.** The planner replaces any script shaper but the default one with `dumber`, which reorders nothing and inserts no dotted circles ([AAT fonts](choosing-a-script-shaper.html#aat-fonts)). The font is expected to do all of that itself.
 * **Glyph classes.** If the font has no GDEF classes, they are made from Unicode before `morx` runs, as they would be for GSUB. If it has GDEF, every glyph `morx` writes gets its class from GDEF (`hb-aat-layout-common.hh:202–281`).
-* **Deleted glyphs.** Glyphs that `morx` deletes stay in the buffer, marked, until GPOS is about to run, or until after positioning if it isn’t ([step 22](the-pipeline-step-by-step.html#after-positioning)).
+* **Deleted glyphs.** Glyphs that `morx` deletes stay in the buffer, marked, until GPOS is about to run, or until after positioning if it isn’t ([step 22](pipeline-step-by-step.html#after-positioning)).
 
 Whether GPOS, `kerx` or `kern` then positions the glyphs is decided separately: see [AAT positioning](aat-positioning.html), and [Fallbacks](fallbacks.html) for marks.
 

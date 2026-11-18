@@ -4,3 +4,4 @@
 set -e
 cd "$(dirname "$0")"
 ${PYTHON:-python3} build-fonts.py
+${PYTHON:-python3} turkish.py

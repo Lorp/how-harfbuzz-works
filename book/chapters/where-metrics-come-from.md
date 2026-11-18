@@ -20,7 +20,7 @@ These are the font functions hb-ot answers about metrics, and where it looks for
 
 Two things are missing from the list. hb-ot has no horizontal origin function, so every glyph’s horizontal origin is at (0, 0). And it has no kerning function: the old `kern` table is applied by the shaper, not looked up through the font (see [Legacy kern](legacy-kern.html)). The glyph mapping functions, which read `cmap`, are covered with [normalization](normalization.html).
 
-The shaper uses these answers in a few places. Advances and vertical origins are fetched for every glyph when positioning begins (see [the pipeline](the-pipeline-step-by-step.html)). Glyph extents are used by the fallback mark positioner, when a font has no GPOS mark attachment (see [Fallbacks](fallbacks.html)), and by the vertical-origin fallback below. Font extents are used by the vertical fallbacks, and by applications to space lines.
+The shaper uses these answers in a few places. Advances and vertical origins are fetched for every glyph when positioning begins (see [the pipeline](pipeline-step-by-step.html)). Glyph extents are used by the fallback mark positioner, when a font has no GPOS mark attachment (see [Fallbacks](fallbacks.html)), and by the vertical-origin fallback below. Font extents are used by the vertical fallbacks, and by applications to space lines.
 
 ## Advance widths: hmtx
 

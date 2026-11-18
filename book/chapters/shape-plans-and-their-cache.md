@@ -40,7 +40,7 @@ The **key** is what the plan was made for, and what the cache compares. The rest
 | `map` | the chosen script and language tags; each feature’s mask bits and shift; the GSUB and GPOS lookups, in stages, with the mask and flags each runs with | [From features to lookups](from-features-to-lookups.html) |
 | `aat_map` | the same for `morx`, when it is used instead of GSUB | [AAT inside HarfBuzz](aat-inside-harfbuzz.html) |
 | `data` | the script shaper’s own plan data, if it has any | the chapters on scripts |
-| `frac_mask`, `numr_mask`, `dnom_mask`, `rtlm_mask`, `kern_mask` | the masks of features the pipeline treats specially | [The pipeline, step by step](the-pipeline-step-by-step.html) |
+| `frac_mask`, `numr_mask`, `dnom_mask`, `rtlm_mask`, `kern_mask` | the masks of features the pipeline treats specially | [The pipeline, step by step](pipeline-step-by-step.html) |
 | `apply_gpos`, `apply_kern`, `apply_morx`, `zero_marks`, `fallback_mark_positioning` and other flags | decisions about which tables and fallbacks to use | [Fallbacks](fallbacks.html), [Legacy kern](legacy-kern.html) |
 
 Five script shapers keep `data`: Arabic, Hangul, Indic, Khmer and USE (their `data_create` functions). The Indic shaper, for instance, records there whether the font uses the old or the new Indic script tags, and prepares the tests it uses to ask whether `rphf`, `pref`, `blwf`, `pstf` and `vatu` would apply to a glyph (`hb-ot-shaper-indic.cc:315`), once per plan rather than once per run.

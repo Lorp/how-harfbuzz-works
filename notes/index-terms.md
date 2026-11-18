@@ -211,7 +211,7 @@ Code index:
 
 ## 15. The pipeline, step by step
 
-`chapters/the-pipeline-step-by-step.md`
+`chapters/pipeline-step-by-step.md`
 
 General index:
 
@@ -254,7 +254,7 @@ Code index:
 
 ## 18. GPOS: positioning glyphs
 
-`chapters/positioning-glyphs-gpos.md`
+`chapters/gpos.md`
 
 General index:
 
@@ -341,7 +341,7 @@ Code index:
 
 ## 24. The Indic model
 
-`chapters/the-indic-model.md`
+`chapters/indic-model.md`
 
 General index:
 
@@ -351,7 +351,7 @@ General index:
 Code index:
 
 * API and macros (6): `hb_indic_get_categories`, `hb_indic_would_substitute_feature_t`, `HB_MAX_SYLLABLE_LENGTH`, `hb_ot_layout_lookup_would_substitute_with_buffer`, `hb_stable_sort`, `hb_syllabic_clear_var`
-* Source files (16): `Blocks.txt`, `fonts/the-indic-model/build-fonts.py`, `gen-indic-table.py`, `gen-ragel-artifacts.py`, `hb-limits.hh`, `hb-ot-layout-gsubgpos.hh`, `hb-ot-layout.hh`, `hb-ot-shaper-indic-machine.hh`, `hb-ot-shaper-indic-machine.rl`, `hb-ot-shaper-indic-table.cc`, `hb-ot-shaper-indic.cc`, `hb-ot-shaper-indic.hh`, `hb-ot-shaper-syllabic.cc`, `IndicPositionalCategory.txt`, `IndicSyllabicCategory.txt`, `meson.build`
+* Source files (16): `Blocks.txt`, `fonts/indic-model/build-fonts.py`, `gen-indic-table.py`, `gen-ragel-artifacts.py`, `hb-limits.hh`, `hb-ot-layout-gsubgpos.hh`, `hb-ot-layout.hh`, `hb-ot-shaper-indic-machine.hh`, `hb-ot-shaper-indic-machine.rl`, `hb-ot-shaper-indic-table.cc`, `hb-ot-shaper-indic.cc`, `hb-ot-shaper-indic.hh`, `hb-ot-shaper-syllabic.cc`, `IndicPositionalCategory.txt`, `IndicSyllabicCategory.txt`, `meson.build`
 
 ## 25. Khmer and Myanmar
 
@@ -370,7 +370,7 @@ Code index:
 
 ## 26. The Universal Shaping Engine
 
-`chapters/the-universal-shaping-engine.md`
+`chapters/universal-shaping-engine.md`
 
 General index:
 
@@ -380,7 +380,7 @@ General index:
 Code index:
 
 * API and macros (5): `_hb_clear_substitution_flags`, `HB_OPTIMIZE_SIZE`, `HB_OT_SHAPE_ZERO_WIDTH_MARKS_BY_GDEF_EARLY`, `hb_syllabic_clear_var`, `hb_use_get_category`
-* Source files (19): `ArabicShaping.txt`, `Blocks.txt`, `DerivedCoreProperties.txt`, `fonts/the-universal-shaping-engine/build-fonts.py`, `gen-use-table.py`, `hb-ot-shaper-arabic.cc`, `hb-ot-shaper-syllabic.cc`, `hb-ot-shaper-use-machine.hh`, `hb-ot-shaper-use-machine.rl`, `hb-ot-shaper-use-table.hh`, `hb-ot-shaper-use.cc`, `IndicPositionalCategory.txt`, `IndicShapingInvalidCluster.txt`, `IndicSyllabicCategory.txt`, `ms-use/IndicPositionalCategory-Additional.txt`, `ms-use/IndicSyllabicCategory-Additional.txt`, `Scripts.txt`, `test-use-table.cc`, `UnicodeData.txt`
+* Source files (19): `ArabicShaping.txt`, `Blocks.txt`, `DerivedCoreProperties.txt`, `fonts/universal-shaping-engine/build-fonts.py`, `gen-use-table.py`, `hb-ot-shaper-arabic.cc`, `hb-ot-shaper-syllabic.cc`, `hb-ot-shaper-use-machine.hh`, `hb-ot-shaper-use-machine.rl`, `hb-ot-shaper-use-table.hh`, `hb-ot-shaper-use.cc`, `IndicPositionalCategory.txt`, `IndicShapingInvalidCluster.txt`, `IndicSyllabicCategory.txt`, `ms-use/IndicPositionalCategory-Additional.txt`, `ms-use/IndicSyllabicCategory-Additional.txt`, `Scripts.txt`, `test-use-table.cc`, `UnicodeData.txt`
 
 ## 27. Dotted circles and broken clusters
 
@@ -692,7 +692,7 @@ Code index:
 
 ## 48. The family
 
-`chapters/the-family.md`
+`chapters/family.md`
 
 General index:
 
@@ -1463,8 +1463,8 @@ Each term, with the chapters it is in.
 * `fonts/shape-plans-and-their-cache/build-fonts.py`: 12
 * `fonts/subsetting/build-subsetting-fonts.py`: 39
 * `fonts/subsetting/math-summary.txt`: 39
-* `fonts/the-indic-model/build-fonts.py`: 24
-* `fonts/the-universal-shaping-engine/build-fonts.py`: 26
+* `fonts/indic-model/build-fonts.py`: 24
+* `fonts/universal-shaping-engine/build-fonts.py`: 26
 * `fonts/variable-components/lsb.py`: 33
 * `fonts/variable-components/no-reset.py`: 33
 * `fonts/variable-components/varc-dump.py`: 33

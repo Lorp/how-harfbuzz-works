@@ -24,10 +24,11 @@ Before writing or editing anything in `book/`, read `notes/writing-brief.md`: it
 * ISO Open Font Format specification
 * This book as a PDF, with its page-numbering file, in `resources/how-harfbuzz-works/` (a snapshot, so it may lag behind the Markdown)
 * [The Raster Tragedy at Low-Resolution Revisited](http://rastertragedy.com) — Beat Stamm on rasterizing and hinting (© all rights reserved, don’t quote at length)
+* [Fonts and Layout for Global Scripts](https://simoncozens.github.io/fonts-and-layout/) — Simon Cozens on fonts, OpenType and feature programming from the font maker’s side; a copy is in `resources/fonts-and-layout/`. A second opinion on what the book tells font makers. CC BY-SA 4.0: cite and quote briefly with credit, but don’t adapt its text, or ShareAlike applies. Written 2016–2021, and its chapters on HarfBuzz, FreeType and Raqm are empty. `notes/fonts-and-layout.md` lists where it differs from HarfBuzz today
 * [OpenType registries](https://learn.microsoft.com/en-us/typography/opentype/spec/ttoreg) — script, language system, feature, baseline and axis tags. What is registered, as against what HarfBuzz accepts; their tags are in `tools/registries.json`, checked by `tools/check-tags.mjs`
 * [Microsoft’s script development specifications](https://learn.microsoft.com/en-us/typography/script-development/standard) — how Windows (Uniscribe, DirectWrite) shapes each complex script. What HarfBuzz is compatible with, and where it differs
 * [Apple’s TrueType Reference Manual](https://developer.apple.com/fonts/TrueType-Reference-Manual/) — AAT tables and Apple’s tags
-[HarfBuzz issues, discussions and pull requests](https://github.com/harfbuzz/harfbuzz/issues) — where decisions were argued and made: why a behavior exists, whether it is experimental, what other engines do. `gh` can search them
+* [HarfBuzz issues, discussions and pull requests](https://github.com/harfbuzz/harfbuzz/issues) — where decisions were argued and made: why a behavior exists, whether it is experimental, what other engines do. `gh` can search them
 * [Microsoft typography issues](https://github.com/MicrosoftDocs/typography-issues/issues) — known problems and proposals in the OpenType specification
 
 ## Beyond the code

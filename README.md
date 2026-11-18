@@ -180,6 +180,18 @@ package: harfbuzzjs@1.6.4
 ```
 ````
 
+### Show the order features run in: `order`
+
+This shapes a pair of fonts from `fonts/feature-order/`, which have one lookup for every feature HarfBuzz’s shapers ask for, numbered in opposite orders, and shows the stages HarfBuzz runs them in, with the reorderings and other steps between them. It is what the appendix “Feature order” is made of:
+
+````markdown
+```order
+fonts: order-dev2
+text: कि
+options: --features=smcp
+```
+````
+
 The other blocks, `raster`, `draw`, `info` and `table`, are described with the rest at the top of `tools/build-site.mjs`.
 
 `tools/build-site.mjs` has the full details at the top.

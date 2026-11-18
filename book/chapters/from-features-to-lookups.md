@@ -303,7 +303,7 @@ The same lookup in two stages is two entries, and runs twice.
 
 ## Running the map
 
-`hb_ot_map_t::apply` (`hb-ot-layout.cc:2069`) loops over the stages and their lookups. For each lookup it checks digests, sets the lookup’s mask and flags, and runs it; after each stage, it calls the pause function. `substitute` runs it for GSUB, `position` for GPOS. What happens inside one lookup is the subject of [GSUB: substituting glyphs](gsub.html#running-one-lookup), and where in the pipeline the two calls come is in [The pipeline, step by step](the-pipeline-step-by-step.html).
+`hb_ot_map_t::apply` (`hb-ot-layout.cc:2069`) loops over the stages and their lookups. For each lookup it checks digests, sets the lookup’s mask and flags, and runs it; after each stage, it calls the pause function. `substitute` runs it for GSUB, `position` for GPOS. What happens inside one lookup is the subject of [GSUB: substituting glyphs](gsub.html#running-one-lookup), and where in the pipeline the two calls come is in [The pipeline, step by step](pipeline-step-by-step.html).
 
 ## Where to read the source
 

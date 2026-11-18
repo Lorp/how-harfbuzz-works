@@ -8,7 +8,7 @@ Hebrew, Thai, Lao and Korean need no syllable machine and no reordering of lette
 | Thai | Thai, Lao | `preprocess_text` | splits SARA AM; for old Thai fonts, swaps marks for the font’s private-use glyphs |
 | Hangul | Hangul | `collect_features`, `override_features`, `data_create`, `preprocess_text`, `setup_masks` | decides, from the font, whether a syllable is one glyph or several jamo |
 
-How a script gets one of these shapers is in [Choosing a script shaper](choosing-a-script-shaper.html), and where each hook runs is in [The pipeline, step by step](the-pipeline-step-by-step.html#where-the-shapers-hooks-run). The examples use test fonts in `fonts/hebrew-thai-lao-and-hangul/`, built by `build-fonts.py` there from three small feature files. Most glyphs are boxes, named after their characters. The Thai ones are drawn so that a mark’s different forms can be told apart. Every result on this page was produced by HarfBuzz {{hb}} when the page was built.
+How a script gets one of these shapers is in [Choosing a script shaper](choosing-a-script-shaper.html), and where each hook runs is in [The pipeline, step by step](pipeline-step-by-step.html#where-the-shapers-hooks-run). The examples use test fonts in `fonts/hebrew-thai-lao-and-hangul/`, built by `build-fonts.py` there from three small feature files. Most glyphs are boxes, named after their characters. The Thai ones are drawn so that a mark’s different forms can be told apart. Every result on this page was produced by HarfBuzz {{hb}} when the page was built.
 
 ## Hebrew
 

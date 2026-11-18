@@ -90,7 +90,7 @@ The circle is there in the first line, before any of the shaper’s steps; the I
 
 ## Broken clusters
 
-The four syllabic shapers each divide the text into syllables with a grammar, as [the Indic model](the-indic-model.html#finding-syllables), [Khmer and Myanmar](khmer-and-myanmar.html) and [the Universal Shaping Engine](the-universal-shaping-engine.html) describe. Each grammar has a catch-all for marks with no base: a **broken cluster**, a syllable made of what may follow a base, with no base before it. Indic’s is `reph? n? complex_syllable_tail` (`hb-ot-shaper-indic-machine.rl:107`), Khmer’s `Robatic? (H.cn)* (H | syllable_tail)`, Myanmar’s `k? VS? syllable_tail`, and USE’s a tail with an optional leading repha. A lone vowel sign is one in all four. When the scanner finds one, it also sets a buffer scratch flag, `HB_BUFFER_SCRATCH_FLAG_HAS_BROKEN_SYLLABLE`, so a buffer with none can skip the next step at once.
+The four syllabic shapers each divide the text into syllables with a grammar, as [the Indic model](indic-model.html#finding-syllables), [Khmer and Myanmar](khmer-and-myanmar.html) and [the Universal Shaping Engine](universal-shaping-engine.html) describe. Each grammar has a catch-all for marks with no base: a **broken cluster**, a syllable made of what may follow a base, with no base before it. Indic’s is `reph? n? complex_syllable_tail` (`hb-ot-shaper-indic-machine.rl:107`), Khmer’s `Robatic? (H.cn)* (H | syllable_tail)`, Myanmar’s `k? VS? syllable_tail`, and USE’s a tail with an optional leading repha. A lone vowel sign is one in all four. When the scanner finds one, it also sets a buffer scratch flag, `HB_BUFFER_SCRATCH_FLAG_HAS_BROKEN_SYLLABLE`, so a buffer with none can skip the next step at once.
 
 Which sequences count as broken is the grammars’ business, and it changes with them. `NEWS` for 10.2.0, for instance, says “Don’t insert U+25CC DOTTED CIRCLE before superscript/subscript digits”.
 
@@ -182,11 +182,11 @@ to: end reordering indic initial
 
 ### After the repha
 
-A circle goes after any glyphs at the start of the syllable that have the shaper’s repha category: `Repha` in the Indic shaper, `R` in USE. Both are categories of characters, not of sequences. In the Indic table one character has `Repha`, U+0D4E MALAYALAM LETTER DOT REPH (`hb-ot-shaper-indic-table.cc:96`); in USE, `R` is given to characters whose Indic syllabic category is `Consonant_Preceding_Repha` or `Consonant_Prefixed` (`gen-use-table.py:282`). With the Malayalam glyphs of [the Indic model](the-indic-model.html)’s `scripts.ttf`, the dot reph is passed over, and then moved after its new base:
+A circle goes after any glyphs at the start of the syllable that have the shaper’s repha category: `Repha` in the Indic shaper, `R` in USE. Both are categories of characters, not of sequences. In the Indic table one character has `Repha`, U+0D4E MALAYALAM LETTER DOT REPH (`hb-ot-shaper-indic-table.cc:96`); in USE, `R` is given to characters whose Indic syllabic category is `Consonant_Preceding_Repha` or `Consonant_Prefixed` (`gen-use-table.py:282`). With the Malayalam glyphs of [the Indic model](indic-model.html)’s `scripts.ttf`, the dot reph is passed over, and then moved after its new base:
 
 ```shape
-the-indic-model/scripts.ttf  \u0D4E\u0D3E  --language=ml
-the-indic-model/scripts.ttf  \u0D4E\u0D3E  --language=ml  --cluster-level=1
+indic-model/scripts.ttf  \u0D4E\u0D3E  --language=ml
+indic-model/scripts.ttf  \u0D4E\u0D3E  --language=ml  --cluster-level=1
 ```
 
 The reph that RA and a virama make is not a character, and the insertion doesn’t pass over it, though the Indic grammar puts it in the broken cluster (`reph?`). So RA, virama and a vowel sign get their circle before the RA. The circle becomes the base, the RA a consonant after it, and the reph is never made: the Indic shaper makes one only of RA + virama at the start of a syllable. A circle typed in the same place gives a reph on the circle:
@@ -194,21 +194,21 @@ The reph that RA and a virama make is not a character, and the insertion doesn�
 ```shape
 circle.ttf  र\u094D\u0941  --language=hi
 circle.ttf  र\u094D\u25CC\u0941  --language=hi
-the-universal-shaping-engine/deva3.ttf  र\u094D\u0941  --language=hi
+universal-shaping-engine/deva3.ttf  र\u094D\u0941  --language=hi
 ```
 
 The first line shows RA with a visible virama after the circle, where the second has the reph; it looks like a bug (the comment “Insert dottedcircle after possible Repha” suggests the reph was meant to be kept). When the circle comes in before the shaper looks, from the vowel constraints below, the reph does form on it, and HarfBuzz’s own test, `indic-vowel-letter-spoofing.tests`, expects exactly that for RA, virama and LETTER I. The third line is USE, under `dev3`, where RA + virama is a syllable of its own, a virama-terminated cluster, so the vowel sign after it is broken by itself and the reph, formed in the first syllable, stays before the circle.
 
 ### Clusters
 
-The circle takes the cluster and the mask of the first glyph of the syllable, even when it goes in after a repha, as the second Malayalam line shows: the circle is in cluster 0 with the dot reph, not cluster 1 with the vowel sign. After a space, a vowel sign is a broken cluster in the Indic shaper (USE, as [Spaces as bases](the-universal-shaping-engine.html#spaces-as-bases) shows, lets it sit on the space):
+The circle takes the cluster and the mask of the first glyph of the syllable, even when it goes in after a repha, as the second Malayalam line shows: the circle is in cluster 0 with the dot reph, not cluster 1 with the vowel sign. After a space, a vowel sign is a broken cluster in the Indic shaper (USE, as [Spaces as bases](universal-shaping-engine.html#spaces-as-bases) shows, lets it sit on the space):
 
 ```shape
 circle.ttf  क \u093F  --language=hi
 circle.ttf  क \u093F  --language=hi  --cluster-level=1
 ```
 
-At the default cluster level, the vowel sign was already merged into the space’s cluster at step 4 ([The pipeline, step by step](the-pipeline-step-by-step.html#properties-and-clusters)), because a mark continues the grapheme before it, so the circle gets cluster 1. At level 1 nothing was merged, and it gets the vowel sign’s cluster, 2.
+At the default cluster level, the vowel sign was already merged into the space’s cluster at step 4 ([The pipeline, step by step](pipeline-step-by-step.html#properties-and-clusters)), because a mark continues the grapheme before it, so the circle gets cluster 1. At level 1 nothing was merged, and it gets the vowel sign’s cluster, 2.
 
 ### What the circle is to GDEF
 

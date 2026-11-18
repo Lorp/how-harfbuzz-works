@@ -1,8 +1,8 @@
 # GSUB: substituting glyphs
 
-By the time HarfBuzz opens a font’s GSUB table, the hard questions about *characters* have been answered. The text has been segmented, its script and direction are known, and it has been [normalized](normalization.html), which is where every character was mapped to a glyph through `cmap`. [The pipeline, step by step](the-pipeline-step-by-step.html#substituting) shows where GSUB comes in the whole of shaping. What arrives here is a buffer of glyph IDs, each still carrying the cluster number of the character it came from and a set of Unicode properties.
+By the time HarfBuzz opens a font’s GSUB table, the hard questions about *characters* have been answered. The text has been segmented, its script and direction are known, and it has been [normalized](normalization.html), which is where every character was mapped to a glyph through `cmap`. [The pipeline, step by step](pipeline-step-by-step.html#substituting) shows where GSUB comes in the whole of shaping. What arrives here is a buffer of glyph IDs, each still carrying the cluster number of the character it came from and a set of Unicode properties.
 
-GSUB’s job is to change *which* glyphs are in that buffer. It swaps one glyph for another, splits one into several, joins several into one, and does any of those only in certain surroundings. It never moves anything: positions are GPOS’s job, in the [next chapter](positioning-glyphs-gpos.html). This chapter is about how HarfBuzz reads GSUB and runs it: the order things happen in, which glyphs a lookup can see, and the many small decisions that the OpenType specification leaves open, which HarfBuzz settles in particular ways.
+GSUB’s job is to change *which* glyphs are in that buffer. It swaps one glyph for another, splits one into several, joins several into one, and does any of those only in certain surroundings. It never moves anything: positions are GPOS’s job, in the [next chapter](gpos.html). This chapter is about how HarfBuzz reads GSUB and runs it: the order things happen in, which glyphs a lookup can see, and the many small decisions that the OpenType specification leaves open, which HarfBuzz settles in particular ways.
 
 Every example comes from one small test font, built from the feature file `fonts/gsub/ligatures.fea` and two variants of it. Its glyphs are plain boxes, since only their names, their `cmap` and their layout tables matter here. Every shaping result and trace on this page was produced by running HarfBuzz {{hb}} on those fonts when the page was built.
 
@@ -161,7 +161,7 @@ ligatures.ttf  a  --features=salt=3
 ligatures.ttf  a  --features=salt=4
 ```
 
-The `rand` feature takes this one step further. HarfBuzz turns it on with the largest possible value, which Alternate substitution reads as “choose at random”. It picks using a simple pseudo-random generator, `minstd_rand`, whose state is kept in the buffer and starts at 1, so the same text shaped the same way gives the same “random” result. Applications can set the state with `hb_buffer_set_random_state`. Each choice moves the state on, so a later choice depends on every earlier one, and HarfBuzz marks the whole buffer unsafe to break: no part of it can be reshaped on its own and be sure of coming out the same. (The test font has no `rand` lookup.)
+The `rand` feature takes this one step further. HarfBuzz turns it on by default, in every application, with the largest possible value, which Alternate substitution reads as “choose at random”. It picks using a simple pseudo-random generator, `minstd_rand`, whose state is kept in the buffer and starts at 1, so the same text shaped the same way gives the same “random” result. Applications can set the state with `hb_buffer_set_random_state`. Each choice moves the state on, so a later choice depends on every earlier one, and HarfBuzz marks the whole buffer unsafe to break: no part of it can be reshaped on its own and be sure of coming out the same. (The test font has no `rand` lookup.)
 
 ### Glyph properties
 
@@ -202,7 +202,7 @@ Which default ignorables can be passed over depends on whether the glyph is part
 | input | passed over, unless the feature has manual ZWJ | blocks | block | passed over |
 | context | passed over | passed over, unless the feature has manual ZWNJ | block | passed over |
 
-So, in the default case, a zero-width joiner doesn’t stop a ligature, and a zero-width non-joiner does. That’s what they are for: ZWNJ asks for *no* joining. The “hidden” characters are default ignorables too, but they’re there to change the shaping, so GSUB never looks past them. The combining grapheme joiner, for example, is how a writer stops two marks from being reordered or combined (HarfBuzz issue #554). A CGJ that turns out to keep no marks apart loses its hidden bit during normalization, and is then passed over like any other default ignorable, as [Unicode inside HarfBuzz](unicode-inside-harfbuzz.html#cgj-sometimes) shows. GPOS has rules of its own, covered in the [next chapter](positioning-glyphs-gpos.html).
+So, in the default case, a zero-width joiner doesn’t stop a ligature, and a zero-width non-joiner does. That’s what they are for: ZWNJ asks for *no* joining. The “hidden” characters are default ignorables too, but they’re there to change the shaping, so GSUB never looks past them. The combining grapheme joiner, for example, is how a writer stops two marks from being reordered or combined (HarfBuzz issue #554). A CGJ that turns out to keep no marks apart loses its hidden bit during normalization, and is then passed over like any other default ignorable, as [Unicode inside HarfBuzz](unicode-inside-harfbuzz.html#cgj-sometimes) shows. GPOS has rules of its own, covered in the [next chapter](gpos.html).
 
 ```shape
 ligatures.ttf  fi
@@ -215,6 +215,8 @@ The joiners are still in the output. They have no glyph in this font, and late i
 The flags come from planning ([From features to lookups](from-features-to-lookups.html#the-flags)). For the default shaper, only `mark` and `mkmk` have them. The Arabic shaper gives manual ZWJ to nearly all its features, so that a ZWJ there really does block a ligature, and the Indic shaper gives both flags to its basic forms features (`nukt`, `akhn`, `rphf` and the rest). One further rule only applies to GSUB: in scripts whose shaper splits text into syllables, a lookup can be limited to one syllable at a time, so that no rule can match across a syllable boundary. The matcher checks for that too.
 
 ## The lookup types, as HarfBuzz runs them
+
+This section is about how HarfBuzz runs each type. For how to write each one in a feature file, with an example from a real script for most of them, see “Types of Substitution Rule” in Simon Cozens’ [*Fonts and Layout for Global Scripts*](https://simoncozens.github.io/fonts-and-layout/features-2.html#types-of-substitution-rule).
 
 ### Single substitution
 
@@ -294,7 +296,7 @@ The trace says “ligating glyphs at 0,2”: the components were found at positi
 2. It writes the ligature glyph in place of the first component and removes the others. The glyphs that were passed over aren’t removed: they are kept, in order, *after* the ligature.
 3. It gives the ligature a new **ligature ID**, and records its number of components. Each passed-over mark gets the same ligature ID and the number of the component it followed.
 
-That last step is what lets a mark find the right part of a ligature later on. GPOS’s mark-to-ligature attachment uses it to choose which of the ligature’s anchors to use. This font has no GPOS, so HarfBuzz positions the mark with its fallback positioner ([Fallbacks](fallbacks.html)), which divides the ligature into equal parts, one for each component. Even so, the effect shows (and [GPOS: positioning glyphs](positioning-glyphs-gpos.html) shows it with real anchors):
+That last step is what lets a mark find the right part of a ligature later on. GPOS’s mark-to-ligature attachment uses it to choose which of the ligature’s anchors to use. This font has no GPOS, so HarfBuzz positions the mark with its fallback positioner ([Fallbacks](fallbacks.html)), which divides the ligature into equal parts, one for each component. Even so, the effect shows (and [GPOS: positioning glyphs](gpos.html) shows it with real anchors):
 
 ```shape
 ligatures.ttf  f\u0301i
@@ -344,6 +346,105 @@ Nesting is limited. A lookup can nest 64 deep at most (`HB_MAX_NESTING_LEVEL`); 
 ### Extension
 
 An Extension subtable holds a 32-bit offset to a subtable of another type. It exists only because 16-bit offsets can’t reach far enough in large fonts. HarfBuzz follows the offset and carries on as if the subtable were there. Nothing else in this chapter changes for extension lookups.
+
+## What a feature file compiles to
+
+HarfBuzz never sees a feature file, only the lookups it was compiled to. Most rules compile to what they look like, but a few don’t, and HarfBuzz follows the lookups. This section shows four, compiled by feaLib from `constructs.fea`. Adobe’s *OpenType Feature File Specification* is the reference for the language itself.
+
+### An ignore rule
+
+The test font’s `calt` turns *f* into `a.alt1`, except before *i*:
+
+```
+feature calt {
+  ignore sub f' i;
+  sub f' by a.alt1;
+} calt;
+```
+
+That isn’t a rule and an exception to it. It is one chained-context lookup with two rules for *f*. The first has *i* as its lookahead and no nested lookups. The second calls a lookup that makes the substitution:
+
+```views
+font: constructs.ttf
+lookup: 0
+fea: constructs.fea calt
+print: spec fea
+```
+
+The rules for a glyph are tried in order, and the first that matches wins (`hb-ot-layout-gsubgpos.hh:4964`). Before *i*, the first rule matches, applies nothing, and so stops the second being tried. The lookup itself carries on at the next glyph: an `ignore` rule passes over one position, and doesn’t end the lookup.
+
+```shape
+constructs.ttf  fi  --language=en
+constructs.ttf  fe  --language=en
+```
+
+The *f* before *i* is left for `liga`, which makes `f_i`.
+
+### An inline contextual rule
+
+`sub f' by a.alt1` says what to substitute inside the rule. A chained-context rule can’t do that: it can only call another lookup. So feaLib made one, lookup 1, a single substitution that belongs to no feature:
+
+```views
+font: constructs.ttf
+lookup: 1
+fea: constructs.fea calt
+```
+
+It runs only when the chained rule calls it:
+
+```trace
+font: constructs.ttf
+text: fe
+options: --language=en
+from: start lookup 0
+to: end lookup 0
+```
+
+feaLib numbered it straight after the chained lookup, so it takes a number among the font’s own: the `liga` lookups written next are 2 and 3, not 1 and 2.
+
+### Rules of different types in one block
+
+A `feature` block can mix kinds of rule, but a lookup has only one type. feaLib starts a new lookup each time the type changes, and puts runs of rules of one type in the same lookup. The test font’s `liga` block has a ligature rule and then a single substitution:
+
+```
+feature liga {
+  sub f i by f_i;
+  sub x by e.init;
+} liga;
+```
+
+So `liga` has two lookups, 2 and 3. Each runs over the whole buffer before the next starts, so a later rule in the block sees what the earlier ones made, as if they had been written as separate lookups:
+
+```trace
+font: constructs.ttf
+text: fx
+options: --language=en
+from: start lookup 2
+to: end lookup 3
+skipped: yes
+```
+
+### Rules before the first script
+
+A rule before a feature block’s first `script` or `language` statement goes to every language system the font declares with `languagesystem`. A `language` statement then includes those rules too, unless it says `exclude_dflt`. The test font’s `salt` turns *a* into `a.alt2` for everyone, and *e* into `e.init` only in Turkish, which excludes the rest:
+
+```
+feature salt {
+  sub a by a.alt2;
+  script latn;
+  language TRK exclude_dflt;
+  sub e by e.init;
+} salt;
+```
+
+feaLib wrote two `salt` features into the FeatureList, one for the default language systems with lookup 4, and one for `TRK` with lookup 5 alone. HarfBuzz uses whichever the chosen language system lists ([Choosing a script shaper](choosing-a-script-shaper.html#from-a-language-to-language-system-tags)):
+
+```shape
+constructs.ttf  ae  --features=salt  --language=en
+constructs.ttf  ae  --features=salt  --language=tr
+```
+
+> For type designers: when a feature file seems to do something it doesn’t say, look at what it compiled to. `ttx -t GSUB` shows the lookups and which features use them, and a trace (`hb-shape --trace`, from a build with detailed traces) shows the order HarfBuzz runs them in.
 
 ## Clusters and safe breaking
 

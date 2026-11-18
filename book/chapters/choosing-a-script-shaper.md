@@ -204,7 +204,7 @@ indic-none.ttf  कि  --language=hi
 indic-none.ttf  क्र  --language=hi
 ```
 
-Under `dev2` everything works: the vowel sign moves before KA, the conjunct forms, and RA goes below. Under `dev3` the result is the same here, from a different shaper; [The Universal Shaping Engine](the-universal-shaping-engine.html) shows where the two part company. Under `DFLT` and `latn` nothing works. The vowel sign stays after KA, and `akhn` and `blwf` never run, though their lookups are under the very script that was chosen: they are Indic features, which only the Indic shaper and the USE ask for. The virama is placed by fallback mark positioning, which the default shaper has and the Indic shaper doesn’t.
+Under `dev2` everything works: the vowel sign moves before KA, the conjunct forms, and RA goes below. Under `dev3` the result is the same here, from a different shaper; [The Universal Shaping Engine](universal-shaping-engine.html) shows where the two part company. Under `DFLT` and `latn` nothing works. The vowel sign stays after KA, and `akhn` and `blwf` never run, though their lookups are under the very script that was chosen: they are Indic features, which only the Indic shaper and the USE ask for. The virama is placed by fallback mark positioning, which the default shaper has and the Indic shaper doesn’t.
 
 The traces show which shaper ran by the steps that appear. Under `dev2`, the Indic shaper’s `preprocess_text` runs, and its two reordering passes run as pauses inside GSUB:
 
@@ -241,7 +241,7 @@ indic_plan->is_old_spec = indic_plan->config->has_old_spec &&
                           ((plan->map.chosen_script[0] & 0x000000FFu) != '2');
 ```
 
-All nine Indic scripts have `has_old_spec` set. In the old mode, the shaper moves the first virama after the base to after the last consonant (`:669`), the order old fonts’ lookups expect: `ra virama`, not `virama ra`. It also merges clusters differently and sets the `blwf` mask on fewer glyphs; [The Indic model](the-indic-model.html) has the rest. This font’s `blwf` was written for the new order, so under `deva` it no longer matches:
+All nine Indic scripts have `has_old_spec` set. In the old mode, the shaper moves the first virama after the base to after the last consonant (`:669`), the order old fonts’ lookups expect: `ra virama`, not `virama ra`. It also merges clusters differently and sets the `blwf` mask on fewer glyphs; [The Indic model](indic-model.html) has the rest. This font’s `blwf` was written for the new order, so under `deva` it no longer matches:
 
 ```trace
 font: indic-deva.ttf
@@ -334,7 +334,7 @@ A script shaper is an `hb_ot_shaper_t` (`hb-ot-shaper.hh:67`): a table of hooks,
 | `zero_width_marks` | whether, and when, marks lose their advance | at planning |
 | `fallback_position` | whether fallback mark positioning, and legacy `kern`, may be used | at planning |
 
-Much of a shaper’s work is in the pauses that `collect_features` adds between GSUB stages, such as the Indic reordering passes ([From features to lookups](from-features-to-lookups.html)). [The pipeline, step by step](the-pipeline-step-by-step.html) shows where each hook runs. The default shaper’s hooks are all null.
+Much of a shaper’s work is in the pauses that `collect_features` adds between GSUB stages, such as the Indic reordering passes ([From features to lookups](from-features-to-lookups.html)). [The pipeline, step by step](pipeline-step-by-step.html) shows where each hook runs. The default shaper’s hooks are all null.
 
 ## What it means
 
@@ -359,6 +359,30 @@ The script tag in a font is not a label. It decides which shaper runs, and so wh
 * A Hebrew font needs `hebr` in GPOS, not just `DFLT`, or its GPOS is ignored.
 * A Syriac font under `DFLT` alone gets no joining. Under `latn` it does.
 * GSUB and GPOS are searched separately, and only GSUB’s answer picks the shaper. A font with no GSUB still gets the script’s shaper (for the Indic scripts, in its old mode).
+
+### Turkish i
+
+Turkish has a dotted and a dotless i, and its capital of *i* is *İ*, with a dot. A font usually gives Turkish its own *i* through `locl`, and the language system decides whether that happens. The test font `turkish.ttf`, from `fonts/choosing-a-script-shaper/turkish.fea`, has a `TRK` language system whose `locl` turns *i* into `i.TRK`, a glyph that looks the same. It has `liga`, with an *f i* ligature, and `smcp`, which turns *i* into `i.sc` and `i.TRK` into `i.TRK.sc`, a small capital that keeps its dot:
+
+```shape
+turkish.ttf  fi  --language=en
+turkish.ttf  fi  --language=tr
+turkish.ttf  i  --language=en  --features=smcp
+turkish.ttf  i  --language=tr  --features=smcp
+```
+
+`tr` gives `TRK`. In Turkish, `locl` has made `i.TRK` before `liga` and `smcp` run, so no ligature forms, since an *fi* ligature would hide the dot, and the small capital is the dotted one. Nothing in `liga` or `smcp` needs to know about Turkish: a different glyph is enough.
+
+That depends on the order of the lookups. Under the default shaper, `locl`, `liga` and `smcp` are in one stage ([Feature order](feature-order.html)), so `locl` comes first only if its lookup does. `turkish-late.ttf` is the same font with the `locl` block moved to the end of the feature file:
+
+```shape
+turkish-late.ttf  fi  --language=tr
+turkish-late.ttf  i  --language=tr  --features=smcp
+```
+
+Now `liga` and `smcp` reach the *i* first, and `locl` finds nothing to change. Under the Indic, Myanmar and USE shapers, `locl` runs in an early stage, before any reordering, but under the default shaper its place in the LookupList is all it has.
+
+For the font file’s side, see Simon Cozens’ *Fonts and Layout for Global Scripts*. [“Scripts and languages”](https://simoncozens.github.io/fonts-and-layout/features.html#scripts-and-languages) explains `languagesystem` and `exclude_dflt`, and [“Language-specific substitutes”](https://simoncozens.github.io/fonts-and-layout/localisation.html#language-specific-substitutes) and [“The letter ‘i’”](https://simoncozens.github.io/fonts-and-layout/localisation.html#the-letter-i) work through language-specific forms with `locl`, including Turkish i with small capitals and ligatures.
 
 ## Where to read the source
 

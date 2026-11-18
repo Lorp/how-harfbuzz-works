@@ -1,0 +1,27 @@
+# Test font for GSUB, “What a feature file becomes”: four feature-file
+# constructs whose compiled lookups aren't what they look like.
+languagesystem DFLT dflt;
+languagesystem latn dflt;
+languagesystem latn TRK;
+
+# An ignore rule, and an inline contextual rule: one chained lookup, which
+# calls a single substitution feaLib makes for it.
+feature calt {
+  ignore sub f' i;
+  sub f' by a.alt1;
+} calt;
+
+# Two kinds of rule in one block: feaLib makes a lookup for each.
+feature liga {
+  sub f i by f_i;
+  sub x by e.init;
+} liga;
+
+# A rule before the first script statement goes to every language system;
+# exclude_dflt keeps it out of Turkish.
+feature salt {
+  sub a by a.alt2;
+  script latn;
+  language TRK exclude_dflt;
+  sub e by e.init;
+} salt;

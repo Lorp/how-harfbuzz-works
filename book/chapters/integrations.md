@@ -164,7 +164,7 @@ Any language with a GObject introspection binding can then load the typelib at r
 
 ## Other language bindings
 
-Most programs that call HarfBuzz from another language use a binding written for that language instead. Those the HarfBuzz project hosts itself, harfbuzzjs (WebAssembly, for JavaScript) and uharfbuzz (Cython, for Python), are described in [The family](the-family.html#other-relatives), along with harfbuzz_rs for Rust. Two more are widely used:
+Most programs that call HarfBuzz from another language use a binding written for that language instead. Those the HarfBuzz project hosts itself, harfbuzzjs (WebAssembly, for JavaScript) and uharfbuzz (Cython, for Python), are described in [The family](family.html#other-relatives), along with harfbuzz_rs for Rust. Two more are widely used:
 
 * **harfbuzz-sys** and **harfbuzz**, from the Servo project, are “Rust bindings to the HarfBuzz text shaping engine” ([rust-harfbuzz](https://github.com/servo/rust-harfbuzz)). The repository has HarfBuzz as a Git submodule, built with the `bundled` feature. Its `harfbuzz-sys/Cargo.toml` has features named `coretext`, `directwrite` and `freetype`, all on by default, which expose this chapter’s integration layers to Rust.
 * **HarfBuzzSharp**, in the SkiaSharp repository, “provides .NET bindings for the HarfBuzz OpenType text shaping engine”, and pairs with SkiaSharp for rendering through `SkiaSharp.HarfBuzz` ([its README](https://github.com/mono/SkiaSharp/blob/main/binding/HarfBuzzSharp/PACKAGE-README.md)). The repository has a native-assets package for each platform it supports, from Android to WebAssembly (`binding/HarfBuzzSharp.NativeAssets.*`).

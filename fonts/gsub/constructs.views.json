@@ -1,0 +1,33 @@
+{
+ "font": "constructs.ttf",
+ "sha256": "3a73e15aea3984a497b0b07a1906b93b86a7fabe2ab27ff0a174d4bb46d31f98",
+ "lookups": {
+  "0": {
+   "ttx": "<Lookup index=\"0\">\n  <LookupType value=\"6\"/>\n  <LookupFlag value=\"0\"/>\n  <!-- SubTableCount=1 -->\n  <ChainContextSubst index=\"0\" Format=\"1\">\n    <Coverage>\n      <Glyph value=\"f\"/>\n    </Coverage>\n    <!-- ChainSubRuleSetCount=1 -->\n    <ChainSubRuleSet index=\"0\">\n      <!-- ChainSubRuleCount=2 -->\n      <ChainSubRule index=\"0\">\n        <!-- BacktrackGlyphCount=0 -->\n        <!-- InputGlyphCount=1 -->\n        <!-- LookAheadGlyphCount=1 -->\n        <LookAhead index=\"0\" value=\"i\"/>\n        <!-- SubstCount=0 -->\n      </ChainSubRule>\n      <ChainSubRule index=\"1\">\n        <!-- BacktrackGlyphCount=0 -->\n        <!-- InputGlyphCount=1 -->\n        <!-- LookAheadGlyphCount=0 -->\n        <!-- SubstCount=1 -->\n        <SubstLookupRecord index=\"0\">\n          <SequenceIndex value=\"0\"/>\n          <LookupListIndex value=\"1\"/>\n        </SubstLookupRecord>\n      </ChainSubRule>\n    </ChainSubRuleSet>\n  </ChainContextSubst>\n</Lookup>"
+  },
+  "1": {
+   "ttx": "<Lookup index=\"1\">\n  <LookupType value=\"1\"/>\n  <LookupFlag value=\"0\"/>\n  <!-- SubTableCount=1 -->\n  <SingleSubst index=\"0\">\n    <Substitution in=\"f\" out=\"a.alt1\"/>\n  </SingleSubst>\n</Lookup>",
+   "spec": "Lookup 1: Single substitution (type 1)\n  lookupFlag: none\n  subtable 0: SingleSubstFormat1\n    coverage: [f]\n    deltaGlyphID: +9\n    (so: f → a.alt1)"
+  },
+  "2": {
+   "ttx": "<Lookup index=\"2\">\n  <LookupType value=\"4\"/>\n  <LookupFlag value=\"0\"/>\n  <!-- SubTableCount=1 -->\n  <LigatureSubst index=\"0\">\n    <LigatureSet glyph=\"f\">\n      <Ligature components=\"i\" glyph=\"f_i\"/>\n    </LigatureSet>\n  </LigatureSubst>\n</Lookup>",
+   "spec": "Lookup 2: Ligature substitution (type 4)\n  lookupFlag: none\n  subtable 0: LigatureSubstFormat1\n    coverage: [f]\n    ligatureSet:\n      (f)\n        1. [i] → f_i",
+   "hex": "── Lookup 2 (at 0x0054)\n0054  00 04   lookupType\n0056  00 00   lookupFlag (none)\n0058  00 01   subTableCount\n005a  00 64   subtableOffsets[0] → subtable 0\n── subtable 0: LigatureSubstFormat1 (at 0x00b8)\n00b8  00 01   substFormat\n00ba  00 42   coverageOffset → Coverage\n00bc  00 01   ligatureSetCount\n00be  00 32   ligatureSetOffsets[0] → LigatureSet 0\n── LigatureSet 0 (at 0x00ea)\n00ea  00 01   ligatureCount\n00ec  00 0a   ligatureOffsets[0] → Ligature 0.0\n── Ligature 0.0 (at 0x00f4)\n00f4  00 09   ligatureGlyph = f_i\n00f6  00 02   componentCount (including the first)\n00f8  00 05   componentGlyphIDs[0] = i\n── Coverage (at 0x00fa)\n00fa  00 01   format\n00fc  00 01   glyphCount\n00fe  00 04   glyphArray[0] = f"
+  },
+  "3": {
+   "ttx": "<Lookup index=\"3\">\n  <LookupType value=\"1\"/>\n  <LookupFlag value=\"0\"/>\n  <!-- SubTableCount=1 -->\n  <SingleSubst index=\"0\">\n    <Substitution in=\"x\" out=\"e.init\"/>\n  </SingleSubst>\n</Lookup>",
+   "spec": "Lookup 3: Single substitution (type 1)\n  lookupFlag: none\n  subtable 0: SingleSubstFormat1\n    coverage: [x]\n    deltaGlyphID: +9\n    (so: x → e.init)"
+  },
+  "4": {
+   "ttx": "<Lookup index=\"4\">\n  <LookupType value=\"1\"/>\n  <LookupFlag value=\"0\"/>\n  <!-- SubTableCount=1 -->\n  <SingleSubst index=\"0\">\n    <Substitution in=\"a\" out=\"a.alt2\"/>\n  </SingleSubst>\n</Lookup>",
+   "spec": "Lookup 4: Single substitution (type 1)\n  lookupFlag: none\n  subtable 0: SingleSubstFormat1\n    coverage: [a]\n    deltaGlyphID: +12\n    (so: a → a.alt2)"
+  },
+  "5": {
+   "ttx": "<Lookup index=\"5\">\n  <LookupType value=\"1\"/>\n  <LookupFlag value=\"0\"/>\n  <!-- SubTableCount=1 -->\n  <SingleSubst index=\"0\">\n    <Substitution in=\"e\" out=\"e.init\"/>\n  </SingleSubst>\n</Lookup>",
+   "spec": "Lookup 5: Single substitution (type 1)\n  lookupFlag: none\n  subtable 0: SingleSubstFormat1\n    coverage: [e]\n    deltaGlyphID: +13\n    (so: e → e.init)"
+  }
+ },
+ "tables": {
+  "hmtx": "<hmtx>\n  <mtx name=\".notdef\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"a\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"a.alt1\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"a.alt2\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"a.alt3\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"acutecomb\" width=\"0\" lsb=\"50\"/>\n  <mtx name=\"e\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"e.init\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"f\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"f_f\" width=\"900\" lsb=\"50\"/>\n  <mtx name=\"f_f_i\" width=\"900\" lsb=\"50\"/>\n  <mtx name=\"f_i\" width=\"900\" lsb=\"50\"/>\n  <mtx name=\"f_l\" width=\"900\" lsb=\"50\"/>\n  <mtx name=\"i\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"l\" width=\"500\" lsb=\"50\"/>\n  <mtx name=\"space\" width=\"250\" lsb=\"50\"/>\n  <mtx name=\"x\" width=\"500\" lsb=\"50\"/>\n</hmtx>"
+ }
+}

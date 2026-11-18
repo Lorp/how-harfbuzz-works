@@ -70,7 +70,7 @@ The plan is built by the constructor of `hb_subset_plan_t` (`hb-subset-plan.cc:6
 
 ## Characters first
 
-`_populate_unicodes_to_retain` (`hb-subset-plan.cc:244`) maps the requested characters to glyphs through `cmap`, and drops any the font doesn’t have. Before that, `_unicode_closure` adds to them. Since 11.1.0 it adds the **bidi closure**: the mirror of each character, from the Unicode Bidi_Mirroring_Glyph property, so that ( brings ) with it. Shaping right-to-left text replaces a character with its mirror when the font has one ([The pipeline, step by step](the-pipeline-step-by-step.html#mirroring)), so a subset without the mirror would draw an unmirrored glyph. `paren.ttf` was cut from the demo font with the text `(`, and `paren-nobidi.ttf` the same way with `--no-bidi-closure`:
+`_populate_unicodes_to_retain` (`hb-subset-plan.cc:244`) maps the requested characters to glyphs through `cmap`, and drops any the font doesn’t have. Before that, `_unicode_closure` adds to them. Since 11.1.0 it adds the **bidi closure**: the mirror of each character, from the Unicode Bidi_Mirroring_Glyph property, so that ( brings ) with it. Shaping right-to-left text replaces a character with its mirror when the font has one ([The pipeline, step by step](pipeline-step-by-step.html#mirroring)), so a subset without the mirror would draw an unmirrored glyph. `paren.ttf` was cut from the demo font with the text `(`, and `paren-nobidi.ttf` the same way with `--no-bidi-closure`:
 
 ```shape
 demo.ttf  (  --direction=rtl
@@ -175,7 +175,7 @@ The layout stage (`hb-subset-plan-layout.cc`) does more than add glyphs. For GSU
 3. **Close the lookups.** `closure_lookups` adds the lookups that contextual lookups call, then removes every lookup whose coverage doesn’t intersect the glyph set: those can never fire.
 4. **Prune features.** `prune_features` drops a feature that has no lookups left, with two exceptions (`hb-ot-layout-gsubgpos.hh:6630`): a `size` feature with parameters, and `pref`, which is kept even when empty because HarfBuzz chooses its Khmer shaper by whether the font has it (“Never ever drop feature 'pref'”). Then features with the same tag and, after subsetting, the same lookups are merged (12.0.0), and language systems are pruned.
 
-[GPOS](positioning-glyphs-gpos.html) takes part in steps 1, 3 and 4, but adds no glyphs. Since GSUB is closed first, GPOS’s step 3 sees every glyph that can reach it.
+[GPOS](gpos.html) takes part in steps 1, 3 and 4, but adds no glyphs. Since GSUB is closed first, GPOS’s step 3 sees every glyph that can reach it.
 
 The demo font has `liga` and `dlig`. A subset for `ct` loses `dlig`, which is not a default feature, and with it the `c_t` ligature; asking for it with `--layout-features+=dlig` keeps both. Its kerning and mark lookups go too, since their glyphs are gone, and with them the GPOS features:
 
