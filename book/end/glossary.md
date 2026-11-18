@@ -40,7 +40,7 @@
 
 **Cluster level.** A buffer setting that decides how eagerly HarfBuzz merges clusters, and whether it keeps them in order.
 
-**Code point.** The number Unicode gives a character, from U+0000 to U+10FFFF.
+**Code point.** The number Unicode gives a character, written in hexadecimal after “U+”, from U+0000 to U+10FFFF.
 
 **COENG.** The Khmer sign, U+17D2, that makes the next consonant a subscript: Khmer’s counterpart of the virama.
 
