@@ -6,6 +6,8 @@
 * ISO/IEC 14496-22, *Open Font Format*. The 5th edition adds the “beyond 64k” formats and extended collection headers.
 * Microsoft, *Developing OpenType fonts* for particular scripts (Arabic, Devanagari and the rest), and the *Universal Shaping Engine* introduction: <https://learn.microsoft.com/en-us/typography/script-development/standard>
 * Microsoft, *Creating and supporting OpenType fonts for the Universal Shaping Engine*: <https://learn.microsoft.com/en-us/typography/script-development/use>, with its data files in Microsoft’s font-tools repository
+* Microsoft, *typography-issues*, the tracker for the OpenType and script development documents, where questions about the USE specification are titled “[USE]”: <https://github.com/MicrosoftDocs/typography-issues/issues?q=%5BUSE%5D>. [The Universal Shaping Engine](the-universal-shaping-engine.html) cites issues 216, 232, 270, 271, 279, 281, 289, 296, 336, 482, 484, 696, 750, 916, 928, 1078 and 1179.
+* Microsoft, *font-tools*, with USE’s data files (`IndicSyllabicCategory-Additional.txt`, `IndicPositionalCategory-Additional.txt`, `IndicShapingInvalidCluster.txt`) and the issues about them, such as #53: <https://github.com/microsoft/font-tools/tree/master/USE>
 * Microsoft, *Developing OpenType Fonts for Khmer Script* and *Creating and Supporting OpenType Fonts for Myanmar Script*: <https://learn.microsoft.com/en-us/typography/script-development/khmer>, <https://learn.microsoft.com/en-us/typography/script-development/myanmar>
 * Apple, *TrueType Reference Manual*, including the AAT tables (`morx`, `kerx`, `ankr`, `trak`, `feat`, `ltag`) and the TrueType rasterizer’s phantom points: <https://developer.apple.com/fonts/TrueType-Reference-Manual/>
 * Microsoft, OpenType *kern* table: <https://learn.microsoft.com/en-us/typography/opentype/spec/kern>, and Apple, *TrueType Reference Manual*, the `kern` table
@@ -47,7 +49,10 @@
 * Behdad Esfahbod, *HarfBust*, a puzzle font that shapes differently in each engine, 2025: <https://behdad.github.io/harfbust/>
 * Behdad Esfahbod, on how Core Text, DirectWrite and HarfBuzz handle invalid offsets, HarfBuzz issue #5535, 25 November 2025: <https://github.com/harfbuzz/harfbuzz/issues/5535#issuecomment-3573738217>
 * HarfBuzz, `docs/wasm-shaper.md`, the WebAssembly shaper, with examples at <https://github.com/harfbuzz/harfbuzz-wasm-examples>
+* HarfBuzz issues on the Universal Shaping Engine cited in [The Universal Shaping Engine](the-universal-shaping-engine.html): #170, #542, #1102, #1677, #1683, #1746, #1924 and #2061, and #539, which brought in the Indic `3` tags: <https://github.com/harfbuzz/harfbuzz/issues?q=label%3AUSE>
 * HarfRust: <https://github.com/harfbuzz/harfrust>
+* harfbuzzjs, HarfBuzz compiled to WebAssembly, version 1.6.4: <https://github.com/harfbuzz/harfbuzzjs>
+* uharfbuzz, HarfBuzz’s Python bindings, version 0.57.0: <https://github.com/harfbuzz/uharfbuzz>
 * packTab, the table packer used for HarfBuzz’s Unicode data: <https://github.com/harfbuzz/packtab>
 * Theppitak Karoonboonyanan, *Thai shaping*, cited in HarfBuzz’s Thai shaper: <https://linux.thai.net/~thep/th-otf/shaping.html>
 * SBL Hebrew Font User Manual, cited in `hb-unicode.hh` for the order of Hebrew points
@@ -62,6 +67,13 @@
 * Eric Lengyel, the Slug algorithm for rendering glyphs on the GPU: <https://github.com/EricLengyel/Slug>
 * SIL, Graphite: <https://graphite.sil.org/>
 * WebAssembly Micro Runtime, which the `wasm` backend runs modules with: <https://github.com/bytecodealliance/wasm-micro-runtime>
+* tiny-skia, the rasterizer of the Rust quick-start program: <https://github.com/linebender/tiny-skia>
+* Pillow, which writes the Python quick-start program’s PNG: <https://python-pillow.org>
+
+## Fonts
+
+* Impallari Type, *Libre Baskerville*, under the SIL Open Font License, used in [Quick start](quick-start.html) and [The command-line tools](command-line-tools.html): <https://github.com/impallari/Libre-Baskerville>, from Google Fonts: <https://github.com/google/fonts/tree/main/ofl/librebaskerville>
+* Roboto, as included in HarfBuzz’s own test fonts (`test/subset/data/fonts/`), used wherever the book needs a font that comes with HarfBuzz
 
 ## Books
 

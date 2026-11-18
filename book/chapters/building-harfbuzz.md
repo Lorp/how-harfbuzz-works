@@ -2,15 +2,17 @@
 
 Most people get HarfBuzz already built: inside their operating system or their browser, or from a package manager. Building it yourself is for when you want to work on it, or at least to watch it work: to run the command-line tools on your own fonts, to see the traces this book shows, to run the test suites, and to change something and see what happens.
 
+> This chapter is for readers who will build HarfBuzz themselves: to run the tools or this book’s examples against HarfBuzz {{hb}}, to see the detailed traces, or to work on HarfBuzz itself. Readers who use one of the ready-made routes below, or a packaged HarfBuzz 15, can skip it, and so can readers happy to read the book’s examples rather than rerun them.
+
 To program with HarfBuzz, you don’t necessarily have to build it either. Three ready-made routes skip the build:
 
 * **JavaScript.** [harfbuzzjs](https://github.com/harfbuzz/harfbuzzjs), from the HarfBuzz project, is HarfBuzz compiled to WebAssembly, for Node and browsers, installed with `npm install harfbuzzjs`. Version 1.6.4 contains HarfBuzz 15.0.0. It has the shaper and the glyph outlines, but not hb-vector, hb-raster or the tools.
 * **Python.** [uharfbuzz](https://github.com/harfbuzz/uharfbuzz), also from the HarfBuzz project, comes ready-built for the common platforms with `pip install uharfbuzz`. Version 0.57.0 contains HarfBuzz 15.0.0.
 * **Rust.** The [HarfRust](https://crates.io/crates/harfrust) crate needs no C at all, but it isn’t HarfBuzz: it is a port of HarfBuzz’s shaping to Rust, which matches HarfBuzz {{hb}} closely but not exactly ([HarfRust](harfrust.html)).
 
-[Quick start](quick-start.html) uses harfbuzzjs and HarfRust. A package manager’s HarfBuzz is another way in, but check its version first, with `pkg-config --modversion harfbuzz`. This book describes HarfBuzz 15, and a packaged HarfBuzz can be much older: Linux distributions such as Debian and Ubuntu keep the version they shipped with for the life of a release, and Homebrew keeps the version you installed until you upgrade. An older HarfBuzz may not do what this book describes, and before 13.0.0 it has no hb-vector or hb-raster.
+The [Quick start](quick-start.html) chapter uses all three. A package manager’s HarfBuzz is another way in, but check its version first, with `pkg-config --modversion harfbuzz`. This book describes HarfBuzz 15, and a packaged HarfBuzz can be much older: Linux distributions such as Debian and Ubuntu keep the version they shipped with for the life of a release, and Homebrew keeps the version you installed until you upgrade. An older HarfBuzz may not do what this book describes, and before 13.0.0 it has no hb-vector or hb-raster.
 
-This chapter follows a developer setting up such a build, in order: the source, a first build, a development build, a second build for detailed traces, and the daily work in the tree. It ends with a short tour of builds for shipping. Options are named where they are needed; [Compile-time configuration](compile-time-configuration.html), Appendix B, lists them all.
+This chapter follows a developer setting up a build, in order: the source, a first build, a development build, a second build for detailed traces, and the daily work in the tree. It ends with a short tour of builds for shipping. Options are named where they are needed; [Compile-time configuration](compile-time-configuration.html), Appendix B, lists them all.
 
 Builds can’t run when the book is built, so the commands here are plain listings, and the little output shown was produced by hand, with HarfBuzz {{hb}} on a Mac.
 

@@ -10,10 +10,12 @@ The [previous chapter](command-line-tools.html#what-does-this-text-look-like-in-
 Each program loads a font, shapes a string, and draws the glyphs where shaping put them, first as SVG and then as a PNG. The rest of the book explains what happens at each step; here the steps are just run.
 
 > This chapter is for programmers who want HarfBuzz in their own software, and for font engineers who script their work: the Python section is the place to start for tests and proofs that shape text in bulk. Type designers who want to see what HarfBuzz does with a font have what they need in the previous chapter’s tools, and can skip ahead. [How to read this book](introduction.html#how-to-read-this-book) says which other chapters a programmer needs.
+>
+> This book explains what HarfBuzz does inside; it isn’t HarfBuzz’s manual. [HarfBuzz’s own documentation](https://harfbuzz.github.io/), its user manual and API reference, is the definitive account of what each function does and promises, and the place to look things up while programming. The end of this chapter lists the references for the other languages too.
 
 Every program below is in the book’s repository, in [`examples/quick-start/`](https://github.com/Lorp/how-harfbuzz-works/tree/main/examples/quick-start), and is compiled and run when the book is built: each picture under a listing is that program’s output. The commands around them are hand-written.
 
-All of them use Libre Baskerville, a Baskerville by Impallari Type under the SIL Open Font License, and the text “office coffee”, as the previous chapter did. The text is chosen so that shaping shows: the font’s standard ligatures turn the *ffi* of “office” and the *ff* of “coffee” into one glyph each, so the thirteen characters become ten glyphs. The font is in the book’s repository, in [`fonts/quick-start/`](https://github.com/Lorp/how-harfbuzz-works/tree/main/fonts/quick-start), and comes from Google Fonts, which is where to get it:
+All of the examples use Libre Baskerville, a Baskerville by Impallari Type under the SIL Open Font License, and the text “office coffee”, as the previous chapter did. The text is chosen so that shaping shows: the font’s standard ligatures turn the *ffi* of “office” and the *ff* of “coffee” into one glyph each, so the thirteen characters become ten glyphs. The font is in the book’s repository, in [`fonts/quick-start/`](https://github.com/Lorp/how-harfbuzz-works/tree/main/fonts/quick-start), and comes from Google Fonts, which is where to get it:
 
 ```
 curl -L -o LibreBaskerville.ttf \
@@ -210,6 +212,17 @@ They are as short as they can be, and a real program needs more. In rough order 
 * **Variable fonts**, set to a position with `hb_font_set_variations` ([The design space](design-space.html)).
 * **Hinting and small sizes.** hb-raster and tiny-skia don’t hint. For hinted text, FreeType draws the outlines ([hb-raster](hb-raster.html) explains the trade).
 * **Color fonts.** The C and Python PNG programs paint them already, since they paint with hb-raster. The SVG programs would need hb-vector’s paint context in C, or a color library in the other languages ([Color](color.html)).
+
+## Documentation
+
+Each library’s own reference is where to go next:
+
+| Language | Library | Reference |
+|---|---|---|
+| C | HarfBuzz | the [API reference](https://harfbuzz.github.io/reference-manual.html), including [buffers](https://harfbuzz.github.io/harfbuzz-hb-buffer.html), [hb-vector](https://harfbuzz.github.io/harfbuzz-hb-vector.html) and [hb-raster](https://harfbuzz.github.io/harfbuzz-hb-raster.html) |
+| JavaScript | harfbuzzjs | its [README](https://github.com/harfbuzz/harfbuzzjs#readme), and the type declarations in `dist/index.d.mts` |
+| Python | uharfbuzz, Pillow | [uharfbuzz’s documentation](https://uharfbuzz.readthedocs.io/), and [Pillow’s](https://pillow.readthedocs.io/en/stable/) |
+| Rust | HarfRust, Skrifa, tiny-skia | [HarfRust](https://docs.rs/harfrust/0.16.0/harfrust/), [Skrifa](https://docs.rs/skrifa/0.50.0/skrifa/) and [tiny-skia](https://docs.rs/tiny-skia/0.11.4/tiny_skia/) on docs.rs |
 
 ## Where to read the source
 
