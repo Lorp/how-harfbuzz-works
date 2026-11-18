@@ -126,3 +126,4 @@
 `Blob`  not-a-tag
 `Face`  not-a-tag
 `BGRa`  not-a-tag
+`NAME`  not-a-tag  a placeholder lookup name, in Reading feature files

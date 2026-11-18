@@ -92,11 +92,12 @@ chapters/harfrust.md
 chapters/family.md
 
 [appendices]
+appendices/feature-order.md
+appendices/reading-feature-files.md
 appendices/reading-harfbuzz-cpp.md
+appendices/limits.md
 appendices/compile-time-configuration.md
 appendices/regenerating-the-unicode-and-shaping-tables.md
-appendices/limits.md
-appendices/feature-order.md
 
 [end]
 end/glossary.md

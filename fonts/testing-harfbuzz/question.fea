@@ -1,0 +1,12 @@
+# Does calt see what liga made? liga comes first in the LookupList, so
+# under the default shaper it should.
+languagesystem DFLT dflt;
+languagesystem latn dflt;
+
+feature liga {
+  sub f i by f_i;
+} liga;
+
+feature calt {
+  sub f_i' T by f_i.short;
+} calt;

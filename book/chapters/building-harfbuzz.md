@@ -12,7 +12,7 @@ To program with HarfBuzz, you don’t necessarily have to build it either. Three
 
 The [Quick start](quick-start.html) chapter uses all three. A package manager’s HarfBuzz is another way in, but check its version first, with `pkg-config --modversion harfbuzz`. This book describes HarfBuzz 15, and a packaged HarfBuzz can be much older: Linux distributions such as Debian and Ubuntu keep the version they shipped with for the life of a release, and Homebrew keeps the version you installed until you upgrade. An older HarfBuzz may not do what this book describes, and before 13.0.0 it has no hb-vector or hb-raster.
 
-This chapter follows a developer setting up a build, in order: the source, a first build, a development build, a second build for detailed traces, and the daily work in the tree. It ends with a short tour of builds for shipping. Options are named where they are needed; [Compile-time configuration](compile-time-configuration.html), Appendix B, lists them all.
+This chapter follows a developer setting up a build, in order: the source, a first build, a development build, a second build for detailed traces, and the daily work in the tree. It ends with a short tour of builds for shipping. Options are named where they are needed; the appendix [Compile-time configuration](compile-time-configuration.html) lists them all.
 
 Builds can’t run when the book is built, so the commands here are plain listings, and the little output shown was produced by hand, with HarfBuzz {{hb}} on a Mac.
 
@@ -231,7 +231,7 @@ The Ragel grammars are different, because they are part of the build. With Ragel
 
 ## Builds to ship
 
-A build to ship makes the opposite choices: release optimization, the platform’s dependencies, and nothing unused. What follows is a map; Appendix B has the details.
+A build to ship makes the opposite choices: release optimization, the platform’s dependencies, and nothing unused. What follows is a map; [Compile-time configuration](compile-time-configuration.html) has the details.
 
 ### Optional dependencies and backends
 

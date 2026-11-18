@@ -1149,6 +1149,15 @@ function main(outDir, fragment) {
     fs.copyFileSync(path.join(outDir, "title.html"), path.join(outDir, "index.html"));
     console.log("index.html (the title page)");
   }
+  // Pages left from earlier builds, of files since renamed or removed, would
+  // otherwise linger in the output and be found by an old link or bookmark.
+  const current = new Set([...pages.map((p) => `${p.slug}.html`), "index.html"]);
+  for (const f of fs.readdirSync(outDir)) {
+    if (f.endsWith(".html") && !current.has(f)) {
+      fs.rmSync(path.join(outDir, f));
+      console.log(`${f} removed: no longer in the book`);
+    }
+  }
 }
 
 const args = process.argv.slice(2);

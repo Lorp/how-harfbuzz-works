@@ -4,7 +4,7 @@ HarfBuzz is checked in three ways. A run can be watched from inside: the buffer 
 
 This chapter describes each, from the code and from the files in `test/`. The book’s build of HarfBuzz {{hb}} has the tests turned off (`-Dtests=disabled` in `tools/build-harfbuzz.sh`), so nothing from the suites runs here, except one test line that the build can run because it needs only `hb-shape` and a font. Traces and verification do run live.
 
-The last part is about the possible bugs found while this book’s examples were being built, and what they suggest about where bugs are left to find.
+The last part shows how to test HarfBuzz with a small font of your own, then the possible bugs found while this book’s examples were being built that way, and what they suggest about where bugs are left to find.
 
 ## Looking inside a run
 
@@ -209,6 +209,52 @@ void* hb_malloc_impl (size_t size)
 
 **What fuzzing can’t find.** A fuzzer needs a failure it can detect, and wrong output isn’t one. The shaping fuzzer sets `HB_BUFFER_FLAG_VERIFY`, but `hb_shape` returns nothing, and a failed check only prints a message (`hb-buffer-verify.cc:49`), so a verification failure doesn’t stop a fuzzing run (inferred from the code: nothing in the fuzzer reads the message). The exception is `hb-depend-closure-parity`, which runs on valid fonts, computes a glyph closure from hb-depend’s graph and from the subsetter, and fails if they differ ([hb-depend](hb-depend.html)). It is a correctness check that a machine can run without being told the answer, and so the only one of its kind here.
 
+## Testing with a font of your own
+
+Many of HarfBuzz’s own shaping tests use small fonts, each made for one question, with the output it should give ([The shaping tests](#the-shaping-tests)). The same method works for anyone who wants to know what HarfBuzz does with a rule: build a font that has that rule and little else, and shape some text with it. This book’s examples were all made that way, and so were the bugs it found, in the next section. It is also how to cut a misbehaving font down to the lookups in question.
+
+Shaping never looks at outlines, so the glyphs can be plain boxes. What matters is their names, the `cmap`, the advances and the layout tables. This program builds such a font from a feature file ([Reading feature files](reading-feature-files.html) explains enough of the language to read one) with fontTools, given the characters it needs and any glyphs the rules make that no character maps to:
+
+```example
+program: test-font/make-test-font.py
+args: question.fea  question.ttf  fiT  f_i  f_i.short
+show: source
+```
+
+The font below was built by this program, from a feature file that asks a question: does `calt` see the ligature `liga` made?
+
+```
+feature liga {
+  sub f i by f_i;
+} liga;
+
+feature calt {
+  sub f_i' T by f_i.short;
+} calt;
+```
+
+```shape
+question.ttf  fi  --language=en
+question.ttf  fiT  --language=en
+```
+
+It does: `liga`’s lookup comes first in the LookupList, and under the default shaper the two run in one stage, in that order ([Feature order](feature-order.html)). The trace shows each step:
+
+```trace
+font: question.ttf
+text: fiT
+options: --language=en
+from: start lookup 0
+to: end lookup 1
+```
+
+Some things this book learned to do in its own test fonts:
+
+* **Ask one question per font.** Two fonts that differ in one thing, such as the order of two feature blocks, answer a question better than one font with everything in it.
+* **Number lookups on purpose.** A lookup’s place in the LookupList decides when it runs within a stage, and feaLib numbers lookups in the order it meets them. The fonts behind [Feature order](feature-order.html) number theirs in opposite orders, to find where stages end.
+* **Pass `--language`** in every `hb-shape` command whose result could depend on it. Otherwise `hb-shape` takes the language from the locale.
+* **Use `--trace`**, which needs a HarfBuzz built with detailed traces ([Building HarfBuzz](building-harfbuzz.html)), and `--verify`, `--show-flags` and `--show-extents` ([The command-line tools](command-line-tools.html)).
+
 ## The bugs this book found
 
 Writing this book meant building small fonts that exercise one thing each, shaping text with them, and checking every result against the code and the specifications. Some results didn’t match. Those are drafted as bug reports in [`notes/upstream-bug-reports.md`](https://github.com/Lorp/how-harfbuzz-works/blob/main/notes/upstream-bug-reports.md), in the book’s repository, eighty-two so far, each reproduced on HarfBuzz {{hb}} (commit `3df40d9b`), most with a font or a command that needs nothing from this book.
@@ -405,4 +451,5 @@ The pattern suggests where to look next. Most of these drafts came from fonts sm
 * `test/shape` holds about 6,300 test lines in three sets. Each runs with verification, once for every kind of font functions the build has, through one `hb-shape --batch` process.
 * `test/api` checks the C API with GLib’s framework; `test/subset` compares subset fonts byte for byte with expected fonts that fontTools agrees with.
 * The fuzzers look for crashes, hangs and runaway memory, with allocations that fail at random. Every failure they find is kept and rerun as a test on every build.
-* The book’s eighty-two draft bug reports, none filed yet, are nearly all wrong-but-valid output: combinations no test has, branches the tests miss, copies that drifted apart, limits real text can reach, and comments that no longer match the code. Checked against `main` on 18 November 2026, twenty-seven were fixed, six partly, and ten had pull requests open.
+* A font of boxes with a rule or two, built from a feature file, is the quickest way to find out what HarfBuzz does with a rule.
+* The book’s eighty-two draft bug reports, none yet on HarfBuzz’s issue tracker, are nearly all wrong-but-valid output: combinations no test has, branches the tests miss, copies that drifted apart, limits real text can reach, and comments that no longer match the code. Checked against `main` on 18 November 2026, twenty-seven were fixed, six partly, and ten had pull requests open.

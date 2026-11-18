@@ -78,4 +78,5 @@
 ## Books
 
 * Simon Cozens, *Fonts and Layout for Global Scripts*, written 2016–2021 and unfinished, under CC BY-SA 4.0: <https://simoncozens.github.io/fonts-and-layout/>, source at <https://github.com/simoncozens/fonts-and-layout>
-* Yannis Haralambous, *Fonts & Encodings*, O’Reilly, 2007.
+* Yannis Haralambous, *Fonts & Encodings*, O’Reilly, 2007: <https://www.oreilly.com/library/view/fonts-encodings/9780596102425/>
+* Tal Leming, *OpenType Cookbook*: <https://opentypecookbook.com/>
