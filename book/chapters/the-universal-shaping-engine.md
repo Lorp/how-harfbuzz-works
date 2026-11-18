@@ -324,7 +324,7 @@ Alone, the cluster is isolated, and the vowel sign keeps its ordinary form. Befo
 
 ## The nine Indic scripts under `dev3`
 
-[Choosing a script shaper](choosing-a-script-shaper.html#the-same-text-in-seven-fonts) showed three Devanagari syllables shaped alike under `dev2` and `dev3`. That is the common case, but not the only one. The same lookups, under the two tags:
+[Choosing a script shaper](choosing-a-script-shaper.html#the-same-text-in-seven-fonts) showed three Devanagari syllables shaped alike under `dev2` and `dev3`, and that the `3` tags are HarfBuzz’s and Apple’s, not the OpenType registry’s ([Choosing a script shaper](choosing-a-script-shaper.html#from-a-script-to-script-tags)). That is the common case, but not the only one. The same lookups, under the two tags:
 
 ```shape
 deva2.ttf  क\u094Dत  --language=hi

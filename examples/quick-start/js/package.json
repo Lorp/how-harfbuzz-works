@@ -1,0 +1,8 @@
+{
+  "name": "quick-start",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "harfbuzzjs": "1.6.4"
+  }
+}

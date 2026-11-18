@@ -1366,11 +1366,11 @@ Asking for small caps off turns them on, and the weight is ignored with no messa
 
 ---
 
-## 75. `hb-vector --show-extents` draws each box after the first at twice its pen position
+## 75. `hb-vector --show-extents` and `hb-raster --show-extents` draw each box after the first at twice its pen position
 
 **Tag:** `hhw-20261118`
 
-**Summary.** `hb-vector` sets the glyph’s transform to the pen position (`util/vector-output.hh:265`, `:288`), then draws the extents overlay through it with the pen position added again (`:273`, `:296`; `util/helper-extents-overlay.hh:66`). The first glyph’s pen position is 0, so only the boxes after it are misplaced. `hb-raster` draws them in the right place.
+**Summary.** `hb-vector` sets the glyph’s transform to the pen position (`util/vector-output.hh:265`, `:288`), then draws the extents overlay through it with the pen position added again (`:273`, `:296`; `util/helper-extents-overlay.hh:66`). The first glyph’s pen position is 0, so only the boxes after it are misplaced. `hb-raster` does the same in all three of its paths: outlines (`util/raster-output.hh:251`, `:257`), color glyphs (`:330`, `:341`) and per-glyph foreground colors (`:426`, `:430`). (The first draft of this report said `hb-raster` was correct; a picture in the book showed otherwise.)
 
 **Repro.** `var.ttf` in the book’s test fonts, whose `I` has an advance of 260 and a stem from 80 to 180:
 
@@ -1380,9 +1380,15 @@ $ hb-vector var.ttf III --show-extents
 
 The second `I` is drawn at x 340–440, but its box at 599–701 and its origin dot at 520; the third `I` at 600–700, its box at 1119–1221. The boxes also fall outside the picture’s `viewBox`.
 
+```
+$ hb-raster test/subset/data/fonts/Roboto-Regular.ttf Wave --font-size=32 --show-extents -o wave.png
+```
+
+`hb-shape --show-extents` puts the *a*’s ink at x 28–43 (pen 27, bearing 1, width 15), but its box is drawn at about 55–70, around the *v* and *e*; the boxes of *v* and *e* fall outside the image, which is sized to the glyphs.
+
 **Expected.** The overlay drawn at the glyph’s origin within the transform, or without the transform.
 
-**On main.** Still present.
+**On main.** Still present (no change to these files on main since 17 November, checked 18 November 2026).
 
 ---
 

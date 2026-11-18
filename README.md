@@ -4,7 +4,7 @@
 
 Read it [online](https://lorp.github.io/how-harfbuzz-works/) or as a [PDF](https://lorp.github.io/how-harfbuzz-works/print/how-harfbuzz-works.pdf).
 
-A book about the inside of [HarfBuzz](https://github.com/harfbuzz/harfbuzz), written from its source code (version 15.1.0), for type designers, font engineers and programmers.
+A book about the inside of [HarfBuzz](https://github.com/harfbuzz/harfbuzz), written from its source code (version 15.1.0), checked against the OpenType specification and other sources, for type designers, font engineers and programmers.
 
 “I skimmed a few chapters. Genuinely useful to aspiring HarfBuzz developers.”  
 — *Behdad Esfahbod*
@@ -18,6 +18,7 @@ Every shaping result and trace in the book is made by running HarfBuzz on small 
 * `book/book.json`: title, subtitle, and the HarfBuzz version described
 * `book/cover.png`, `book/cover-back.png`: the front and back covers, for the PDF
 * `fonts/<page>/`: each chapter’s feature files, the fonts built from them, and `build.sh`
+* `examples/`: whole example programs, in C, JavaScript and Rust, which the build compiles and runs (needs a C compiler, npm and cargo)
 * `tools/`: building HarfBuzz (`build-harfbuzz.sh`), the site (`build-site.mjs`, Node), and the test fonts and their views (`build-test-font.py`, `font-views.py`, Python)
 * `notes/`: research toward the book, such as the survey of the source
 
@@ -55,7 +56,7 @@ Each `FONT.views.json` holds the views made from the compiled font: spec-like, T
 
 A chapter is ordinary Markdown, in `book/chapters/`. What makes this book different is that its examples aren’t typed in by hand: you describe what you want to show, and the build runs HarfBuzz to produce it. If HarfBuzz’s behavior changes, the book changes with it.
 
-Each chapter has its own small test fonts in `fonts/<chapter>/`, named after the chapter’s file (so `gsub.md` uses `fonts/gsub/`). Three kinds of code block use them.
+Each chapter has its own small test fonts in `fonts/<chapter>/`, named after the chapter’s file (so `gsub.md` uses `fonts/gsub/`). The kinds of code block below use them.
 
 ### Show what HarfBuzz does: `shape`
 
@@ -101,5 +102,35 @@ cpp: LigatureSubstFormat1_2
 `fea` names the feature file and the block in it the lookup came from, and `cpp` names the HarfBuzz struct that reads it. In the PDF only one view can be shown; add `print: spec fea` (for example) to choose which. The default is the spec-like table.
 
 These views come from a `FONT.views.json` file next to each font, which the chapter’s `build.sh` writes. So after changing a feature file, rebuild that chapter’s fonts (see above); the site build stops and tells you if you forget.
+
+### Show a whole program: `example`
+
+This shows a program from `examples/`, and what it outputs. The build compiles and runs it (C against the HarfBuzz in `.cache/harfbuzz`, JavaScript with npm, Rust with cargo, all built in `.cache/examples/`), so the listing and the picture can’t disagree:
+
+````markdown
+```example
+program: quick-start/c/text-to-svg.c
+args: hb:test/subset/data/fonts/Roboto-Regular.ttf  office coffee
+output: svg
+```
+````
+
+`args` are the program’s arguments, with two or more spaces between them; the first is a font, found as in the other blocks (`hb:` means HarfBuzz’s own source tree). `output` is `svg` or `png`. Add `show: source` for the listing alone, or `show: output` for the picture alone. Outputs are kept in `.cache/examples/out/` and rerun only when the program, its `package.json` or `Cargo.toml`, or the arguments change.
+
+### Let the reader try it: `demo`
+
+This runs a JavaScript module from `examples/` in the reader’s browser, with a box to type text into. The module exports `drawText(canvas, fontData, text, pixels)`; the font is cut down with `hb-subset` and carried in the page, and the package comes from jsDelivr. Demos appear on screen only, so the text around one should still make sense in print.
+
+````markdown
+```demo
+program: quick-start/js/text-to-canvas.mjs
+font: hb:test/subset/data/fonts/Roboto-Regular.ttf
+unicodes: 20-7E
+text: office coffee
+package: harfbuzzjs@1.6.4
+```
+````
+
+The other blocks, `raster`, `draw`, `info` and `table`, are described with the rest at the top of `tools/build-site.mjs`.
 
 `tools/build-site.mjs` has the full details at the top.

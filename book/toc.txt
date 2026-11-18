@@ -22,6 +22,7 @@ front/notation.md
 chapters/why-shaping-exists.md
 chapters/building-harfbuzz.md
 chapters/command-line-tools.md
+chapters/quick-start.md
 
 [part] Foundations
 chapters/fonts-as-bytes.md

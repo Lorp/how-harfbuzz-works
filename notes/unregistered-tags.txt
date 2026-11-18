@@ -1,0 +1,126 @@
+# Tags the book quotes that aren’t in the registries tools/check-tags.mjs reads.
+# `tag`  kind  note
+#   unregistered: a real tag outside the registries. The note says what it is and where
+#                 the book says it isn’t registered; the book must say so.
+#   iso15924:     an ISO 15924 script code (HarfBuzz’s hb_script_t), not an OpenType tag.
+#   not-a-tag:    a word, identifier or name that happens to have four letters.
+
+`GLYF`  unregistered  table: beyond 64K; Fonts as bytes says so
+`GVAR`  unregistered  table: beyond 64K, ISO 2026; Varying outlines says so
+`HHEA`  unregistered  table: beyond 64K, as `GLYF`
+`HMTX`  unregistered  table: beyond 64K, as `GLYF`
+`Icfc`  unregistered  baseline: HarfBuzz’s own; Other tables says so
+`Idce`  unregistered  baseline: HarfBuzz’s own; Other tables says so
+`LOCA`  unregistered  table: beyond 64K, as `GLYF`
+`MAXP`  unregistered  table: beyond 64K, as `GLYF`
+`Slnt`  unregistered  style: HarfBuzz’s own; Other tables says so
+`VARC`  unregistered  table: ISO 2026, not OpenType 1.9.1; Variable components says so
+`Wasm`  unregistered  table: HarfBuzz’s experimental WebAssembly backend; hb_shape and its backends says so
+`XYZ `  unregistered  language: the tag HarfBuzz makes up for `xyz`, in Choosing a script shaper
+`appl`  unregistered  meta: Apple’s, named as such in Other tables
+`bild`  unregistered  meta: Apple’s, named as such in Other tables
+`bng3`  unregistered  script: as `dev3`
+`dev3`  unregistered  script: HarfBuzz and Core Text only; Choosing a script shaper says so
+`jstf`  unregistered  axis: HarfBuzz’s experimental justification; For applications says so
+`mym3`  unregistered  script: doesn’t exist, and the book says so
+`xreq`  unregistered  feature: made up for a test font, in From features to lookups
+`Arab`  iso15924
+`Deva`  iso15924
+`Latn`  iso15924
+`Qaag`  iso15924
+`AUTO`  not-a-tag
+`BUZZ`  not-a-tag
+`Buzz`  not-a-tag
+`Crap`  not-a-tag
+`DFLT`  not-a-tag
+`FAbv`  not-a-tag
+`FBlw`  not-a-tag
+`FLAG`  not-a-tag
+`FPst`  not-a-tag
+`Font`  not-a-tag
+`HARF`  not-a-tag
+`Harf`  not-a-tag
+`Head`  not-a-tag
+`INIT`  not-a-tag
+`LANG`  not-a-tag
+`Left`  not-a-tag
+`MAbv`  not-a-tag
+`MBlw`  not-a-tag
+`MPre`  not-a-tag
+`MPst`  not-a-tag
+`Mark`  not-a-tag
+`Mono`  not-a-tag
+`NEWS`  not-a-tag
+`NONE`  not-a-tag
+`NULL`  not-a-tag
+`Null`  not-a-tag
+`PATH`  not-a-tag
+`Plan`  not-a-tag
+`SMVD`  not-a-tag
+`TODO`  not-a-tag
+`Tail`  not-a-tag
+`VAbv`  not-a-tag
+`VBlw`  not-a-tag
+`VPre`  not-a-tag
+`VPst`  not-a-tag
+`ZWNJ`  not-a-tag
+`aat/`  not-a-tag
+`alef`  not-a-tag
+`ansi`  not-a-tag
+`aots`  not-a-tag
+`bias`  not-a-tag
+`bool`  not-a-tag
+`cond`  not-a-tag
+`copy`  not-a-tag
+`data`  not-a-tag
+`dflt`  not-a-tag
+`docs`  not-a-tag
+`draw`  not-a-tag
+`dupe`  not-a-tag
+`else`  not-a-tag
+`expr`  not-a-tag
+`face`  not-a-tag
+`fini`  not-a-tag
+`font`  not-a-tag
+`gid0`  not-a-tag
+`gid1`  not-a-tag
+`gid2`  not-a-tag
+`glib`  not-a-tag
+`goto`  not-a-tag
+`info`  not-a-tag
+`int8`  not-a-tag
+`kbts`  not-a-tag
+`lang`  not-a-tag
+`libs`  not-a-tag
+`line`  not-a-tag
+`main`  not-a-tag
+`mask`  not-a-tag
+`mmap`  not-a-tag
+`none`  not-a-tag
+`png `  not-a-tag
+`ppem`  not-a-tag
+`prev`  not-a-tag
+`ptem`  not-a-tag
+`push`  not-a-tag
+`seac`  not-a-tag
+`slng`  not-a-tag
+`slow`  not-a-tag
+`sort`  not-a-tag
+`src/`  not-a-tag
+`star`  not-a-tag
+`stmt`  not-a-tag
+`sync`  not-a-tag
+`tail`  not-a-tag
+`test`  not-a-tag
+`text`  not-a-tag
+`this`  not-a-tag
+`upem`  not-a-tag
+`var1`  not-a-tag
+`var2`  not-a-tag
+`view`  not-a-tag
+`wasm`  not-a-tag
+`xMin`  not-a-tag
+`yMax`  not-a-tag
+`zlib`  not-a-tag
+`Blob`  not-a-tag
+`Face`  not-a-tag

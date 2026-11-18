@@ -200,7 +200,7 @@ apps.ttf  ب\u0640بب  --show-flags  --safe-to-insert-tatweel
 
 Both the medial and final behs (clusters 1 and 2) are `#5`, unsafe to break and safe for a tatweel. With a tatweel inserted before the middle one, the forms are the same and the word is 300 units wider. The text has changed, so the word has to be shaped again, and its clusters move along by one; an application that wants clusters to keep pointing into its own text can add the tatweel with `hb_buffer_add` and the cluster of the character it was inserted before (inferred from how clusters work, not tried here).
 
-The other is `hb_shape_justify` (`hb-shape.cc:255`, new in 7.1.0), which shapes a run again and again at different settings of a font’s `jstf` axis, or failing that `wdth`, until its advance falls between two targets. It is still experimental: it exists only in a build with `-Dexperimental_api=true`, and with it `hb-shape --justify-to`. This book’s build is not one. Syriac’s `stch`, which stretches a mark across a word, is a different thing: the font asks for it, and HarfBuzz does it while shaping ([Joining scripts](joining-scripts.html#stretching-stch)).
+The other is `hb_shape_justify` (`hb-shape.cc:255`, new in 7.1.0), which shapes a run again and again at different settings of a font’s `jstf` axis (HarfBuzz’s own tag: OpenType registers no such axis), or failing that `wdth`, until its advance falls between two targets. It is still experimental: it exists only in a build with `-Dexperimental_api=true`, and with it `hb-shape --justify-to`. This book’s build is not one. Syriac’s `stch`, which stretches a mark across a word, is a different thing: the font asks for it, and HarfBuzz does it while shaping ([Joining scripts](joining-scripts.html#stretching-stch)).
 
 ## Pitfalls
 

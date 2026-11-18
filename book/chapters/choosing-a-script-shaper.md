@@ -18,7 +18,11 @@ HarfBuzz’s scripts are [ISO 15924 codes](https://www.unicode.org/iso15924/iso1
 | Lao, Yi, N’Ko, Vai | `lao `, `yi  `, `nko `, `vai ` |
 | everything else | the ISO 15924 code with its first letter lowercased: `arab`, `latn`, `syrc` |
 
-The nine Indic scripts have three generations of tag. The old tags, such as `deva`, go with the shaping model of the first OpenType Indic specifications, and the `2` tags with a later model that changed the order of glyphs some lookups see (more on that below). A `3` tag isn’t a third Indic model: as `NEWS` for 2.0.0 says, “Indic3 tags (‘dev3’, etc) are passed to USE shaper.” Myanmar has no `mym3` (`:166`). The old tags are made by lowercasing, with a switch for the exceptions (`hb_ot_old_tag_from_script`, `:37`). Text with no script of its own, such as digits alone, has the script `HB_SCRIPT_INVALID`, which gets no tags. At most three tags are kept (`HB_OT_MAX_TAGS_PER_SCRIPT`, `hb-ot-layout.h:99`).
+The nine Indic scripts have three generations of tag. The old tags, such as `deva`, go with the shaping model of the first OpenType Indic specifications, and the `2` tags with a later model that changed the order of glyphs some lookups see (more on that below). A `3` tag isn’t a third Indic model: as `NEWS` for 2.0.0 says, “Indic3 tags (‘dev3’, etc) are passed to USE shaper.” Myanmar has no `mym3` (`:166`).
+
+The `3` tags aren’t OpenType tags. The [registry](https://learn.microsoft.com/en-us/typography/opentype/spec/scripttags) lists `deva` and `dev2`, and nothing ending in `3`, for any script. HarfBuzz added them in 2018 (2.0.0), following Apple’s Core Text: the [issue that asked for them](https://github.com/harfbuzz/harfbuzz/issues/539) says “Apple does that and we want to put it in OpenType itself,” and that hasn’t happened. DirectWrite doesn’t support them (as reported by a reviewer; not checked here). They are an experiment shared by HarfBuzz and Apple, not a standard, and a font that uses them still needs its lookups under the `2` tag for other engines.
+
+The old tags are made by lowercasing, with a switch for the exceptions (`hb_ot_old_tag_from_script`, `:37`). Text with no script of its own, such as digits alone, has the script `HB_SCRIPT_INVALID`, which gets no tags. At most three tags are kept (`HB_OT_MAX_TAGS_PER_SCRIPT`, `hb-ot-layout.h:99`).
 
 `hb-shape --script` takes an ISO 15924 code ([The command-line tools](command-line-tools.html#direction-script-and-language)). `hb_script_from_iso15924_tag` (`hb-common.cc:445`) fixes its case, so `--script=deva` is Devanagari, but `--script=dev2` is no code at all and becomes `HB_SCRIPT_UNKNOWN`.
 
@@ -350,7 +354,7 @@ The script tag in a font is not a label. It decides which shaper runs, and so wh
 
 * A font for an Indic or USE script needs its lookups under that script’s own tag. Under `DFLT` or `latn` alone, the shaper is the default one, and features such as `akhn`, `blwf`, `half` and `pref` are never applied, however they are registered.
 * For the nine Indic scripts, the `2` tag and the old tag mean different glyph orders in some lookups. A font with both is shaped with the `2` tag. A font with only the old tag gets the old mode, and so does a font whose only tag is the misspelling `dflt`.
-* A `3` tag, such as `dev3`, sends the text to the Universal Shaping Engine, which has its own feature order and categories, and HarfBuzz looks for it before the `2` tag.
+* A `3` tag, such as `dev3`, sends the text to the Universal Shaping Engine, which has its own feature order and categories, and HarfBuzz looks for it before the `2` tag. The `3` tags aren’t in the OpenType registry, and DirectWrite doesn’t support them.
 * A Myanmar font needs `mym2`: `mymr` gets the default shaper.
 * A Hebrew font needs `hebr` in GPOS, not just `DFLT`, or its GPOS is ignored.
 * A Syriac font under `DFLT` alone gets no joining. Under `latn` it does.

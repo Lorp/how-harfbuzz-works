@@ -1,4 +1,4 @@
-// What the PDF is made from, as one hash: every file in book/, fonts/ and
+// What the PDF is made from, as one hash: every file in book/, examples/, fonts/ and
 // tools/ (but not the publishing scripts), by path and content (not date,
 // which git checkouts change). The PDF build records it in
 // .cache/pdf-source.txt; publishing compares it with the current one, to
@@ -12,7 +12,7 @@ export const RECORD = ".cache/pdf-source.txt";
 
 export function sourceHash(root) {
   const hash = crypto.createHash("sha256");
-  for (const dir of ["book", "fonts", "tools"]) {
+  for (const dir of ["book", "examples", "fonts", "tools"]) {
     const files = fs.readdirSync(path.join(root, dir), { recursive: true })
       .filter((f) => !f.split(path.sep).includes("__pycache__") && !f.endsWith(".DS_Store"))
       .filter((f) => !(dir === "tools" && ["publish.mjs", "source-hash.mjs"].includes(f)))

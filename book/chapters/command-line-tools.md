@@ -270,18 +270,29 @@ text: Wave
 at: wght=100; wght=400; wght=900
 ```
 
-`hb-raster` writes PNG, PPM, or `ansi`, a picture in the characters and colors of a terminal (`raster-output.hh:41`). Its default size is 256 pixels per em. Here it is at 32, with `--show-extents`:
+`hb-raster` writes PNG, PPM, or `ansi`, a picture in the characters and colors of a terminal (`raster-output.hh:41`). Its default size is 256 pixels per em. Here it is at 32:
+
+```raster
+zoom: 4
+hb:test/subset/data/fonts/Roboto-Regular.ttf  Wave  --font-size=32
+```
+
+`--show-extents` should add each glyph’s ink box and origin to the picture, but in {{hb}} it puts most of them in the wrong place ([below](#a-bug-in-show-extents)).
+
+`hb-view` came first: `hb-vector` and `hb-raster` arrived in 13.0.0 with their libraries, and “share many of the same options as `hb-view`” (`NEWS`). It draws through cairo, using `libharfbuzz-cairo`, and so writes whatever cairo can: PNG, SVG, PDF, PostScript, EPS, cairo script and `ansi`, depending on how cairo was built (`helper-cairo.hh:374`). Its default size is 256. `hb-vector` and `hb-raster` do the same work with HarfBuzz’s own renderers and no cairo, and are described with their libraries, in [hb-vector](hb-vector.html) and [hb-raster](hb-raster.html).
+
+Written to a terminal without `-O`, `hb-raster` and `hb-view` show the picture there. In iTerm2, WezTerm and kitty, which can show images, they send a PNG in the terminal’s own protocol; elsewhere they print it as `ansi` (`helper-image-output.hh:76`), with the chafa library’s help if they were built with it.
+
+### A bug in `--show-extents`
+
+In {{hb}}, `hb-raster` and `hb-vector` draw the box of every glyph but the first in the wrong place. Here is the picture above with `--show-extents`:
 
 ```raster
 zoom: 4
 hb:test/subset/data/fonts/Roboto-Regular.ttf  Wave  --font-size=32  --show-extents
 ```
 
-In {{hb}}, `hb-vector --show-extents` draws the box of every glyph but the first too far along the line, at twice its position: the overlay is drawn with the glyph’s transform already set, and then moved by the pen position again (`vector-output.hh:292`, `helper-extents-overlay.hh:66`). `hb-raster` draws them in the right place, as above.
-
-`hb-view` came first: `hb-vector` and `hb-raster` arrived in 13.0.0 with their libraries, and “share many of the same options as `hb-view`” (`NEWS`). It draws through cairo, using `libharfbuzz-cairo`, and so writes whatever cairo can: PNG, SVG, PDF, PostScript, EPS, cairo script and `ansi`, depending on how cairo was built (`helper-cairo.hh:374`). Its default size is 256. `hb-vector` and `hb-raster` do the same work with HarfBuzz’s own renderers and no cairo, and are described with their libraries, in [hb-vector](hb-vector.html) and [hb-raster](hb-raster.html).
-
-Written to a terminal without `-O`, `hb-raster` and `hb-view` show the picture there. In iTerm2, WezTerm and kitty, which can show images, they send a PNG in the terminal’s own protocol; elsewhere they print it as `ansi` (`helper-image-output.hh:76`), with the chafa library’s help if they were built with it.
+Only the *W*’s box is where it should be. The box around the *v* and the *e* is the *a*’s, at twice the *a*’s pen position, and the boxes of the *v* and the *e* are further on still, outside the picture. Each glyph’s overlay is drawn with its transform already set to the pen position, and then moved by the pen position again (`raster-output.hh:251`, `vector-output.hh:292`, `helper-extents-overlay.hh:66`). The first glyph’s pen position is 0, so its box alone is right. `hb-shape --show-extents` gives the correct numbers. This is draft 75 in [Testing HarfBuzz](testing-harfbuzz.html#the-bugs-this-book-found).
 
 ## hb-gpu
 

@@ -213,7 +213,7 @@ void* hb_malloc_impl (size_t size)
 
 Writing this book meant building small fonts that exercise one thing each, shaping text with them, and checking every result against the code and the specifications. Some results didn’t match. Those are drafted as bug reports in [`notes/upstream-bug-reports.md`](https://github.com/Lorp/how-harfbuzz-works/blob/main/notes/upstream-bug-reports.md), in the book’s repository, eighty-one so far, each reproduced on HarfBuzz {{hb}} (commit `3df40d9b`), most with a font or a command that needs nothing from this book.
 
-**None has been filed upstream.** They are drafts, written by the book’s authors. Some are certainly bugs, some are matters of policy that HarfBuzz’s developers may well decide the other way, and a few were found by reading code and have no example yet.
+**None is yet on HarfBuzz’s issue tracker.** The first sixty-five went to HarfBuzz’s author directly, and many are already fixed (see the last column below), but they are still drafts, written by the book’s authors. Some are certainly bugs, some are matters of policy that HarfBuzz’s developers may well decide the other way, and a few were found by reading code and have no example yet.
 
 The tables below give each draft’s number in that file, a one-line summary, the chapter that describes the behavior, and how it was checked:
 
@@ -306,7 +306,7 @@ Places where a limit meant to stop malicious fonts changes the result for valid 
 | 68 | `hb-vector`’s PDF output ignores custom palette colors | [hb-vector](hb-vector.html#color-glyphs-in-pdf) | Run | |
 | 69 | `hb-vector`’s PDF compositing isn’t isolated, so SCREEN and DIFFERENCE blend with the white page | [hb-vector](hb-vector.html#color-glyphs-in-pdf) | Run | |
 | 70 | hb-gpu drops a fill whose only clip is a rectangle, though its comment says rectangles are just ignored | [hb-gpu](hb-gpu.html#what-isnt-supported) | Run | |
-| 75 | `hb-vector --show-extents` draws each box after the first at twice its pen position | [The command-line tools](command-line-tools.html#drawing-hb-vector-hb-raster-and-hb-view) | Run | |
+| 75 | `hb-vector --show-extents` and `hb-raster --show-extents` draw each box after the first at twice its pen position | [The command-line tools](command-line-tools.html#a-bug-in-show-extents) | Run | |
 
 </div>
 

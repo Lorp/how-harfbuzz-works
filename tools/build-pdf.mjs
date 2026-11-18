@@ -198,6 +198,14 @@ pre { white-space: pre-wrap; overflow-wrap: anywhere; break-inside: avoid; }
 table { width: 100%; }
 td, th { overflow-wrap: anywhere; }
 figure, .shape, .trace, .info, .draw { break-inside: avoid; max-width: 100% !important; overflow: hidden; }
+/* A program's listing is often longer than a page: let it run across pages,
+   keeping its file name with its first lines. Its output, a picture and a
+   caption, stays in one piece. */
+figure.listing, figure.listing pre { break-inside: auto; overflow: visible; }
+figure.listing figcaption { break-after: avoid; }
+figure.listing pre { orphans: 4; widows: 4; }
+.example-output img { break-after: avoid; }
+.example-output figcaption { break-before: avoid; }
 /* The web styles keep figure cells on one line and scroll them; a page can't scroll. */
 .shape td, .trace td, .info td, .shape td *, .trace td *, .info td * { white-space: normal !important; }
 .shape td.out code, .trace td.buf code, .info td.out code, .shape td.in .cps { white-space: pre-wrap !important; overflow-wrap: anywhere; }

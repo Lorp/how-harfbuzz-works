@@ -236,7 +236,7 @@
 
 **Offset.** A number of bytes, counted from some base structure, to another structure in the same table. In HarfBuzz an offset knows the type of its target.
 
-**Old and new Indic tags.** The two generations of OpenType tag for the nine Indic scripts (`deva`, `dev2`), which expect some glyphs in different orders. `dev3` tags send text to the Universal Shaping Engine.
+**Old and new Indic tags.** The two generations of OpenType tag for the nine Indic scripts (`deva`, `dev2`), which expect some glyphs in different orders. `dev3` and the other `3` tags, which HarfBuzz and Core Text support but the OpenType registry doesn’t list, send text to the Universal Shaping Engine.
 
 **Old Hangul.** Korean as written before the twentieth century, whose syllables have no precomposed characters and are drawn from jamo glyphs with `ljmo`, `vjmo` and `tjmo`.
 

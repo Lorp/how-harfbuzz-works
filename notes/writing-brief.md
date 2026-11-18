@@ -9,7 +9,7 @@ What a writer of one chapter is given, whether that’s a person or an agent. Th
 * `book/front/introduction.md` and `book/front/notation.md`. Build on them; don’t repeat them.
 * The chapters this one depends on (see `writing-order.md`), in their current drafts. Link back to them instead of explaining again.
 * `notes/outline.md`, and the parts of `notes/survey/` that cover the chapter.
-* The block types in `tools/build-site.mjs`: `views`, `shape`, `trace` and `raster` (header comment), and `draw`, `info` and `table` (comments above `blockDraw`, `blockInfo` and `blockTable`).
+* The block types in `tools/build-site.mjs`: `views`, `shape`, `trace` and `raster` (header comment), `draw`, `info` and `table` (comments above `blockDraw`, `blockInfo` and `blockTable`), and `example` and `demo` for whole programs from `examples/` (comments above `blockExample` and `blockDemo`, and `README.md`).
 
 ## Sources, and how claims are checked
 
@@ -18,6 +18,7 @@ The HarfBuzz version the book describes (`book/book.json`) is checked out at `.c
 * **Claims about HarfBuzz** are checked against that code, and cite file and line (`hb-ot-map.cc:389` in prose, `src/...` in the “Where to read the source” table). The survey notes are a guide: where they disagree with the code, the code wins, and the disagreement is reported.
 * **Claims about HarfBuzz’s history** come from `NEWS`, `README.md`, `AUTHORS`, `docs/` and source comments. `docs/usermanual-*.xml` is the hand-written manual, and the doc comments in `src/*.cc` (with their `Since:` versions) are the API reference. The manual says what was intended; the code says what happens.
 * **Claims about other projects** (browsers, toolkits, platforms, HarfRust) need a source in that project: its repository or its own documentation, cited. A claim without one is left out, not softened.
+* **Claims about standing** come from outside HarfBuzz, because the code can’t give them. The code says what HarfBuzz does, not whether that is the standard. For every tag, table, feature, flag or behavior a chapter describes, ask: is it in the OpenType specification or its registries, only in the ISO standard, Apple’s, or HarfBuzz’s own (experimental, or a private extension)? Do other engines (DirectWrite, Core Text, Uniscribe) do the same? Say which, with a source: the registries, Microsoft’s script development specifications, the ISO standard, Apple’s TrueType Reference Manual, or a HarfBuzz issue or discussion where the decision was made (the resources in `AGENTS.md`). A tag HarfBuzz accepts but no registry lists, such as `dev3`, must be called unregistered where it first appears. `node tools/check-tags.mjs` lists every quoted tag that isn’t registered; a new one goes in `notes/unregistered-tags.txt`, with where the book says so.
 * Anything not checked is marked as the writer’s own reading (“(inferred)”, or said in words).
 
 ## Style
@@ -46,7 +47,7 @@ Anything shown as HarfBuzz’s output is a live block, run when the book is buil
 
 ## Verifying
 
-Build the whole site into a directory of your own (`node tools/build-site.mjs DIR`), never into `site/` while others are writing. It must succeed. Then read the chapter’s HTML and check that every block rendered and says what the prose says.
+Build the whole site into a directory of your own (`node tools/build-site.mjs DIR`), never into `site/` while others are writing. It must succeed. So must `node tools/check-tags.mjs`. Then read the chapter’s HTML and check that every block rendered and says what the prose says.
 
 ## Boundaries
 

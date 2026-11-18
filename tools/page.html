@@ -51,7 +51,7 @@ body::before {
 .flow { display: grid; min-width: 0; }
 .flow > * { width: 100%; max-width: var(--measure); justify-self: start; min-width: 0; }
 .flow > .views, .flow > .shape, .flow > .trace, .flow > table { max-width: var(--wide); }
-.flow > .macros { max-width: var(--wide); }
+.flow > .macros, .flow > .listing { max-width: var(--wide); }
 .macros table { display: table; table-layout: fixed; font-size: .85rem; }
 .macros th:nth-child(1) { width: 25%; }
 .macros th:nth-child(2) { width: 35%; }
@@ -115,7 +115,7 @@ h2 { font-size: 1.55rem; font-weight: 600; margin: 2.75rem 0 .5rem; padding-top:
 h3 { font-size: 1.15rem; font-weight: 600; margin: 1.75rem 0 .25rem; }
 p, ul, ol { margin: 0 0 1rem; }
 a { color: var(--accent); text-underline-offset: .15em; }
-code { font-family: var(--font-code); font-size: .86em; }
+code { font-family: var(--font-code); font-size: .86em; font-variant-ligatures: none; }
 p code, li code, td code { background: var(--well); padding: .05em .3em; border-radius: 3px; }
 blockquote {
   margin: 1.25rem 0; padding: .25rem 0 .25rem 1.1rem; border-left: 3px solid var(--accent);
@@ -151,6 +151,23 @@ pre code { font-size: .82rem; line-height: 1.55; }
 .trace td { padding: .3rem .75rem; }
 .trace td.what { font: 400 .78rem var(--font-code); white-space: nowrap; color: var(--ink); }
 .trace tr:last-child td { border-bottom: 0; }
+
+/* Figures: example programs, their output, and live demos. The glyphs are
+   black on transparent, so they sit on white in dark mode too. */
+.listing { margin: .5rem 0 1rem; border: 1px solid var(--rule); border-radius: 6px; background: var(--well); }
+.listing figcaption { padding: .45rem 1rem; border-bottom: 1px solid var(--rule); font: 400 .78rem var(--font-code); color: var(--muted); }
+.listing pre { padding: .9rem 1rem; }
+.example-output { margin: 0 0 1.75rem; }
+.example-output img { display: block; max-width: 100%; height: auto; background: #fff; border: 1px solid var(--rule); padding: .5rem; box-sizing: content-box; }
+.example-output img.vector { width: 24rem; }
+.example-output img.pixels { image-rendering: pixelated; }
+.example-output figcaption { font-size: .78rem; color: var(--muted); margin-top: .25rem; }
+.demo { margin: 0 0 1.75rem; padding: .75rem 1rem; border: 1px solid var(--rule); border-radius: 6px; font: 400 .85rem var(--font-head); }
+.demo input[type=text] { width: 16rem; max-width: 100%; font: inherit; }
+.demo input[type=number] { width: 4rem; font: inherit; }
+.demo-canvas { margin: .75rem 0 .25rem; overflow-x: auto; }
+.demo canvas { display: block; background: #fff; border: 1px solid var(--rule); }
+.demo-note { margin: 0; font-size: .78rem; color: var(--muted); }
 
 /* Figures: outlines drawn by hb-vector */
 .rasters { margin: .5rem 0 1.75rem; }

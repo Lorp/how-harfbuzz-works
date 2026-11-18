@@ -40,6 +40,10 @@
 //   hb:test/…/Roboto-Regular.ttf  Hamburgefonts  --font-size=11 --font-funcs=ft --ft-load-flags=0
 //   ```                      --font-funcs=ft uses the FreeType build (build-ft/)
 //
+//   ```example and ```demo   whole programs from examples/, compiled and run,
+//                            or run in the reader's browser: see blockExample
+//                            and blockDemo below
+//
 // The spec-like, TTX and bytes views are read from FONT.views.json beside each
 // font. Those are written by tools/font-views.py (Python, with fontTools) when
 // a chapter's fonts are built, and committed, so this build needs no Python.
@@ -461,8 +465,165 @@ function blockTable(body, fonts) {
          `<figcaption>${esc(f.font)}: ${esc(what)} (TTX)</figcaption></figure>`;
 }
 
+// Example programs, in examples/: compiled (or installed) and run when the
+// book is built, so a listing can't drift from what it does. Each language
+// is built in .cache/examples/: C against HB_BUILD's own libraries, through
+// their uninstalled pkg-config files; JavaScript with npm, from the
+// program's package.json; Rust with cargo, from its Cargo.toml. Outputs are
+// kept by a hash of the program, its build files and its arguments, so an
+// unchanged example isn't run again.
+const EXAMPLES = path.join(ROOT, "examples");
+// Listings link to their files in the book's repository, on GitHub.
+const REPOSITORY = JSON.parse(fs.readFileSync(path.join(ROOT, "book", "book.json"), "utf8")).repository;
+const EXAMPLES_CACHE = path.join(ROOT, ".cache", "examples");
+
+function run(exe, args, opts = {}) {
+  const r = spawnSync(exe, args, { maxBuffer: 64 << 20, ...opts });
+  if (r.error) throw new Error(`${exe}: ${r.error.message}`);
+  if (r.status !== 0) throw new Error(`${exe} ${args.join(" ")} failed:\n${r.stderr}`);
+  return r;
+}
+
+// The program's command: [exe, args before the user's], building it first.
+function exampleCommand(program) {
+  const src = path.join(EXAMPLES, program);
+  const dir = path.dirname(src), name = path.basename(src).replace(/\.[^.]*$/, "");
+  const ext = path.extname(src);
+  if (ext === ".c") {
+    const exe = path.join(EXAMPLES_CACHE, "c", name);
+    const lib = /hb-raster\.h/.test(fs.readFileSync(src, "utf8")) ? "harfbuzz-raster" : "harfbuzz-vector";
+    const env = { ...process.env, PKG_CONFIG_PATH: path.join(HB_BUILD, "build", "meson-uninstalled") };
+    const flags = run("pkg-config", ["--cflags", "--libs", lib], { encoding: "utf8", env }).stdout.trim().split(/\s+/);
+    fs.mkdirSync(path.dirname(exe), { recursive: true });
+    run("cc", ["-Wall", "-Werror", "-o", exe, src, ...flags, `-Wl,-rpath,${path.join(HB_BUILD, "build", "src")}`],
+        { encoding: "utf8" });
+    return [exe, []];
+  }
+  if (ext === ".mjs") {
+    const work = path.join(EXAMPLES_CACHE, "js");
+    fs.mkdirSync(work, { recursive: true });
+    const pkg = fs.readFileSync(path.join(dir, "package.json"), "utf8");
+    const installed = path.join(work, "package.json");
+    if (!fs.existsSync(installed) || fs.readFileSync(installed, "utf8") !== pkg) {
+      fs.writeFileSync(installed, pkg);
+      run("npm", ["install", "--no-audit", "--no-fund", "--ignore-scripts"], { cwd: work, encoding: "utf8" });
+    }
+    fs.copyFileSync(src, path.join(work, path.basename(src)));
+    return [process.execPath, [path.join(work, path.basename(src))]];
+  }
+  if (ext === ".rs") {
+    const manifest = path.join(dir, "..", "Cargo.toml");
+    const target = path.join(EXAMPLES_CACHE, "rust-target");
+    run("cargo", ["build", "--release", "--quiet", "--manifest-path", manifest, "--bin", name],
+        { encoding: "utf8", env: { ...process.env, CARGO_TARGET_DIR: target } });
+    return [path.join(target, "release", name), []];
+  }
+  throw new Error(`${program}: no rule for ${ext} programs`);
+}
+
+// Runs an example program with its arguments, and returns its standard
+// output and error, from the cache if nothing has changed.
+function runExample(program, args) {
+  const src = path.join(EXAMPLES, program);
+  const hash = createHash("sha256").update(program).update(fs.readFileSync(src));
+  for (const f of ["package.json", "../Cargo.toml"]) {
+    const p = path.join(path.dirname(src), f);
+    if (fs.existsSync(p)) hash.update(fs.readFileSync(p));
+  }
+  for (const a of args) hash.update("\0" + a);
+  const key = hash.digest("hex").slice(0, 16);
+  const out = path.join(EXAMPLES_CACHE, "out", key);
+  if (!fs.existsSync(out + ".stdout")) {
+    const [exe, pre] = exampleCommand(program);
+    const r = run(exe, [...pre, ...args]);
+    fs.mkdirSync(path.dirname(out), { recursive: true });
+    fs.writeFileSync(out + ".stderr", r.stderr);
+    fs.writeFileSync(out + ".stdout", r.stdout);
+  }
+  return { stdout: fs.readFileSync(out + ".stdout"), stderr: fs.readFileSync(out + ".stderr", "utf8") };
+}
+
+// ```example                one example program, run when the page is built
+// program: quick-start/c/text-to-svg.c   (in examples/)
+// args: hb:…/Roboto-Regular.ttf  office coffee   (the first is a font)
+// output: svg               (svg or png; png takes `zoom`, default 2)
+// show: both                (source, output or both; default both)
+// ```
+function blockExample(body, fonts) {
+  const f = parseFields(body);
+  const [font, ...rest] = f.args.split(/\s{2,}/);
+  const args = [fontPath(font, fonts), ...rest.map(decode)];
+  const show = f.show || "both";
+  let html = "";
+  if (show !== "output") {
+    const src = fs.readFileSync(path.join(EXAMPLES, f.program), "utf8");
+    const lang = { ".c": "c", ".mjs": "javascript", ".rs": "rust" }[path.extname(f.program)];
+    const url = `${REPOSITORY}/blob/main/examples/${f.program}`;
+    html += `<figure class="listing"><figcaption><a href="${esc(url)}"><code>examples/${esc(f.program)}</code></a></figcaption>` +
+            `<pre><code class="language-${lang}">${esc(src)}</code></pre></figure>\n`;
+  }
+  if (show !== "source") {
+    const { stdout } = runExample(f.program, args);
+    // The font's name, the text in quotes, and any other arguments as they are.
+    const shownArgs = [font.startsWith("hb:") ? path.basename(font) : font,
+                       ...rest.map((a, i) => i ? a : `“${a}”`)].join(", ");
+    let img;
+    if (f.output === "png") {
+      const zoom = Number(f.zoom || 2);
+      const [w, h] = [stdout.readUInt32BE(16), stdout.readUInt32BE(20)];
+      img = `<img class="pixels" src="data:image/png;base64,${stdout.toString("base64")}" ` +
+            `width="${w * zoom}" height="${h * zoom}" alt="${esc(rest[0] || "")}">`;
+      img += `<figcaption>Its output for ${esc(shownArgs)}: ${w} × ${h} pixels, shown ${zoom} times larger</figcaption>`;
+    } else {
+      img = `<img class="vector" src="data:image/svg+xml;base64,${stdout.toString("base64")}" alt="${esc(rest[0] || "")}">`;
+      img += `<figcaption>Its output for ${esc(shownArgs)}</figcaption>`;
+    }
+    html += `<figure class="example-output">${img}</figure>\n`;
+  }
+  return html;
+}
+
+// ```demo                   a live demo, on screen only: a browser module from
+// program: quick-start/js/text-to-canvas.mjs   examples/, which exports
+// font: hb:…/Roboto-Regular.ttf                drawText(canvas, fontData, text,
+// unicodes: 20-7E                              pixels). The font is subset to
+// text: office coffee                          these code points with hb-subset
+// package: harfbuzzjs@1.6.4                    and carried in the page; the
+// ```                                          package comes from jsDelivr.
+function blockDemo(body, fonts) {
+  const f = parseFields(body);
+  const src = fs.readFileSync(path.join(EXAMPLES, f.program), "utf8");
+  const [pkg] = f.package.split("@");
+  const subset = path.join(EXAMPLES_CACHE, "demo-font-" +
+    createHash("sha256").update(f.font + f.unicodes).digest("hex").slice(0, 12) + ".ttf");
+  if (!fs.existsSync(subset)) {
+    fs.mkdirSync(path.dirname(subset), { recursive: true });
+    runTool(path.join(HB_BUILD, "build", "util", "hb-subset"),
+            [fontPath(f.font, fonts), `--unicodes=${f.unicodes}`, "--layout-features=*", "-o", subset]);
+  }
+  const module = src.replace(`from "${pkg}"`, `from "https://cdn.jsdelivr.net/npm/${f.package}/dist/index.mjs"`);
+  const id = "demo-" + createHash("sha256").update(body).digest("hex").slice(0, 8);
+  return `<div class="demo screen-only" id="${id}">` +
+    `<label>Text <input type="text" value="${esc(f.text)}" spellcheck="false"></label> ` +
+    `<label>Size <input type="number" value="32" min="6" max="200"> pixels</label>` +
+    `<div class="demo-canvas"><canvas></canvas></div>` +
+    `<p class="demo-note">Drawn in your browser, by the program above. ` +
+    `The font is ${esc(path.basename(f.font))}, cut down to the characters ${esc(f.unicodes)} (hex).</p></div>\n` +
+    `<script type="module">\n${module}\n` +
+    `const root = document.getElementById("${id}");\n` +
+    `const font = Uint8Array.from(atob("${fs.readFileSync(subset).toString("base64")}"), (c) => c.charCodeAt(0));\n` +
+    `const [text, size] = root.querySelectorAll("input"), canvas = root.querySelector("canvas");\n` +
+    `function redraw() {\n` +
+    `  const ratio = window.devicePixelRatio || 1;\n` +
+    `  drawText(canvas, font, text.value, Number(size.value) * ratio);\n` +
+    `  canvas.style.width = canvas.width / ratio + "px";\n}\n` +
+    `text.addEventListener("input", redraw); size.addEventListener("input", redraw); redraw();\n` +
+    `</script>\n`;
+}
+
 const BLOCKS = { views: blockViews, shape: blockShape, trace: blockTrace,
-                 draw: blockDraw, info: blockInfo, table: blockTable, raster: blockRaster };
+                 draw: blockDraw, info: blockInfo, table: blockTable, raster: blockRaster,
+                 example: blockExample, demo: blockDemo };
 
 // Heading ids, made the way Python-Markdown's toc extension made them, so
 // links to sections keep working: "The mask" → "the-mask".
