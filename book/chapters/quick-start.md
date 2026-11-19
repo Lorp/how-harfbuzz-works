@@ -45,6 +45,14 @@ The program does three things, and every HarfBuzz program does them.
 
 **Read the result.** After shaping, the buffer holds two arrays of the same length. Each `hb_glyph_info_t` has the glyph’s ID and its **cluster**, which says where in the text the glyph came from. Each `hb_glyph_position_t` has the glyph’s advance and its offset. The loop prints them in `hb-shape`’s format, which [Reading this book](notation.html#shaping-results) explains: the glyph’s name, `=` and its cluster, `@` and its offset if it has one, `+` and its advance. `hb_font_glyph_to_string` gives the glyph’s name, or `gid` and its number in a font without names. The *ffi* of “office” has become one glyph, `f_f_i`, and the next glyph’s cluster jumps from 1 to 4, because three characters went into it.
 
+Programmers often want glyph IDs, not names, and `hb-shape` prints them with `--no-glyph-names`:
+
+```shape
+LibreBaskerville.ttf  office coffee  --no-glyph-names
+```
+
+The program can do the same by printing `info[i].codepoint` in place of the name: after shaping, that field holds the glyph ID. The same one-word change works in the other three languages.
+
 The build checks that this output is exactly what `hb-shape` prints for the same font and text. `hb-shape` does it without a loop: `hb_buffer_serialize` writes a buffer in this format (`util/shape-format.hh`).
 
 The clusters count bytes of UTF-8, because that is how the text was given to the buffer. `hb-shape` counts characters unless it is run with `--utf8-clusters`, so for text beyond ASCII the two differ until that option is added. For “office coffee” they agree.
