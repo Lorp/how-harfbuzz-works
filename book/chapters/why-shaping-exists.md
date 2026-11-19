@@ -10,7 +10,7 @@ The examples come from one small test font, `shaping.ttf`, built from `fonts/why
 
 A **character** is the smallest unit of text that Unicode encodes: a letter, a digit, a punctuation mark, an accent, a space, a joiner. Each has a number, its **code point**, from U+0000 to U+10FFFF. The number after “U+” is hexadecimal: U+0066 is *f*, 102 in decimal, and U+0628, 1576 in decimal, is the Arabic letter beh.
 
-In memory, a string is stored in one of three [encodings](https://www.unicode.org/faq/utf_bom.html): UTF-8 uses one to four bytes per code point, UTF-16 one or two 16-bit units, and UTF-32 one 32-bit unit. In UTF-8, *f* is the byte 66 and beh the two bytes D8 A8. HarfBuzz [accepts all three](buffers.html#adding-text), as well as plain arrays of code points, and decodes the text into code points as soon as it arrives. Inside HarfBuzz, a code point is an `hb_codepoint_t`, a 32-bit integer.
+In memory, a string is stored in one of three [encodings](https://www.unicode.org/faq/utf_bom.html): UTF-8 uses one to four bytes per code point, UTF-16 one or two 16-bit units, and UTF-32 one 32-bit unit. In UTF-8, *f* is the byte 66 (hex) and beh the two bytes D8 A8 (hex). HarfBuzz [accepts all three](buffers.html#adding-text), as well as plain arrays of code points, and decodes the text into code points as soon as it arrives. Inside HarfBuzz, a code point is an `hb_codepoint_t`, a 32-bit integer.
 
 In strings, characters are stored in **logical order**: the order in which they are read, and normally typed. That is true whichever way the script runs on the page. The first character of an Arabic word is its rightmost letter, and it comes first in the string.
 

@@ -26,7 +26,7 @@ It is a variable font, with weights from 400 to 700, and every program here draw
 
 ## In C
 
-The first C program needs only HarfBuzz itself, `libharfbuzz`. The two that draw use HarfBuzz’s own drawing libraries: `libharfbuzz-vector` for SVG and `libharfbuzz-raster` for pixels, the ones the two tools are built on.
+The first C program uses HarfBuzz itself, `libharfbuzz`. The two that draw also use HarfBuzz’s drawing libraries: `libharfbuzz-vector` for SVG and `libharfbuzz-raster` for pixels, the ones the two tools are built on.
 
 ### Glyphs, as hb-shape prints them
 
@@ -57,12 +57,39 @@ The build checks that this output is exactly what `hb-shape` prints for the same
 
 The clusters count bytes of UTF-8, because that is how the text was given to the buffer. `hb-shape` counts characters unless it is run with `--utf8-clusters`, so for text beyond ASCII the two differ until that option is added. For “office coffee” they agree.
 
-The program compiles against any HarfBuzz from 2.8.2 on, the version that added `hb_blob_create_from_file_or_fail`:
+### Building and running
+
+The programs are written for HarfBuzz {{hb}}. First, ask `pkg-config` which HarfBuzz you have:
+
+```
+pkg-config --modversion harfbuzz
+```
+
+If it prints {{hb}} or later, compile and run against it:
 
 ```
 cc text-to-glyphs.c $(pkg-config --cflags --libs harfbuzz) -o text-to-glyphs
 ./text-to-glyphs LibreBaskerville.ttf "office coffee"
 ```
+
+If it prints an older version, or says the package wasn’t found, build HarfBuzz {{hb}} yourself. It takes a minute or two, and doesn’t touch any HarfBuzz you have installed. You need a C++ compiler, `pkg-config`, Meson and Ninja (`brew install meson ninja pkg-config` on a Mac, `apt install meson ninja-build pkg-config` on Debian and Ubuntu), and for the PNG program below, libpng (`brew install libpng`, or `apt install libpng-dev`). Then, in the folder with the programs:
+
+```
+git clone --depth 1 --branch {{hb}} https://github.com/harfbuzz/harfbuzz.git
+meson setup harfbuzz/build harfbuzz
+ninja -C harfbuzz/build
+```
+
+Point `pkg-config` at the build’s `meson-uninstalled` folder ([Building HarfBuzz](building-harfbuzz.html#what-a-build-makes)), and tell the program where the libraries are:
+
+```
+export PKG_CONFIG_PATH=$PWD/harfbuzz/build/meson-uninstalled
+cc text-to-glyphs.c $(pkg-config --cflags --libs harfbuzz) \
+   -Wl,-rpath,$PWD/harfbuzz/build/src -o text-to-glyphs
+./text-to-glyphs LibreBaskerville.ttf "office coffee"
+```
+
+[Building HarfBuzz](building-harfbuzz.html) explains the build in full, including Windows.
 
 ### SVG with hb-vector
 
@@ -78,6 +105,13 @@ output: svg
 
 **Draw.** `hb_vector_draw_glyph` draws a glyph’s outline at the current transform, and `HB_VECTOR_EXTENTS_MODE_EXPAND` grows the SVG’s box to fit it. `hb_vector_draw_render` returns the document.
 
+It builds as the first program did, with `harfbuzz-vector`, HarfBuzz’s SVG library, in place of `harfbuzz` (and the same `-Wl,-rpath` option, if you built HarfBuzz yourself):
+
+```
+cc text-to-svg.c $(pkg-config --cflags --libs harfbuzz-vector) -o text-to-svg
+./text-to-svg LibreBaskerville.ttf "office coffee" > office.svg
+```
+
 ### PNG with hb-raster
 
 The PNG version is the same program with a size and a different drawing context:
@@ -90,39 +124,14 @@ output: png
 
 Three things change. The font now has a size, set with `hb_font_set_scale` to 64 units a pixel, so that positions keep fractions of a pixel, and `hb_raster_paint_set_scale_factor` tells the rasterizer to divide by 64 again. The image’s size has to be given before drawing: here it is the line’s advance by the font’s ascender and descender, in whole pixels. And it uses a paint context, not a draw context, because only a painted image can be written as PNG (`hb_raster_image_serialize_to_png_or_fail` takes only color images). Painting has a bonus: a color font comes out in color, with no change to the program. [hb-raster](hb-raster.html) explains both contexts.
 
-### Building and running the drawing programs
-
-The two drawing programs need HarfBuzz’s drawing libraries, `libharfbuzz-vector` and `libharfbuzz-raster`, which are stable only since HarfBuzz 15.0.0. First, ask `pkg-config` whether you have them:
+It builds with `harfbuzz-raster`, and takes a size in pixels as well:
 
 ```
-pkg-config --modversion harfbuzz-vector
+cc text-to-png.c $(pkg-config --cflags --libs harfbuzz-raster) -o text-to-png
+./text-to-png LibreBaskerville.ttf "office coffee" 32 > office.png
 ```
 
-If it prints 15.0.0 or later, compile and run against it:
-
-```
-cc text-to-svg.c $(pkg-config --cflags --libs harfbuzz-vector) -o text-to-svg
-./text-to-svg LibreBaskerville.ttf "office coffee" > office.svg
-```
-
-If it prints an older version, or says the package wasn’t found, build HarfBuzz 15.1.0 yourself. It takes a minute or two, and doesn’t touch any HarfBuzz you have installed. You need a C++ compiler, `pkg-config`, Meson and Ninja (`brew install meson ninja pkg-config` on a Mac, `apt install meson ninja-build pkg-config` on Debian and Ubuntu), and for the PNG program, libpng (`brew install libpng`, or `apt install libpng-dev`). Then, in the folder with the programs:
-
-```
-git clone --depth 1 --branch 15.1.0 https://github.com/harfbuzz/harfbuzz.git
-meson setup harfbuzz/build harfbuzz
-ninja -C harfbuzz/build
-```
-
-Point `pkg-config` at the build’s `meson-uninstalled` folder ([Building HarfBuzz](building-harfbuzz.html#what-a-build-makes)), and tell the program where the libraries are:
-
-```
-export PKG_CONFIG_PATH=$PWD/harfbuzz/build/meson-uninstalled
-cc text-to-svg.c $(pkg-config --cflags --libs harfbuzz-vector) \
-   -Wl,-rpath,$PWD/harfbuzz/build/src -o text-to-svg
-./text-to-svg LibreBaskerville.ttf "office coffee" > office.svg
-```
-
-The PNG program builds the same way, with `harfbuzz-raster` in place of `harfbuzz-vector`, and takes a size in pixels as well: `./text-to-png LibreBaskerville.ttf "office coffee" 32 > office.png`. If HarfBuzz was built without libpng, it prints “nothing to write”: Meson uses libpng only if it finds it, and says whether it did in the summary it prints at the end of `meson setup`. [Building HarfBuzz](building-harfbuzz.html) explains the build in full, including Windows.
+If HarfBuzz was built without libpng, it prints “nothing to write”: Meson uses libpng only if it finds it, and says whether it did in the summary it prints at the end of `meson setup`.
 
 ## In JavaScript
 
@@ -323,7 +332,7 @@ Each library’s own reference is where to go next:
 * The smallest program stops there and prints them, as `hb-shape` does. It needs only HarfBuzz itself, in any recent version.
 * Clusters count in the units the text was given in: bytes in C and Rust, UTF-16 code units in JavaScript, characters in Python.
 * A drawing program walks the glyphs, adding up advances and offsets, and draws each at its pen position.
-* In C, hb-vector draws the glyphs as SVG and hb-raster as pixels, and both are stable since HarfBuzz 15.0.0.
+* In C, hb-vector draws the glyphs as SVG and hb-raster as pixels.
 * In JavaScript, harfbuzzjs shapes, and gives outlines as SVG path data, for an SVG file or a canvas.
 * In Python, uharfbuzz shapes, draws outlines through a pen, and paints with hb-raster; Pillow writes the PNG.
 * In Rust, HarfRust shapes, Skrifa gives the outlines, and a rasterizer such as tiny-skia makes pixels. HarfRust is a port, not HarfBuzz.
