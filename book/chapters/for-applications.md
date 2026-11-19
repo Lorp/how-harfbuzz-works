@@ -223,6 +223,38 @@ With *liga* off for the *i* only, *ff* still forms; off for the second *f*, neit
 
 **Failure is quiet.** `hb_shape` returns nothing, and `hb_shape_full` returns true even when the buffer ran out of memory or of its operation budget; `hb_buffer_allocation_successful` is the test ([hb_shape and its backends](hb_shape-and-its-backends.html#running-the-plan-and-failing)).
 
+## Before shipping
+
+The [Quick start](quick-start.html) programs are as short as they can be, and most first programs are similar. This section lists what a real program adds to them, and the traps it can still fall into. HarfBuzz’s [user manual](https://harfbuzz.github.io/) explains how to do each step, so the table links to it for the how, and to this book for the why.
+
+| Step | How: the user manual | Why: this book |
+|---|---|---|
+| Check that the file was a font | [Object lifecycle management](https://harfbuzz.github.io/object-model-lifecycle.html) | [hb_face_create](blobs-faces-and-lazy-tables.html#hb_face_create) |
+| Set the direction, script and language | [Setting buffer properties](https://harfbuzz.github.io/setting-buffer-properties.html) | [Why shaping exists](why-shaping-exists.html#runs-and-the-three-things-harfbuzz-must-be-told) |
+| Set the size | [Fonts, faces and output](https://harfbuzz.github.io/fonts-and-faces.html) | [Three kinds of size](fonts-and-font-functions.html#three-kinds-of-size) |
+| Keep faces and fonts, and reuse buffers | [Object lifecycle management](https://harfbuzz.github.io/object-model-lifecycle.html), and [Buffers, language, script and direction](https://harfbuzz.github.io/buffers-language-script-and-direction.html) | [Objects, references and user data](blobs-faces-and-lazy-tables.html#objects-references-and-user-data) |
+| Share objects between threads | [Object lifecycle management](https://harfbuzz.github.io/object-model-lifecycle.html) | [Sharing a face between threads](blobs-faces-and-lazy-tables.html#sharing-a-face-between-threads) |
+| Check that shaping succeeded | not in the manual; the API reference has [`hb_buffer_allocation_successful`](https://harfbuzz.github.io/harfbuzz-hb-buffer.html#hb-buffer-allocation-successful) | [Running the plan, and failing](hb_shape-and-its-backends.html#running-the-plan-and-failing) |
+
+Each trap below follows from something HarfBuzz does inside, explained in the chapter linked.
+
+**A file that isn’t a font gives no error.** `hb_face_create` never fails: given bytes that aren’t a font, it returns a face with no tables and no glyphs ([hb_face_create](blobs-faces-and-lazy-tables.html#hb_face_create)). Shaping with it works, and every character comes out as glyph 0. `hb-shape` checks for this and says “Failed loading font face”; a program has to check too, with `hb_face_get_glyph_count`, or by making the face with `hb_face_create_or_fail` (HarfBuzz 10.1.0 and later), which returns `NULL` instead.
+
+**Failure is quiet.** `hb_shape` returns nothing, and `hb_shape_full` returns true even when the buffer has run out of memory or of its operation budget, as [Pitfalls](#pitfalls) says. `hb_buffer_allocation_successful` is the test.
+
+**The language comes from the locale, once.** `hb_buffer_guess_segment_properties` takes the language from the process’s locale, through `hb_language_get_default` (`hb-common.cc:384`). That function reads `LC_CTYPE` the first time it is called and keeps the answer for the life of the process. So the same program can shape differently on two machines, and differently from `hb-shape`, which sets its locale from the environment (`util/options.hh:287`). A C program that never calls `setlocale` is in the `C` locale, and gets the language `c`, which matches no language system in a font. With a font that has Turkish forms, the language decides whether *fi* becomes a ligature:
+
+```shape
+choosing-a-script-shaper/turkish.ttf  fi  --language=en
+choosing-a-script-shaper/turkish.ttf  fi  --language=tr
+```
+
+The same comment warns that the first call uses `setlocale`, which many C libraries don’t make thread-safe, and advises calling `hb_language_get_default` once before starting threads. A program that sets the language itself avoids both problems.
+
+**Clusters count in the units the text was added in.** A cluster is an index into whatever the buffer was given: bytes for UTF-8, code units for UTF-16, characters for UTF-32 ([Adding text](buffers.html#adding-text)). The bindings differ: the [Quick start](quick-start.html#glyphs-in-javascript) programs count bytes in C and Rust, UTF-16 code units in JavaScript, and characters in Python. Feature ranges are counted in clusters too ([Pitfalls](#pitfalls)), so in JavaScript a range that starts after an emoji is one higher than its character count.
+
+**The plan cache only grows.** Each face keeps every shape plan it has made, and never frees one until the face is destroyed ([Never pruned](shape-plans-and-their-cache.html#never-pruned)). Each distinct language tag is a distinct plan, so a long-running program that passes tags such as `en-GB-oxendict` straight through gets one plan per tag. Mapping tags to the few a font distinguishes keeps the cache small.
+
 ## Where to read the source
 
 | File | What’s there |
@@ -245,3 +277,4 @@ With *liga* off for the *i* only, *ff* still forms; off for the second *f*, neit
 * `--verify` checks the flags by reshaping. A few shapers and tables in {{hb}} set them too optimistically.
 * Context, given through the `item_offset` of the add functions, reaches only Arabic joining and the dotted-circle test, never lookups.
 * Itemization, font fallback, line breaking and justification are the application’s; HarfBuzz offers the tatweel flag, and an experimental justifier that uses variation axes.
+* Before shipping: check that the file was a font and that shaping succeeded, set the language instead of letting it come from the locale, and count clusters in the units the text was added in.

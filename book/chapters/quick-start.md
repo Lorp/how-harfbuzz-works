@@ -291,7 +291,9 @@ They are as short as they can be, and a real program needs more. In rough order 
 * **Variable fonts**, set to a position with `hb_font_set_variations` ([The design space](design-space.html)).
 * **Hinting and small sizes.** hb-raster and tiny-skia don’t hint. For hinted text, FreeType draws the outlines ([hb-raster](hb-raster.html) explains the trade).
 * **Color fonts.** The C and Python PNG programs paint them already, since they paint with hb-raster. The SVG programs would need hb-vector’s paint context in C, or a color library in the other languages ([Color](color.html)).
-* **Checking the font.** HarfBuzz doesn’t fail on a file that isn’t a font: it gives an empty face, and every character comes out as glyph 0. A real program checks, with `hb_face_get_glyph_count`, or by loading the font with `hb_face_create_or_fail` (HarfBuzz 10.1.0 and later).
+* **Checking the font.** HarfBuzz doesn’t fail on a file that isn’t a font ([Before shipping](for-applications.html#before-shipping) says what happens, and what to check).
+
+For a real program, two places take over from here. HarfBuzz’s [user manual](https://harfbuzz.github.io/) explains how to do each of the things above. [Before shipping](for-applications.html#before-shipping), at the end of For applications, lists the same steps with links to both the manual and this book, and the traps that a program built on these examples can still fall into.
 
 ## Documentation
 
