@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>office coffee</title>
+
+<!-- Where the browser finds harfbuzzjs when a module imports "harfbuzzjs". -->
+<script type="importmap">
+  { "imports": { "harfbuzzjs": "https://cdn.jsdelivr.net/npm/harfbuzzjs@1.6.4/dist/index.mjs" } }
+</script>
+
+<canvas id="line"></canvas>
+
+<script type="module">
+  import { drawText } from "./text-to-canvas.mjs";
+
+  // The font's bytes, from beside the page.
+  const response = await fetch("LibreBaskerville.ttf");
+  const font = new Uint8Array(await response.arrayBuffer());
+
+  // 32 CSS pixels high, with as many canvas pixels as the screen has.
+  const canvas = document.getElementById("line");
+  const ratio = window.devicePixelRatio || 1;
+  drawText(canvas, font, "office coffee", 32 * ratio);
+  canvas.style.width = canvas.width / ratio + "px";
+</script>
+</html>

@@ -179,13 +179,35 @@ node text-to-svg.mjs LibreBaskerville.ttf "office coffee" > office.svg
 
 ### Pixels, in a browser
 
-In a browser, the canvas does the rasterizing: the same path data becomes a `Path2D`, and the canvas fills it.
+In a browser, the canvas does the rasterizing: the same path data becomes a `Path2D`, and the canvas fills it. This module exports one function, `drawText`, which shapes a line and draws it on a canvas:
 
 ```example
 program: quick-start/js/text-to-canvas.mjs
 args: LibreBaskerville.ttf
 show: source
 ```
+
+A canvas can be scaled and flipped once, so the glyphs are drawn in font units with y going up, and the canvas turns them into pixels.
+
+A web page uses the module like this:
+
+```example
+program: quick-start/js/text-to-canvas.html
+args: LibreBaskerville.ttf
+show: source
+```
+
+The page, `text-to-canvas.mjs` and the font go in one folder. The **import map** tells the browser where to find a module imported by a bare name: when `text-to-canvas.mjs` imports `"harfbuzzjs"`, the browser loads harfbuzzjs 1.6.4 from jsDelivr, a CDN that serves npm packages, so nothing has to be installed. To serve harfbuzzjs yourself, copy `index.mjs`, `harfbuzz.js` and `harfbuzz.wasm` from `node_modules/harfbuzzjs/dist/` into a folder named `harfbuzzjs` beside the page, and change the import map to `"./harfbuzzjs/index.mjs"`. harfbuzzjs loads `harfbuzz.wasm` from beside its own module, wherever that is.
+
+On a high-resolution screen, the canvas should have more pixels than it takes up on the page, `devicePixelRatio` times as many, or the text comes out blurred. The page asks `drawText` for that many pixels, and then sets the canvas’s width in CSS pixels.
+
+Browsers don’t run modules from a page opened as a file, so serve the folder with a local web server, such as Python’s:
+
+```
+python3 -m http.server
+```
+
+and open `http://localhost:8000/text-to-canvas.html`.
 
 ```demo
 program: quick-start/js/text-to-canvas.mjs
@@ -196,8 +218,6 @@ package: harfbuzzjs@1.6.4
 ```
 
 <p class="print-only">The web edition of this book runs this program on the page, with a box to type text into.</p>
-
-A canvas can be scaled and flipped once, so the glyphs are drawn in font units with y going up, and the canvas turns them into pixels. On a high-resolution screen, the canvas should have more pixels than it takes up on the page, `devicePixelRatio` times as many, or the text comes out blurred. The page above does that around `drawText`.
 
 ## In Python
 

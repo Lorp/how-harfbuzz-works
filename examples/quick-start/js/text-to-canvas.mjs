@@ -16,7 +16,7 @@ export function drawText(canvas, fontData, text, pixels) {
   const { ascender, descender } = font.hExtents();
   const positions = buffer.getGlyphPositions();
   let width = 0;
-  for (const pos of positions) width += pos.xAdvance;
+  for (let i = 0; i < positions.length; i++) width += positions[i].xAdvance;
   const top = Math.ceil(ascender * scale);
   const bottom = Math.floor(descender * scale);
   canvas.width = Math.ceil(width * scale);

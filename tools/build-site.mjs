@@ -648,7 +648,7 @@ function blockExample(body, fonts) {
   let html = "";
   if (show !== "output") {
     const src = fs.readFileSync(path.join(EXAMPLES, f.program), "utf8");
-    const lang = { ".c": "c", ".mjs": "javascript", ".py": "python", ".rs": "rust" }[path.extname(f.program)];
+    const lang = { ".c": "c", ".mjs": "javascript", ".py": "python", ".rs": "rust", ".html": "html" }[path.extname(f.program)];
     const url = `${REPOSITORY}/blob/main/examples/${f.program}`;
     html += `<figure class="listing"><figcaption><a href="${esc(url)}"><code>examples/${esc(f.program)}</code></a></figcaption>` +
             `<pre><code class="language-${lang}">${esc(src)}</code></pre></figure>\n`;
