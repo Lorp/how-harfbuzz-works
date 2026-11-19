@@ -13,7 +13,7 @@ The book, started 17 November 2026, is still a draft: 49 chapters in twelve part
 
 ## How it’s made
 
-The book was drafted by Claude, Anthropic’s AI model, working in Claude Code. Laurence Penney planned it, directed its revisions and checked it. That was not one instruction but hundreds:
+The book was drafted by Claude, Anthropic’s AI model, working in Claude Code. Laurence Penney planned it, directed its revisions, checked it, and added numerous edits by hand. Not a one-shot, but hundreds of instructions:
 
 * **Organization:** the order of the parts and chapters, which sections moved between them, and who each chapter is for.
 * **Wording:** headings, sentences and captions rewritten, plain wording chosen over clever wording, and errors of fact caught, down to a miscounted glyph.

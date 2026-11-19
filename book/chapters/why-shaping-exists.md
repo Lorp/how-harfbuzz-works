@@ -304,7 +304,7 @@ From there, HarfBuzz grew in both directions. Version 2.0.0, in October 2018, ad
 
 ## What happens to a run
 
-This chapter has looked at HarfBuzz from outside: text in, glyphs out, and the ways the two differ. The next two chapters are practical: [building HarfBuzz](building-harfbuzz.html) and [the command-line tools](command-line-tools.html) that come with it, which the rest of the book uses to show what HarfBuzz does. After them the book looks inside. It follows one run through the library: from the bytes of the font, which [Fonts as bytes](fonts-as-bytes.html) starts with, through the buffer and the shape plan, to the pipeline that maps characters to glyphs, substitutes and positions them, and hands them back with their clusters.
+This chapter has looked at HarfBuzz from outside: text in, glyphs out, and the ways the two differ. The next three chapters are practical: [the command-line tools](command-line-tools.html) that come with HarfBuzz, which the rest of the book uses to show what it does; a [quick start](quick-start.html) at programming with it; and [building HarfBuzz](building-harfbuzz.html) yourself. After them the book looks inside. It follows one run through the library: from the bytes of the font, which [Fonts as bytes](fonts-as-bytes.html) starts with, through the buffer and the shape plan, to the pipeline that maps characters to glyphs, substitutes and positions them, and hands them back with their clusters.
 
 ## Where to read the source
 

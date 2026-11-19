@@ -15,7 +15,7 @@ Everything in this book happens between those two points: a buffer of characters
 
 ## How a run is shaped
 
-The work is split into the parts this book follows, after a first part for getting started. [Part I](why-shaping-exists.html) says why shaping exists at all, then how to build HarfBuzz and how to use the command-line tools that come with it, which every later chapter uses to show what HarfBuzz does.
+The work is split into the parts this book follows, after a first part for getting started. [Part I](why-shaping-exists.html) says why shaping exists at all, then how to use the command-line tools that come with HarfBuzz, which every later chapter uses to show what it does, how to program with it, and how to build it.
 
 The font comes first. Before it can shape anything, HarfBuzz has to read the font, which is a file of binary tables, and it has to do so safely, since fonts come from anywhere. [Part II](fonts-as-bytes.html) covers how HarfBuzz lays its data structures over the bytes of a font without copying them, how the sanitizer makes that safe, and where a glyph’s metrics come from.
 

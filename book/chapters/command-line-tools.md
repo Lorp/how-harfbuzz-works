@@ -2,7 +2,7 @@
 
 HarfBuzz comes with a handful of small programs, in its `util/` folder. `hb-shape` shapes a piece of text with a font and prints the glyphs and positions that come back. `hb-info` says what is in a font. `hb-subset` cuts a font down. `hb-vector`, `hb-raster` and `hb-view` draw shaped text. They are thin: each parses its options, makes the same HarfBuzz objects an application would, calls the library, and prints what it gets. That makes them the quickest way to ask HarfBuzz a question about a font, and the answer comes from the library itself.
 
-Every shaping result in this book is `hb-shape` output. This chapter explains its options, then the other tools, then puts them to work on a few questions about fonts. How to get the tools is the [previous chapter](building-harfbuzz.html); [Reading this book](notation.html) explains how the book shows their output.
+Every shaping result in this book is `hb-shape` output. This chapter explains its options, then the other tools, then puts them to work on a few questions about fonts. The tools come with a package manager’s HarfBuzz: Homebrew’s `harfbuzz`, for example, or Debian’s `libharfbuzz-bin`. Check the version first, with `hb-shape --version`: this book describes HarfBuzz 15, and a packaged HarfBuzz can be much older. [Building HarfBuzz](building-harfbuzz.html) shows how to build HarfBuzz {{hb}} yourself, including the build with detailed traces. [Reading this book](notation.html) explains how the book shows their output.
 
 As everywhere in the book, the results and pictures below were made by running the tools of HarfBuzz {{hb}} when the page was built. Commands shown in plain code blocks are hand-written.
 
