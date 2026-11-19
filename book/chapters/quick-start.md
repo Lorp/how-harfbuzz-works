@@ -137,6 +137,16 @@ If HarfBuzz was built without libpng, it prints “nothing to write”: Meson us
 
 [harfbuzzjs](https://github.com/harfbuzz/harfbuzzjs) is HarfBuzz compiled to WebAssembly, from the HarfBuzz project, with the C API wrapped in classes. It runs in Node and in browsers. Version 1.6.4, which these programs use, contains HarfBuzz 15.0.0, one release behind this book. It doesn’t include hb-vector or hb-raster, but it gives each glyph’s outline as SVG path data, which is enough for both jobs.
 
+harfbuzzjs names follow HarfBuzz’s with one rule: drop `hb_` and the object’s name, make the function a method of a class (`Blob`, `Face`, `Font`, `Buffer`), and write it in camelCase. So `hb_buffer_guess_segment_properties (buf)` is `buffer.guessSegmentProperties()`, and a position’s `x_advance` is `xAdvance`. The rule works both ways, and it is what to use to find a method in HarfBuzz’s documentation, or a HarfBuzz function in harfbuzzjs: harfbuzzjs’s own documentation doesn’t give the C names. A few names don’t follow it:
+
+| harfbuzzjs | HarfBuzz |
+|---|---|
+| `addText` | `hb_buffer_add_utf16`, so clusters count UTF-16 code units |
+| `glyphName` | `hb_font_glyph_to_string`, which gives `gid` and a number for a glyph without a name |
+| `hExtents` | `hb_font_get_h_extents` |
+| `face.upem` | `hb_face_get_upem`, as a property |
+| `glyphToPath` | none: harfbuzzjs’s own, built on `hb_font_draw_glyph` |
+
 ### Glyphs in JavaScript
 
 ```example
@@ -193,6 +203,8 @@ A canvas can be scaled and flipped once, so the glyphs are drawn in font units w
 
 [uharfbuzz](https://github.com/harfbuzz/uharfbuzz) is HarfBuzz’s Python binding, from the HarfBuzz project, and comes ready-built for the common platforms. Version 0.57.0, which these programs use, contains HarfBuzz 15.0.0, one release behind this book. Unlike harfbuzzjs, it includes hb-raster, though not hb-vector.
 
+uharfbuzz keeps HarfBuzz’s names, in snake_case, without the `hb_` and the object’s name, and turns getters into properties (`buf.glyph_infos`, `face.upem`). Each function’s documentation links to the C function it wraps. Two names differ: `add_str` is `hb_buffer_add_utf32`, and `draw_glyph_with_pen` is `hb_font_draw_glyph` with a fontTools-style pen.
+
 ### Glyphs in Python
 
 ```example
@@ -245,6 +257,8 @@ python text-to-png.py LibreBaskerville.ttf "office coffee" 32 > office.png
 ## In Rust
 
 Rust programs usually don’t call HarfBuzz itself. They use HarfRust, a port of HarfBuzz’s shaping to Rust, which matches HarfBuzz {{hb}} but isn’t HarfBuzz: [HarfRust](harfrust.html) counts the differences. It only shapes, so the outlines come from Skrifa, part of the same Rust font libraries (Fontations). For C HarfBuzz itself, the `harfbuzz` crate has bindings, but they are less used.
+
+HarfRust’s API is its own, modeled on HarfBuzz’s but not a binding to it, so its names don’t map one to one. The difference most worth knowing: C’s `codepoint` field, which holds a glyph ID after shaping, is `glyph_id` in HarfRust.
 
 The project’s `Cargo.toml` asks for `harfrust = "0.16.0"`, which is all the first program needs, and for the drawing programs `skrifa = "0.50.0"`, and `tiny-skia` for the PNG version.
 
