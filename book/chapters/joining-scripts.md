@@ -125,6 +125,8 @@ Beth (D) joins the Alaph after it, which is final; with another beth after that,
 | | `calt` | none if the font has `rclt` |
 | | `liga`, `clig`, `mset`, then `Buzz` and the common and horizontal features | |
 
+[Feature order](feature-order.html#arabic) lists these stages beside the other shapers’.
+
 The joining features are added with `add_feature`, not `enable_feature`: none is on globally, and each glyph gets the bit of at most one. All but `stch` have `F_MANUAL_ZWJ`. `cswh` is no longer on, because Windows 8 and later don’t turn it on (`:244`); `mset` is.
 
 Why so many stages? The comment at `:192` gives the reasons. The pause between the joining features and `rlig` is required: `rlig` must see the joining forms, because lam-alef is a ligature of an *initial or medial* lam and a *final* alef (the bug it cites is Mozilla’s 644184). The pauses between the joining features themselves “are not necessarily needed as only one of those features is applied to any character”; they make a difference only to contextual lookups, which see the forms of earlier features but not of later ones, and HarfBuzz follows the order of the specification, as giving “better experience if that’s what Uniscribe is doing”. [From features to lookups](from-features-to-lookups.html#harf-and-buzz-seen-through-the-arabic-shapers-stages) shows these stages running.

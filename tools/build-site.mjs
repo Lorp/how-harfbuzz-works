@@ -1095,17 +1095,47 @@ function readToc() {
 
 // The contents, as nested lists. With summaries, it's the full contents for
 // the title page; without, it's the short one in every page's header.
-function contents(sections, md, withSummaries) {
+function contents(sections, md, withSummaries, depth = 1) {
   const item = (p) => {
     const num = p.number ? `<span class="num">${p.number}</span> ` : "";
     const cls = p.planned ? ' class="planned"' : "";
     const summary = withSummaries && p.summary ? `<span class="summary">${md.renderInline(p.summary)}</span>` : "";
-    return `<li${cls}>${num}<a href="${p.slug}.html">${esc(p.title)}</a>${summary}</li>`;
+    const subs = depth > 1 && !p.planned && p.slug !== "title" ? subheadings(p, md, depth) : "";
+    return `<li${cls}>${num}<a href="${p.slug}.html">${esc(p.title)}</a>${summary}${subs}</li>`;
   };
   return sections.map((s) => {
     const head = s.label ? `<p class="toc-head">${esc(s.label)}${s.title ? `: ${esc(s.title)}` : ""}</p>` : "";
     return `<div class="toc-section">${head}<ol>${s.pages.map(item).join("")}</ol></div>`;
   }).join("");
+}
+
+// A page's headings, from level 2 down to depth, as nested lists, with the
+// ids the renderer gives them (counted over every heading, as it does).
+function subheadings(p, md, depth) {
+  const used = new Set(), heads = [];
+  let fenced = false;
+  for (const line of p.src.split("\n")) {
+    if (/^(```|~~~)/.test(line)) { fenced = !fenced; continue; }
+    const m = !fenced && line.match(/^(#{1,6}) (.+?)\s*#*\s*$/);
+    if (!m) continue;
+    const text = m[2], plainText = md.parseInline(text, {})[0].children
+      .filter((c) => c.type === "text" || c.type === "code_inline").map((c) => c.content).join("");
+    let id = slugify(plainText), n = 1;
+    while (used.has(id)) id = `${slugify(plainText)}_${n++}`;
+    used.add(id);
+    if (m[1].length >= 2 && m[1].length <= depth && plainText !== "In short") heads.push({ level: m[1].length, id, text });
+  }
+  const list = (level, i) => {
+    let out = "";
+    while (i < heads.length && heads[i].level >= level) {
+      const h = heads[i++];
+      let sub = "";
+      if (i < heads.length && heads[i].level > level) [sub, i] = list(level + 1, i);
+      out += `<li><a href="${p.slug}.html#${h.id}">${md.renderInline(h.text)}</a>${sub}</li>`;
+    }
+    return [`<ol class="toc-sub toc-h${level}">${out}</ol>`, i];
+  };
+  return heads.length ? list(2, 0)[0] : "";
 }
 
 // The page for a chapter that's planned but not written yet.
@@ -1126,7 +1156,7 @@ function main(outDir, fragment) {
     `It describes HarfBuzz ${HB_TAG}.`;
   const plain = new MarkdownIt({ html: true });
   const nav = contents(sections, plain, false);
-  const fullContents = contents(sections, plain, true);
+  const fullContents = contents(sections, plain, true, Number(process.env.TOC_DEPTH || 1));
   const index = new Index(pages);
   pages.forEach((p, n) => {
     const { slug, title } = p;

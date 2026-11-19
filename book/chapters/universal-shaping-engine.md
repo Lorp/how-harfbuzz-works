@@ -224,7 +224,7 @@ The wide tail is deliberate. The specification’s symbol cluster takes only con
 | “Topographical features” | `isol`, `init`, `medi`, `fina` | none |
 | “Standard typographic presentation” | `abvs`, `blws`, `haln`, `pres`, `psts`; then `Buzz`, `BUZZ`, the common and horizontal features, and the application’s | |
 
-([From features to lookups](from-features-to-lookups.html#stages-and-pauses) explains `rvrn`, `Harf` and `Buzz`.) Within each group, lookups run in LookupList order, whatever their features. The specification says so: “it is, therefore, up to the font developer to specify the order of lookups for these features in the font’s OTL. The order given here is recommended but not required.” Only `rphf` and `pref` have stages of their own, because what each did must be recorded before the next.
+([From features to lookups](from-features-to-lookups.html#stages-and-pauses) explains `rvrn`, `Harf` and `Buzz`.) [Feature order](feature-order.html#the-universal-shaping-engine) lists these stages beside the other shapers’. Within each group, lookups run in LookupList order, whatever their features. The specification says so: “it is, therefore, up to the font developer to specify the order of lookups for these features in the font’s OTL. The order given here is recommended but not required.” Only `rphf` and `pref` have stages of their own, because what each did must be recorded before the next.
 
 The flags differ from the Indic shaper’s too. They are HarfBuzz’s choices, since the specification doesn’t say how lookups treat joiners:
 

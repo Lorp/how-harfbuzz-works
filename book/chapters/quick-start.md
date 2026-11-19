@@ -24,7 +24,7 @@ curl -L -o LibreBaskerville.ttf \
 
 It is a variable font, with weights from 400 to 700, and every program here draws its default, 400.
 
-## In C
+## HarfBuzz in C
 
 The first C program uses HarfBuzz itself, `libharfbuzz`. The two that draw also use HarfBuzz’s drawing libraries: `libharfbuzz-vector` for SVG and `libharfbuzz-raster` for pixels, the ones the two tools are built on.
 
@@ -133,7 +133,7 @@ cc text-to-png.c $(pkg-config --cflags --libs harfbuzz-raster) -o text-to-png
 
 If HarfBuzz was built without libpng, it prints “nothing to write”: Meson uses libpng only if it finds it, and says whether it did in the summary it prints at the end of `meson setup`.
 
-## In JavaScript
+## HarfBuzz in JavaScript
 
 [harfbuzzjs](https://github.com/harfbuzz/harfbuzzjs) is HarfBuzz compiled to WebAssembly, from the HarfBuzz project, with the C API wrapped in classes. It runs in Node and in browsers. Version 1.6.4, which these programs use, contains HarfBuzz 15.0.0, one release behind this book. It doesn’t include hb-vector or hb-raster, but it gives each glyph’s outline as SVG path data, which is enough for both jobs.
 
@@ -219,7 +219,7 @@ package: harfbuzzjs@1.6.4
 
 <p class="print-only">The web edition of this book runs this program on the page, with a box to type text into.</p>
 
-## In Python
+## HarfBuzz in Python
 
 [uharfbuzz](https://github.com/harfbuzz/uharfbuzz) is HarfBuzz’s Python binding, from the HarfBuzz project, and comes ready-built for the common platforms. Version 0.57.0, which these programs use, contains HarfBuzz 15.0.0, one release behind this book. Unlike harfbuzzjs, it includes hb-raster, though not hb-vector.
 
@@ -274,7 +274,7 @@ pip install uharfbuzz pillow
 python text-to-png.py LibreBaskerville.ttf "office coffee" 32 > office.png
 ```
 
-## In Rust
+## HarfBuzz in Rust: HarfRust
 
 Rust programs usually don’t call HarfBuzz itself. They use HarfRust, a port of HarfBuzz’s shaping to Rust, which matches HarfBuzz {{hb}} but isn’t HarfBuzz: [HarfRust](harfrust.html) counts the differences. It only shapes, so the outlines come from Skrifa, part of the same Rust font libraries (Fontations). For C HarfBuzz itself, the `harfbuzz` crate has bindings, but they are less used.
 

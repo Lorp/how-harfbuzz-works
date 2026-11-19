@@ -104,6 +104,10 @@ details.contents .toc .toc-section { break-inside: avoid; }
 .toc li.planned > a { color: var(--muted); }
 .toc .summary { grid-column: 2; display: block; margin: -.1rem 0 .5rem; color: var(--muted); font: 400 .92rem/1.45 var(--font-text); }
 .toc.full { font: 500 1.05rem var(--font-head); }
+.toc .toc-sub { grid-column: 2; margin: 0 0 .4rem; font: 400 .9rem/1.5 var(--font-text); }
+.toc .toc-sub li { display: block; }
+.toc .toc-sub .toc-sub { margin: 0 0 .2rem 1.2em; font-size: .85rem; color: var(--muted); }
+.toc .toc-sub .toc-sub a { color: var(--muted); }
 .toc.full .toc-section { margin-top: 1.75rem; }
 .eyebrow { margin: 2.5rem 0 -1.5rem; font: 600 .78rem var(--font-head); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
 .planned-note { color: var(--muted); font-style: italic; padding: .75rem 1rem; background: var(--well); border-radius: 6px; }

@@ -30,7 +30,10 @@ const CHROME = process.env.CHROME || "/Applications/Google Chrome.app/Contents/M
 const work = fs.mkdtempSync(path.join(os.tmpdir(), "hb-book-pdf-"));
 const siteDir = path.join(work, "site");
 
-const built = spawnSync(process.execPath, [path.join(ROOT, "tools", "build-site.mjs"), siteDir], { stdio: ["ignore", "ignore", "inherit"] });
+// The printed contents lists each chapter's sections too (TOC_DEPTH 2), with
+// the page each one starts on.
+const built = spawnSync(process.execPath, [path.join(ROOT, "tools", "build-site.mjs"), siteDir],
+  { stdio: ["ignore", "ignore", "inherit"], env: { ...process.env, TOC_DEPTH: process.env.TOC_DEPTH || "2" } });
 if (built.status !== 0) process.exit(built.status || 1);
 
 // Pages in book order, with whether each is written. Same slugs as the site.
@@ -112,9 +115,29 @@ function content(slug) {
   const opener = page.startsPart
     ? `<div class="part-title" id="part-${page.part.label.split(" ")[1]}"><p class="part-label">${esc(page.part.label)}</p><h1 class="part-name">${esc(page.part.name)}</h1></div>\n<div class="front blank">&nbsp;</div>\n`
     : "";
+  // The title page: its description goes on the imprint's page, at the top.
+  // The contents are printed twice: in brief, the chapters with their
+  // summaries; then in detail, on a right-hand page of its own, with each
+  // chapter's sections. The book's title, which is these pages, isn't listed.
+  // Each entry gets the page it starts on, a placeholder for now, filled in
+  // like the cross-references.
+  if (slug === "title") {
+    const h2 = html.indexOf("<h2");
+    titleIntro = html.slice(0, h2).match(/<p>(?!<strong>)[\s\S]*?<\/p>/g).join("\n");
+    html = html.slice(0, h2) .replace(/<p>(?!<strong>)[\s\S]*?<\/p>\s*/g, "") + html.slice(h2);
+    html = html.replace(/<li><a href="#title">[\s\S]*?<\/li>/, "");
+    const paged = (nav) => nav.replace(/(<a href="#([^"]+)"[^>]*>[\s\S]*?<\/a>)/g, (m, a, target) =>
+      `${a}<span class="tocpg" data-target="${target}">000</span>`);
+    html = html.replace(/<nav class="toc full">[\s\S]*?<\/nav>/, (nav) =>
+      paged(nav.replace(/<ol class="toc-sub[\s\S]*?<\/ol>/g, "")).replace('class="toc full"', 'class="toc full brief"') +
+      `\n<div class="contents-detail" id="${DETAIL}"><h2>Contents in detail</h2>\n` +
+      paged(nav.replace(/<span class="summary">[\s\S]*?<\/span>/g, "")) + "</div>");
+  }
   return `${opener}<section class="page-${slug}${opener ? " part-first" : ""}" id="${slug}">\n${html}\n</section>`;
 }
 
+const DETAIL = "contents-in-detail";
+let titleIntro = "";
 const meta = JSON.parse(fs.readFileSync(path.join(ROOT, "book", "book.json"), "utf8"));
 const esc = (t) => t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 // The version the PDF is built from, taken once, before anything is built.
@@ -134,6 +157,7 @@ const front = [
 <p class="author">${esc(meta.author)}${meta.with ? ` <span>with ${esc(meta.with)}</span>` : ""}</p>
 <p class="publisher">${esc(meta.publisher || "")}<br>${new Date().getFullYear()}</p></div>`,
   `<div class="front imprint">
+<div class="imprint-intro">{{intro}}</div>
 <p><i>${esc(meta.title)}</i>: ${esc(meta.subtitle).replace(/^./, (c) => c.toLowerCase())}</p>
 <p>By ${esc(meta.author)}${meta.with ? ` with ${esc(meta.with)}` : ""}</p>
 <p>${esc(version.label)}. It describes HarfBuzz ${esc(meta.harfbuzz)}, and every example in it was run on that version.</p>
@@ -179,7 +203,7 @@ section.part-first { break-before: auto; }
 /* Front matter: each piece a page of its own, with no page number. */
 .front { page: front; break-after: page; box-sizing: border-box; height: 7.4in; }
 .half-title { padding-top: 1.6in; }
-.half-title p { margin: 0; text-align: center; font: 500 1.1rem var(--font-head); letter-spacing: .02em; }
+.half-title p { margin: 0; text-align: center; font: 500 2.2rem var(--font-head); letter-spacing: .02em; }
 /* Title page: left aligned. The title is 4.5rem; subtitle, author, and the
    publisher and date below them, are half that. */
 .title-page { padding-top: 1.2in; text-align: left; display: flex; flex-direction: column; height: 7.4in; box-sizing: border-box; }
@@ -190,6 +214,9 @@ section.part-first { break-before: auto; }
 .title-page .publisher { margin: auto 0 0; font: 400 2.25rem/1.3 var(--font-text); }
 .imprint { display: flex; flex-direction: column; justify-content: flex-end; font-size: .85rem; line-height: 1.5; }
 .imprint p { margin: 0 0 .6rem; }
+.imprint .imprint-intro { margin-bottom: auto; font-size: 1.0625rem; line-height: 1.5; }
+.imprint .imprint-intro p { margin: 0 0 .8rem; }
+.contents-detail { break-before: page; }
 /* The title page is printed above, so the web title page gives only its
    description and the contents. */
 .page-title > h1, .page-title > h1 + p { display: none; }
@@ -248,6 +275,14 @@ sup.lnote { font-size: .62em; line-height: 0; color: #2c48c9; margin-left: .05em
 .link-notes ol { margin: 0; padding-left: 1.6rem; }
 .link-notes li { overflow-wrap: anywhere; word-break: break-all; }
 .unwritten { color: inherit; }
+/* The contents: page numbers on the right; each chapter's sections under it,
+   in smaller type, without the summaries. */
+.toc.full li { grid-template-columns: 2.2em 1fr auto; column-gap: .6rem; break-inside: avoid; }
+.toc.full .tocpg { grid-column: 3; grid-row: 1; text-align: right; font-variant-numeric: tabular-nums; color: #5a6373; }
+.toc.full .toc-sub { grid-column: 2 / 4; margin: .1rem 0 .5rem; }
+.toc.full .toc-sub li { display: flex; gap: .6rem; break-inside: avoid; line-height: 1.45; }
+.toc.full .toc-sub li > a { flex: 1; color: inherit !important; }
+.toc.full .toc-sub .tocpg { font-size: .9em; }
 /* The indexes: two columns of small type. */
 .index ul { columns: 2; column-gap: 1.4rem; }
 .index li { font-size: .8rem; line-height: 1.35; }
@@ -293,7 +328,7 @@ ${extra ? `<style>${extra}</style>` : ""}
 </head>
 <body>
 <div class="cover"><img src="${cover}" alt="How HarfBuzz Works"></div>
-${front}
+${front.replace("{{intro}}", titleIntro)}
 <main class="flow">
 ${main}
 </main>
@@ -322,7 +357,8 @@ const bodies = new Map(pages.filter((p) => p.written).map((p) => [p.slug, conten
 const indexes = [...bodies].filter(([slug]) => INDEXES.has(slug));
 let mainHtml = [...bodies].filter(([slug]) => !INDEXES.has(slug)).map(([, b]) => b).join("\n");
 const partIds = [...new Set(pages.filter((p) => p.startsPart).map((p) => `part-${p.part.label.split(" ")[1]}`))];
-const targets = new Set([...partIds, ...indexes.flatMap(([, b]) => [...b.matchAll(LOC)].map((m) => m[1]))]);
+const targets = new Set([DETAIL, ...partIds, ...indexes.flatMap(([, b]) => [...b.matchAll(LOC)].map((m) => m[1]))]);
+for (const m of mainHtml.matchAll(/<span class="tocpg" data-target="([^"]+)">/g)) targets.add(m[1]);
 // and every cross-reference, and where it points
 for (const m of mainHtml.matchAll(/<span class="pref" id="(xr-\d+)" data-target="([^"]+)">/g)) { targets.add(m[1]); targets.add(m[2]); }
 const firstPdf = path.join(printDir, "without-indexes.pdf");
@@ -334,12 +370,13 @@ const firstPages = destinations(firstPdf);
 // even page gets a blank page before it, which moves it and everything after
 // it on by one page; nothing else in the layout changes, as each part starts
 // on a new page anyway.
+// The detailed contents also starts on an odd page, the same way.
 const turns = [];
-for (const id of partIds) {
+for (const id of [DETAIL, ...partIds]) {
   if ((firstPages.get(id) + turns.length) % 2 === 0) turns.push(firstPages.get(id));
 }
-for (const id of partIds) if (turns.includes(firstPages.get(id)))
-  mainHtml = mainHtml.replace(`<div class="part-title" id="${id}"`, `<div class="front blank turn">&nbsp;</div>\n$&`);
+for (const id of [DETAIL, ...partIds]) if (turns.includes(firstPages.get(id)))
+  mainHtml = mainHtml.replace(new RegExp(`<div class="[^"]*" id="${id}"`), `<div class="front blank turn">&nbsp;</div>\n$&`);
 const pageOf = new Map([...firstPages].map(([t, n]) => [t, n + turns.filter((p) => p <= n).length]));
 
 // Page numbers. The cover and the blanks before the half-title have none; the
@@ -398,6 +435,8 @@ if (indexes.length) {
   });
   console.log(`cross-references: ${xrefs}, ${same} on their own page, ${lost} with no page found`);
 }
+mainHtml = mainHtml.replace(/<span class="tocpg" data-target="([^"]+)">000<\/span>/g, (m, target) =>
+  `<span class="tocpg">${pageOf.has(target) ? label(pageOf.get(target)) : ""}</span>`);
 // The title page fills the text area, so its last lines sit on the bottom
 // margin: 7.55in on paper (9in less the margins), in CSS inches before Chrome shrinks it.
 const htmlFile = printPdf(doc(mainHtml, `.title-page { height: ${(7.55 / shrink - 0.05).toFixed(3)}in; }`), OUT, "book.html");

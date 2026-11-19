@@ -63,7 +63,7 @@ The names differ a little between the views. For this lookup:
 
 ## The order lookups run in
 
-Planning hands over the lookups in **stages**, separated by pauses where a script shaper can step in (an Indic shaper, for example, reorders glyphs between stages). Within a stage, HarfBuzz sorts the lookups by their index in the LookupList (`hb-ot-map.cc:389`; [From features to lookups](from-features-to-lookups.html#stages-and-pauses) covers stages and pauses). It doesn’t sort them by feature, and it doesn’t keep the order in which the features were asked for.
+Planning hands over the lookups in **stages**, separated by pauses where a script shaper can step in (an Indic shaper, for example, reorders glyphs between stages). Within a stage, HarfBuzz sorts the lookups by their index in the LookupList (`hb-ot-map.cc:389`; [From features to lookups](from-features-to-lookups.html#stages-and-pauses) covers stages and pauses). It doesn’t sort them by feature, and it doesn’t keep the order in which the features were asked for. [Feature order](feature-order.html) gives the stages for every shaper.
 
 For the default shaper, which handles Latin, nearly every feature is in the same stage. So `ccmp`, `liga`, `calt` and the rest are not applied one feature after another: their lookups are merged into one list and run in lookup order. The test font’s `ccmp` turns `x` into `f i`. It comes after `liga` in the feature file, so its lookup is lookup 4, after `liga`’s lookup 0. The font `ccmp-first.ttf` is the same except that the `ccmp` block comes first in its feature file:
 
