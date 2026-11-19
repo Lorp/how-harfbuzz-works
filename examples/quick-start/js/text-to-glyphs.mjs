@@ -19,10 +19,13 @@ hb.shape(font, buffer);
 // Print each glyph: name=cluster, @offset if it has one, +advance.
 const infos = buffer.getGlyphInfos();
 const positions = buffer.getGlyphPositions();
-const glyphs = infos.map((info, i) => {
+const glyphs = [];
+for (let i = 0; i < infos.length; i++) {
   const pos = positions[i];
-  const name = font.glyphName(info.codepoint);   // a glyph id, after shaping
-  const offset = pos.xOffset || pos.yOffset ? `@${pos.xOffset},${pos.yOffset}` : "";
-  return `${name}=${info.cluster}${offset}+${pos.xAdvance}`;
-});
+  const name = font.glyphName(infos[i].codepoint);   // a glyph id, after shaping
+  let glyph = `${name}=${infos[i].cluster}`;
+  if (pos.xOffset || pos.yOffset) glyph += `@${pos.xOffset},${pos.yOffset}`;
+  glyph += `+${pos.xAdvance}`;
+  glyphs.push(glyph);
+}
 console.log(`[${glyphs.join("|")}]`);
