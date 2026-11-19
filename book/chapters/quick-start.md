@@ -9,7 +9,7 @@ The [previous chapter](command-line-tools.html) ran HarfBuzz’s tools: `hb-shap
 
 Each language’s section starts with the smallest useful HarfBuzz program: it loads a font, shapes a string, and prints the glyphs that come out, as `hb-shape` does. Two more programs then draw those glyphs where shaping put them, as SVG and as a PNG. The rest of the book explains what happens at each step; here the steps are just run.
 
-> This chapter is for programmers who want HarfBuzz in their own software, and for font engineers who script their work: the Python section is the place to start for tests and proofs that shape text in bulk. Its [first program](#glyphs-in-python) is worth trying even for a reader who has never written one. It is 27 lines, it needs one `pip install`, and changing it to shape a whole word list with your own font is a small step. Type designers who only want to see what HarfBuzz does with a font have what they need in the previous chapter’s tools, and can skip ahead. [How to read this book](introduction.html#how-to-read-this-book) says which other chapters a programmer needs.
+> This chapter is for programmers who want HarfBuzz in their own software, and for font engineers who script their work: the Python section is the place to start for tests and proofs that shape text in bulk. Its [first program](#glyphs-in-python) is worth trying even for a reader who has never written one. It is 25 lines, it needs one `pip install`, and changing it to shape a whole word list with your own font is a small step. Type designers who only want to see what HarfBuzz does with a font have what they need in the previous chapter’s tools, and can skip ahead. [How to read this book](introduction.html#how-to-read-this-book) says which other chapters a programmer needs.
 >
 > This book explains what HarfBuzz does inside; it isn’t HarfBuzz’s manual. [HarfBuzz’s own documentation](https://harfbuzz.github.io/), its user manual and API reference, is the definitive account of what each function does and promises, and the place to look things up while programming. The end of this chapter lists the references for the other languages too.
 
@@ -39,7 +39,7 @@ same-as: hb-shape --utf8-clusters
 
 The program does three things, and every HarfBuzz program does them.
 
-**Load the font.** A [blob](blobs-faces-and-lazy-tables.html) holds the file’s bytes, a face reads the font in it, and a font is the face at a size. Nothing here sets a size, so the font works in font units, and so does everything after it. HarfBuzz doesn’t fail on a file that isn’t a font: it gives an empty face, with no glyphs, and shaping with it would print glyph 0 for every character. So the program checks the glyph count. `hb-shape` refuses such a file too (“Failed loading font face”). From HarfBuzz 10.1.0, `hb_face_create_or_fail` does the checking: it returns `NULL` where `hb_face_create` returns an empty face.
+**Load the font.** A [blob](blobs-faces-and-lazy-tables.html) holds the file’s bytes, a face reads the font in it, and a font is the face at a size. Nothing here sets a size, so the font works in font units, and so does everything after it.
 
 **Shape.** The text goes into a [buffer](buffers.html) as UTF-8. `hb_buffer_guess_segment_properties` works out the script, language and direction from the text and the locale. A real application should set them, as [Why shaping exists](why-shaping-exists.html#runs-and-the-three-things-harfbuzz-must-be-told) explains. `hb_shape` turns the characters into glyphs: after it, each `hb_glyph_info_t`’s `codepoint` is a glyph ID, not a character.
 
@@ -291,6 +291,7 @@ They are as short as they can be, and a real program needs more. In rough order 
 * **Variable fonts**, set to a position with `hb_font_set_variations` ([The design space](design-space.html)).
 * **Hinting and small sizes.** hb-raster and tiny-skia don’t hint. For hinted text, FreeType draws the outlines ([hb-raster](hb-raster.html) explains the trade).
 * **Color fonts.** The C and Python PNG programs paint them already, since they paint with hb-raster. The SVG programs would need hb-vector’s paint context in C, or a color library in the other languages ([Color](color.html)).
+* **Checking the font.** HarfBuzz doesn’t fail on a file that isn’t a font: it gives an empty face, and every character comes out as glyph 0. A real program checks, with `hb_face_get_glyph_count`, or by loading the font with `hb_face_create_or_fail` (HarfBuzz 10.1.0 and later).
 
 ## Documentation
 

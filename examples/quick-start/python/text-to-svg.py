@@ -31,8 +31,6 @@ font_path, text = sys.argv[1], sys.argv[2]
 # Load the font: file → blob → face → font.
 blob = hb.Blob.from_file_path(font_path)
 face = hb.Face(blob)
-if not face.glyph_count:  # not a font: HarfBuzz gives an empty face
-    sys.exit(f"{font_path} isn't a font")
 font = hb.Font(face)
 
 # Shape: characters in, positioned glyphs out, in font units.

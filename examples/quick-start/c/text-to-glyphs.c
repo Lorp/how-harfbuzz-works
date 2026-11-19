@@ -19,11 +19,6 @@ int main (int argc, char **argv)
     return 1;
   }
   hb_face_t *face = hb_face_create (blob, 0);
-  if (!hb_face_get_glyph_count (face))   /* not a font: HarfBuzz gives an empty face */
-  {
-    fprintf (stderr, "%s isn't a font\n", argv[1]);
-    return 1;
-  }
   hb_font_t *font = hb_font_create (face);
 
   /* Shape: characters in, positioned glyphs out. */
