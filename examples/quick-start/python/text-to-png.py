@@ -10,6 +10,8 @@ font_path, text, pixels = sys.argv[1], sys.argv[2], int(sys.argv[3])
 
 blob = hb.Blob.from_file_path(font_path)
 face = hb.Face(blob)
+if not face.glyph_count:  # not a font: HarfBuzz gives an empty face
+    sys.exit(f"{font_path} isn't a font")
 font = hb.Font(face)
 
 # The size: one pixel is 64 units, so positions keep fractions of a pixel.

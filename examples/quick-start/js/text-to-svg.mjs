@@ -8,6 +8,10 @@ const [fontPath, text] = process.argv.slice(2);
 // Load the font: file → blob → face → font.
 const blob = new hb.Blob(fs.readFileSync(fontPath));
 const face = new hb.Face(blob);
+if (!face.referenceTable("head")) {   // not a font: HarfBuzz gives an empty face
+  console.error(`${fontPath} isn't a font`);
+  process.exit(1);
+}
 const font = new hb.Font(face);
 
 // Shape: characters in, positioned glyphs out, in font units.
