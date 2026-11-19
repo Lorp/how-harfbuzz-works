@@ -564,7 +564,10 @@ function exampleCommand(program) {
   const ext = path.extname(src);
   if (ext === ".c") {
     const exe = path.join(EXAMPLES_CACHE, "c", name);
-    const lib = /hb-raster\.h/.test(fs.readFileSync(src, "utf8")) ? "harfbuzz-raster" : "harfbuzz-vector";
+    // The library is the one whose header the program includes: hb-raster,
+    // hb-vector, or HarfBuzz alone.
+    const code = fs.readFileSync(src, "utf8");
+    const lib = /hb-raster\.h/.test(code) ? "harfbuzz-raster" : /hb-vector\.h/.test(code) ? "harfbuzz-vector" : "harfbuzz";
     const env = { ...process.env, PKG_CONFIG_PATH: path.join(HB_BUILD, "build", "meson-uninstalled") };
     const flags = run("pkg-config", ["--cflags", "--libs", lib], { encoding: "utf8", env }).stdout.trim().split(/\s+/);
     fs.mkdirSync(path.dirname(exe), { recursive: true });
@@ -631,7 +634,10 @@ function runExample(program, args) {
 // ```example                one example program, run when the page is built
 // program: quick-start/c/text-to-svg.c   (in examples/)
 // args: LibreBaskerville.ttf  office coffee   (the first is a font)
-// output: svg               (svg or png; png takes `zoom`, default 2)
+// output: svg               (svg, png or text; png takes `zoom`, default 2)
+// same-as: hb-shape --utf8-clusters   (text only: the build fails unless the
+//                           output is what hb-shape prints for the same font
+//                           and text, with these options)
 // show: both                (source, output or both; default both)
 // ```
 function blockExample(body, fonts) {
@@ -653,7 +659,20 @@ function blockExample(body, fonts) {
     const shownArgs = [font.startsWith("hb:") ? path.basename(font) : font,
                        ...rest.map((a, i) => i ? a : `“${a}”`)].join(", ");
     let img;
-    if (f.output === "png") {
+    if (f.output === "text") {
+      const text = stdout.toString("utf8").trimEnd();
+      let same = "";
+      if (f["same-as"]) {
+        const [tool, ...opts] = f["same-as"].split(/\s+/);
+        if (tool !== "hb-shape") throw new Error(`${f.program}: same-as only knows hb-shape`);
+        const expected = runShape(args[0], args[1], opts);
+        if (text !== expected)
+          throw new Error(`${f.program} doesn't print what hb-shape ${opts.join(" ")} does:\n${text}\n${expected}`);
+        same = `, the same as <code>hb-shape${opts.length ? " " + esc(opts.join(" ")) : ""}</code> prints`;
+      }
+      img = `<pre><code>${esc(text)}</code></pre>`;
+      img += `<figcaption><span class="kind">Text</span> Its output for ${esc(shownArgs)}${same}</figcaption>`;
+    } else if (f.output === "png") {
       const zoom = Number(f.zoom || 2);
       const [w, h] = [stdout.readUInt32BE(16), stdout.readUInt32BE(20)];
       img = `<img class="pixels" src="data:image/png;base64,${stdout.toString("base64")}" ` +
@@ -663,7 +682,7 @@ function blockExample(body, fonts) {
       img = `<img class="vector" src="data:image/svg+xml;base64,${stdout.toString("base64")}" alt="${esc(rest[0] || "")}">`;
       img += `<figcaption><span class="kind">Vector · SVG</span> Its output for ${esc(shownArgs)}</figcaption>`;
     }
-    html += `<figure class="example-output">${img}</figure>\n`;
+    html += `<figure class="example-output${f.output === "text" ? " text" : ""}">${img}</figure>\n`;
   }
   return html;
 }

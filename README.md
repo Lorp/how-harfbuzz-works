@@ -164,7 +164,7 @@ output: svg
 ```
 ````
 
-`args` are the program’s arguments, with two or more spaces between them; the first is a font, found as in the other blocks (`hb:` means HarfBuzz’s own source tree). `output` is `svg` or `png`. Add `show: source` for the listing alone, or `show: output` for the picture alone. Outputs are kept in `.cache/examples/out/` and rerun only when the program, its `package.json` or `Cargo.toml`, or the arguments change.
+`args` are the program’s arguments, with two or more spaces between them; the first is a font, found as in the other blocks (`hb:` means HarfBuzz’s own source tree). `output` is `svg`, `png` or `text`. For `text`, a line `same-as: hb-shape` (with any `hb-shape` options after it) makes the build fail unless the program prints exactly what `hb-shape` prints for the same font and text. Add `show: source` for the listing alone, or `show: output` for the picture alone. Outputs are kept in `.cache/examples/out/` and rerun only when the program, its `package.json` or `Cargo.toml`, or the arguments change.
 
 ### Let the reader try it: `demo`
 
