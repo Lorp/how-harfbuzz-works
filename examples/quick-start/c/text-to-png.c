@@ -34,7 +34,8 @@ int main (int argc, char **argv)
   hb_font_extents_t line;
   hb_font_get_h_extents (font, &line);
   int bottom = (line.descender - 63) / 64, top = (line.ascender + 63) / 64;
-  hb_raster_extents_t extents = {0, bottom, (width + 63) / 64, top - bottom, 0};
+  unsigned w = (width + 63) / 64, h = top - bottom;
+  hb_raster_extents_t extents = {0, bottom, w, h, 0};
 
   /* Paint each glyph at its pen position, in black. */
   hb_raster_paint_t *paint = hb_raster_paint_create_or_fail ();

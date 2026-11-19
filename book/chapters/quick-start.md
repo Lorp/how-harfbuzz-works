@@ -1,6 +1,6 @@
 # Quick start: shaping text, then drawing it
 
-The [previous chapter](command-line-tools.html) ran HarfBuzz’s tools: `hb-shape` to see what shaping does to a line of text, and `hb-vector` and `hb-raster` to [draw it](command-line-tools.html#what-does-this-text-look-like-in-this-font). This chapter writes programs that do the same, small versions of those three tools, in four languages:
+The [previous chapter](command-line-tools.html) ran HarfBuzz’s tools: `hb-shape` to see what shaping does to a line of text, and `hb-vector` and `hb-raster` to [draw it](command-line-tools.html#what-does-this-text-look-like-in-this-font). This chapter shows how to write programs that do the same, small versions of those three tools, in four languages:
 
 * **C**, with HarfBuzz itself;
 * **JavaScript**, with harfbuzzjs, HarfBuzz compiled to WebAssembly;
@@ -9,7 +9,7 @@ The [previous chapter](command-line-tools.html) ran HarfBuzz’s tools: `hb-shap
 
 Each language’s section starts with the smallest useful HarfBuzz program: it loads a font, shapes a string, and prints the glyphs that come out, as `hb-shape` does. Two more programs then draw those glyphs where shaping put them, as SVG and as a PNG. The rest of the book explains what happens at each step; here the steps are just run.
 
-> This chapter is for programmers who want HarfBuzz in their own software, and for font engineers who script their work: the Python section is the place to start for tests and proofs that shape text in bulk. Its [first program](#glyphs-in-python) is worth trying even for a reader who has never written one. It is 25 lines, it needs one `pip install`, and changing it to shape a whole word list with your own font is a small step. Type designers who only want to see what HarfBuzz does with a font have what they need in the previous chapter’s tools, and can skip ahead. [How to read this book](introduction.html#how-to-read-this-book) says which other chapters a programmer needs.
+> This chapter is not only for programmers who want HarfBuzz in their own software. It’s also for font engineers who script their work: the Python section is the place to start for tests and proofs that shape text in bulk. Its [first program](#glyphs-in-python) is worth trying even for a reader who has never written one. It is 25 lines, it needs one `pip install`, and changing it to shape a whole word list with your own font is a small step. Type designers who only want to see what HarfBuzz does with a font have what they need in the previous chapter’s tools, and can skip ahead. [How to read this book](introduction.html#how-to-read-this-book) says which other chapters a programmer needs.
 >
 > This book explains what HarfBuzz does inside; it isn’t HarfBuzz’s manual. [HarfBuzz’s own documentation](https://harfbuzz.github.io/), its user manual and API reference, is the definitive account of what each function does and promises, and the place to look things up while programming. The end of this chapter lists the references for the other languages too.
 
@@ -132,6 +132,16 @@ cc text-to-png.c $(pkg-config --cflags --libs harfbuzz-raster) -o text-to-png
 ```
 
 If HarfBuzz was built without libpng, it prints “nothing to write”: Meson uses libpng only if it finds it, and says whether it did in the summary it prints at the end of `meson setup`.
+
+### HarfBuzz in C++
+
+The three programs compile as C++ too, unchanged. C++ can also do the cleanup itself, with HarfBuzz’s header `hb-cplusplus.hh`. To use it in the first program:
+
+1. Include `hb-cplusplus.hh` after `hb.h`.
+2. Hold each object HarfBuzz creates in an `hb::unique_ptr`, as in `hb::unique_ptr<hb_buffer_t> buf {hb_buffer_create ()};`, and pass HarfBuzz’s functions its pointer, `buf.get ()`, as in `hb_shape (font.get (), buf.get (), NULL, 0);`.
+3. Delete the `hb_*_destroy` calls: each object is destroyed when its `unique_ptr` goes out of scope, in the reverse order of creation, as the C program destroys them.
+
+The drawing programs need `hb-vector.h` or `hb-raster.h` included before `hb-cplusplus.hh`, which only then knows their types. `hb::shared_ptr` is the same for an object with more than one owner.
 
 ## HarfBuzz in JavaScript
 
