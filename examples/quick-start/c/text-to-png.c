@@ -7,18 +7,10 @@
 
 int main (int argc, char **argv)
 {
-  if (argc != 4)
-  {
-    fprintf (stderr, "usage: %s FONT TEXT PIXELS\n", argv[0]);
-    return 1;
-  }
+  if (argc != 4) { fprintf (stderr, "usage: %s FONT TEXT PIXELS\n", argv[0]); return 1; }
 
   hb_blob_t *blob = hb_blob_create_from_file_or_fail (argv[1]);
-  if (!blob)
-  {
-    fprintf (stderr, "can't read %s\n", argv[1]);
-    return 1;
-  }
+  if (!blob) { fprintf (stderr, "can't read %s\n", argv[1]); return 1; }
   hb_face_t *face = hb_face_create (blob, 0);
   hb_font_t *font = hb_font_create (face);
 
