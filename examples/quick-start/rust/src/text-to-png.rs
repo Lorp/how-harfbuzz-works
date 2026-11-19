@@ -27,12 +27,10 @@ impl OutlinePen for Pen {
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
-    if args.len() != 4 {
+    let [_, font_path, text, pixels] = args.as_slice() else {
         panic!("usage: text-to-png FONT TEXT PIXELS");
-    }
-    let font_path = &args[1];
-    let text = &args[2];
-    let pixels: f32 = args[3].parse().expect("PIXELS must be a number");
+    };
+    let pixels: f32 = pixels.parse().expect("PIXELS must be a number");
     let data = std::fs::read(font_path).expect("can't read the font");
 
     // Shape, in font units: HarfRust has no font size.

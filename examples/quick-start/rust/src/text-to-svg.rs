@@ -7,11 +7,9 @@ use skrifa::{FontRef, GlyphId, MetadataProvider};
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
-    if args.len() != 3 {
+    let [_, font_path, text] = args.as_slice() else {
         panic!("usage: text-to-svg FONT TEXT");
-    }
-    let font_path = &args[1];
-    let text = &args[2];
+    };
     let data = std::fs::read(font_path).expect("can't read the font");
 
     // Shape: characters in, positioned glyphs out, in font units.
