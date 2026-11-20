@@ -109,7 +109,7 @@ So GSUB and GPOS can settle on different scripts: a font may keep its Devanagari
 
 The trace line “start table GPOS script tag” doesn’t show GPOS’s choice. It prints GSUB’s chosen script (`hb-ot-layout.cc:2149` formats `chosen_script[0]`, not `chosen_script[1]`), so in a font with no GSUB it says `''` even when GPOS found a script. The Hebrew trace below shows it.
 
-> Since {{hb}}: fixed on HarfBuzz main by [`24795ef`](https://github.com/harfbuzz/harfbuzz/commit/24795efd37271e6fac4e1e44316ccf690b63e31f) (17 November 2026), so main’s trace prints the script GPOS chose.
+> Since {{hb}}: fixed on HarfBuzz main by [#6686](https://github.com/harfbuzz/harfbuzz/pull/6686) (17 November 2026), so main’s trace prints the script GPOS chose.
 
 ## From tags to a shaper
 

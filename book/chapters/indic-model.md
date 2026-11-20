@@ -484,7 +484,7 @@ full.ttf  क\u093F  --language=hi  --text-before=क
 
 After KA it isn’t initial, and the two syllables become unsafe to break between. In the last line the earlier KA is given as pre-context, and the vowel sign is initial again: the test looks only inside the buffer. An application that splits a word into two runs, for a change of color say, gets the initial form mid-word even if it passes the first as context. That may be unintended (inferred: the source gives no reason, and the Arabic shaper’s joining does read context).
 
-> Since {{hb}}: fixed on HarfBuzz main by [`5795f86`](https://github.com/harfbuzz/harfbuzz/commit/5795f8699503de6c64206cb939eaae9086b279f1) (17 November 2026), so main reads the pre-context, and in the last line the vowel sign isn’t initial.
+> Since {{hb}}: fixed on HarfBuzz main by [#6713](https://github.com/harfbuzz/harfbuzz/pull/6713) (17 November 2026), so main reads the pre-context, and in the last line the vowel sign isn’t initial.
 
 ## The old model
 

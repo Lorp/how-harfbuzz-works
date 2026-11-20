@@ -184,7 +184,7 @@ style-size.ttf  --get-style=opsz
 
 The answer is 320 points, not 16. That looks like a HarfBuzz bug. The `size` feature’s design size is in decipoints, and is divided by 10: `style-size.ttf`, which has OS/2 version 4 and a `size` feature of 100, reports 10.
 
-> Since {{hb}}: fixed on HarfBuzz main by [`b14a94e`](https://github.com/harfbuzz/harfbuzz/commit/b14a94e52fed2ebb39744a4596ec2c840beffef3) (17 November 2026), so main converts the TWIPs to points, and `style.ttf` reports 16.
+> Since {{hb}}: fixed on HarfBuzz main by [#6695](https://github.com/harfbuzz/harfbuzz/pull/6695) (17 November 2026), so main converts the TWIPs to points, and `style.ttf` reports 16.
 
 `STAT` is read in shaping in one place: an AAT `trak` table is applied only to a font that also has `STAT` (`hb-ot-shape.cc:218`), Apple’s test for a modern font ([AAT positioning](aat-positioning.html)).
 
@@ -295,4 +295,4 @@ Each API can be compiled out: `HB_NO_MATH`, `HB_NO_BASE`, `HB_NO_STYLE`, `HB_NO_
 * `name` keeps one record per name ID and language, from the platform with the best encoding. Windows English variants are all `en`; Unicode-platform names need `ltag`; format 1 language tags aren’t read; Macintosh Roman is read as ASCII. Names come out as UTF-8, UTF-16, or UTF-32, in the language asked for or a less specific one, else not at all.
 * `meta` entries come back as raw blobs; HarfBuzz doesn’t parse `dlng` or `slng`.
 
-> Since {{hb}}: fixed on HarfBuzz main by [`b14a94e`](https://github.com/harfbuzz/harfbuzz/commit/b14a94e52fed2ebb39744a4596ec2c840beffef3) (17 November 2026), so main reads OS/2’s optical sizes as TWIPs (the item on `hb_style_get_value`; the other two issues there remain).
+> Since {{hb}}: fixed on HarfBuzz main by [#6695](https://github.com/harfbuzz/harfbuzz/pull/6695) (17 November 2026), so main reads OS/2’s optical sizes as TWIPs (the item on `hb_style_get_value`; the other two issues there remain).

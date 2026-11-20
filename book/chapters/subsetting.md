@@ -281,7 +281,7 @@ nested-a.ttf  a
 
 The subset shapes differently from the original. The bound also leaves less margin than its comment asks for: the Indic shaper’s `collect_features_indic` calls `add_gsub_pause` 14 times (`hb-ot-shaper-indic.cc:249`–`265`), more than the 12 the comment allows, though only a chain running backwards through the lookup list across most of those stages would notice.
 
-> Since {{hb}}: partly fixed on HarfBuzz main by [`0209ec2`](https://github.com/harfbuzz/harfbuzz/commit/0209ec2865b55e892897966e95dfb8915a1309e9) (17 November 2026): `HB_CLOSURE_MAX_STAGES` is 16, more than the Indic shaper’s 14 pauses; the closure still cuts long chains, and `nested-a.ttf` cut by main shapes `a` as `s18`.
+> Since {{hb}}: partly fixed on HarfBuzz main by [#6725](https://github.com/harfbuzz/harfbuzz/pull/6725) (17 November 2026): `HB_CLOSURE_MAX_STAGES` is 16, more than the Indic shaper’s 14 pauses; the closure still cuts long chains, and `nested-a.ttf` cut by main shapes `a` as `s18`.
 
 The order between tables misses something too. MATH is subset against the snapshots taken before GSUB ran: its glyph variants and assemblies against `_glyphset_cmaped`, its italics corrections, accent positions, and kerning against `_glyphset_mathed` (`hb-ot-math-table.hh:232`, `:1064`). A glyph that only GSUB produces keeps its outline and loses its MATH data. `math.ttf` has an integral, a display-size variant of it, and an `rtlm` feature (a default one) that replaces both with mirrored forms for right-to-left math. All four glyphs have italics corrections, and both integrals have a list of sizes. Cut for ∫, the subset keeps all four glyphs and shapes as the original does:
 
@@ -458,4 +458,4 @@ A server that cuts many subsets from one font can do part of the work once. `hb_
 * A custom glyph map that reorders glyphs breaks pair kerning and class definitions.
 * Tables are dropped, passed through, or subset; each subset renumbers what it keeps. A symbol `cmap` is dropped, and a CFF `.notdef` keeps its outline.
 
-> Since {{hb}}: changed on HarfBuzz main by [`0209ec2`](https://github.com/harfbuzz/harfbuzz/commit/0209ec2865b55e892897966e95dfb8915a1309e9) (17 November 2026): the closure runs at most 18 passes (the item on the GSUB closure).
+> Since {{hb}}: changed on HarfBuzz main by [#6725](https://github.com/harfbuzz/harfbuzz/pull/6725) (17 November 2026): the closure runs at most 18 passes (the item on the GSUB closure).

@@ -26,7 +26,7 @@ Each layer is turned on by a Meson option ([Building HarfBuzz](building-harfbuzz
 
 A program can test what its HarfBuzz was built with. `hb-features.h`, installed with the headers, defines `HB_HAS_FREETYPE`, `HB_HAS_CAIRO`, `HB_HAS_ICU`, and the rest for the layers that were built (`src/meson.build:586`). One of them never appears: the list asks for `HAVE_GRAPHITE`, but the build sets `HAVE_GRAPHITE2` (`meson.build:253`), so `HB_HAS_GRAPHITE` stays undefined even when the Graphite shaper is there. In the hand-built HarfBuzz described above, `hb-shape --list-shapers` lists `graphite2`, and `hb-features.h` says `#undef HB_HAS_GRAPHITE`.
 
-> Since {{hb}}: fixed on HarfBuzz main by [`2b873b8`](https://github.com/harfbuzz/harfbuzz/commit/2b873b805800dcad37827f90a5c28ccb6ccc4ba8) and [`506cc94`](https://github.com/harfbuzz/harfbuzz/commit/506cc943b3c2ad82c5398361afdaf6e9eaad6b0f) (17 November 2026), so main’s `hb-features.h` defines `HB_HAS_GRAPHITE` when the Graphite shaper is built.
+> Since {{hb}}: fixed on HarfBuzz main by [#6721](https://github.com/harfbuzz/harfbuzz/pull/6721) and [#6722](https://github.com/harfbuzz/harfbuzz/pull/6722) (17 November 2026), so main’s `hb-features.h` defines `HB_HAS_GRAPHITE` when the Graphite shaper is built.
 
 ## FreeType: hb-ft
 

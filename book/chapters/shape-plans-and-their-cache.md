@@ -142,7 +142,7 @@ Asking for a feature that is on anyway makes a new plan too: an empty list and `
 
 When `init` copies the features into a new plan, it means to “make start/end uniform to easier catch bugs”, setting every non-global `start` and `end` to 1 and 2. The loop it does this in writes `features[0]` each time round instead of `features[i]` (`hb-shape-plan.cc:95`), so only the first feature is changed. Nothing reads the copied ranges, so nothing goes wrong (inferred).
 
-> Since {{hb}}: fixed on HarfBuzz main by [`caf12a8`](https://github.com/harfbuzz/harfbuzz/commit/caf12a809a78332fb320bc1375eca31ab838a0f6) (17 November 2026), so main writes `features[i]` and makes every copied range uniform.
+> Since {{hb}}: fixed on HarfBuzz main by [#6693](https://github.com/harfbuzz/harfbuzz/pull/6693) (17 November 2026), so main writes `features[i]` and makes every copied range uniform.
 
 ### The variation state
 

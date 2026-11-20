@@ -109,7 +109,7 @@ apps.ttf  a fine non-Toxic office  --language=en  --verify  --unsafe-to-concat
 
 Two things about the test matter to an application. The pieces are cut from the text with `hb_buffer_append`, which since 2.9.1 copies the neighboring characters as pre- and post-context (`hb-buffer.cc:2139`–`2154`). So the promise that is checked is about pieces shaped *with* their context, and an application should supply it too. And all three checks are skipped at cluster levels 2 and 3 (`hb-buffer-verify.cc:65`), so flags made at those levels are never tested, and [one of the ways flags are set at level 3](buffers.html#the-four-cluster-levels) treats it as ordered when it isn’t.
 
-> Since {{hb}}: fixed on HarfBuzz main by [`7f0fe35`](https://github.com/harfbuzz/harfbuzz/commit/7f0fe35618c08a7089af610b7546fa1cba484c29) (17 November 2026), so main scans the whole range at level 3 as well.
+> Since {{hb}}: fixed on HarfBuzz main by [#6706](https://github.com/harfbuzz/harfbuzz/pull/6706) (17 November 2026), so main scans the whole range at level 3 as well.
 
 `--verify` doesn’t fail for the examples in most chapters of this book, but it does for some, and each failure is a break the flags call safe that isn’t. Run over every `shape` example in the book, it fails on three kinds of text. The book’s build stops when `hb-shape` fails, so the failures are shown here by shaping the pieces by hand.
 
@@ -134,7 +134,7 @@ hebrew-thai-lao-and-hangul/hangul.ttf  가\u11EB  --language=ko  --cluster-level
 hebrew-thai-lao-and-hangul/hangul.ttf  가  --language=ko  --cluster-level=1
 ```
 
-> Since {{hb}}: fixed on HarfBuzz main by [`8e6c16e`](https://github.com/harfbuzz/harfbuzz/commit/8e6c16eefc3dc7480326faa81de903b388fff151) (17 November 2026), so main flags the trailing consonant unsafe to break, and the Hangul text passes `--verify`.
+> Since {{hb}}: fixed on HarfBuzz main by [#6709](https://github.com/harfbuzz/harfbuzz/pull/6709) (17 November 2026), so main flags the trailing consonant unsafe to break, and the Hangul text passes `--verify`.
 
 Each of these looks like a HarfBuzz bug. For an application, they mean the flags are as good as the code that sets them, and `--verify` is how to find out for a given font and text.
 

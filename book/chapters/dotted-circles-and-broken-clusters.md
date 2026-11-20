@@ -15,7 +15,7 @@ The examples use three small test fonts, built from `fonts/dotted-circles-and-br
 | 3 | `preprocess_text_hangul` (`hb-ot-shaper-hangul.cc:232`) | `preprocess_text` | Hangul | a tone mark with no syllable | yes | the character, copying the tone mark’s properties |
 | 4 | `hb_syllabic_insert_dotted_circles` (`hb-ot-shaper-syllabic.cc:33`) | in GSUB, at the first reordering pause | Indic, Khmer, Myanmar, USE | a broken cluster | yes | the glyph, with a category of the shaper’s |
 
-> Since {{hb}}: fixed on HarfBuzz main by [`74fc8c8`](https://github.com/harfbuzz/harfbuzz/commit/74fc8c86c594ec594904fde28b548f5fc6ef2384) and [`2831a8a`](https://github.com/harfbuzz/harfbuzz/commit/2831a8a45c77c180373987312958d31b3575a72c) (17 November 2026), so on main paths 2 and 3 also give the circle U+25CC’s own properties (the last column of rows 2 and 3).
+> Since {{hb}}: fixed on HarfBuzz main by [#6710](https://github.com/harfbuzz/harfbuzz/pull/6710) and [#6711](https://github.com/harfbuzz/harfbuzz/pull/6711) (17 November 2026), so on main paths 2 and 3 also give the circle U+25CC’s own properties (the last column of rows 2 and 3).
 
 So the vowel constraints are not a fifth way, beside four others: they are one of the four. No other code in {{hb}} inserts U+25CC. `NEWS` first mentions them in 0.9.4: “Implement dotted-circle insertion.”
 
@@ -244,7 +244,7 @@ hebrew-thai-lao-and-hangul/hangul.ttf  \u302E  --language=ko  --text-before=가
 
 It doesn’t look at the pre-context either. [Tone marks](hebrew-thai-lao-and-hangul.html#tone-marks) shows the rest: the circle is made with `replace_glyphs`, which copies the tone mark’s entry, so the circle has the tone mark’s properties, a spacing mark, and after a lone jamo the fallback positioner treats it as one; and with `BOT`, path 1 has already put a circle before the tone mark, which to this shaper isn’t a syllable, so the text gets two.
 
-> Since {{hb}}: fixed on HarfBuzz main by [`2831a8a`](https://github.com/harfbuzz/harfbuzz/commit/2831a8a45c77c180373987312958d31b3575a72c) and [`59fa8f0`](https://github.com/harfbuzz/harfbuzz/commit/59fa8f0c28df047b6786a60febf2c8b53a694e05) (17 November 2026), so main gives the circle U+25CC’s own properties, and with `BOT` uses the circle path 1 inserted as the tone mark’s base, so there is one.
+> Since {{hb}}: fixed on HarfBuzz main by [#6711](https://github.com/harfbuzz/harfbuzz/pull/6711) and [#6712](https://github.com/harfbuzz/harfbuzz/pull/6712) (17 November 2026), so main gives the circle U+25CC’s own properties, and with `BOT` uses the circle path 1 inserted as the tone mark’s base, so there is one.
 
 ## Vowel constraints
 
@@ -337,7 +337,7 @@ bare.ttf  \u{11038}  --language=sa
 
 In `bare.ttf` the circle has no advance and is moved back over the letter A, as a zeroed mark is; a lone vowel sign, which gets its circle from path 4, keeps the circle’s advance. A circle with the properties of U+25CC, as path 1 gives it, would avoid this; it looks like a bug.
 
-> Since {{hb}}: fixed on HarfBuzz main by [`74fc8c8`](https://github.com/harfbuzz/harfbuzz/commit/74fc8c86c594ec594904fde28b548f5fc6ef2384) (17 November 2026), so main gives the circle U+25CC’s own properties, and in `bare.ttf` it keeps its advance.
+> Since {{hb}}: fixed on HarfBuzz main by [#6710](https://github.com/harfbuzz/harfbuzz/pull/6710) (17 November 2026), so main gives the circle U+25CC’s own properties, and in `bare.ttf` it keeps its advance.
 
 ### Only adjacent characters
 
@@ -381,4 +381,4 @@ The first line shows LETTER A and VOWEL SIGN AA together with no circle, which i
 * The vowel constraints are Microsoft’s 103 sequences in 16 scripts, generated into code. They insert the character without checking the font, so a font without a dotted circle gets `.notdef`, and the circle copies the properties of the vowel sign after it, so in a font without GDEF, USE zeroes it.
 * Only the first path reads the pre-context. A syllable split between runs gets a circle at the split.
 
-> Since {{hb}}: fixed on HarfBuzz main by [`74fc8c8`](https://github.com/harfbuzz/harfbuzz/commit/74fc8c86c594ec594904fde28b548f5fc6ef2384) (17 November 2026), so main gives the vowel constraints’ circle U+25CC’s own properties (the item on the vowel constraints).
+> Since {{hb}}: fixed on HarfBuzz main by [#6710](https://github.com/harfbuzz/harfbuzz/pull/6710) (17 November 2026), so main gives the vowel constraints’ circle U+25CC’s own properties (the item on the vowel constraints).

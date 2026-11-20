@@ -96,12 +96,14 @@ function content(slug) {
     });
   }
   // A link out of the book gets a note number, and its address is listed at
-  // the end of the page: “Links”. Links whose text is the address itself, and
-  // the source references (\`hb-ot-map.cc:389\`, which say where they point),
-  // don't.
+  // the end of the page: “Links”. Links whose text is the address itself, the
+  // source references (\`hb-ot-map.cc:389\`, which say where they point), and
+  // HarfBuzz pull requests given as “#6704”, don't.
   const notes = [];
   html = html.replace(/<a href="(https?:\/\/[^"]+)"([^>]*)>([\s\S]*?)<\/a>/g, (m, url, rest, text) => {
     if (/class="src"/.test(rest) || text.replace(/<[^>]+>/g, "").trim() === url.replace(/&amp;/g, "&")) return m;
+    // “#6704”, a HarfBuzz pull request or issue by its number, says where it is.
+    if (/^https:\/\/github\.com\/harfbuzz\/harfbuzz\/(pull|issues)\/\d+$/.test(url) && /^#\d+$/.test(text.trim())) return m;
     let n = notes.indexOf(url) + 1;
     if (!n) n = notes.push(url);
     return `${m}<sup class="lnote">${n}</sup>`;

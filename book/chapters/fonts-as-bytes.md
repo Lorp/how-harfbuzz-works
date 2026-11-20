@@ -340,7 +340,7 @@ null-coverage-f1.ttf  aex
 
 Made to lookup 0, a format 2 subtable, the change switched off one lookup. Made to lookup 1, a format 1 subtable, it switches off all of GSUB. Real fonts don’t have null coverage offsets, so this is unlikely to matter, but it shows what holds the Null pattern together: every method of every type, in its `default` case.
 
-> Since {{hb}}: fixed on HarfBuzz main by [`6426ee4`](https://github.com/harfbuzz/harfbuzz/commit/6426ee4ca8a218ecf7e8b8dd92997f6d435ff03f) (17 November 2026), so main’s `get_population` returns 0 for an unknown format, and a null coverage switches off only its own subtable.
+> Since {{hb}}: fixed on HarfBuzz main by [#6696](https://github.com/harfbuzz/harfbuzz/pull/6696) (17 November 2026), so main’s `get_population` returns 0 for an unknown format, and a null coverage switches off only its own subtable.
 
 ### Crap: Null’s writable twin
 

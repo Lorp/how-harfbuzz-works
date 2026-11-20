@@ -37,7 +37,7 @@ The `packtab` target installs **packTab**, HarfBuzz’s table packer, with `pip 
 
 Two further targets: `clean` deletes the generated files, and `clean-sources` the downloaded ones, so that the next run fetches new copies. `SOURCES`, the list `clean-sources` deletes (`:16`), leaves out `DerivedCoreProperties.txt` and `emoji-test.txt`, which other rules download. A stale copy of either survives a clean and is used again. That may be why `hb-ot-shaper-use-table.hh` records `DerivedCoreProperties-17.0.0.txt` beside version 18.0.0 of every other Unicode file (inferred).
 
-> Since {{hb}}: fixed on HarfBuzz main by [`b873113`](https://github.com/harfbuzz/harfbuzz/commit/b873113f410f0fa0b215f225aec5d76eb55c22e3) (17 November 2026), so main’s `SOURCES` lists both files; the USE table hasn’t been regenerated since, and still records `DerivedCoreProperties-17.0.0.txt`.
+> Since {{hb}}: fixed on HarfBuzz main by [#6715](https://github.com/harfbuzz/harfbuzz/pull/6715) (17 November 2026), so main’s `SOURCES` lists both files; the USE table hasn’t been regenerated since, and still records `DerivedCoreProperties-17.0.0.txt`.
 
 ### What the headers record
 
@@ -188,7 +188,7 @@ Read from the code, none affecting the output in {{hb}}:
 * `gen-arabic-table.py` reads `Blocks.txt` for nothing and lists U+F2EE twice; `gen-arabic-joining-list.py`’s usage string has an old name; `gen-emoji-table.py`’s header names only `emoji-data.txt`, not `emoji-test.txt`.
 * `gen-tag-table.py` and `gen-os2-unicode-ranges.py` give `docs.microsoft.com` URLs, which now redirect to `learn.microsoft.com`, and the ISO 639 table cites `www-01.sil.org`.
 
-> Since {{hb}}: partly fixed on HarfBuzz main by [`ebfcf19`](https://github.com/harfbuzz/harfbuzz/commit/ebfcf19c720f3328754ecdde620eb45c2fa8088c), [`c66b1a5`](https://github.com/harfbuzz/harfbuzz/commit/c66b1a505795d701b27c67702809814ee250d6cd), and [`b873113`](https://github.com/harfbuzz/harfbuzz/commit/b873113f410f0fa0b215f225aec5d76eb55c22e3) (17 November 2026): the version regex, the Ragel argument check, and `SOURCES` (the first three items); the other items remain.
+> Since {{hb}}: partly fixed on HarfBuzz main by [#6688](https://github.com/harfbuzz/harfbuzz/pull/6688), [#6689](https://github.com/harfbuzz/harfbuzz/pull/6689), and [#6715](https://github.com/harfbuzz/harfbuzz/pull/6715) (17 November 2026): the version regex, the Ragel argument check, and `SOURCES` (the first three items); the other items remain.
 
 ## Where to read the source
 

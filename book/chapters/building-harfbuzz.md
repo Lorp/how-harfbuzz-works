@@ -116,7 +116,7 @@ FreeType and GLib don’t get libraries of their own: their glue, hb-ft and hb-g
 
 The build also writes **`hb-features.h`** (`src/meson.build:614`), an installed header that defines `HB_HAS_FREETYPE`, `HB_HAS_RASTER`, and so on for each optional part this build has, so that an application can test for them with `#ifdef`. Two entries are never set by Meson: `HB_HAS_GRAPHITE`, because the option sets `HAVE_GRAPHITE2`, and `HB_HAS_GPU`, though hb-gpu is built (`src/meson.build:587`; [Compile-time configuration](compile-time-configuration.html#the-meson-options)).
 
-> Since {{hb}}: fixed on HarfBuzz main by [`2b873b8`](https://github.com/harfbuzz/harfbuzz/commit/2b873b805800dcad37827f90a5c28ccb6ccc4ba8) and [`506cc94`](https://github.com/harfbuzz/harfbuzz/commit/506cc943b3c2ad82c5398361afdaf6e9eaad6b0f) (17 November 2026), so main’s `hb-features.h` defines `HB_HAS_GPU` when hb-gpu is built, and `HB_HAS_GRAPHITE` when graphite2 is.
+> Since {{hb}}: fixed on HarfBuzz main by [#6721](https://github.com/harfbuzz/harfbuzz/pull/6721) and [#6722](https://github.com/harfbuzz/harfbuzz/pull/6722) (17 November 2026), so main’s `hb-features.h` defines `HB_HAS_GPU` when hb-gpu is built, and `HB_HAS_GRAPHITE` when graphite2 is.
 
 The tools are in `build/util/`: `hb-shape`, `hb-view` (with cairo), `hb-info`, `hb-subset`, `hb-raster`, `hb-vector`, and `hb-ft-raster` when FreeType is found, plus `hb-gpu` when GLFW and GLEW are (`util/meson.build:225`). `hb-ft-raster`, which renders with FreeType for comparison, is built but not installed. The test programs are under `build/test/` and `build/src/`.
 

@@ -152,7 +152,7 @@ gsub/ligatures.ttf  fi  --features=-liga,liga
 
 The same request turns ligatures off in a `morx` font and on in a GSUB font. Nothing in the source says this is intended.
 
-> Since {{hb}}: fixed on HarfBuzz main by [`f346ea1`](https://github.com/harfbuzz/harfbuzz/commit/f346ea17a9cedce7ba98f45782aa27faa597a0e3) (17 November 2026), so on main the later request wins in AAT too, as it does in OpenType.
+> Since {{hb}}: fixed on HarfBuzz main by [#6714](https://github.com/harfbuzz/harfbuzz/pull/6714) (17 November 2026), so on main the later request wins in AAT too, as it does in OpenType.
 
 ## The state machine
 

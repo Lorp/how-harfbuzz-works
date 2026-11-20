@@ -66,7 +66,7 @@ if (likely (!hb_unsigned_mul_overflows (len, HB_BUFFER_MAX_OPS_FACTOR, &mul)))
 
 `mul` is unsigned. From a length of 524,288 characters, 4,096 times the length no longer fits in an `int`, and the cast makes it negative. Up to 1,048,575 characters, then, the budget is spent before shaping begins. From 1,048,576 the unsigned multiplication overflows too, the branch isn’t taken, and the budget stays at its default of about half a billion. Shaping `fi` repeated with `ligatures.ttf` (tried, not shown: the output is a million glyphs long) gives 262,143 ligatures for 524,286 characters, one ligature and then plain `f` and `i` for 524,290 and for 1,000,000 characters, and 524,286 ligatures again for 1,048,576. This looks like a bug: the line needs a clamp to `INT_MAX` before the cast. `hb-shape` doesn’t report the failure, since it doesn’t call `hb_buffer_allocation_successful`.
 
-> Since {{hb}}: changed on HarfBuzz main by [`339aa68`](https://github.com/harfbuzz/harfbuzz/commit/339aa688fa4dfb4c38591a609f01fd8ca759afdb) (11 November 2026), which charges each lookup pass to the budget: it still starts negative, and 1,000,000 characters get no ligature at all, while 524,290 shape fully, probably because the budget overflows and wraps around.
+> Since {{hb}}: changed on HarfBuzz main by [#6632](https://github.com/harfbuzz/harfbuzz/pull/6632) (11 November 2026), which charges each lookup pass to the budget: it still starts negative, and 1,000,000 characters get no ligature at all, while 524,290 shape fully, probably because the budget overflows and wraps around.
 
 ## Sanitizing
 
@@ -80,7 +80,7 @@ The sanitizer checks a table once, when it is first loaded, and a table that fai
 | `HB_AAT_MAX_SUBTABLES` | 1,024 | subtables in one `morx`, `mort`, `kerx`, or AAT `kern` | the table is rejected (`hb-aat-layout-morx-table.hh:1501`, `hb-aat-layout-kerx-table.hh:1154`) | [AAT inside HarfBuzz](aat-inside-harfbuzz.html#before-the-loop), [Legacy kern](legacy-kern.html#two-tables-called-kern) |
 | `HB_SANITIZE_MAX_EDITS` | 32 | nothing | never read | [Sanitizer](trust-nothing-the-sanitizer.html#whats-left-of-repairing) |
 
-> Since {{hb}}: fixed on HarfBuzz main by [`9172214`](https://github.com/harfbuzz/harfbuzz/commit/91722141bb48a8414284cb3b4001b0c98cce9a19) (17 November 2026), which removes `HB_SANITIZE_MAX_EDITS` (the table’s last row).
+> Since {{hb}}: fixed on HarfBuzz main by [#6728](https://github.com/harfbuzz/harfbuzz/pull/6728) (17 November 2026), which removes `HB_SANITIZE_MAX_EDITS` (the table’s last row).
 
 The AAT limit is in the sanitizer for a reason its comment gives: the accelerator keeps one or two glyph sets per subtable, “which can take far more memory than the subtable has bytes” (`hb-limits.hh:95`). A rejected `morx` means the font is shaped as if it had none, with GSUB if it has one. The state machines that pass the sanitizer are then checked as they run, against a sanitizer context with the maximum budget (`hb-aat-layout.cc:71`; [The AAT tables](trust-nothing-the-sanitizer.html#the-aat-tables)).
 
@@ -104,7 +104,7 @@ Every one of these fails quietly. A subset that hits one is smaller than it shou
 
 The comment on the definition says the value “must be larger than the number of times `add_gsub_pause()` is called in a collect_features call of any shaper” (`hb-limits.hh:65`). The Indic shaper’s `collect_features_indic` calls it 14 times: once before `locl`, once before the basic features, once after each of the 11 basic features, and once before the presentation features (`hb-ot-shaper-indic.cc:249–265`). The USE shaper calls it 8 times, Arabic up to 12. The value is 12, which is smaller than 14, so the comment and the code disagree. As written, the loop runs at most 14 passes, which equals the Indic count rather than exceeding it, so the code may be right by accident; but the reasoning in the comment doesn’t support the number. [Subsetting](subsetting.html#where-the-fixed-order-misses) shows a chain that the 14 passes cut short.
 
-> Since {{hb}}: fixed on HarfBuzz main by [`0209ec2`](https://github.com/harfbuzz/harfbuzz/commit/0209ec2865b55e892897966e95dfb8915a1309e9) (17 November 2026), which raises `HB_CLOSURE_MAX_STAGES` to 16, so main runs at most 18 passes.
+> Since {{hb}}: fixed on HarfBuzz main by [#6725](https://github.com/harfbuzz/harfbuzz/pull/6725) (17 November 2026), which raises `HB_CLOSURE_MAX_STAGES` to 16, so main runs at most 18 passes.
 
 ## AAT
 
@@ -197,7 +197,7 @@ Two limits change nothing visible. `HB_CBDT_MAX_INDEX_ENTRIES`, 65,536, caps the
 
 `HB_SVG_MAX_PATH_SEGMENTS` (262,144, `hb-limits.hh:130`) appears nowhere else in the source, nor in `util/` or the tests. `HB_SANITIZE_MAX_EDITS` (32) is left over from the time the sanitizer repaired fonts. `HB_REPACKER_MAX_VERTICES` is used, but also by `test-repacker.cc`, which fills a graph to the limit to check it.
 
-> Since {{hb}}: fixed on HarfBuzz main by [`9172214`](https://github.com/harfbuzz/harfbuzz/commit/91722141bb48a8414284cb3b4001b0c98cce9a19) (17 November 2026), so main no longer defines `HB_SVG_MAX_PATH_SEGMENTS` or `HB_SANITIZE_MAX_EDITS`.
+> Since {{hb}}: fixed on HarfBuzz main by [#6728](https://github.com/harfbuzz/harfbuzz/pull/6728) (17 November 2026), so main no longer defines `HB_SVG_MAX_PATH_SEGMENTS` or `HB_SANITIZE_MAX_EDITS`.
 
 ## Changing a limit
 
@@ -232,4 +232,4 @@ Most limits have grown over the years as real fonts reached them. `NEWS` records
 * `HB_CLOSURE_MAX_STAGES` is 12, though its comment requires it to exceed the Indic shaper’s 14 pauses. `HB_SVG_MAX_PATH_SEGMENTS` and `HB_SANITIZE_MAX_EDITS` are unused.
 * The limits in `hb-limits.hh` and `hb-sanitize.hh` can be changed at build time; the others are fixed in the source. Only the drawing and painting budget can be changed at run time.
 
-> Since {{hb}}: fixed on HarfBuzz main by [`0209ec2`](https://github.com/harfbuzz/harfbuzz/commit/0209ec2865b55e892897966e95dfb8915a1309e9) and [`9172214`](https://github.com/harfbuzz/harfbuzz/commit/91722141bb48a8414284cb3b4001b0c98cce9a19) (17 November 2026), so main has `HB_CLOSURE_MAX_STAGES` at 16 and neither unused limit (the item on `HB_CLOSURE_MAX_STAGES`).
+> Since {{hb}}: fixed on HarfBuzz main by [#6725](https://github.com/harfbuzz/harfbuzz/pull/6725) and [#6728](https://github.com/harfbuzz/harfbuzz/pull/6728) (17 November 2026), so main has `HB_CLOSURE_MAX_STAGES` at 16 and neither unused limit (the item on `HB_CLOSURE_MAX_STAGES`).
