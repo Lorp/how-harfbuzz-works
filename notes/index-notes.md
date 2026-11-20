@@ -78,6 +78,7 @@ One entry, the other forms pointing at it.
 * **Null object** (“Null”): see also empty blob, tagged Null, `Crap`
 * **phantom points**: also top phantom point; see also `gvar`, HVAR
 * **script shaper**: not the same as backend (“backend shaper”)
+* **continuous integration** (“CI”): also CI
 * **glyph extents** (“extents”, “glyph’s extents”): see also font extents
 * **pixels per em** (“Pixels per em”): also ppem
 * **point size** (“Point size”): also ptem

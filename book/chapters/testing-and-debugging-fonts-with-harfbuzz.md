@@ -1,6 +1,6 @@
 # Testing and debugging fonts with HarfBuzz
 
-A font maker turns to a shaping engine with two kinds of question. The first comes while a font is being made: a rule has been written, and the text doesn’t come out as it should. The second comes once the font works: will it still work after the next change? This chapter answers both with HarfBuzz’s own tools: the first by narrowing a problem down to the step that causes it, the second with tests that every build of the font must pass.
+A font maker turns to a shaping engine with two kinds of question. The first comes while a font is being made: a rule has been written, and the text doesn’t come out as it should. The second comes once the font works: will it still work after the next change? This chapter answers both with HarfBuzz’s own tools: the first by narrowing a problem down to the step that causes it, the second with tests that every build of the font must pass, run by **continuous integration** (CI), which builds a project on a server each time a change is pushed.
 
 HarfBuzz is the natural engine for both. Chrome, Firefox, Android, and most other software shape text with it, so for most of a font’s users, what HarfBuzz does with the font *is* what the font does. `hb-shape` gives the same answer those programs get for the same text and settings, and it can show each step it took to get there. And HarfBuzz’s own test suite has a format for expected results, and a runner for them, that work as well for a font maker’s tests as for HarfBuzz’s.
 
@@ -76,7 +76,7 @@ When the features are all there, the trace shows which lookup did the wrong thin
 
 ### Decide whose problem it is
 
-Most problems are in the font, but not all. When the font’s tables look right and the result is still wrong, try other engines: the same text in another HarfBuzz release, in the platform shapers where HarfBuzz is built with them, and in HarfRust ([Other shapers and other versions](#other-shapers-and-other-versions)). If every engine gives the same wrong result, the font is almost certainly the cause, however right the rule looks: read it again beside the trace. If HarfBuzz alone differs, look in this book’s chapter for the script, since many differences are deliberate, and in HarfBuzz’s issues, since many are known. If it is still unexplained, it may be a HarfBuzz bug, and the next step makes the report.
+In this font, `hb-info` and the trace were enough: one rule was registered in the wrong place, and the other is in a feature that is off by default. Most problems are in the font, but not all: when the font’s tables look right and the result is still wrong, try other engines: the same text in another HarfBuzz release, in the platform shapers where HarfBuzz is built with them, and in HarfRust ([Other shapers and other versions](#other-shapers-and-other-versions)). If every engine gives the same wrong result, the font is almost certainly the cause, however right the rule looks: read it again beside the trace. If HarfBuzz alone differs, look in this book’s chapter for the script, since many differences are deliberate, and in HarfBuzz’s issues, since many are known. If it is still unexplained, it may be a HarfBuzz bug, worth reporting on [HarfBuzz’s issue tracker](https://github.com/harfbuzz/harfbuzz/issues). The next step makes the small font that such a report needs.
 
 ### Cut it down
 
@@ -95,6 +95,8 @@ Once the problem is fixed, keep the text that went wrong, with its options and t
 ## Keeping a font working
 
 Fonts are revised after they ship, and their layout tables with them. A new alternate is added, a class gains a glyph, a feature file is reordered, a glyph is renamed, a compiler is updated. Each change can alter how some text comes out, and nothing in the font says which. The way to find out is to keep a record of what the font did, and compare every new build with it.
+
+Today that comparison is best made by CI: one more step in the font’s build shapes the test texts with the new build and fails if the output doesn’t match the record. Nobody has to remember to run it, and a mistake is caught in the change that made it. The sections below build that up: recording the font’s output, choosing what to test, running the tests and reading a failure, and then running them in CI.
 
 The examples from here on use two releases of one test font. Release 1 has an *fi* ligature and kerns *T* with *o*:
 
@@ -118,7 +120,7 @@ feature calt {
 
 It’s a common kind of change, and it has a common kind of mistake in it: the kerning wasn’t updated for the new glyph. Nothing warns about it. The font compiles, and each feature does what its rules say.
 
-## Recording what the font does
+### Recording what the font does
 
 A test is a text, the options to shape it with, and the result. The result isn’t written by hand: it is what HarfBuzz gives now, recorded once and checked by eye, and from then on it is what every later build must give. Here is what release 1 gives for four texts:
 
@@ -157,11 +159,35 @@ myfont.ttf;--language=en --features=-liga;U+0066,U+0069;[f=0+500|i=1+500]
 myfont.ttf;--language=en;U+0054,U+006F,U+0020,U+0066,U+0069,U+0074;[T=0+420|o=1+500|space=2+500|f_i=3+900|t=5+500]
 ```
 
-The results are the ones above. The font is named without a folder, because the runner finds it beside the `.tests` file, so each build of the font is saved under the same name in the same place. Pass `--language` in every case: `hb-shape` otherwise takes the language from the locale, and the recording and the rerun could disagree. (The program sets `LC_ALL=C`, as HarfBuzz’s runner does, so they wouldn’t here, but a case recorded by hand might.)
+The results are the ones above. The font is named without a folder, because the runner finds it beside the `.tests` file, so each build of the font is saved under the same name in the same place. Pass `--language` in every case: `hb-shape` otherwise takes the language from the locale, and the recording and the rerun could disagree.
 
 Glyph names make the results readable, and a font built without them (a `post` table of version 3, as many shipping fonts have) is recorded with glyph IDs instead, as `gid` followed by the number. Either works, but a test with names is easier to check by eye and survives a change in glyph order. Record from a build with names if the build process can make one.
 
-## Running the tests
+### What to test
+
+The tests only see what they shape. Some places to look, in roughly the order they catch problems:
+
+* **Every rule in context, and just out of it.** A contextual rule needs a case where its context matches and one where it nearly does: *To* and *Tx*, a mark after a base and after a space. Release 2’s mistake is found by any case with *T o* in it.
+* **Every script and language system the font registers.** A `locl` lookup only runs under its language, so a Turkish *i* needs `--language=tr` to be seen at all ([Choosing a script shaper](choosing-a-script-shaper.html)). Give every case its language.
+* **Marks on every base they should attach to**, including a base reached through a ligature, and two marks stacked.
+* **Broken text.** A mark with no base, or a syllable a script’s rules reject, gets a dotted circle from HarfBuzz ([Dotted circles and broken clusters](dotted-circles-and-broken-clusters.html)). A case for each says what users see when they type something unusual.
+* **Text at the edges.** `--text-before` and `--text-after` give a case the context a line break or a style change would, without shaping it: the start of a word after a punctuation mark, an Arabic letter that joins to text in another run.
+* **Variable fonts at every threshold.** Testing at the named instances isn’t enough when a substitution switches somewhere in between.
+
+The last needs an example. This font, from [Shape plans and their cache](shape-plans-and-their-cache.html), substitutes `H` for `I` from weight 600 to 695, and `V` from 700:
+
+```shape
+shape-plans-and-their-cache/featvar.ttf  I  --variations=wght=400  --language=en  --ned
+shape-plans-and-their-cache/featvar.ttf  I  --variations=wght=600  --language=en  --ned
+shape-plans-and-their-cache/featvar.ttf  I  --variations=wght=695  --language=en  --ned
+shape-plans-and-their-cache/featvar.ttf  I  --variations=wght=696  --language=en  --ned
+shape-plans-and-their-cache/featvar.ttf  I  --variations=wght=700  --language=en  --ned
+shape-plans-and-their-cache/featvar.ttf  I  --variations=wght=900  --language=en  --ned
+```
+
+Tests at 400 and 900 never see the `H`, nor the gap at 696, where the `I` comes back: the conditions say 0.59, and a user value of 696 normalizes to just above it. A feature file says where the switches are; the cases should sit on each side of each of them ([Design space](design-space.html) explains the normalization).
+
+### Running the tests
 
 HarfBuzz’s runner is `test/shape/run-tests.py`, in its source tree. It is one Python file with no dependencies beyond Python itself, so it can be copied out and used with any `hb-shape` ([Building HarfBuzz](building-harfbuzz.html) shows how to get one). It takes the path of `hb-shape`, then one or more `.tests` files:
 
@@ -197,16 +223,7 @@ and, on standard error, for each failure:
 
 The output is TAP, the format Meson’s test runner reads. One thing to know before calling it from a build script: it exits with 0 whether or not tests fail. Nothing after the count is checked (`run-tests.py:357`, the last line), because Meson reads the `ok` and `not ok` lines itself. A script should look for `not ok`, or for the summary line, rather than the exit status.
 
-If the font’s sources are kept in a repository with continuous integration, it is worth running the tests there, on every change, so that a failure is seen by whoever made the change, before the font is released. The step is the same as on a desktop: build the font, then run the tests and fail if any test failed:
-
-```
-$ python3 run-tests.py "$(command -v hb-shape)" myfont.tests > results.tap
-$ ! grep -q '^not ok' results.tap
-```
-
-The second command fails when the file has a `not ok` line, and so fails the build. Two things make the results trustworthy. The `hb-shape` should be a known HarfBuzz release, pinned or built from source, since a CI machine’s packaged one may be years old ([Building HarfBuzz](building-harfbuzz.html)); and a change of release should be a change of its own, so that a difference it causes isn’t mistaken for one the font caused.
-
-## Reading a failure
+### Reading a failure
 
 The runner says what changed. Shaped by both releases, the text that failed shows it plainly:
 
@@ -235,9 +252,9 @@ to: end lookup 0 feature 'kern'
 
 `calt` replaces the *o* with `o.alt`, and then `kern` runs and changes nothing, because its pair is *T o*, and there is no longer an *o*. Substitution always comes before positioning, so GPOS only ever sees what GSUB has left. The recipe [Why didn’t this ligature form?](command-line-tools.html#why-didnt-this-ligature-form) works through the same reading for a substitution.
 
-Then comes the decision only the font maker can make: is the change a mistake, or the new intended behavior? Here it is a mistake, and the fix is in the font, `pos T [o o.alt] -80;`. Had the change been intended, the fix would be in the tests: record the failing cases again, check the new results by eye, and commit them with the font, so that the record says when and why the font’s behavior changed. A suite whose expected results are regenerated without being read checks nothing.
+Then comes the decision only the font maker can make: is the change a mistake, or the new intended behavior? Here it is a mistake, and the fix is in the font, `pos T [o o.alt] -80;`. Had the change been intended, the tests would be recorded again instead, as [Running the tests in CI](#running-the-tests-in-ci) shows.
 
-## Results that change at a line break
+### Results that change at a line break
 
 Line breaking means shaping a text in pieces. An application shapes a paragraph once, picks the breaks, and reuses the glyphs on each side when the glyph flags say it can ([For applications](for-applications.html)). If a font’s result for a piece differs from the same glyphs in the whole, a line ends or begins with the wrong glyphs, and only where it happens to break.
 
@@ -245,29 +262,66 @@ Line breaking means shaping a text in pieces. An application shapes a paragraph 
 
 A failure there isn’t always the font’s fault. The flags are set by HarfBuzz, from what the lookups did, and some of the failures in that chapter are HarfBuzz setting them wrongly. But it is always a break where the font’s text comes out differently in an application, so it is worth knowing about, and worth reporting to HarfBuzz if the font is doing nothing unusual. To test a text that should only be checked whole, record it with `*` as its expected result: the runner then counts it as passed without comparing anything, and runs it without `--verify` (`run-tests.py:298`).
 
-## What to test
+### Running the tests in CI
 
-The tests only see what they shape. Some places to look, in roughly the order they catch problems:
+The `.tests` file is kept in the repository with the font’s sources, so CI can check every change against it before the font is released.
 
-* **Every rule in context, and just out of it.** A contextual rule needs a case where its context matches and one where it nearly does: *To* and *Tx*, a mark after a base and after a space. Release 2’s mistake is found by any case with *T o* in it.
-* **Every script and language system the font registers.** A `locl` lookup only runs under its language, so a Turkish *i* needs `--language=tr` to be seen at all ([Choosing a script shaper](choosing-a-script-shaper.html)). Give every case its language.
-* **Marks on every base they should attach to**, including a base reached through a ligature, and two marks stacked.
-* **Broken text.** A mark with no base, or a syllable a script’s rules reject, gets a dotted circle from HarfBuzz ([Dotted circles and broken clusters](dotted-circles-and-broken-clusters.html)). A case for each says what users see when they type something unusual.
-* **Text at the edges.** `--text-before` and `--text-after` give a case the context a line break or a style change would, without shaping it: the start of a word after a punctuation mark, an Arabic letter that joins to text in another run.
-* **Variable fonts at every threshold.** Testing at the named instances isn’t enough when a substitution switches somewhere in between.
+The usual way to run shaping tests in CI is fontspector, the successor to fontbakery, with tests in a JSON format of their own ([Font QA tools](#font-qa-tools)). Large projects work this way. Each of the Noto fonts’ repositories has a GitHub Actions workflow that, for every branch, builds the font, runs the QA checks, including any shaping tests in its `qa/shaping_tests` folder, and compares the build with the font’s previous release using `gftools.diffenator`, which renders test strings from both and shows the differences ([notofonts.github.io](https://github.com/notofonts/notofonts.github.io), its README). Fontspector shapes with HarfRust, not HarfBuzz. To test against HarfBuzz itself, run the same kind of tests with `hb-shape` and HarfBuzz’s own runner, as the rest of this section does. A font can use both.
 
-The last needs an example. This font, from [Shape plans and their cache](shape-plans-and-their-cache.html), substitutes `H` for `I` from weight 600 to 695, and `V` from 700:
+The step is the same as on a desktop: build the font, then run the tests and fail if any test failed:
 
-```shape
-shape-plans-and-their-cache/featvar.ttf  I  --variations=wght=400  --language=en  --ned
-shape-plans-and-their-cache/featvar.ttf  I  --variations=wght=600  --language=en  --ned
-shape-plans-and-their-cache/featvar.ttf  I  --variations=wght=695  --language=en  --ned
-shape-plans-and-their-cache/featvar.ttf  I  --variations=wght=696  --language=en  --ned
-shape-plans-and-their-cache/featvar.ttf  I  --variations=wght=700  --language=en  --ned
-shape-plans-and-their-cache/featvar.ttf  I  --variations=wght=900  --language=en  --ned
+```
+$ python3 run-tests.py "$(command -v hb-shape)" myfont.tests > results.tap
+$ ! grep -q '^not ok' results.tap
 ```
 
-Tests at 400 and 900 never see the `H`, nor the gap at 696, where the `I` comes back: the conditions say 0.59, and a user value of 696 normalizes to just above it. A feature file says where the switches are; the cases should sit on each side of each of them ([Design space](design-space.html) explains the normalization).
+The second command fails when the file has a `not ok` line, and so fails the build. On GitHub Actions, for example, a workflow could do it like this. It is an example, hand-written and not run by this book, and it assumes the font is built by a `build.sh` and its tests are in `tests/`:
+
+```
+name: Shaping tests
+on: [push, pull_request]
+jobs:
+  shaping:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install meson ninja fonttools==4.38.0
+      - name: Build HarfBuzz {{hb}}
+        run: |
+          git clone --depth 1 --branch {{hb}} https://github.com/harfbuzz/harfbuzz.git hb
+          meson setup hb/build hb -Dtests=disabled -Ddocs=disabled
+          ninja -C hb/build util/hb-shape
+      - run: sh build.sh
+      - name: Run the tests
+        run: |
+          python3 hb/test/shape/run-tests.py "$PWD/hb/build/util/hb-shape" tests/myfont.tests > results.tap
+          cat results.tap
+          ! grep -q '^not ok' results.tap
+```
+
+The runner’s source comes with the HarfBuzz it builds, so the two always match. The failures’ details, the actual and expected results, go to standard error, which the CI log shows.
+
+Not every failure is a mistake. When a change is meant to alter the output, the tests are recorded again in the same change, and the difference in the `.tests` file says exactly what the change did. Had release 2’s alternate been intended, recording again would have given:
+
+```
+-myfont.ttf;--language=en;U+0054,U+006F;[T=0+420|o=1+500]
++myfont.ttf;--language=en;U+0054,U+006F;[T=0+500|o.alt=1+500]
+ myfont.ttf;--language=en;U+0066,U+0069,U+0074;[f_i=0+900|t=2+500]
+ myfont.ttf;--language=en --features=-liga;U+0066,U+0069;[f=0+500|i=1+500]
+-myfont.ttf;--language=en;U+0054,U+006F,U+0020,U+0066,U+0069,U+0074;[T=0+420|o=1+500|space=2+500|f_i=3+900|t=5+500]
++myfont.ttf;--language=en;U+0054,U+006F,U+0020,U+0066,U+0069,U+0074;[T=0+500|o.alt=1+500|space=2+500|f_i=3+900|t=5+500]
+```
+
+That is what a reviewer reads in the pull request: each changed result beside the old one. Here it shows the alternate, and also that *T* lost its kerning, which nobody intended. A change that alters results without changing the `.tests` file fails; one that changes the file has said, in its diff, what it changed. So the new results are read before they are committed: a suite whose expected results are regenerated without being read checks nothing.
+
+Three things keep the comparison honest:
+
+* **A fixed HarfBuzz.** The `hb-shape` should be a known release, pinned or built from source, since a CI machine’s packaged one may be years old ([Building HarfBuzz](building-harfbuzz.html)). Moving to a new release is a change of its own, so that a difference it causes isn’t mistaken for one the font caused.
+* **A fixed compiler.** The font is built by a compiler, and a new version of it may split lookups differently or choose other subtable formats ([Reading feature files](reading-feature-files.html#the-compilers)). Pin its version too, and update it in a change of its own.
+* **The same settings everywhere.** The runner sets `LC_ALL=C` (`run-tests.py:19`), and every test gives its language, so a test means the same on every machine.
 
 ## Other shapers and other versions
 
@@ -285,7 +339,20 @@ A test says which glyphs come out and where. It doesn’t say whether they look 
 
 ## Font QA tools
 
-Fontspector, the Rust successor to fontbakery, runs a font maker’s shaping tests as checks in its Google Fonts profile: `shaping/regression` compares the results with expected ones, and `shaping/forbidden` fails if a forbidden glyph, such as `.notdef` or a visible virama, appears (`profile-googlefonts/src/checks/shaping/` in [fontspector](https://github.com/fonttools/fontspector)). Its tests are JSON files, in the format Simon Cozens describes in [*Better Fonts Through Test-Driven Development*](https://simoncozens.github.io/tdd-for-otl/), which fontbakery’s checks of the same names read too. It shapes with HarfRust (its `Cargo.toml`), where fontbakery shapes through uharfbuzz, HarfBuzz’s Python binding, by way of vharfbuzz. HarfRust follows HarfBuzz closely, but not exactly ([HarfRust](harfrust.html)), so a result that matters is worth checking with HarfBuzz too.
+Fontspector, the Rust successor to fontbakery, runs a font maker’s shaping tests as checks in its Google Fonts profile: `shaping/regression` compares the results with expected ones, and `shaping/forbidden` fails if a forbidden glyph, such as `.notdef` or a visible virama, appears (`profile-googlefonts/src/checks/shaping/` in [fontspector](https://github.com/fonttools/fontspector)). Fontbakery has checks of the same names. The tests are JSON files, in the format Simon Cozens describes in [*Better Fonts Through Test-Driven Development*](https://simoncozens.github.io/tdd-for-otl/). Here is one of Noto Looped Thai’s (`qa/shaping_tests/looped.json` in [notofonts/thai](https://github.com/notofonts/thai)), trimmed:
+
+```
+{
+  "expectation": "uni0E23=0+510|uni0E37=0@-625,0+0|uni0E48.small=0@-215,-1+0|uni0E2D=3+584|…",
+  "input": "รื่องนั้",
+  "note": "Issue #21",
+  "only": "NotoLoopedThai-Regular.ttf"
+}
+```
+
+The expectation is HarfBuzz’s output format, as `hb-shape` prints it, without the brackets: so a `.tests` line and a JSON test record the same thing, and either can be made from the other. The note ties the test to the issue it came from, which is [Keep the case](#keep-the-case) in practice.
+
+Fontspector shapes with HarfRust (its `Cargo.toml`), and fontbakery with uharfbuzz, HarfBuzz’s Python binding, by way of vharfbuzz. HarfRust follows HarfBuzz closely, but not exactly ([HarfRust](harfrust.html)), so a result that matters is worth checking with HarfBuzz too.
 
 Their other checks are outside this book: outlines, metadata, spacing, naming, and the rest of what makes a font fit to ship.
 
@@ -304,8 +371,8 @@ Their other checks are outside this book: outlines, metadata, spacing, naming, a
 * When a font doesn’t work, reproduce the problem with `hb-shape` and everything the application passes, find the step with `hb-info` and `--trace`, try other engines to see whose problem it is, and cut it down with `hb-subset` to a font small enough to report.
 * Most “broken” rules are registered under a script or language the text doesn’t get, or in a feature that is off by default.
 * Record what HarfBuzz does with the font now, check it by eye, and compare every later build with it. HarfBuzz’s `.tests` format holds the record, and its `run-tests.py` runs it with any `hb-shape`.
-* The runner adds `--verify`, so every test also checks the font at line breaks, and it runs every test with each kind of font functions the build has. It exits with 0 even when tests fail: look for `not ok`.
-* If the font has continuous integration, run the tests there on every change, with a pinned HarfBuzz release.
-* A failure is read by shaping both builds and tracing the new one. Then decide: fix the font, or record the new result on purpose.
 * Test every contextual rule in and just out of context, every language system, marks, broken text, text at the edges, and variable fonts on each side of every threshold.
-* The same tests run with another HarfBuzz release, the platform shapers, and HarfRust. Fontspector and fontbakery run shaping tests of their own format, fontspector with HarfRust.
+* The runner adds `--verify`, so every test also checks the font at line breaks, and it runs every test with each kind of font functions the build has. It exits with 0 even when tests fail: look for `not ok`.
+* A failure is read by shaping both builds and tracing the new one. Then decide: fix the font, or record the new result on purpose.
+* Run the tests in CI on every change, with a pinned HarfBuzz release and a pinned compiler. When a change is meant to alter the output, record the tests again in the same change, so that the diff of the `.tests` file shows what it altered.
+* The usual CI route is fontspector, the successor to fontbakery, with JSON tests, as the Noto fonts use; it shapes with HarfRust. HarfBuzz’s own runner tests against HarfBuzz itself, and a font can use both. The same tests also run with another HarfBuzz release and the platform shapers.
