@@ -17,7 +17,7 @@ Before writing or editing anything in `book/`, read `notes/writing-brief.md`: it
 
 `notes/outline.md` has the plan of the book, and `notes/upstream-bug-reports.md` the bugs it has found.
 
-**Bug report numbers are permanent.** HarfBuzz pull requests cite the reports by number (“How HarfBuzz Works bug 75”). Never renumber, reorder, reuse or delete one: a new report takes the next unused number, and a withdrawn one keeps its number, marked as withdrawn. The rules are at the top of `notes/upstream-bug-reports.md`.
+**Bug report numbers are permanent.** HarfBuzz pull requests cite the reports by number (“How HarfBuzz Works bug 75”), and their ID is HHW-75. Never renumber, reorder, reuse or delete one: a new report takes the next unused number, and a withdrawn one keeps its number, marked as withdrawn. The rules are at the top of `notes/upstream-bug-reports.md`.
 
 ## Resources that can help us
 
