@@ -163,7 +163,8 @@ const front = [
 <p><i>${esc(meta.title)}</i>: ${esc(meta.subtitle).replace(/^./, (c) => c.toLowerCase())}</p>
 <p>By ${esc(meta.author)}${meta.with ? ` with ${esc(meta.with)}` : ""}</p>
 <p>${esc(version.label)}. It describes HarfBuzz ${esc(meta.harfbuzz)}, and every example in it was run on that version.</p>
-<p>Set in Source Serif 4, Commissioner and JetBrains Mono.</p>
+<p>The book’s source and issues: ${esc(meta.repository.replace(/^https?:\/\//, ""))}<br>HarfBuzz’s source and issues: github.com/harfbuzz/harfbuzz</p>
+<p>Set in Source Serif 4, Commissioner, and JetBrains Mono.</p>
 </div>`,
 ].join("\n");
 
