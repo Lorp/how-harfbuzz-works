@@ -1,0 +1,13 @@
+# A font that doesn't do what its maker meant: the fi ligature is written
+# under DFLT only, and the Th ligature is in dlig, which is off by default.
+languagesystem DFLT dflt;
+languagesystem latn dflt;
+
+feature liga {
+  script DFLT;
+  sub f i by f_i;
+} liga;
+
+feature dlig {
+  sub T h by T_h;
+} dlig;

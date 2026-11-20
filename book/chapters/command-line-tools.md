@@ -214,7 +214,7 @@ to: end table GSUB
 
 ### Verifying
 
-`--verify` makes HarfBuzz check its own result: it cuts the text wherever the glyph flags say a line could break, shapes the pieces, and compares (`shape-options.hh:54`, [Buffers](buffers.html#verification)). If the result passes, the output is unchanged. If it fails, HarfBuzz prints the reason and the text to standard error, `hb-shape` prints `error: Shaping failed.`, and exits with 3. [For applications](for-applications.html#checking-the-flags) shows fonts that fail.
+`--verify` makes HarfBuzz check its own result: it cuts the text wherever the glyph flags say a line could break, shapes the pieces, and compares (`shape-options.hh:54`, [Buffers](buffers.html#verification)). If the result passes, the output is unchanged. If it fails, HarfBuzz prints the reason and the text to standard error, `hb-shape` prints `error: Shaping failed.`, and exits with 3. [For applications](for-applications.html#checking-the-flags) shows fonts that fail, and [Testing and debugging fonts with HarfBuzz](testing-and-debugging-fonts-with-harfbuzz.html) why a font’s tests should run with it.
 
 ### Many runs
 
@@ -224,7 +224,7 @@ to: end table GSUB
 $ printf 'shaping.ttf;fi\nshaping.ttf;fi;--features=-liga\n' | hb-shape --batch
 ```
 
-Each line runs as if it were a command of its own, and prints what it would. The font of the last line is kept loaded while the next line names the same file (`face-options.hh:109`), and one process serves every line. HarfBuzz’s own test runners drive `hb-shape` and `hb-subset` this way (`test/shape/run-tests.py:25`). The drawing tools and `hb-subset` also print `success` or `failure` after each line. A line with a bad option or font still ends the whole batch (`options.hh:114`).
+Each line runs as if it were a command of its own, and prints what it would. The font of the last line is kept loaded while the next line names the same file (`face-options.hh:109`), and one process serves every line. HarfBuzz’s own test runners drive `hb-shape` and `hb-subset` this way (`test/shape/run-tests.py:25`), and so can a font’s ([Testing and debugging fonts with HarfBuzz](testing-and-debugging-fonts-with-harfbuzz.html)). The drawing tools and `hb-subset` also print `success` or `failure` after each line. A line with a bad option or font still ends the whole batch (`options.hh:114`).
 
 `-n` (`--num-iterations`) repeats the shaping, for timing, and an empty `--output-format=` skips writing the result at all (`shape-output.hh:56`), so that the time measured is HarfBuzz’s.
 
@@ -321,7 +321,7 @@ zoom: 3
 $ hb-raster test/subset/data/fonts/Roboto-Regular.ttf Wave --font-size=32 --show-extents -o wave-extents.png
 ```
 
-Only the *W*’s box is where it should be. The box around the *v* and the *e* is the *a*’s, at twice the *a*’s pen position, and the boxes of the *v* and the *e* are further on still, outside the picture. Each glyph’s overlay is drawn with its transform already set to the pen position, and then moved by the pen position again (`raster-output.hh:251`, `vector-output.hh:292`, `helper-extents-overlay.hh:66`). The first glyph’s pen position is 0, so its box alone is right. `hb-shape --show-extents` gives the correct numbers. This is draft 75 in [Testing HarfBuzz](testing-harfbuzz.html#the-bugs-this-book-found).
+Only the *W*’s box is where it should be. The box around the *v* and the *e* is the *a*’s, at twice the *a*’s pen position, and the boxes of the *v* and the *e* are further on still, outside the picture. Each glyph’s overlay is drawn with its transform already set to the pen position, and then moved by the pen position again (`raster-output.hh:251`, `vector-output.hh:292`, `helper-extents-overlay.hh:66`). The first glyph’s pen position is 0, so its box alone is right. `hb-shape --show-extents` gives the correct numbers. This is draft 75 in [Bugs this book found](bugs-this-book-found.html#hhw-75).
 
 ## hb-gpu
 
@@ -337,6 +337,8 @@ The build makes a few more programs, for HarfBuzz’s own developers, and doesn�
 * `hb-fc-list`, in `util/hb-fc-list.c`, lists the fontconfig fonts that can draw a piece of text. Nothing in the build compiles it.
 
 ## Recipes
+
+Each of these answers one question about one font, once. To check that a font keeps giving the right answers, build after build, see [Testing and debugging fonts with HarfBuzz](testing-and-debugging-fonts-with-harfbuzz.html).
 
 ### What does this text look like in this font?
 

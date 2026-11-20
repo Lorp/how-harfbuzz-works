@@ -1,0 +1,11 @@
+# Release 1 of a font under test: an f_i ligature, and T kerned with o.
+languagesystem DFLT dflt;
+languagesystem latn dflt;
+
+feature liga {
+  sub f i by f_i;
+} liga;
+
+feature kern {
+  pos T o -80;
+} kern;

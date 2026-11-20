@@ -9,7 +9,7 @@ Read it [online](https://lorp.github.io/how-harfbuzz-works/) or as a [PDF](https
 “I skimmed a few chapters. Genuinely useful to aspiring HarfBuzz developers.”  
 — *Behdad Esfahbod*
 
-The book, started 17 November 2026, is still a draft: 49 chapters in twelve parts, and six appendices. So far only Laurence Penney and Behdad Esfahbod, HarfBuzz’s author, have reviewed it. If you find a mistake, whether a false claim, a misleading phrase or something missing, please [open an issue](https://github.com/Lorp/how-harfbuzz-works/issues), quoting the version in the page’s footer.
+The book, started 17 November 2026, is still a draft: 50 chapters in twelve parts, and seven appendices. So far only Laurence Penney and Behdad Esfahbod, HarfBuzz’s author, have reviewed it. If you find a mistake, whether a false claim, a misleading phrase or something missing, please [open an issue](https://github.com/Lorp/how-harfbuzz-works/issues), quoting the version in the page’s footer.
 
 ## How it’s made
 
@@ -30,7 +30,7 @@ Anything the book shows as HarfBuzz’s output is made by running HarfBuzz when 
 * the output of HarfBuzz’s command-line tools;
 * whole example programs in C, JavaScript, Python and Rust, compiled and run, with what they draw.
 
-So if HarfBuzz changes, rebuilding the book shows what has changed. Writing it this way has turned up bugs in HarfBuzz, which `notes/upstream-bug-reports.md` records and the chapter “Testing HarfBuzz” describes. Behdad has fixed many of them.
+So if HarfBuzz changes, rebuilding the book shows what has changed. Writing it this way has turned up bugs in HarfBuzz, which `notes/upstream-bug-reports.md` records and the appendix “Bugs this book found” lists. Behdad has fixed many of them.
 
 ## Layout
 

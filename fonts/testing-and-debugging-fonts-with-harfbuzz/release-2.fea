@@ -1,0 +1,16 @@
+# Release 2: as release 1, with a new contextual alternate, a narrower o
+# after T. The kerning wasn't updated for o.alt.
+languagesystem DFLT dflt;
+languagesystem latn dflt;
+
+feature liga {
+  sub f i by f_i;
+} liga;
+
+feature calt {
+  sub T o' by o.alt;
+} calt;
+
+feature kern {
+  pos T o -80;
+} kern;

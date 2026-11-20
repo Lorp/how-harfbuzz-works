@@ -1,0 +1,4 @@
+myfont.ttf;--language=en;U+0054,U+006F;[T=0+420|o=1+500]
+myfont.ttf;--language=en;U+0066,U+0069,U+0074;[f_i=0+900|t=2+500]
+myfont.ttf;--language=en --features=-liga;U+0066,U+0069;[f=0+500|i=1+500]
+myfont.ttf;--language=en;U+0054,U+006F,U+0020,U+0066,U+0069,U+0074;[T=0+420|o=1+500|space=2+500|f_i=3+900|t=5+500]

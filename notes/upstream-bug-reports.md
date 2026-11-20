@@ -8,7 +8,7 @@ Eighty-three possible bugs found while writing the book, drafted for the HarfBuz
 * A new report takes the next number after the highest ever given.
 * A report found to be wrong, a duplicate or not a bug keeps its number and heading, marked **Withdrawn.** with the reason. It is never deleted.
 * Fixed reports stay, with how they were fixed.
-* The table in Testing HarfBuzz uses the same numbers.
+* The tables in the appendix Bugs this book found (`book/appendices/bugs-this-book-found.md`) use the same numbers, and each row’s anchor is its ID in lower case (`bugs-this-book-found.html#hhw-75`).
 
 Since 17 November many of them have been fixed on HarfBuzz’s `main` branch, and others have open pull requests. On 18 November 2026 every report was rechecked against `main` at commit `454f9c49c` (17 November 2026), built with the same options, by rerunning its repro or, for those read from the code, reading the code again. Report 83, written on 20 November, was checked against `main` at `94715f603` (19 November 2026). Each report ends with the result, under **On main.**: fixed (with the commit and pull request), changed, in progress (with the open pull request and its branch), or still present.
 

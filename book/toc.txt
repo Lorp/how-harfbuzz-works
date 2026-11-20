@@ -85,6 +85,7 @@ chapters/hb-depend.md
 chapters/for-applications.md
 chapters/integrations.md
 chapters/other-tables.md
+chapters/testing-and-debugging-fonts-with-harfbuzz.md
 
 [part] HarfBuzz and its relatives
 chapters/testing-harfbuzz.md
@@ -98,6 +99,7 @@ appendices/reading-harfbuzz-cpp.md
 appendices/limits.md
 appendices/compile-time-configuration.md
 appendices/regenerating-the-unicode-and-shaping-tables.md
+appendices/bugs-this-book-found.md
 
 [end]
 end/glossary.md
