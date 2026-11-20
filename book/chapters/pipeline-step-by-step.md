@@ -2,7 +2,7 @@
 
 When `hb_shape` reaches the `ot` backend, the expensive decisions have been made. The plan holds the map of features and lookups, the script shaper, and a few dozen settings, all worked out once for this font, script, language, and direction ([Shape plans and their cache](shape-plans-and-their-cache.html)). What is left is to run it: to take one buffer of characters and turn it into positioned glyphs.
 
-That is the job of one short function, `hb_ot_shape_internal` (`hb-ot-shape.cc:1171`). Everything the `ot` shaper does to a buffer happens inside it, in a fixed order, and most of the rest of this part of the book is about one step or another of it. This chapter goes through the whole function once, in order: what each step does, why it comes where it does, which fields of the buffer it reads and writes, and where the step is explained in depth.
+That is the job of one short function, `hb_ot_shape_internal` (`hb-ot-shape.cc:1173`). Everything the `ot` shaper does to a buffer happens inside it, in a fixed order, and most of the rest of this part of the book is about one step or another of it. This chapter goes through the whole function once, in order: what each step does, why it comes where it does, which fields of the buffer it reads and writes, and where the step is explained in depth.
 
 It follows one run all the way, using `hb-shape --trace` ([The command-line tools](command-line-tools.html#traces)). The test font, `pipeline.ttf`, is built from `fonts/pipeline-step-by-step/pipeline.fea`. It has Arabic beh, lam, and alef in their joining forms, the lam-alef ligature, a fatha that GPOS attaches to beh, a pair of parentheses, and the digits and fraction slash for an automatic fraction. Its glyphs are boxes. Every result and trace on this page was produced by running HarfBuzz {{hb}} on it when the page was built.
 
@@ -64,33 +64,33 @@ Line numbers are in `hb-ot-shape.cc` unless another file is named; where there a
 
 | | Step | Source | What it changes | In depth |
 |---|---|---|---|---|
-| 1 | save the direction; allocate `unicode_props` | :1174, :1176 | `target_direction`; bytes 4–5 of each glyph | [Buffers](buffers.html#who-has-which-byte-and-when) |
-| 2 | `hb_set_unicode_props` | :1178, :471 | `mask` (to the global mask), `unicode_props`, scratch flags | [Unicode inside HarfBuzz](unicode-inside-harfbuzz.html#the-properties-each-glyph-carries) |
-| 3 | `hb_insert_dotted_circle` | :1179, :552 | may add one character | [Dotted circles and broken clusters](dotted-circles-and-broken-clusters.html) |
-| 4 | `hb_form_clusters` | :1181, :581 | `cluster` | [Buffers](buffers.html#merging-clusters) |
-| 5 | `hb_ensure_native_direction` | :1183, :591 | order; `props.direction` | below |
-| 6 | shaper’s `preprocess_text` | :1185 | characters | the script chapters |
-| 7 | `hb_ot_rotate_chars` | :886, :655 | `codepoint` (mirrors, vertical forms); `rtlm` mask bit | [Unicode inside HarfBuzz](unicode-inside-harfbuzz.html), [Vertical text](vertical-text.html) |
-| 8 | normalization, with the `cmap` lookup | :890, `hb-ot-shape-normalize.cc:280` | characters; `normalizer_glyph_index` (bytes 0–3) | [Normalization](normalization.html) |
-| 9 | `hb_ot_shape_setup_masks` | :892, :750 | `mask`: fractions, shaper, ranged user features | [From features to lookups](from-features-to-lookups.html#mask-bits) |
-| 10 | recategorize marks, if fallback positioning will run | :896 | combining classes in `unicode_props` | [Fallbacks](fallbacks.html) |
-| 11 | `hb_ot_map_glyphs_fast` | :898, :844 | `codepoint` becomes a glyph ID; content type | [Buffers](buffers.html#content-types) |
-| 12 | allocate `glyph_props`, `lig_props`; GDEF classes and digest, or synthesized classes | :940, :926, :929 | bytes 0–2; the buffer’s digest | [GSUB](gsub.html#glyph-properties) |
-| 13 | GSUB, with the shaper’s pauses; or `morx` | :931, :916 | glyphs, clusters | [GSUB](gsub.html), [AAT inside HarfBuzz](aat-inside-harfbuzz.html) |
-| 14 | `clear_positions` | :1096 | `pos` becomes positions | [Buffers](buffers.html#the-buffers-three-arrays) |
-| 15 | default advances; origins; space widths | :1098, :1002 | advances, offsets | [Where metrics come from](where-metrics-come-from.html), [Fallbacks](fallbacks.html) |
-| 16 | `position_start`; zero marks early | :1049, :1055 | `attach_chain`, `attach_type`; advances | [GPOS: positioning glyphs](gpos.html) |
-| 17 | GPOS, or `kerx`; `kern` or fallback kerning; `trak` | :1064, :271 | advances, offsets | GPOS, [Legacy kern](legacy-kern.html), [AAT positioning](aat-positioning.html) |
-| 18 | zero marks late | :1070 | advances | GPOS |
-| 19 | finish advances; zero default ignorables; finish offsets | :1080–:1082 | advances, offsets | GPOS, [Fonts and font functions](fonts-and-font-functions.html#slant) |
-| 20 | fallback mark positioning | :1089 | offsets | [Fallbacks](fallbacks.html) |
-| 21 | reverse into visual order; free bytes 0–2 | :1103, :1105 | order | below |
-| 22 | remove glyphs `morx` deleted | :946 or :955 | glyphs | [AAT inside HarfBuzz](aat-inside-harfbuzz.html) |
-| 23 | variation selectors not found | :958, :795 | `codepoint` | [Unicode inside HarfBuzz](unicode-inside-harfbuzz.html#variation-selectors) |
-| 24 | `hb_ot_hide_default_ignorables` | :959, :817 | `codepoint`, or removes glyphs | [Unicode inside HarfBuzz](unicode-inside-harfbuzz.html#hidden-preserved-or-removed) |
-| 25 | shaper’s `postprocess_glyphs` | :961 | anything | the script chapters |
-| 26 | `hb_propagate_flags` | :1196, :1109 | glyph flags in `mask` | [Buffers](buffers.html#glyph-flags) |
-| 27 | free `unicode_props`; restore the direction | :1198, :1200 | `props.direction` | |
+| 1 | save the direction; allocate `unicode_props` | :1176, :1178 | `target_direction`; bytes 4–5 of each glyph | [Buffers](buffers.html#who-has-which-byte-and-when) |
+| 2 | `hb_set_unicode_props` | :1180, :470 | `mask` (to the global mask), `unicode_props`, scratch flags | [Unicode inside HarfBuzz](unicode-inside-harfbuzz.html#the-properties-each-glyph-carries) |
+| 3 | `hb_insert_dotted_circle` | :1181, :551 | may add one character | [Dotted circles and broken clusters](dotted-circles-and-broken-clusters.html) |
+| 4 | `hb_form_clusters` | :1183, :580 | `cluster` | [Buffers](buffers.html#merging-clusters) |
+| 5 | `hb_ensure_native_direction` | :1185, :590 | order; `props.direction` | below |
+| 6 | shaper’s `preprocess_text` | :1187 | characters | the script chapters |
+| 7 | `hb_ot_rotate_chars` | :888, :654 | `codepoint` (mirrors, vertical forms); `rtlm` mask bit | [Unicode inside HarfBuzz](unicode-inside-harfbuzz.html), [Vertical text](vertical-text.html) |
+| 8 | normalization, with the `cmap` lookup | :892, `hb-ot-shape-normalize.cc:280` | characters; `normalizer_glyph_index` (bytes 0–3) | [Normalization](normalization.html) |
+| 9 | `hb_ot_shape_setup_masks` | :894, :749 | `mask`: fractions, shaper, ranged user features | [From features to lookups](from-features-to-lookups.html#mask-bits) |
+| 10 | recategorize marks, if fallback positioning will run | :898 | combining classes in `unicode_props` | [Fallbacks](fallbacks.html) |
+| 11 | `hb_ot_map_glyphs_fast` | :900, :846 | `codepoint` becomes a glyph ID; content type | [Buffers](buffers.html#content-types) |
+| 12 | allocate `glyph_props`, `lig_props`; GDEF classes and digest, or synthesized classes | :942, :928, :931 | bytes 0–2; the buffer’s digest | [GSUB](gsub.html#glyph-properties) |
+| 13 | GSUB, with the shaper’s pauses; or `morx` | :933, :918 | glyphs, clusters | [GSUB](gsub.html), [AAT inside HarfBuzz](aat-inside-harfbuzz.html) |
+| 14 | `clear_positions` | :1098 | `pos` becomes positions | [Buffers](buffers.html#the-buffers-three-arrays) |
+| 15 | default advances; origins; space widths | :1100, :1004 | advances, offsets | [Where metrics come from](where-metrics-come-from.html), [Fallbacks](fallbacks.html) |
+| 16 | `position_start`; zero marks early | :1051, :1057 | `attach_chain`, `attach_type`; advances | [GPOS: positioning glyphs](gpos.html) |
+| 17 | GPOS, or `kerx`; `kern` or fallback kerning; `trak` | :1066, :267 | advances, offsets | GPOS, [Legacy kern](legacy-kern.html), [AAT positioning](aat-positioning.html) |
+| 18 | zero marks late | :1072 | advances | GPOS |
+| 19 | finish advances; zero default ignorables; finish offsets | :1082–:1084 | advances, offsets | GPOS, [Fonts and font functions](fonts-and-font-functions.html#slant) |
+| 20 | fallback mark positioning | :1091 | offsets | [Fallbacks](fallbacks.html) |
+| 21 | reverse into visual order; free bytes 0–2 | :1105, :1107 | order | below |
+| 22 | remove glyphs `morx` deleted | :948 or :957 | glyphs | [AAT inside HarfBuzz](aat-inside-harfbuzz.html) |
+| 23 | variation selectors not found | :960, :797 | `codepoint` | [Unicode inside HarfBuzz](unicode-inside-harfbuzz.html#variation-selectors) |
+| 24 | `hb_ot_hide_default_ignorables` | :961, :819 | `codepoint`, or removes glyphs | [Unicode inside HarfBuzz](unicode-inside-harfbuzz.html#hidden-preserved-or-removed) |
+| 25 | shaper’s `postprocess_glyphs` | :963 | anything | the script chapters |
+| 26 | `hb_propagate_flags` | :1198, :1111 | glyph flags in `mask` | [Buffers](buffers.html#glyph-flags) |
+| 27 | free `unicode_props`; restore the direction | :1200, :1202 | `props.direction` | |
 
 Only some steps send a message to `--trace`: preprocess-text, the three rounds of normalization, GSUB and GPOS and their lookups, `morx` and `kerx`, legacy `kern`, fallback kerning and mark positioning, and postprocess-glyphs. The others show only in what the buffer looks like at the next message.
 
@@ -147,7 +147,7 @@ Step 6 is the first of the script shaper’s hooks to run on the text. `preproce
 
 ## Characters to glyphs
 
-`hb_ot_substitute_pre` (`:936`) first calls `hb_ot_substitute_default` (`:882`), steps 7 to 11, which end with a buffer of glyphs.
+`hb_ot_substitute_pre` (`:938`) first calls `hb_ot_substitute_default` (`:884`), steps 7 to 11, which end with a buffer of glyphs.
 
 ### Mirroring
 
@@ -192,7 +192,7 @@ Step 11, `hb_ot_map_glyphs_fast`, copies each `normalizer_glyph_index` into `cod
 
 ## Substituting
 
-Step 12 claims three of the bytes `normalizer_glyph_index` just gave back, for `glyph_props` and `lig_props` (`_hb_buffer_allocate_gsubgpos_vars`, `:940`). `hb_ot_layout_substitute_start_with_digest` (`hb-ot-layout.cc:1631`) reads each glyph’s class from GDEF into `glyph_props`, clears `lig_props`, and builds the buffer’s digest of glyph IDs, which lets GSUB skip lookups that can’t match. If the font has no GDEF glyph classes, they are made up from the Unicode general categories instead ([GSUB](gsub.html#glyph-properties)).
+Step 12 claims three of the bytes `normalizer_glyph_index` just gave back, for `glyph_props` and `lig_props` (`_hb_buffer_allocate_gsubgpos_vars`, `:942`). `hb_ot_layout_substitute_start_with_digest` (`hb-ot-layout.cc:1626`) reads each glyph’s class from GDEF into `glyph_props`, clears `lig_props`, and builds the buffer’s digest of glyph IDs, which lets GSUB skip lookups that can’t match. If the font has no GDEF glyph classes, they are made up from the Unicode general categories instead ([GSUB](gsub.html#glyph-properties)).
 
 Step 13 is GSUB itself, `hb_ot_map_t::substitute`, which runs the plan’s GSUB lookups stage by stage and calls the shaper’s pause functions between stages ([From features to lookups](from-features-to-lookups.html#stages-and-pauses)):
 
@@ -210,7 +210,7 @@ If the plan uses `morx` instead, step 13 is `hb_aat_layout_substitute`, and GSUB
 
 ## Positioning
 
-`hb_ot_position` (`:1094`) holds steps 14 to 21.
+`hb_ot_position` (`:1096`) holds steps 14 to 21.
 
 ### Advances
 
@@ -230,17 +230,17 @@ to: end table GPOS
 
 ### GPOS, and what surrounds it
 
-`hb_ot_position_plan` (`:1029`) runs GPOS with a sequence of steps around it whose order is fixed:
+`hb_ot_position_plan` (`:1031`) runs GPOS with a sequence of steps around it whose order is fixed:
 
 * If the font funcs provide horizontal origins, they are added back, because GPOS works from the horizontal origin.
 * Step 16: `GPOS::position_start` clears each glyph’s `attach_chain` and `attach_type`, which GPOS keeps in the spare field of the positions. If the shaper zeroes marks “early”, before GPOS, it sets every GDEF mark’s advance to zero now. USE and the Myanmar shaper do.
-* Step 17: `plan->position` (`:271`) runs GPOS, or `kerx`. Then, if the plan says so, legacy `kern` ([Legacy kern](legacy-kern.html)) or fallback kerning, and `trak` ([AAT positioning](aat-positioning.html)). Which of them the plan uses was decided when it was made, from the tables the font has. Here, the fatha is attached to beh at offset (100, 50).
+* Step 17: `plan->position` (`:267`) runs GPOS, or `kerx`. Then, if the plan says so, legacy `kern` ([Legacy kern](legacy-kern.html)) or fallback kerning, and `trak` ([AAT positioning](aat-positioning.html)). Which of them the plan uses was decided when it was made, from the tables the font has. Here, the fatha is attached to beh at offset (100, 50).
 * Step 18: shapers that zero marks “late” do it now. The default, Arabic, Hebrew, and Thai shapers are among them; the Indic, Khmer, and Hangul shapers don’t zero marks at all. If the plan has neither GPOS nor `kerx` and the run is forward, the mark’s offset is moved back by its old advance at the same time, so that it hangs over the glyph before it.
 * Step 19: `position_finish_advances`, which does nothing in {{hb}}; then `hb_ot_zero_width_default_ignorables`, which gives every default ignorable no advance and no offset along the line; then `position_finish_offsets`, which resolves attachments. GPOS stores a mark’s offset relative to its base, and this adds up the base’s offset and the advances between them. Then, for a synthetically slanted font, each glyph with a vertical offset is moved sideways to match ([Fonts and font functions](fonts-and-font-functions.html#slant)).
 * Horizontal origins are subtracted again, if there are any.
 * Step 20: if the plan has neither GPOS nor `kerx`, and the shaper allows it, marks are placed from glyph extents (“start fallback mark” in a trace; [Fallbacks](fallbacks.html)).
 
-The order in step 19 is the one the source comment insists on: “Has to follow a certain order.” Resolving an attachment adds up advances, so the advances must be final first. In a right-to-left run, the advances added to a mark’s offset include the mark’s own (`OT/Layout/GPOS/GPOS.hh:126`). The fatha’s 200 was zeroed in step 18, so its offset stays at 100. In the other order it would have moved 200 units (read from the code).
+The order in step 19 is the one the source comment insists on: “Has to follow a certain order.” Resolving an attachment adds up advances, so the advances must be final first. In a right-to-left run, the advances added to a mark’s offset include the mark’s own (`OT/Layout/GPOS/GPOS.hh:135`). The fatha’s 200 was zeroed in step 18, so its offset stays at 100. In the other order it would have moved 200 units (read from the code).
 
 ### Into visual order
 
@@ -248,7 +248,7 @@ Step 21: if the buffer’s direction is now backward, `hb_buffer_reverse` revers
 
 ## After positioning
 
-`hb_ot_substitute_post` (`:951`) changes glyph IDs, which is why it is called “substitute”, but runs after positioning. Each of its steps needs positioning to have happened first.
+`hb_ot_substitute_post` (`:953`) changes glyph IDs, which is why it is called “substitute”, but runs after positioning. Each of its steps needs positioning to have happened first.
 
 Step 22 removes glyphs that `morx` deleted, if they weren’t removed before GPOS. Step 23 replaces any variation selector that the `cmap` didn’t consume with the buffer’s `not_found_variation_selector` glyph, if the application set one, with no advance or offset ([Unicode inside HarfBuzz](unicode-inside-harfbuzz.html#variation-selectors)).
 
@@ -281,14 +281,14 @@ The `#1` is `UNSAFE_TO_BREAK`. Step 27 gives back `unicode_props`, the last of t
 | Hook or setting | Where | Step |
 |---|---|---|
 | `collect_features`, `override_features`, `gpos_tag` | planning, `hb_ot_shape_collect_features` and `compile` | |
-| `data_create` | the end of planning (`:240`) | |
-| `preprocess_text` | after the native direction (`:1185`) | 6 |
+| `data_create` | the end of planning (`:237`) | |
+| `preprocess_text` | after the native direction (`:1187`) | 6 |
 | `decompose`, `compose`, `reorder_marks`, `normalization_preference` | inside normalization | 8 |
-| `setup_masks` | after the fraction masks, before ranged user features (`:758`) | 9 |
+| `setup_masks` | after the fraction masks, before ranged user features (`:757`) | 9 |
 | pause functions | between GSUB stages | 13 |
 | `zero_width_marks` | before or after GPOS | 16, 18 |
 | `fallback_position` | whether steps 10 and 20, and legacy `kern`, may happen | 10, 17, 20 |
-| `postprocess_glyphs` | after hiding default ignorables (`:961`) | 25 |
+| `postprocess_glyphs` | after hiding default ignorables (`:963`) | 25 |
 
 ## Where to read the source
 

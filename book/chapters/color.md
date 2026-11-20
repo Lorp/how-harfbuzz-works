@@ -41,19 +41,19 @@ Two other paint-funcs implementations live inside HarfBuzz and aren’t public. 
 
 ## Which picture gets painted
 
-The hb-ot font functions paint a glyph with `hb_ot_paint_glyph_or_fail` (`hb-ot-font.cc:939`). Trimmed of its `#ifdef`s, and with `font->face->table` shortened, it is a list:
+The hb-ot font functions paint a glyph with `hb_ot_paint_glyph_or_fail` (`hb-ot-font.cc:951`). Trimmed of its `#ifdef`s, and with `font->face->table` shortened, it is a list:
 
 ```c++
 auto &t = font->face->table;
 if (t.COLR->paint_glyph (font, glyph, paint_funcs, paint_data,
                          palette, foreground)) return true;
 if (t.SVG->paint_glyph (font, glyph, paint_funcs, paint_data)) return true;
-if (t.CBDT->paint_glyph (font, glyph, paint_funcs, paint_data)) return true;
 if (t.sbix->paint_glyph (font, glyph, paint_funcs, paint_data)) return true;
+if (t.CBDT->paint_glyph (font, glyph, paint_funcs, paint_data)) return true;
 return false;
 ```
 
-COLR first, then SVG, then the two bitmap tables. COLR answers for itself. The other three answer with whatever the client’s `image` callback returns (`svg.hh:233`, `CBDT.hh:1066`, `sbix.hh:246`). An `image` callback that returns false is saying “I can’t paint this”, and HarfBuzz goes on to the next table, then, in `hb_font_paint_glyph`, to the outline. That makes refusing an image part of the protocol, not an error.
+COLR first, then SVG, then the two bitmap tables. COLR answers for itself. The other three answer with whatever the client’s `image` callback returns (`svg.hh:235`, `sbix.hh:248`, `CBDT.hh:1089`). An `image` callback that returns false is saying “I can’t paint this”, and HarfBuzz goes on to the next table, then, in `hb_font_paint_glyph`, to the outline. That makes refusing an image part of the protocol, not an error.
 
 The font `images.ttf` shows it. `S` has an SVG document, `T` has an SVG document and an `sbix` bitmap, `P` has only the bitmap, and `N` has nothing but its outline:
 
@@ -62,9 +62,7 @@ font: images.ttf
 text: STPN
 ```
 
-hb-vector, like hb-raster, refuses SVG images (since 14.2.0, below), so `S` falls back to its outline and `T` to its bitmap, the green disc. The order isn’t the same everywhere. Glyph extents are tried from `sbix`, `CBDT`, then `COLR` ([Where metrics come from](where-metrics-come-from.html#glyph-extents)), and `hb_ot_color_glyph_reference_png` tries `sbix` before `CBDT` (`hb-ot-color.cc:417`). They only disagree for a glyph that is in more than one of these tables, which few fonts have.
-
-> Since {{hb}}: fixed on HarfBuzz main by [#6723](https://github.com/harfbuzz/harfbuzz/pull/6723) (17 November 2026), so main paints from `sbix` before `CBDT`, the order the other two use.
+hb-vector, like hb-raster, refuses SVG images (since 14.2.0, below), so `S` falls back to its outline and `T` to its bitmap, the green disc. Glyph extents are tried from `sbix`, `CBDT`, then `COLR` ([Where metrics come from](where-metrics-come-from.html#glyph-extents)), and `hb_ot_color_glyph_reference_png` tries `sbix` before `CBDT` too (`hb-ot-color.cc:417`). Before 15.2.0, painting tried `CBDT` first, so for a glyph in both tables the picture painted and the extents and image reported could come from different tables ([HHW-26](bugs-this-book-found.html#hhw-26)).
 
 ## Palettes: CPAL
 
@@ -112,11 +110,11 @@ Entry 0xFFFF is never looked up: it is the foreground.
 
 Version 0 of `COLR` is a list of base glyphs, each with a run of layer records, and each layer record is a glyph ID and a palette entry. The base glyph is drawn by filling each layer glyph’s outline, in order, bottom first. In `colr0.ttf`, `A` is a square in entry 0, a disc in entry 1, and a bar in entry 0xFFFF; `B` has the same layers with the square last, so it covers the others, as the drawings above show.
 
-HarfBuzz paints a version 0 glyph with one `fill_glyph` per layer (`COLR.hh:3274`), each with the layer’s color, or with the foreground color and `is_foreground` set for entry 0xFFFF. The bar takes the foreground color, which hb-vector draws as black and this book shows in the color of its text. Nothing else is called: no transform, no clip, no group. `hb_ot_color_glyph_get_layers` returns the same layer list for clients that want to do it all themselves, as they had to before 7.0.0.
+HarfBuzz paints a version 0 glyph with one `fill_glyph` per layer (`COLR.hh:3276`), each with the layer’s color, or with the foreground color and `is_foreground` set for entry 0xFFFF. The bar takes the foreground color, which hb-vector draws as black and this book shows in the color of its text. Nothing else is called: no transform, no clip, no group. `hb_ot_color_glyph_get_layers` returns the same layer list for clients that want to do it all themselves, as they had to before 7.0.0.
 
 ## COLR version 1: the paint graph
 
-Version 1 keeps version 0’s lists, for older readers, and adds a **paint graph** for each base glyph. Each node is a Paint table, one of 33 formats, and most have a child offset, so the graph is a tree that can share subtrees. Five lists hang off the table header: the BaseGlyphList, from base glyph to root Paint; the LayerList, of Paints shared between glyphs; the **ClipList**, of boxes per glyph range; and, for variable fonts, a DeltaSetIndexMap and an ItemVariationStore. A glyph in the BaseGlyphList is painted from its graph, and only a glyph that isn’t is looked up in the version 0 list (`COLR.hh:3223`).
+Version 1 keeps version 0’s lists, for older readers, and adds a **paint graph** for each base glyph. Each node is a Paint table, one of 33 formats, and most have a child offset, so the graph is a tree that can share subtrees. Five lists hang off the table header: the BaseGlyphList, from base glyph to root Paint; the LayerList, of Paints shared between glyphs; the **ClipList**, of boxes per glyph range; and, for variable fonts, a DeltaSetIndexMap and an ItemVariationStore. A glyph in the BaseGlyphList is painted from its graph, and only a glyph that isn’t is looked up in the version 0 list (`COLR.hh:3225`).
 
 The formats come in families, nearly all in pairs of a fixed format and a variable one:
 
@@ -136,7 +134,7 @@ Format 33 is PaintGlyph with a 24-bit glyph ID, for fonts beyond 65,535 glyphs; 
 
 ### The walk
 
-`COLR::paint_glyph` (`COLR.hh:3200`) starts every version 1 glyph the same way. It pushes the font transform, a scale from font units to the font’s scale, so the whole graph can be painted in font units. If the glyph has a ClipBox, it pushes a rectangle clip. Then it calls `recurse` on the root Paint, which dispatches on the format, and each format calls back and recurses into its children. A transform, say, is a push, a recursion, and a pop:
+`COLR::paint_glyph` (`COLR.hh:3202`) starts every version 1 glyph the same way. It pushes the font transform, a scale from font units to the font’s scale, so the whole graph can be painted in font units. If the glyph has a ClipBox, it pushes a rectangle clip. Then it calls `recurse` on the root Paint, which dispatches on the format, and each format calls back and recurses into its children. A transform, say, is a push, a recursion, and a pop:
 
 ```c++
 void paint_glyph (hb_paint_context_t *c, uint32_t varIdxBase) const
@@ -152,9 +150,9 @@ void paint_glyph (hb_paint_context_t *c, uint32_t varIdxBase) const
 
 (`PaintTranslate`, trimmed.) The other transforms are the same, with `push_scale`, `push_rotate`, `push_skew`, or their “around center” forms, which conjugate the transform with a translation. Angles are F2DOT14 numbers in half-turns: 0.5 is 90°. An Affine2x3 is passed through as six numbers.
 
-**PaintGlyph** is where an outline enters, and where the [Drawing outlines](drawing-outlines.html) chapter takes over. `push_clip_glyph` expects the outline at the font’s scale, not in font units, so HarfBuzz pushes the inverse font transform around it, then pushes the font transform again for the child (`COLR.hh:3323`). When the child is a PaintSolid, as it is for most layers, it calls `fill_glyph` instead of a clip, a fill, and a pop.
+**PaintGlyph** is where an outline enters, and where the [Drawing outlines](drawing-outlines.html) chapter takes over. `push_clip_glyph` expects the outline at the font’s scale, not in font units, so HarfBuzz pushes the inverse font transform around it, then pushes the font transform again for the child (`COLR.hh:3325`). When the child is a PaintSolid, as it is for most layers, it calls `fill_glyph` instead of a clip, a fill, and a pop.
 
-**PaintColrGlyph** paints another color glyph inside this one, as a component. HarfBuzz first offers it to the client through `color_glyph`, so that a client that has cached that glyph’s rendering can use it; if the client returns false, HarfBuzz paints the other glyph’s graph itself, inside that glyph’s ClipBox (`COLR.hh:3364`).
+**PaintColrGlyph** paints another color glyph inside this one, as a component. HarfBuzz first offers it to the client through `color_glyph`, so that a client that has cached that glyph’s rendering can use it; if the client returns false, HarfBuzz paints the other glyph’s graph itself, inside that glyph’s ClipBox (`COLR.hh:3366`).
 
 **PaintComposite** paints its backdrop in one group and its source in a second group, inside the first, then pops the source with the composite mode and the backdrop with ordinary source-over (`COLR.hh:1961`). The modes are the 28 of the W3C compositing specification, numbered as in `hb_paint_composite_mode_t`; a number HarfBuzz doesn’t know becomes CLEAR, as a comment on the struct says it should.
 
@@ -197,7 +195,7 @@ colr1.ttf  UC  --show-extents
 
 ### Variable paints
 
-In a variable format, `varIdxBase` is the index of the first delta set; the paint’s varying fields use consecutive ones, in order. `PaintVarTranslate` has two, dx at `varIdxBase` and dy at `varIdxBase + 1`, which is what the `instancer (varIdxBase, 1)` above reads. Each color stop of a variable color line has a base of its own, for its offset and alpha. If the table has a DeltaSetIndexMap, each index is mapped through it first; if not, it is used as an index into the item variation store directly (`hb-ot-layout-common.hh:4248`). At the default location no deltas are applied at all. The store is the same machinery as everywhere else ([Deltas](deltas.html)), and the deltas are in the units of the field: an angle’s delta of 8192 is half a turn of F2DOT14, 90°.
+In a variable format, `varIdxBase` is the index of the first delta set; the paint’s varying fields use consecutive ones, in order. `PaintVarTranslate` has two, dx at `varIdxBase` and dy at `varIdxBase + 1`, which is what the `instancer (varIdxBase, 1)` above reads. Each color stop of a variable color line has a base of its own, for its offset and alpha. If the table has a DeltaSetIndexMap, each index is mapped through it first; if not, it is used as an index into the item variation store directly (`hb-ot-layout-common.hh:4325`). At the default location no deltas are applied at all. The store is the same machinery as everywhere else ([Deltas](deltas.html)), and the deltas are in the units of the field: an angle’s delta of 8192 is half a turn of F2DOT14, 90°.
 
 `V` in `colr1.ttf` is `L` inside a PaintVarRotateAroundCenter whose angle is 0, plus a delta of 8192 at the end of the SPIN axis:
 
@@ -214,15 +212,15 @@ The square turns from 0° at SPIN 0 to 45° at 0.5 and 90° at 1.
 
 A paint graph is a graph, and fonts can make it cyclic or enormous. The [sanitizer](trust-nothing-the-sanitizer.html) checks Paint tables to a depth of 64 and charges PaintComposite against its operation budget, but it can’t see cycles that go through a glyph ID, so painting has guards of its own, in `hb_paint_context_t` (`COLR.hh:65`):
 
-* `recurse` stops at a depth of 64 (`HB_MAX_NESTING_LEVEL`) and after 16,384 Paints in all (`HB_MAX_GRAPH_EDGE_COUNT`) (`COLR.hh:3313`).
+* `recurse` stops at a depth of 64 (`HB_MAX_NESTING_LEVEL`) and after 16,384 Paints in all (`HB_MAX_GRAPH_EDGE_COUNT`) (`COLR.hh:3315`).
 * Two cycle detectors, one for glyph IDs reached through PaintColrGlyph and one for layer indices reached through PaintColrLayers, refuse to enter one twice on the same path. They are `hb_decycler_t`: Floyd’s tortoise and hare, adapted to a depth-first walk, which needs no memory beyond the stack (`hb-decycler.hh`).
-* A work budget, shared with the client. If the paint funcs offer `get_budget_remaining`, HarfBuzz charges the client’s counter, so outline drawing, painting, and the client’s own work share one limit; otherwise it uses its own, `HB_BUDGET_GLYPH`, 2<sup>24</sup>. Each color stop read costs 16, and once the budget is spent, `recurse` paints no more. [Drawing outlines](drawing-outlines.html) describes the budgets.
+* A work budget, shared with the client. If the paint funcs offer `get_budget_remaining`, HarfBuzz charges the client’s counter, so outline drawing, painting, and the client’s own work share one limit; otherwise it uses its own, `HB_BUDGET_GLYPH`, 2<sup>25</sup>. Each color stop read costs 16, and once the budget is spent, `recurse` paints no more. [Drawing outlines](drawing-outlines.html) describes the budgets.
 
 Version 1 glyphs and synthetic bold and slant meet in [Fonts and font functions](fonts-and-font-functions.html#slant): the slant is one transform pushed around the whole glyph, and the glyph’s layers are painted with a sub-font that has the synthetic settings turned off (`COLR.hh:115`), so that nothing is slanted twice.
 
 ## Bitmaps: sbix and CBDT
 
-`sbix`, Apple’s table, and `CBDT` with `CBLC`, Google’s, store bitmaps in **strikes**, one per size in pixels per em. HarfBuzz chooses the strike as [Where metrics come from](where-metrics-come-from.html#glyph-extents) describes: the smallest at least as big as the font’s ppem, or the largest if none is, or if the font has no ppem set (`sbix.hh:280`). `P` in `images.ttf` has a strike at 10 ppem, with an 8-pixel image, and one at 100 ppem, with an 80-pixel image. The first drawing has no ppem set, the second `--font-ppem=10`:
+`sbix`, Apple’s table, and `CBDT` with `CBLC`, Google’s, store bitmaps in **strikes**, one per size in pixels per em. HarfBuzz chooses the strike as [Where metrics come from](where-metrics-come-from.html#glyph-extents) describes: the smallest at least as big as the font’s ppem, or the largest if none is, or if the font has no ppem set (`sbix.hh:282`). `P` in `images.ttf` has a strike at 10 ppem, with an 8-pixel image, and one at 100 ppem, with an 80-pixel image. The first drawing has no ppem set, the second `--font-ppem=10`:
 
 ```draw
 font: images.ttf
@@ -238,7 +236,7 @@ options: --font-ppem=10
 The `image` callback gets the image, untouched, in a blob; its width and height in pixels; the format tag; and the glyph’s extents at the font’s scale. HarfBuzz pushes no transform for an image. The client scales the pixels to fill the extents, which already include the origin offsets and the strike’s scale. Only PNG is handed over, as `HB_PAINT_IMAGE_FORMAT_PNG`:
 
 * From `sbix`, only images whose graphic type is `png `. A `dupe` record, which says “the same image as glyph *n*”, is followed, up to eight times (`sbix.hh:121`). JPEG, TIFF, and the rest are ignored, as is the table’s flag that asks for the outline to be drawn as well.
-* From `CBDT`, the PNG image formats, 17, 18, and 19 (`CBDT.hh:1015`), found through CBLC index subtables of formats 1 and 3, the only ones HarfBuzz reads (`CBDT.hh:345`). The uncompressed bitmap formats `CBDT` inherits from `EBDT` aren’t read. HarfBuzz paints an image only if it can also find its extents, and of the PNG formats only 17 and 18 carry their metrics beside the image; format 19 keeps them in the index, which HarfBuzz doesn’t read yet (`CBDT.hh:334`). So a format 19 image can be fetched, but isn’t painted. The CBLC index HarfBuzz builds is capped at 65,536 entries (`HB_CBDT_MAX_INDEX_ENTRIES`).
+* From `CBDT`, the PNG image formats, 17, 18, and 19 (`CBDT.hh:1038`), found through CBLC index subtables of formats 1, 2, 3, and 5 (`CBDT.hh:396`); format 4 isn’t read. The uncompressed bitmap formats `CBDT` inherits from `EBDT` aren’t read. HarfBuzz paints an image only if it can also find its extents. Formats 17 and 18 carry their metrics beside the image; format 19 keeps them in the index, in subtable formats 2 and 5, which HarfBuzz reads since 15.2.0 (`CBDT.hh:384`). Before, a format 19 image could be fetched but wasn’t painted ([HHW-25](bugs-this-book-found.html#hhw-25)). The subsetter still writes only index formats 1 and 3, and leaves out the subtables of the others (`CBDT.hh:689`). Only the first 256 strikes are considered when one is chosen (`HB_CBLC_MAX_STRIKES`, `hb-limits.hh:198`).
 
 `HB_PAINT_IMAGE_FORMAT_BGRA`, raw premultiplied pixels, never comes from the hb-ot font functions. FreeType’s functions (`hb-ft.cc`) produce it, from what FreeType has already decoded. A `CBDT` font from HarfBuzz’s test suite, a subset of Noto Color Emoji with a single 109-ppem strike:
 
@@ -251,7 +249,7 @@ That font has no `glyf` table, so it has no outlines to fall back to. Outside pa
 
 ## SVG
 
-HarfBuzz doesn’t render SVG. When a glyph has a document in the `SVG ` table, painting it is one call: `image`, with the format `HB_PAINT_IMAGE_FORMAT_SVG`, a width and height of zero, and no extents (`svg.hh:233`). The blob is the whole document as the font stores it. It may be gzip-compressed, and it may hold many glyphs, each in an element whose `id` is `glyph` and the glyph ID; finding the right one, and drawing it, is the client’s job. `hb_ot_color_glyph_reference_svg` returns the same blob, and since 12.1.0 and 13.0.0 `hb_ot_color_get_svg_document_count`, `hb_ot_color_glyph_get_svg_document_index`, and `hb_ot_color_get_svg_document_glyph_range` say which document covers which glyphs.
+HarfBuzz doesn’t render SVG. When a glyph has a document in the `SVG ` table, painting it is one call: `image`, with the format `HB_PAINT_IMAGE_FORMAT_SVG`, a width and height of zero, and no extents (`svg.hh:235`). The blob is the whole document as the font stores it. It may be gzip-compressed, and it may hold many glyphs, each in an element whose `id` is `glyph` and the glyph ID; finding the right one, and drawing it, is the client’s job. `hb_ot_color_glyph_reference_svg` returns the same blob, and since 12.1.0 and 13.0.0 `hb_ot_color_get_svg_document_count`, `hb_ot_color_glyph_get_svg_document_index`, and `hb_ot_color_get_svg_document_glyph_range` say which document covers which glyphs.
 
 HarfBuzz’s own renderers rendered SVG glyphs for a while: 13.0.0 introduced them with SVG support, and 13.1.1 added gzip. 14.2.0 dropped it from both (`NEWS`), and their `image` callbacks now refuse SVG, which is why `S` above was drawn as its outline. Code to decompress and index documents is still in `svg.hh`, but nothing in {{hb}} calls it. Nor does HarfBuzz read extents from an SVG document: an SVG glyph has its outline’s extents.
 
@@ -277,10 +275,8 @@ A build with `HB_NO_PAINT` has no paint API, and `HB_NO_DRAW` implies it. `HB_NO
 ## In short
 
 * The paint API turns any kind of color glyph into one nested sequence of callbacks: transforms, clips, fills, gradients, images, and groups. The client renders; HarfBuzz walks the font’s data.
-* HarfBuzz tries COLR, then SVG, then CBDT, then sbix. An `image` callback that returns false passes the glyph on to the next table, and `hb_font_paint_glyph` ends with the outline.
+* HarfBuzz tries COLR, then SVG, then sbix, then CBDT. An `image` callback that returns false passes the glyph on to the next table, and `hb_font_paint_glyph` ends with the outline.
 * CPAL palettes are arrays of `hb_color_t`. The client chooses the palette; HarfBuzz defaults to none of them except 0, and entry 0xFFFF is the foreground color.
 * COLR version 0 is a `fill_glyph` per layer. Version 1 is a graph of 33 Paint formats, walked in font units under the font transform, clipped to its ClipBox, and painted not at all if it is unbounded.
 * Variable paints read consecutive delta sets from `varIdxBase`. Depth, size, cycles, and work are all limited while painting.
 * Bitmaps are handed over as PNG blobs from the chosen strike, with their extents. SVG documents are handed over whole, and HarfBuzz’s own renderers refuse them.
-
-> Since {{hb}}: fixed on HarfBuzz main by [#6723](https://github.com/harfbuzz/harfbuzz/pull/6723) (17 November 2026), so main tries `sbix` before `CBDT` (the item on the order).

@@ -28,7 +28,7 @@ table: fvar
 variations/var.ttf  --list-variations
 ```
 
-(“Varitation” is a typo in `hb-info`, at `util/hb-info.cc:1190`.) The table also lists **named instances**, positions the designer has given names to. They come later in this chapter.
+(“Varitation” is a typo in `hb-info`, at `util/hb-info.cc:1173`.) The table also lists **named instances**, positions the designer has given names to. They come later in this chapter.
 
 An axis has a flag, too. `AXIS_FLAG_HIDDEN` (`hb-ot-var-fvar-table.hh:159`) says that an application shouldn’t show the axis to users. HarfBuzz reports the flag and otherwise ignores it: a hidden axis can be set like any other.
 
@@ -101,7 +101,7 @@ print: 100 400 600 900
 
 The specification is strict about segment maps. Each must map −1 to −1, 0 to 0, and +1 to +1, and a map that doesn’t is to be ignored: “no modification” for that axis. Its from-coordinates must increase. And the result is clamped to the range −1 to +1.
 
-HarfBuzz does something else, and says so. The comment in `SegmentMaps::map_float` (`hb-ot-var-avar-table.hh:152`) reads: “Core Text is wild... PingFangUI avar needs all this special-casing... So we implement an extended version of the spec here, which is more robust and more likely to be compatible with the wild.” What it implements:
+HarfBuzz does something else, and says so. The comment in `SegmentMaps::map_float` (`hb-ot-var-avar-table.hh:196`) reads: “CoreText is wild... PingFangUI avar needs all this special-casing... So we implement an extended version of the spec here, which is more robust and more likely to be compatible with the wild.” What it implements:
 
 * A map with no pairs leaves the axis alone. A map with one pair shifts the whole axis by that pair’s difference.
 * If the first pair is −1→−1 and the next pair also starts at −1, the first is skipped. That’s the PingFang case: a font that maps −1 to −1 and then −1 to −0.5 means that −1 goes to −0.5. The same goes for +1 at the other end.
@@ -142,7 +142,7 @@ start: 100
 print: 75 85 100
 ```
 
-The order of operations is in the second half of `map_coords_16_16` (`hb-ot-var-avar-table.hh:545`):
+The order of operations is in the second half of `map_coords_16_16` (`hb-ot-var-avar-table.hh:665`):
 
 ```c++
 hb_vector_t<int> coords_2_14;
@@ -166,13 +166,13 @@ for (unsigned i = 0; i < coords_length; i++)
 
 First every axis goes through its version 1 segment map. Then the store is evaluated once, at those results rounded to 2.14, and each axis’s delta is added to its *unrounded* 16.16 value. Only the sum is clamped, to ±1, “matching fontTools”, as the comment above the clamp says. The results go into a separate array, so no axis sees another’s version 2 result: there is one pass, not an iteration until things settle.
 
-For years the only description of avar 2 was a proposal, and HarfBuzz’s comment still points to it: `/* "Spec": https://github.com/be-fonts/boring-expansion-spec/issues/14 */` (`hb-ot-var-avar-table.hh:46`). Microsoft’s OpenType 1.9.1 still has only version 1. The 2026 edition of the ISO standard, ISO/IEC 14496-22, describes version 2 in clause 7.3.1, and HarfBuzz differs from it in three small ways:
+For years the only description of avar 2 was a proposal, and HarfBuzz’s comment still points to it: `/* "Spec": https://github.com/be-fonts/boring-expansion-spec/issues/14 */` (`hb-ot-var-avar-table.hh:61`). Microsoft’s OpenType 1.9.1 still has only version 1. The 2026 edition of the ISO standard, ISO/IEC 14496-22, describes version 2 in clause 7.3.1, and HarfBuzz differs from it in three small ways:
 
 * The standard adds each delta to the version 1 result already rounded to 2.14. HarfBuzz adds it to the 16.16 value and rounds once, at the end. The two can differ by one unit of 2.14.
 * The standard clamps only when there is a variation store. HarfBuzz’s version 2 path always clamps, store or not.
 * The standard requires avar to have as many segment maps as fvar has axes. HarfBuzz doesn’t check, for either version: it maps as many axes as both tables have.
 
-There is also a second implementation in the same file, `map_coords_2_14` (`hb-ot-var-avar-table.hh:625`), which rounds to 2.14 before adding the deltas, and has a comment to deprecate it “once fonttools is updated to use 16.16 normalization”. Only the subsetter uses it, when instancing. So the subsetter and the shaper can put the same user position one 2.14 unit apart.
+There is also a second implementation in the same file, `map_coords_2_14` (`hb-ot-var-avar-table.hh:745`), which rounds to 2.14 before adding the deltas, and has a comment to deprecate it “once fonttools is updated to use 16.16 normalization”. Only the subsetter uses it, when instancing. So the subsetter and the shaper can put the same user position one 2.14 unit apart.
 
 ## Named instances
 
@@ -183,7 +183,7 @@ variations/var.ttf  IHV  --named-instance=2
 variations/var.ttf  IHV  --variations=wght=700
 ```
 
-Choosing an instance doesn’t only set a position. HarfBuzz *remembers* the choice, and later settings are made on top of it. Here is `hb_font_set_variations` (`hb-font.cc:3099`), which is what `--variations` calls:
+Choosing an instance doesn’t only set a position. HarfBuzz *remembers* the choice, and later settings are made on top of it. Here is `hb_font_set_variations` (`hb-font.cc:3097`), which is what `--variations` calls:
 
 ```c++
 /* Initialize design coords. */
@@ -219,7 +219,7 @@ variations/var.ttf  IHV  --variations=wdth=75
 
 That’s useful, but the documentation above the function says something else: “Axes not included in @variations will be effectively set to their default values.” That’s only true when no instance has been chosen. Two more details of the same kind:
 
-* `hb_font_set_var_named_instance` (`hb-font.cc:3272`) returns at once if the index is the one already chosen, even if the coordinates have been changed since. Choosing Bold, then setting some other weight, then choosing Bold again leaves the other weight in place.
+* `hb_font_set_var_named_instance` (`hb-font.cc:3269`) returns at once if the index is the one already chosen, even if the coordinates have been changed since. Choosing Bold, then setting some other weight, then choosing Bold again leaves the other weight in place.
 * The loop above sets *every* axis with a matching tag. The ISO standard now allows a font to have several axes with one tag, to be moved together, and this is what it asks for. But `hb_ot_var_normalize_variations` (`hb-ot-var.cc:274`), the face-level version, sets only the first.
 
 The 2026 ISO standard also gives instances a flag, `REPRESENTATIVE_INSTANCE`, meaning that this instance’s values should stand in for the defaults of axes the user hasn’t set. HarfBuzz doesn’t read it. Its struct still describes the field as “Reserved for future use — set to 0” (`hb-ot-var-fvar-table.hh:142`).
@@ -240,7 +240,7 @@ The last one is for callers that have done the normalization themselves. It appl
 
 ## What the rest of HarfBuzz sees
 
-All five functions end in `_hb_font_adopt_var_coords` (`hb-font.cc:2166`):
+All five functions end in `_hb_font_adopt_var_coords` (`hb-font.cc:2191`):
 
 ```c++
 font->coords = coords;
@@ -254,7 +254,7 @@ font->serial_coords = font->serial;
 
 The normalized 2.14 coordinates are the only thing the variation code reads: gvar for outlines, HVAR and VVAR for advances, MVAR for metrics, GDEF and GPOS device tables, CFF2 blends, COLRv1 paints, VARC, and FeatureVariations, which chooses different GSUB and GPOS lookups at different positions. The design coordinates are kept only to be handed back to the caller, and to FreeType when the FreeType font functions are in use.
 
-`has_nonzero_coords` is HarfBuzz’s test for “the default instance”, and it saves work everywhere. A font at its default, whether or not any variations were set, takes the same paths as a static font: advances straight from `hmtx`, no deltas computed. It is also why shape plans don’t multiply. `hb_shape_full` passes the coordinates to the shape-plan cache only when they aren’t all zero (`hb-shape.cc:143`), and even then the cache’s key doesn’t hold them: it holds which FeatureVariations records they select, so every position that selects the same records shares a plan ([Shape plans and their cache](shape-plans-and-their-cache.html)). (A broken avar that maps the default away from 0 turns all of this off, as well as moving the default.)
+`has_nonzero_coords` is HarfBuzz’s test for “the default instance”, and it saves work everywhere. A font at its default, whether or not any variations were set, takes the same paths as a static font: advances straight from `hmtx`, no deltas computed. It is also why shape plans don’t multiply. `hb_shape_full` passes the coordinates to the shape-plan cache only when they aren’t all zero (`hb-shape.cc:144`), and even then the cache’s key doesn’t hold them: it holds which FeatureVariations records they select, so every position that selects the same records shares a plan ([Shape plans and their cache](shape-plans-and-their-cache.html)). (A broken avar that maps the default away from 0 turns all of this off, as well as moving the default.)
 
 Last, the two serial numbers. Every change to a font bumps `serial`, and a change of position also sets `serial_coords`. HarfBuzz’s own font functions keep caches of advances and outlines, and they check `serial_coords` to know when to throw them away (`hb-ot-font.cc:290`). A change of size alone keeps the advance cache, because the cached advances are in font units, before scaling.
 
@@ -265,7 +265,7 @@ Last, the two serial numbers. Every change to a font bumps `serial`, and a chang
 | `src/hb-font.cc` | the five setters, from 3099; `_hb_font_adopt_var_coords`, 2166 |
 | `src/hb-ot-var.cc` | `hb_ot_var_normalize_coords`, 323, and the face-level API |
 | `src/hb-ot-var-fvar-table.hh` | axes, instances, `normalize_axis_value`, `get_coordinates` |
-| `src/hb-ot-var-avar-table.hh` | segment maps and `map_float`, 152; version 2 in `map_coords_16_16`, 545; the instancer’s `map_coords_2_14`, 625 |
+| `src/hb-ot-var-avar-table.hh` | segment maps and `map_float`, 196; version 2 in `map_coords_16_16`, 665; the instancer’s `map_coords_2_14`, 745 |
 
 ## In short
 

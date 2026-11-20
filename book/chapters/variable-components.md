@@ -91,7 +91,7 @@ at: 0000=0; 0002=-1; 0000=-1; 0001=1
 
 ## How HarfBuzz draws a VARC glyph
 
-VARC comes first. When HarfBuzz’s font functions draw a glyph, they try VARC before any outline format (`hb-ot-font.cc:919`):
+VARC comes first. When HarfBuzz’s font functions draw a glyph, they try VARC before any outline format (`hb-ot-font.cc:931`):
 
 ```c++
 #ifndef HB_NO_VAR_COMPOSITES
@@ -111,7 +111,7 @@ A VARC glyph is a list of **components**. Each is a packed record (`VarComponent
 * indices into VARC’s own variation store, for variations of those values and of the transform;
 * a **transform**: translation, rotation, scale, skew, and a center for rotating and scaling around.
 
-`VarComponent::get_path_at` (`VARC.cc:343`) takes a component through six steps. Here they are for glyph 3’s component, 가’s ㄱ, at weight 598.4.
+`VarComponent::get_path_at` (`VARC.cc:367`) takes a component through six steps. Here they are for glyph 3’s component, 가’s ㄱ, at weight 598.4.
 
 ### Step 1: the parent’s coordinates
 
@@ -119,7 +119,7 @@ A VARC glyph is a list of **components**. Each is a packed record (`VarComponent
 
 ### Step 2: the condition
 
-A condition is a small expression over the coordinates: an axis in a range, or a value from the variation store above zero, combined with *and*, *or*, and *not*. It is evaluated at the parent’s coordinates (`VARC.cc:376`), and a component whose condition is false isn’t drawn, so a glyph can change its structure, as a heavy weight might drop a stroke.
+A condition is a small expression over the coordinates: an axis in a range, or a value from the variation store above zero, combined with *and*, *or*, and *not*. It is evaluated at the parent’s coordinates (`VARC.cc:400`), and a component whose condition is false isn’t drawn, so a glyph can change its structure, as a heavy weight might drop a stroke.
 
 Glyph 3’s component has no condition. In `varc-ac01-conditional.ttf`, 각’s middle component is drawn only above a certain weight:
 
@@ -142,7 +142,7 @@ region 1 (opsz 0…1…1): [1704, 0, 0]
 (and 1 more region, all 0)
 ```
 
-Regions work as in [Deltas](deltas.html#regions-and-scalars). At the parent’s weight of 0.5, the weight region counts by half and the others not at all, so `0001` becomes 819 − 0.5 × 327 = 655.5. The code is one call, with the parent’s `coords` (`VARC.cc:381`, trimmed):
+Regions work as in [Deltas](deltas.html#regions-and-scalars). At the parent’s weight of 0.5, the weight region counts by half and the others not at all, so `0001` becomes 819 − 0.5 × 327 = 655.5. The code is one call, with the parent’s `coords` (`VARC.cc:407`, trimmed):
 
 ```c++
 // Apply variations if any
@@ -159,7 +159,7 @@ One index gives deltas for all three values; [the multiple item variation store]
 
 ### Step 4: the component’s coordinates
 
-Now the coordinates to draw the component at (`VARC.cc:392`, trimmed):
+Now the coordinates to draw the component at (`VARC.cc:417`, trimmed):
 
 ```c++
 auto component_coords = coords;
@@ -186,7 +186,7 @@ Three more things about this step:
 
 The transform is stored as separate values, in fixed-point formats suited to each: translations in font units, rotation and skew in half-turns as 4.12 numbers, scales as 6.10. The ㄱ stores only a translation, (−10, 24), whose deltas are (0, 0) for weight and (0, 16) for optical size: it moves up with optical size, not weight.
 
-With the deltas added and the values converted, the parts are put together in this order (`hb_transform_decomposed_t::to_transform`, `hb-geometry.hh:406`):
+With the deltas added and the values converted, the parts are put together in this order (`hb_transform_decomposed_t::to_transform`, `hb-geometry.hh:409`):
 
 ```c++
 t.translate (translateX + tCenterX, translateY + tCenterY);
@@ -196,7 +196,7 @@ t.skew (-skewX, skewY);
 t.translate (-tCenterX, -tCenterY);
 ```
 
-That is the standard’s pseudo-code exactly, negated horizontal skew included. Read upwards, it is what happens to a point: move the center to the origin, skew, scale, rotate, move back, and translate. A missing field is 0, or 1 for a scale, except that a horizontal scale with no vertical one is used for both (`VARC.cc:444`). The result is multiplied onto the levels above (`VARC.cc:451`); for the ㄱ, it is simply a move by (−10, 24).
+That is the standard’s pseudo-code exactly, negated horizontal skew included. Read upwards, it is what happens to a point: move the center to the origin, skew, scale, rotate, move back, and translate. A missing field is 0, or 1 for a scale, except that a horizontal scale with no vertical one is used for both (`VARC.cc:468`). The result is multiplied onto the levels above (`VARC.cc:475`); for the ㄱ, it is simply a move by (−10, 24).
 
 `varc-6868.ttf`, a single Chinese character, 桨, uses much more: components rotated by 52°, 90°, and −231°, scaled unevenly, transformed about a center, and three levels deep, with 31 axes, 29 of them private:
 
@@ -212,7 +212,7 @@ print: 400 550 700
 
 Last, `VARC::get_path_at` is called for glyph 4, with the component’s coordinates and transform. VARC doesn’t cover glyph 4, so it is a **leaf**, drawn by `glyf`, CFF2, or CFF, in that order, through a pen that transforms every point. Drawn by `hb-vector` at step 4’s coordinates and moved by (−10, 24), glyph 4 lands on the ㄱ of `hb-vector`’s 가 to within a hundredth of a unit.
 
-A leaf needn’t be a different glyph. `VARC::get_path_at` won’t recurse into the glyph it’s already drawing (`VARC.cc:475`):
+A leaf needn’t be a different glyph. `VARC::get_path_at` won’t recurse into the glyph it’s already drawing (`VARC.cc:499`):
 
 ```c++
 // Don't recurse on the same glyph.
@@ -234,7 +234,7 @@ hb:test/api/fonts/varc-static-gvar.ttf  ab  --show-extents
 
 ### Two sets of coordinates
 
-The condition and the deltas (steps 2, 3, and 5) are evaluated at the parent’s coordinates; the outline (step 6) is drawn at the component’s. That is on purpose. The deltas say how the parent wants its part placed and shaped as *the parent* changes; the component’s coordinates describe the part’s own shape, which knows nothing of where it’s used. It also lets a glyph’s components share one cache of region scalars (`VARC.cc:546`).
+The condition and the deltas (steps 2, 3, and 5) are evaluated at the parent’s coordinates; the outline (step 6) is drawn at the component’s. That is on purpose. The deltas say how the parent wants its part placed and shaped as *the parent* changes; the component’s coordinates describe the part’s own shape, which knows nothing of where it’s used. It also lets a glyph’s components share one cache of region scalars (`VARC.cc:570`).
 
 In 가 the two agree on everything the store’s regions use, weight and optical size. In 桨 they don’t. 桨’s third component is 木, glyph 7, and 木’s fifth is its stem: glyph 9, a plain 1000-unit square, scaled to a thin upright. At weight 700, `varc-dump.py` finds:
 
@@ -307,9 +307,9 @@ The flag resets to the font’s coordinates, not to zero, so the component still
 
 ## The multiple item variation store
 
-VARC’s deltas come from a **multiple item variation store** (`hb-ot-layout-common.hh:3858`), a variant of the item variation store of HVAR, MVAR, and GDEF ([Deltas](deltas.html#item-variation-stores)), with two differences.
+VARC’s deltas come from a **multiple item variation store** (`hb-ot-layout-common.hh:3926`), a variant of the item variation store of HVAR, MVAR, and GDEF ([Deltas](deltas.html#item-variation-stores)), with two differences.
 
-**Items are lists.** In the ordinary store, an item is one number, such as a glyph’s advance. Here it is a list: one for a component’s axis values, another for its transform. They vary together, over the same regions, so each region’s scalar is worked out once for the list. `MultiVarData::get_delta` (`hb-ot-layout-common.hh:3451`, trimmed) walks the regions, and for each either skips its numbers or adds them all in:
+**Items are lists.** In the ordinary store, an item is one number, such as a glyph’s advance. Here it is a list: one for a component’s axis values, another for its transform. They vary together, over the same regions, so each region’s scalar is worked out once for the list. `MultiVarData::get_delta` (`hb-ot-layout-common.hh:3513`, trimmed) walks the regions, and for each either skips its numbers or adds them all in:
 
 ```c++
 for (unsigned regionIndex = 0; regionIndex < regionCount; regionIndex++)
@@ -330,7 +330,7 @@ for (unsigned regionIndex = 0; regionIndex < regionCount; regionIndex++)
 
 So the numbers are stored region by region. In an ordinary store, 木’s fourteen axis values would need fourteen items, fourteen indices, and fourteen lookups.
 
-**Regions name only the axes they use.** An ordinary region has an entry for every fvar axis; here a region lists only its own, by index (`SparseVarRegionAxis`, `hb-ot-layout-common.hh:2594`). 桨’s 39 regions each name one or two of its 31 axes. A region that names no axes counts everywhere, with a scalar of 1, even at the default. That lets a static VARC font have “deltas” that are really constants, and it’s why `MultiItemVarStoreInstancer` applies deltas even when every coordinate is 0 (`hb-ot-layout-common.hh:4285`), which an ordinary store never does.
+**Regions name only the axes they use.** An ordinary region has an entry for every fvar axis; here a region lists only its own, by index (`SparseVarRegionAxis`, `hb-ot-layout-common.hh:2653`). 桨’s 39 regions each name one or two of its 31 axes. A region that names no axes counts everywhere, with a scalar of 1, even at the default. That lets a static VARC font have “deltas” that are really constants, and it’s why `MultiItemVarStoreInstancer` applies deltas even when every coordinate is 0 (`hb-ot-layout-common.hh:4369`), which an ordinary store never does.
 
 Here is the item for 木’s axis values in 桨, decoded by `varc-dump.py`. Each region has fourteen numbers, for `0000`, `0003`, `0005`, `0007`, `0011`, `0012`, `0014`, `0016`, `0017`, `0018`, `0019`, `0020`, `0022`, and `0023`:
 
@@ -384,7 +384,7 @@ Seventeen bytes, for three varying axes and a varying offset.
 
 **Only the fields that are there.** The glyph ID is 16 bits unless `GID_IS_24BIT` is set; each 16-bit transform field is stored only if flagged. A record doesn’t store its length: decoding it finds the next.
 
-**Shared, packed lists.** The record doesn’t list its axes: it gives an index into a list of axis lists, where `0000, 0001, 0002` is stored once for the three records in this font that use it. The values are `TupleValues` (`hb-open-type.hh:1506`), the run encoding of gvar’s deltas: `42` is `0x40`, “words”, and a count of 2 + 1. A run of zeros is just its control byte: the stem’s four axis values are `83`.
+**Shared, packed lists.** The record doesn’t list its axes: it gives an index into a list of axis lists, where `0000, 0001, 0002` is stored once for the three records in this font that use it. The values are `TupleValues` (`hb-open-type.hh:1513`), the run encoding of gvar’s deltas: `42` is `0x40`, “words”, and a count of 2 + 1. A run of zeros is just its control byte: the stem’s four axis values are `83`.
 
 ## What VARC doesn’t touch
 
@@ -397,13 +397,13 @@ hb:test/api/fonts/varc-ac00-ac01.ttf  가각  --variations=wght=840.3  --show-ex
 
 The extents change with the weight, but the advances stay at 920. And GSUB and GPOS never see components: shaping works on glyph IDs, and a VARC glyph is one glyph. The subsetter does look inside VARC, so that the components a glyph needs are kept with it, as does [hb-depend](hb-depend.html).
 
-The extents are a union of each leaf’s box, transformed as a box. For a rotated component, a rotated box is bigger than the outline inside it, so a VARC glyph’s extents can be looser than its outline: for `varc-6868.ttf`, about 7 units on the left and 9 on the right.
+The extents are a union of each leaf’s box, transformed as a box. Each leaf’s box is scaled to the font’s size first and then rounded outward, to whole units (`glyf.hh:460`, `hb-font.hh:214`). For a rotated component, a rotated box is bigger than the outline inside it, so a VARC glyph’s extents can be looser than its outline: for `varc-6868.ttf`, about 8 units on the left and 10 on the right.
 
 ## HarfBuzz and the standard
 
 In a few places, HarfBuzz doesn’t do what the 2026 ISO standard says.
 
-**The missing scale.** HarfBuzz uses a lone horizontal scale for both directions (`VARC.cc:444`), as fontTools and the boring-expansion text do; a reader of the ISO standard alone would take the missing value to be 1.
+**The missing scale.** HarfBuzz uses a lone horizontal scale for both directions (`VARC.cc:468`), as fontTools and the boring-expansion text do; a reader of the ISO standard alone would take the missing value to be 1.
 
 **Mixed leaves.** The standard says a glyph’s leaves mustn’t mix outline formats. HarfBuzz tries every format for every leaf, so it tolerates fonts that do, and it accepts CFF leaves, which the standard doesn’t list.
 
@@ -417,7 +417,7 @@ varc-static-gvar-lsb.ttf  ab  --show-extents
 
 **The layout.** In two places HarfBuzz, fontTools, and the test fonts agree with each other and not with the standard: the standard’s list of conditions has no count field, and it measures the offsets in a region from the list of regions rather than from the region. Both look like errors in the standard.
 
-And one bug, which no standard would allow. A leaf’s outline is scaled to the font’s size before the transform is applied, and HarfBuzz scales only the transform’s translation to match (`VARC.cc:487`):
+And one bug, which no standard would allow. A leaf’s outline is scaled to the font’s size before the transform is applied, and HarfBuzz scales only the transform’s translation to match (`VARC.cc:511`):
 
 ```c++
 hb_transform_t<> leaf_transform = transform;

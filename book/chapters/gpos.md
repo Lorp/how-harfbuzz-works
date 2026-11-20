@@ -28,7 +28,7 @@ Each lookup runs through GSUB’s `apply_forward` loop, with its digests, mask t
 
 ### One array, in place
 
-GSUB reads from the buffer and writes to a second array ([An input buffer and an output buffer](gsub.html#an-input-buffer-and-an-output-buffer)). GPOS never needs to, since it never adds or removes a glyph. The proxy through which HarfBuzz applies GPOS says so with one constant (`hb-ot-layout.cc:1965`):
+GSUB reads from the buffer and writes to a second array ([An input buffer and an output buffer](gsub.html#an-input-buffer-and-an-output-buffer)). GPOS never needs to, since it never adds or removes a glyph. The proxy through which HarfBuzz applies GPOS says so with one constant (`hb-ot-layout.cc:1960`):
 
 ```c++
 struct GPOSProxy
@@ -44,7 +44,7 @@ With `always_inplace`, `apply_string` skips `clear_output` and `sync`, and `next
 
 ### What a lookup passes over
 
-Lookup flags and GDEF classes work as in GSUB ([Which glyphs a lookup sees](gsub.html#which-glyphs-a-lookup-sees)). Default ignorables are treated differently. The matcher sets its rules from the table it is in (`hb-ot-layout-gsubgpos.hh:844`):
+Lookup flags and GDEF classes work as in GSUB ([Which glyphs a lookup sees](gsub.html#which-glyphs-a-lookup-sees)). Default ignorables are treated differently. The matcher sets its rules from the table it is in (`hb-ot-layout-gsubgpos.hh:902`):
 
 ```c++
 /* Ignore ZWNJ if we are matching GPOS, or matching GSUB context and asked to. */
@@ -62,7 +62,7 @@ So in GPOS, compared with [the GSUB table](gsub.html#joiners):
 | input | passed over, unless the feature has manual ZWJ | passed over | passed over | passed over |
 | context | passed over | passed over | passed over | passed over |
 
-A ZWNJ asks for no *joining*, a matter for GSUB, so it never stops kerning. Hidden characters have been passed over since 10.0.0 ([Unicode inside HarfBuzz](unicode-inside-harfbuzz.html#in-gpos) shows kerning across each). For the default shaper only `mark` and `mkmk` have manual ZWJ (`hb-ot-shape.cc:302`), so a ZWJ between a base and its mark keeps them apart. The per-syllable rule of the syllabic shapers applies only to GSUB.
+A ZWNJ asks for no *joining*, a matter for GSUB, so it never stops kerning. Hidden characters have been passed over since 10.0.0 ([Unicode inside HarfBuzz](unicode-inside-harfbuzz.html#in-gpos) shows kerning across each). For the default shaper only `mark` and `mkmk` have manual ZWJ (`hb-ot-shape.cc:298`), so a ZWJ between a base and its mark keeps them apart. The per-syllable rule of the syllabic shapers applies only to GSUB.
 
 ## Value records
 
@@ -81,11 +81,11 @@ gpos.ttf  a
 gpos.ttf  a  --features=ss01
 ```
 
-`apply_value` (`ValueFormat.hh:87`) scales each number with `em_scale_x` or `em_scale_y` and adds it, saturating rather than overflowing. Placements apply in either direction of text. `xAdvance` applies only in horizontal text and `yAdvance` only in vertical, negated, because HarfBuzz’s vertical advances grow downwards ([Vertical text](vertical-text.html)).
+`apply_value` (`ValueFormat.hh:109`) scales each number with `em_scale_x` or `em_scale_y` and adds it, saturating rather than overflowing. Placements apply in either direction of text. `xAdvance` applies only in horizontal text and `yAdvance` only in vertical, negated, because HarfBuzz’s vertical advances grow downwards ([Vertical text](vertical-text.html)).
 
 ### Device tables
 
-A Device table is read only if the font has a ppem set or variation coordinates that aren’t all zero (`ValueFormat.hh:123`). Two kinds share the offset. A hinting Device table, formats 1 to 3, gives a correction in pixels for a range of sizes, scaled into the font’s units ([Fonts and font functions](fonts-and-font-functions.html#three-kinds-of-size) shows one). A **VariationIndex** table, format 0x8000, holds an index into GDEF’s item variation store ([Deltas](deltas.html#item-variation-stores)); its delta is scaled, then rounded.
+A Device table is read only if the font has a ppem set or variation coordinates that aren’t all zero (`ValueFormat.hh:145`). Two kinds share the offset. A hinting Device table, formats 1 to 3, gives a correction in pixels for a range of sizes, scaled into the font’s units ([Fonts and font functions](fonts-and-font-functions.html#three-kinds-of-size) shows one). A **VariationIndex** table, format 0x8000, holds an index into GDEF’s item variation store ([Deltas](deltas.html#item-variation-stores)); its delta is scaled, then rounded.
 
 `var-kern.ttf` is the shared variable font `variations/var.ttf` with one kerning pair added. Its value is −20 at the lightest weight, −60 at the default, −150 at the heaviest, and its spec-like view shows the VariationIndex behind it:
 
@@ -156,19 +156,19 @@ gpos.ttf  Ve  --show-flags  --unsafe-to-concat
 second-value.ttf  AVaa  --show-flags
 ```
 
-`#1` is unsafe to break, `#2` unsafe to concatenate ([Buffers](buffers.html#glyph-flags)). HarfBuzz 4.0.0 split a simple kern between the two glyphs of a pair, “for improved cursor positioning”, its `NEWS` says. The code is still in `PairPosFormat2.hh:280`, behind `HB_SPLIT_KERN`, and off: “Disabled, because causes issues… :-(” (HarfBuzz issue #3408).
+`#1` is unsafe to break, `#2` unsafe to concatenate ([Buffers](buffers.html#glyph-flags)). HarfBuzz 4.0.0 split a simple kern between the two glyphs of a pair, “for improved cursor positioning”, its `NEWS` says. The code is still in `PairPosFormat2.hh:288`, behind `HB_SPLIT_KERN`, and off: “Disabled, because causes issues… :-(” (HarfBuzz issue #3408).
 
-Pair adjustment is also cached. Each of a lookup’s first eight subtables gets a small cache of coverage lookups (`hb-ot-layout-gsubgpos.hh:1570`), and either a digest of each pair set’s second glyphs, which rejects most absent pairs without a search, or caches of the two class definitions. `HB_NO_OT_LAYOUT_LOOKUP_CACHE` leaves them out.
+Pair adjustment is also cached. Each of a lookup’s first eight subtables gets a small cache of coverage lookups (`hb-ot-layout-gsubgpos.hh:1669`), and either a digest of each pair set’s second glyphs, which rejects most absent pairs without a search, or caches of the two class definitions. `HB_NO_OT_LAYOUT_LOOKUP_CACHE` leaves them out.
 
 ## Anchors
 
 The other four positioning types work with **anchors**: points on a glyph, in font units, where something attaches. There are three formats:
 
 * **Format 1**: x and y.
-* **Format 2**: x, y, and the index of a point in the glyph’s outline. If the font has a ppem and the font funcs can find the point, its position is used instead (`AnchorFormat2.hh:41`). The point differs from x and y only in a hinted outline, and HarfBuzz’s own `hb-ot` funcs don’t implement `get_glyph_contour_point` (`hb-ot-font.cc:991` is commented out), so in practice it is used only with FreeType’s funcs. `HB_NO_HINTING` makes format 2 read as format 1.
+* **Format 2**: x, y, and the index of a point in the glyph’s outline. If the font has a ppem and the font funcs can find the point, its position is used instead (`AnchorFormat2.hh:41`). The point differs from x and y only in a hinted outline, and none of HarfBuzz’s own font funcs provides `get_glyph_contour_point`: `hb-ot`, FreeType, and Fontations each register theirs inside `if (false)` (`hb-ot-font.cc:1004`, `hb-ft.cc:1174`), so in practice the point is used only with a client’s own funcs. FreeType’s were the exception until 15.2.0 ([#6762](https://github.com/harfbuzz/harfbuzz/pull/6762)). `HB_NO_HINTING` makes format 2 read as format 1.
 * **Format 3**: x and y, with a Device table for each, followed under the same conditions as a value record’s.
 
-Anchors are scaled to floats, and kept as floats until two of them are subtracted: the difference is rounded, not each anchor (`hb-ot-layout-common.hh:6374`). An anchor offset that is null, in a cursive record or in a mark lookup’s matrix, means there is no anchor, and the subtable declines, so the next subtable gets a chance at the glyph (`MarkArray.hh:144`).
+Anchors are scaled to floats, and kept as floats until two of them are subtracted: the difference is rounded, not each anchor (`hb-ot-layout-common.hh:6486`). An anchor offset that is null, in a cursive record or in a mark lookup’s matrix, means there is no anchor, and the subtable declines, so the next subtable gets a chance at the glyph (`MarkArray.hh:144`).
 
 ## Cursive attachment
 
@@ -244,14 +244,14 @@ When the current glyph is in the mark coverage, HarfBuzz looks back for the near
 
 The glyph found needn’t be a GDEF base (that check “is too strong; disabled”), only in the base coverage. One kind of non-mark is passed over: the second or later glyph of a multiple substitution, so that a mark after `x` decomposed into `f i` would attach to the `f` (HarfBuzz issue #740). The rule, `accept` (`:75`), stops at a mark inside the sequence (#1020), and since #4124 doesn’t pass over a glyph that is itself in the base coverage.
 
-The loop only stops at a glyph that matches. A glyph that doesn’t, because its mask lacks the lookup’s bit, is passed over like a mark, though `prev` would have stopped there. With `mark` turned off for the `e` alone, the acute after it is attached to the `a` instead:
+The loop stops at the first glyph it doesn’t skip, as `prev` would. If that glyph doesn’t match, because its mask lacks the lookup’s bit, there is no base, and the mark isn’t attached (`MarkBasePosFormat1.hh:123`). With `mark` turned off for the `e` alone, the acute after it stays where it is:
 
 ```shape
 gpos.ttf  ae\u0301  --cluster-level=1
 gpos.ttf  ae\u0301  --cluster-level=1  --features=mark[1:2]=0
 ```
 
-(Cluster level 1 keeps the acute in a cluster of its own, so the range covers only the `e`.) The acute is now 750 units back, over the `a`. This looks like a bug: elsewhere the matchers treat a glyph without the lookup’s mask bit as one that doesn’t match, and stop.
+(Cluster level 1 keeps the acute in a cluster of its own, so the range covers only the `e`.) The acute has no offset: it isn’t attached to the `e`, whose `mark` is off, nor to the `a` behind it. From 7.0.0 until 15.2.0 the loop passed over such a glyph like a mark, and attached the acute to the `a`, 750 units back ([HHW-12](bugs-this-book-found.html#hhw-12), fixed by [#6736](https://github.com/harfbuzz/harfbuzz/pull/6736)).
 
 ### Attaching
 
@@ -279,7 +279,7 @@ The ZWJ stops the attachment: with manual ZWJ it isn’t passed over, so it is t
 
 ## Mark to ligature
 
-A mark-to-ligature subtable is the same, except that each ligature has a row of anchors for each of its components. Which row a mark uses comes from GSUB. When `ligate_input` made the ligature, it gave the ligature a ligature ID, and gave each mark it passed over the same ID and the number of the component it followed ([Matching, and the marks in between](gsub.html#matching-and-the-marks-in-between)). The choice is in `MarkLigPosFormat1.hh:156`:
+A mark-to-ligature subtable is the same, except that each ligature has a row of anchors for each of its components. Which row a mark uses comes from GSUB. When `ligate_input` made the ligature, it gave the ligature a ligature ID, and gave each mark it passed over the same ID and the number of the component it followed ([Matching, and the marks in between](gsub.html#matching-and-the-marks-in-between)). The choice is in `MarkLigPosFormat1.hh:166`:
 
 ```c++
 if (lig_id && lig_id == mark_id && mark_comp > 0)
@@ -376,7 +376,7 @@ So a triplet is usually a correction on top of the pair, written as a later look
 
 ## Resolving attachments
 
-After GPOS, and after the shaper has zeroed the advances of marks ([The pipeline, step by step](pipeline-step-by-step.html#gpos-and-what-surrounds-it)), `position_finish_offsets` (`OT/Layout/GPOS/GPOS.hh:164`) turns relative offsets into offsets from each glyph’s own pen position, if an attachment set the buffer’s `HAS_GPOS_ATTACHMENT` scratch flag. For each glyph with an `attach_chain`, `propagate_attachment_offsets` (`:75`) resolves the parent first, recursively, and then:
+After GPOS, and after the shaper has zeroed the advances of marks ([The pipeline, step by step](pipeline-step-by-step.html#gpos-and-what-surrounds-it)), `position_finish_offsets` (`OT/Layout/GPOS/GPOS.hh:173`) turns relative offsets into offsets from each glyph’s own pen position, if an attachment set the buffer’s `HAS_GPOS_ATTACHMENT` scratch flag. For each glyph with an `attach_chain`, `propagate_attachment_offsets` (`:73`) resolves the parent first, recursively, and then:
 
 * for a cursive child, adds the parent’s offset across the line;
 * for a mark, adds the base’s offset along the line, and subtracts the advances from the base to the mark: in forward text the base’s and any between; in backward text those after the base up to and including the mark’s own, since the mark will be drawn left of the base.
@@ -385,7 +385,7 @@ Each link is cleared as it is resolved, so nothing is added twice. In the trace 
 
 ### A limit on the depth
 
-The recursion is bounded by `HB_MAX_NESTING_LEVEL`, 64, and the glyphs are visited in the buffer’s direction: from the start in left-to-right text, from the end in right-to-left (`GPOS.hh:177`). That order came from `kerx`, whose cross-stream kerning links every glyph to its neighbor and was losing a link every 64 glyphs (HarfBuzz issue #5514): visited in order, each parent is resolved before its child, and the recursion stays shallow.
+The recursion is bounded by `HB_MAX_NESTING_LEVEL`, 64, and the glyphs are visited in the buffer’s direction: from the start in left-to-right text, from the end in right-to-left (`GPOS.hh:186`). That order came from `kerx`, whose cross-stream kerning links every glyph to its neighbor and was losing a link every 64 glyphs (HarfBuzz issue #5514): visited in order, each parent is resolved before its child, and the recursion stays shallow.
 
 A cursive chain can point the other way. In left-to-right text with the RightToLeft flag, every glyph’s parent comes after it, so resolving the first glyph recurses down the whole chain, and gives up at depth 64. In right-to-left text it is a chain *without* the flag, the usual kind in Arabic, that does this. Here are 67 `n`s with the flag set:
 
@@ -393,7 +393,7 @@ A cursive chain can point the other way. In left-to-right text with the RightToL
 gpos.ttf  nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn  --features=-curs,ss03
 ```
 
-Each glyph should be 100 units below the next. Glyphs 64 and 65 are both at −100: the recursion stopped at glyph 64 before adding glyph 65’s offset, so glyphs 0 to 64 are all 100 units too high. Chains that long are rare, but this looks like a bug of the same kind as #5514, left for chains that run against the buffer’s direction.
+Each glyph should be 100 units below the next. Glyphs 64 and 65 are both at −100: the recursion stopped at glyph 64 before adding glyph 65’s offset, so glyphs 0 to 64 are all 100 units too high. Chains that long are rare. It looks like a bug of the same kind as #5514, left for chains that run against the buffer’s direction ([HHW-13](bugs-this-book-found.html#hhw-13)), but HarfBuzz keeps the limit on purpose: a pull request that resolved the links without recursion, [#6753](https://github.com/harfbuzz/harfbuzz/pull/6753), was closed unmerged.
 
 > For programmers: a message callback that reads positions during GPOS sees attachments still relative to their parents, with the links in `var`, not the offsets the application will get.
 

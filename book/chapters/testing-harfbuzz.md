@@ -12,9 +12,9 @@ The last part shows how to test HarfBuzz with a small font of your own, the way 
 
 ### Buffer messages
 
-[Buffers](buffers.html#messages) describes the mechanism. `hb_buffer_set_message_func` (`hb-buffer.cc:2396`) installs a callback that HarfBuzz calls with a short message, formatted into 100 bytes (`:2445`), before and after each step it is willing to report. Returning false skips the step about to start. Since 13.0.0 a callback may change glyph IDs too, if it then calls `hb_buffer_changed`.
+[Buffers](buffers.html#messages) describes the mechanism. `hb_buffer_set_message_func` (`hb-buffer.cc:2401`) installs a callback that HarfBuzz calls with a short message, formatted into 100 bytes (`:2450`), before and after each step it is willing to report. Returning false skips the step about to start. Since 13.0.0 a callback may change glyph IDs too, if it then calls `hb_buffer_changed`.
 
-`hb-ot-layout.cc` sends “start table GSUB” and “start table GPOS” (`:2139`, `:2151`), “start lookup” and “end lookup” around each lookup (`:2096`, `:2119`), and “skipped lookup … because no glyph matches” when the buffer’s digest rules a lookup out. Normalization, the AAT tables, legacy `kern`, and the script shapers send their own, and the verifier sends its failures the same way.
+`hb-ot-layout.cc` sends “start table GSUB” and “start table GPOS” (`:2150`, `:2162`), “start lookup” and “end lookup” around each lookup (`:2107`, `:2130`), and “skipped lookup … because no glyph matches” when the buffer’s digest rules a lookup out. Normalization, the AAT tables, legacy `kern`, and the script shapers send their own, and the verifier sends its failures the same way.
 
 `hb-shape --trace` installs a callback that prints each message and then the whole buffer, serialized just as the final output is, on standard error (`util/shape-output.hh:136`):
 
@@ -22,7 +22,7 @@ The last part shows how to test HarfBuzz with a small font of your own, the way 
 trace: start lookup 3 feature 'calt'	buffer: [space=0|e=1|e=2]
 ```
 
-The **detailed messages** come from inside lookups: which glyph a single substitution is about to replace, which glyphs a ligature is about to join, and each recursion from a contextual lookup into a nested one. They cost time even when nobody is listening, so 12.0.0 turned them off; `NEWS` says that tools that need them “should define `HB_BUFFER_MESSAGE_MORE` to 1 when building HarfBuzz”. The macro defaults to `HB_DEBUG+0` (`hb-debug.hh:452`), and every such message is guarded by it, as here in the code that recurses from a contextual rule (`hb-ot-layout-gsubgpos.hh:2770`, trimmed):
+The **detailed messages** come from inside lookups: which glyph a single substitution is about to replace, which glyphs a ligature is about to join, and each recursion from a contextual lookup into a nested one. They cost time even when nobody is listening, so 12.0.0 turned them off; `NEWS` says that tools that need them “should define `HB_BUFFER_MESSAGE_MORE` to 1 when building HarfBuzz”. The macro defaults to `HB_DEBUG+0` (`hb-debug.hh:452`), and every such message is guarded by it, as here in the code that recurses from a contextual rule (`hb-ot-layout-gsubgpos.hh:2904`, trimmed):
 
 ```c++
 if (HB_BUFFER_MESSAGE_MORE && c->buffer->messaging ())
@@ -75,7 +75,7 @@ Verification is the one check that needs no expected answer: it compares HarfBuz
 
 | Set | Files | Test lines | Where it comes from |
 |---|---|---|---|
-| `in-house` | 90 | 5,277 | HarfBuzz’s own, one file per subject (`arabic-stch.tests`, `indic-init.tests`, `vertical.tests` …) |
+| `in-house` | 97 | 5,834 | HarfBuzz’s own, one file per subject (`arabic-stch.tests`, `indic-init.tests`, `vertical.tests` …) |
 | `aots` | 128 | 276 | Adobe’s Annotated OpenType Specification tests, one per lookup type and format |
 | `text-rendering-tests` | 94 | 753 | the Unicode Consortium’s text-rendering-tests repository |
 
@@ -108,7 +108,7 @@ The first row is the expected output exactly, and verification passed. The secon
 
 For each line, the runner builds the command from the font, `--unicodes`, and the line’s options, and adds `--verify --unsafe-to-concat --safe-to-insert-tatweel` unless the expected output is `*` (`:284`). So every test of the suite is also a verification test, with the unsafe-to-concat and tatweel flags computed and checked too.
 
-Then it runs the line once for each backend it should test. Before reading any test it asks `hb-shape` for its `--list-shapers`, `--list-face-loaders`, and `--list-font-funcs`. Shapers and face loaders default to `ot` only, unless the environment variables `HB_SHAPER_LIST` and `HB_FACE_LOADER` name more (`:146`), but font functions default to every kind the build has: `ot`, and also `ft`, `fontations`, `coretext`, and `directwrite` where they were built in (`hb-font.cc:2608`). A line runs with `--font-funcs=ot`, again with `--font-funcs=ft`, and so on, and every run must give the expected output, so the suite also checks that the font functions agree on advances, origins, and glyph names. A directive or an option narrows the list, and a backend the build lacks is counted as skipped, not failed. The book’s build has only `ot`.
+Then it runs the line once for each backend it should test. Before reading any test it asks `hb-shape` for its `--list-shapers`, `--list-face-loaders`, and `--list-font-funcs`. Shapers and face loaders default to `ot` only, unless the environment variables `HB_SHAPER_LIST` and `HB_FACE_LOADER` name more (`:146`), but font functions default to every kind the build has: `ot`, and also `ft`, `fontations`, `coretext`, and `directwrite` where they were built in (`hb-font.cc:2606`). A line runs with `--font-funcs=ot`, again with `--font-funcs=ft`, and so on, and every run must give the expected output, so the suite also checks that the font functions agree on advances, origins, and glyph names. A directive or an option narrows the list, and a backend the build lacks is counted as skipped, not failed. The book’s build has only `ot`.
 
 A last detail: if the output names glyphs as `gid…` because the font has no names, and it differs from what was expected, the runner converts both to bare glyph IDs with `--glyphs --no-glyph-names` and compares those, so that glyph names coming from one backend and not another don’t fail the test (issue #5169, `:323`).
 
@@ -134,7 +134,7 @@ The tests are ordinary assertions: create an object, call the API, `g_assert_tru
 
 ## The subsetting tests
 
-`test/subset` checks the subsetter by its output files. Each of its 104 test files (`data/tests/*.tests`) lists fonts, profiles, and subsets:
+`test/subset` checks the subsetter by its output files. Each of its 110 test files (`data/tests/*.tests`) lists fonts, profiles, and subsets:
 
 ```
 FONTS:
@@ -194,11 +194,11 @@ extern "C" int LLVMFuzzerTestOneInput (const uint8_t *data, size_t size)
 
 The input is the font, at a scale of 12. Its last 64 bytes are read again as 16 code points to shape, and its last byte as a number of variation coordinates, taken from the bytes before it (`hb-shape-input.hh:243`). A newer, extended form ends with the magic `HBSUBFZ2` and a list of operations (add text, set an axis), so that a fuzzer can reach variations and text on purpose. `test_font ()` comes from `test/api/test-ot-face.c`: it calls many of the face and font APIs on the font, so the shaping fuzzer covers those too.
 
-**The corpus.** `test/fuzzing/fonts/` holds 532 fonts, and `graphs/` ten inputs for the repacker. Most are named like `clusterfuzz-testcase-minimized-hb-subset-fuzzer-6461128124465152`: inputs that once made a fuzzer fail, minimized, and kept after the fix, under the names ClusterFuzz gave them. When HarfBuzz is built normally, with tests, the fuzzers aren’t linked with libFuzzer but with `main.cc`, which reads each file named on its command line and passes it to `LLVMFuzzerTestOneInput` once, printing TAP (`test/fuzzing/main.cc`). Meson runs them over the corpus, 64 files a test, as the `fuzzing` suite. So every crash ever found becomes a regression test that runs on every build. [Trust nothing: the sanitizer](trust-nothing-the-sanitizer.html) is the code most of those crashes hardened.
+**The corpus.** `test/fuzzing/fonts/` holds 542 fonts, and `graphs/` ten inputs for the repacker. Most are named like `clusterfuzz-testcase-minimized-hb-subset-fuzzer-6461128124465152`: inputs that once made a fuzzer fail, minimized, and kept after the fix, under the names ClusterFuzz gave them. When HarfBuzz is built normally, with tests, the fuzzers aren’t linked with libFuzzer but with `main.cc`, which reads each file named on its command line and passes it to `LLVMFuzzerTestOneInput` once, printing TAP (`test/fuzzing/main.cc`). Meson runs them over the corpus, 64 files a test, as the `fuzzing` suite. So every crash ever found becomes a regression test that runs on every build. [Trust nothing: the sanitizer](trust-nothing-the-sanitizer.html) is the code most of those crashes hardened.
 
 **Continuous fuzzing.** `NEWS` for 1.0.5, in 2015, reports memory access bugs “discovered using libFuzzer”, and “we now have continuous fuzzing set up, to avoid issues like these creeping in again.” The repository’s own part of that is `.github/workflows/cifuzz.yml`: on every pull request, OSS-Fuzz’s CIFuzz action builds the fuzzers of the OSS-Fuzz project `harfbuzz` and runs them for 600 seconds, failing the pull request if they find a crash.
 
-**Failing allocations.** Code that handles running out of memory rarely runs. When the fuzzers are built for libFuzzer (`-Dfuzzer_ldflags=…`), HarfBuzz is compiled with `HB_CUSTOM_MALLOC` and `src/failing-alloc.c` (`src/meson.build:659`), whose `hb_malloc_impl`, `hb_calloc_impl`, and `hb_realloc_impl` return null about one time in sixteen:
+**Failing allocations.** Code that handles running out of memory rarely runs. When the fuzzers are built for libFuzzer (`-Dfuzzer_ldflags=…`), HarfBuzz is compiled with `HB_CUSTOM_MALLOC` and `src/failing-alloc.c` (`src/meson.build:660`), whose `hb_malloc_impl`, `hb_calloc_impl`, and `hb_realloc_impl` return null about one time in sixteen:
 
 ```c
 void* hb_malloc_impl (size_t size)
@@ -265,7 +265,7 @@ Writing this book meant building small fonts that exercise one thing each, shapi
 
 None of the book’s draft bug reports in [Bugs this book found](bugs-this-book-found.html) is a crash, a hang, or a read out of bounds, though the book’s fonts include broken ones on purpose. (A number in brackets, here and below, is a draft’s number in that appendix.) Against those failures HarfBuzz is well defended: a decade of continuous fuzzing has turned every such failure into a test, and the sanitizer and the budgets stop the rest. What is left is output that is wrong but well formed, and, in two Windows integrations read but not run, a reference that is never released (79, 80). No fuzzer can see it, because nothing tells a fuzzer what the right answer is, and [verification](#verification) can’t either if the answer is consistently wrong. Only a test with an expected answer catches it, and only on the paths the tests take.
 
-The drafts show where those paths stop.
+The drafts show where those paths stop. Many are fixed in {{hb}} or on HarfBuzz main, and the appendix gives each one’s status; what matters here is where they were found.
 
 **Combinations.** Most of the shaping results need two things at once that are each tested alone: a ranged feature and a global request for the same tag (8), a tone mark at the start of text where two dotted-circle paths both apply (20), a font with GSUB, GPOS *and* `kerx` (38), a Hebrew `mark` feature under `DFLT` rather than `hebr` (21), vertical text with a `kern` table (18), a kerned base with a fallback-positioned mark (16). The in-house tests are recorded one subject to a file, so a combination is tested once someone has met it (inferred from how `record-test.sh` works). A small font built with exactly the two features finds it directly.
 
@@ -273,7 +273,7 @@ The drafts show where those paths stop.
 
 **Copies that drifted apart.** Something done in several places gets fixed or extended in one of them. The GPOS trace message copies the GSUB code above it and kept its index (2). `get_y_delta` lost the guard that `get_x_delta` has (14). Four paths insert dotted circles, and they give the circle three different sets of Unicode properties (19, 35). The AAT and OpenType maps merge repeated features in opposite orders (41), and the bitmap tables are tried in different orders by different callers (26). Comparing the copies finds these; testing one copy doesn’t.
 
-**Limits that real text reaches.** Fuzzing pushes for limits, and the limits are needed. But a limit set to stop a hostile font is sometimes within reach of a legitimate one: 64 links of cursive attachment in Nastaliq (13), a 64-glyph syllable (23), a closure cut at 14 passes (43, 44), 26 mask bits (9). Each degrades quietly, by design: the output is merely wrong. The worst cases are 1 and 47, where the sanitizer’s budget costs a valid font every substitution it has, and 54, where a text of over half a million characters is left almost unshaped.
+**Limits that real text reaches.** Fuzzing pushes for limits, and the limits are needed. But a limit set to stop a hostile font is sometimes within reach of a legitimate one: 64 links of cursive attachment in Nastaliq (13), a 64-glyph syllable (23), a closure cut at 14 passes (43, 44), 26 mask bits (9). Each degrades quietly, by design: the output is merely wrong. The worst cases were 1 and 47, where the sanitizer’s budget cost a valid font every substitution it had, and 54, where a text of over half a million characters was left almost unshaped; 15.2.0 fixes all three.
 
 **Comments and documentation.** A comment says LEFT and RIGHT marks aren’t positioned, and they are (17); another states a rule its own constant breaks (44); hb-depend’s notes describe an earlier design (42); a `Since:` line is wrong (46).
 
@@ -301,7 +301,7 @@ The pattern suggests where to look next. Most of these drafts came from fonts sm
 * Buffer messages report each step of a run and can skip it; the detailed messages from inside lookups need a build with `HB_BUFFER_MESSAGE_MORE`, which is why this book builds HarfBuzz separately for its traces.
 * `HB_DEBUG_*` are compile-time switches for HarfBuzz’s developers, each a depth to which the work of the table code is printed.
 * `HB_BUFFER_FLAG_VERIFY` makes HarfBuzz reshape its result in pieces and compare. It needs no expected answer, so it runs everywhere, but a consistently wrong result passes.
-* `test/shape` holds about 6,300 test lines in three sets. Each runs with verification, once for every kind of font functions the build has, through one `hb-shape --batch` process.
+* `test/shape` holds about 6,900 test lines in three sets. Each runs with verification, once for every kind of font functions the build has, through one `hb-shape --batch` process.
 * `test/api` checks the C API with GLib’s framework; `test/subset` compares subset fonts byte for byte with expected fonts that fontTools agrees with.
 * The fuzzers look for crashes, hangs, and runaway memory, with allocations that fail at random. Every failure they find is kept and rerun as a test on every build.
 * A font of boxes with a rule or two, built from a feature file, is the quickest way to find out what HarfBuzz does with a rule.

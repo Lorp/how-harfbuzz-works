@@ -8,7 +8,7 @@ The examples use one small test font, `featvar.ttf`, built by `fonts/shape-plans
 
 ## What a plan is
 
-The struct is short (`hb-shape-plan.hh:71`):
+The struct is short (`hb-shape-plan.hh:73`):
 
 ```c++
 struct hb_shape_plan_t
@@ -59,6 +59,7 @@ struct hb_shape_plan_key_t
   const hb_feature_t      *user_features;
   unsigned int             num_user_features;
 
+  bool                     default_coords;
   hb_ot_shape_plan_key_t   ot;
 
   hb_shape_func_t         *shaper_func;
@@ -66,7 +67,7 @@ struct hb_shape_plan_key_t
 };
 ```
 
-and two keys are equal when all four are (`hb-shape-plan.cc:177`):
+(`default_coords`, new in 15.2.0, says whether the key was made with no coordinates. It isn’t compared, and only saves work, as [below](#looking-up-and-adding).) Two keys are equal when the four are (`hb-shape-plan.cc:188`):
 
 ```c++
 return hb_segment_properties_equal (&this->props, &other->props) &&
@@ -85,7 +86,7 @@ Everything else about the buffer is left out: its text and context, its flags, a
 
 ### User features
 
-The features are compared by `user_features_match` (`hb-shape-plan.cc:159`), here whole:
+The features are compared by `user_features_match` (`hb-shape-plan.cc:170`), here whole:
 
 ```c++
 if (this->num_user_features != other->num_user_features)
@@ -105,7 +106,7 @@ return true;
 
 Three things count: the tag, the value, and whether the feature is **global**, meaning that its range is the whole of the text (`start` 0 and `end` `HB_FEATURE_GLOBAL_END`, which is `(unsigned) -1`). The range itself doesn’t count. Two runs that turn `liga` off over different clusters share one plan.
 
-That is possible because ranges are never used while the plan is made. The planner only asks whether each feature is global (`hb-ot-shape.cc:392`). A global feature with value 1 can share the one global mask bit with every other such feature, while a feature that is on in some places and off in others needs bits of its own. The range is applied each time the plan is run, from the features passed to the run, in `hb_ot_shape_setup_masks` (`hb-ot-shape.cc:760`):
+That is possible because ranges are never used while the plan is made. The planner only asks whether each feature is global (`hb-ot-shape.cc:391`). A global feature with value 1 can share the one global mask bit with every other such feature, while a feature that is on in some places and off in others needs bits of its own. The range is applied each time the plan is run, from the features passed to the run, in `hb_ot_shape_setup_masks` (`hb-ot-shape.cc:759`):
 
 ```c++
 for (unsigned int i = 0; i < c->num_user_features; i++)
@@ -128,7 +129,7 @@ gsub/ligatures.ttf  fifi  --language=en  --features=-liga[2:4]
 
 (That they share it can’t be seen from `hb-shape`, which shapes once and exits. A small C program, not part of the book’s build, which asks `hb_shape_plan_create_cached2` for both and compares the pointers, confirms it.) [Buffers](buffers.html#the-mask) shows how `set_masks` compares ranges with clusters.
 
-The value counts even for a feature with a range, because it decides how many bits the feature gets: `hb_bit_storage (max_value)`, at most eight (`hb-ot-map.cc:290`). An alternate substitution reads its alternate’s number from those bits, as [GSUB: substituting glyphs](gsub.html#the-mask) shows. The comparison is exact, not by the number of bits, so `salt=2` and `salt=3` over the same cluster get separate plans, though each needs two bits:
+The value counts even for a feature with a range, because it decides how many bits the feature gets: `hb_bit_storage (max_value)`, at most eight (`hb-ot-map.cc:282`). An alternate substitution reads its alternate’s number from those bits, as [GSUB: substituting glyphs](gsub.html#the-mask) shows. The comparison is exact, not by the number of bits, so `salt=2` and `salt=3` over the same cluster get separate plans, though each needs two bits:
 
 ```shape
 gsub/ligatures.ttf  aaa  --language=en  --features=salt[1]=2
@@ -136,17 +137,15 @@ gsub/ligatures.ttf  aaa  --language=en  --features=salt[1]=3
 gsub/ligatures.ttf  aaa  --language=en  --features=salt[1]=2,salt[2]=3
 ```
 
-The features are compared in order, one by one. `kern,liga` and `liga,kern` are different keys, and so are `liga` and `liga,liga`, though each pair compiles to the same map. Order can matter. When a tag is listed twice, the planner merges the entries, and a later global entry replaces the value of an earlier one (`hb-ot-map.cc:249`), so sorting the list could change what it means.
+The features are compared in order, one by one. `kern,liga` and `liga,kern` are different keys, and so are `liga` and `liga,liga`, though each pair compiles to the same map. Order can matter. When a tag is listed twice, the planner merges the entries, and a later global entry replaces the value of an earlier one (`hb-ot-map.cc:241`), so sorting the list could change what it means.
 
 Asking for a feature that is on anyway makes a new plan too: an empty list and `liga` are different keys, with identical results.
 
-When `init` copies the features into a new plan, it means to “make start/end uniform to easier catch bugs”, setting every non-global `start` and `end` to 1 and 2. The loop it does this in writes `features[0]` each time round instead of `features[i]` (`hb-shape-plan.cc:95`), so only the first feature is changed. Nothing reads the copied ranges, so nothing goes wrong (inferred).
-
-> Since {{hb}}: fixed on HarfBuzz main by [#6693](https://github.com/harfbuzz/harfbuzz/pull/6693) (17 November 2026), so main writes `features[i]` and makes every copied range uniform.
+When `init` copies the features into a new plan, it means to “make start/end uniform to easier catch bugs”, setting every non-global `start` and `end` to 1 and 2 (`hb-shape-plan.cc:96`). Nothing reads the copied ranges. (Before 15.2.0 the loop wrote `features[0]` each time round, so only the first feature was changed: [HHW-6](bugs-this-book-found.html#hhw-6).)
 
 ### The variation state
 
-The coordinates aren’t in the key. What is in it is their *outcome*: which of the font’s feature variations apply. `hb_shape_full` passes the font’s normalized coordinates only when some are non-zero (`hb-shape.cc:143`), and `init` hands them to `hb_ot_shape_plan_key_t` (`hb-ot-shape.hh:52`, trimmed):
+The coordinates aren’t in the key. What is in it is their *outcome*: which of the font’s feature variations apply. `hb_shape_full` passes the font’s normalized coordinates only when some are non-zero (`hb-shape.cc:144`), and `init` hands them to `hb_ot_shape_plan_key_t` (`hb-ot-shape.hh:52`, trimmed):
 
 ```c++
 struct hb_ot_shape_plan_key_t
@@ -166,7 +165,7 @@ struct hb_ot_shape_plan_key_t
 };
 ```
 
-There are two of each, one for GSUB and one for GPOS. `variations_index` is the number of the FeatureVariations record that applies. `FeatureVariations::find_index` (`hb-ot-layout-common.hh:5969`) tests the records’ condition sets in order and stops at the first that matches, as the specification says it should. If none matches, or the table has no FeatureVariations, the index is `NOT_FOUND_INDEX`, `0xFFFFFFFF`. A build with `HB_NO_VAR` always gets that (`hb-ot-layout-gsubgpos.hh:6527`).
+There are two of each, one for GSUB and one for GPOS. `variations_index` is the number of the FeatureVariations record that applies. `FeatureVariations::find_index` (`hb-ot-layout-common.hh:6071`) tests the records’ condition sets in order and stops at the first that matches, as the specification says it should. If none matches, or the table has no FeatureVariations, the index is `NOT_FOUND_INDEX`, `0xFFFFFFFF`. A build with `HB_NO_VAR` always gets that (`hb-ot-layout-gsubgpos.hh:6805`).
 
 `featvar.ttf` has two records, made by fontTools’ `addFeatureVariations`. Record 0 applies from normalized weight 0.6 to 1 (user weights 700 to 900) and swaps `I` for `V`. Record 1 applies from 0.4 to 0.59 (600 to 695) and swaps `I` for `H`. Below 600 neither applies:
 
@@ -219,9 +218,9 @@ print: 400 600 700 900
 
 #### Lookup variations
 
-The second half of the key is newer. `NEWS` for 14.6.0 says “Support `FeatureVariations` 1.1 lookup variations”. HarfBuzz reads them from an array of `LookupVariationRecord`s that follows the ordinary records in a FeatureVariations table of version 1.1 or later (`hb-ot-layout-common.hh:5957`). With these, a feature’s lookups aren’t replaced wholesale. Each record gives one feature a list of lookup groups, each with a condition of its own, and the feature gets the groups whose conditions are true, plus its default lookups if a flag says so (`:5784`). Any number of conditions can be true at once, so one record index can’t describe the result.
+The second half of the key is newer. `NEWS` for 14.6.0 says “Support `FeatureVariations` 1.1 lookup variations”. HarfBuzz reads them from an array of `LookupVariationRecord`s that follows the ordinary records in a FeatureVariations table of version 1.1 or later (`hb-ot-layout-common.hh:6059`). With these, a feature’s lookups aren’t replaced wholesale. Each record gives one feature a list of lookup groups, each with a condition of its own, and the feature gets the groups whose conditions are true, plus its default lookups if a flag says so (`:5886`). Any number of conditions can be true at once, so one record index can’t describe the result.
 
-So the key records which conditions are true. `collect_lookup_conditions` (`hb-ot-layout-common.hh:5994`) goes through every lookup variation record in the table, evaluates each distinct condition once, and keeps the offsets of the true ones, sorted, so that two positions with the same true conditions give equal lists. A group with no condition always applies, and isn’t recorded (`:5716`). The comment in the key admits what this costs: two positions whose true conditions differ get different plans, even if they would end up with the same lookups. And it is every condition in the table, not only those of the features this script and language use.
+So the key records which conditions are true. `collect_lookup_conditions` (`hb-ot-layout-common.hh:6106`) goes through every lookup variation record in the table, evaluates each distinct condition once, and keeps the offsets of the true ones, sorted, so that two positions with the same true conditions give equal lists. A group with no condition always applies, and isn’t recorded (`:5818`). The comment in the key admits what this costs: two positions whose true conditions differ get different plans, even if they would end up with the same lookups. And it is every condition in the table, not only those of the features this script and language use.
 
 None of the book’s test fonts uses lookup variations: the fontTools that builds them, 4.38, can’t write them.
 
@@ -263,9 +262,10 @@ hb_atomic_t<plan_node_t *> last_shape_plan;
 
 ### Looking up, and adding
 
-`hb_shape_plan_create_cached2` (`hb-shape-plan.cc:538`) is the whole cache. Trimmed of its debug messages:
+The whole cache is `_hb_shape_plan_get_cached` (`hb-shape-plan.cc:564`), an internal function new in 15.2.0. Trimmed of its debug messages:
 
 ```c++
+  *uncached_plan = nullptr;
 retry:
   hb_face_t::plan_node_t *cached_plan_nodes = face->shape_plans;
 
@@ -273,20 +273,21 @@ retry:
 
   if (likely (!dont_cache))
   {
+    hb_face_t::plan_node_t *cached = face->last_shape_plan.get_acquire ();
     hb_shape_plan_key_t key;
     if (!key.init (false, face, props, user_features, num_user_features,
-                   coords, num_coords, shaper_list))
+                   coords, num_coords, shaper_list,
+                   cached ? &cached->shape_plan->key : nullptr))
       return hb_shape_plan_get_empty ();
 
-    hb_face_t::plan_node_t *cached = face->last_shape_plan.get_acquire ();
     if (cached && cached->shape_plan->key.equal (&key))
-      return hb_shape_plan_reference (cached->shape_plan);
+      return cached->shape_plan;
 
     for (hb_face_t::plan_node_t *node = cached_plan_nodes; node; node = node->next)
       if (node->shape_plan->key.equal (&key))
       {
         face->last_shape_plan.set_release (node);
-        return hb_shape_plan_reference (node->shape_plan);
+        return node->shape_plan;
       }
   }
 
@@ -295,11 +296,17 @@ retry:
                                                        coords, num_coords,
                                                        shaper_list);
   if (unlikely (dont_cache))
+  {
+    *uncached_plan = shape_plan;
     return shape_plan;
+  }
 
   hb_face_t::plan_node_t *node = (hb_face_t::plan_node_t *) hb_calloc (1, sizeof (hb_face_t::plan_node_t));
   if (unlikely (!node))
+  {
+    *uncached_plan = shape_plan;
     return shape_plan;
+  }
 
   node->shape_plan = shape_plan;
   node->next = cached_plan_nodes;
@@ -312,10 +319,12 @@ retry:
   }
   face->last_shape_plan.set_release (node);
 
-  return hb_shape_plan_reference (shape_plan);
+  return shape_plan;
 ```
 
-A key is built on every call, cached or not. With `copy` false, it points at the caller’s features instead of copying them, so a lookup allocates nothing for them. But it does evaluate FeatureVariations, for both tables, every time: `find_index` until a record matches, and for version 1.1 every distinct lookup condition. For a font without FeatureVariations that is next to nothing. For one with many records or conditions, it is work done on every shaping call, before the cache is even looked at. The backend is chosen again too, though after the first time that is only a test of a stored pointer.
+A plan it finds or adds is returned without a new reference: the face owns every plan in its list, and the caller borrows it. A plan that couldn’t be put in the list comes back through `uncached_plan` as well, for the caller to destroy. `hb_shape_full` calls the function directly (`hb-shape.cc:144`), so a call that finds its plan touches no reference count. The public `hb_shape_plan_create_cached2` (`hb-shape-plan.cc:547`) wraps it and adds a reference to a borrowed plan, so that what it returns belongs to the caller, as it always did. In 15.1.0 the cache was `hb_shape_plan_create_cached2` itself, and `hb_shape_full` took a reference and released it on every call.
+
+A key is built on every call, cached or not. With `copy` false, it points at the caller’s features instead of copying them, so a lookup allocates nothing for them. It also works out the variation state, which means evaluating FeatureVariations for both tables: `find_index` until a record matches, and for version 1.1 every distinct lookup condition. Since 15.2.0 that is skipped in the common case: when the new key and the last plan’s key are both at the default position, and the last one has no lookup conditions, `init` copies the last key’s record indices (`hb-shape-plan.cc:110`), since the same face at the same position must come to the same answer. Otherwise the work is done on every shaping call, before the cache is even looked at: next to nothing for a font without FeatureVariations, more for one with many records or conditions. The backend is chosen again too, though after the first time that is only a test of a stored pointer.
 
 The lookup itself is two steps. First the last plan, then the list from its head. Each comparison is `key.equal`, which compares properties first, and so fails fast for a different script or direction.
 
@@ -331,11 +340,11 @@ Only the head is ever written, and nodes are never removed, so a thread walking 
 
 Nothing removes a plan from the cache. The list is freed only in `hb_face_destroy` (`hb-face.cc:607`), which drops the face’s reference to each plan. There is no limit on its length, no eviction, and no API to empty it.
 
-The plan an application gets back has its own reference, which it releases with `hb_shape_plan_destroy`, as `hb_shape_full` does at once. A plan the application keeps can outlive its face, but its `face_unsafe` then points at freed memory, so it shouldn’t be used (inferred).
+The plan an application gets back from `hb_shape_plan_create_cached2` has its own reference, which it releases with `hb_shape_plan_destroy`. A plan the application keeps can outlive its face, but its `face_unsafe` then points at freed memory, so it shouldn’t be used (inferred).
 
 ### The empty plan
 
-When a plan can’t be made, these functions return the **empty plan**, `hb_shape_plan_get_empty` (`hb-shape-plan.cc:306`): the shared Null object, all zeros, which `hb_object_is_valid` rejects. Running it returns false (`:425`) and leaves the buffer as it was. Its shaper name is null. It is what `hb_shape_plan_create2` returns for an invalid direction (`:255`), when no backend will take the face, and when it runs out of memory, and what `create_cached2` returns when no key can be made.
+When a plan can’t be made, these functions return the **empty plan**, `hb_shape_plan_get_empty` (`hb-shape-plan.cc:315`): the shared Null object, all zeros, which `hb_object_is_valid` rejects. Running it returns false (`:434`) and leaves the buffer as it was. Its shaper name is null. It is what `hb_shape_plan_create2` returns for an invalid direction or no segment properties at all (`:266`), when no backend will take the face, and when it runs out of memory, and what `create_cached2` returns when no key can be made.
 
 The cache has one more case. A face that isn’t a valid object, which means the empty face, `hb_face_get_empty`, is never cached (`dont_cache`), and every call goes straight to `hb_shape_plan_create2`. That doesn’t help much. The empty face’s per-shaper data loaders are inert, so no backend can make data for it, not even `ot`, and the key can’t be made. Shaping a font made from `hb_face_get_empty ()` fails: `hb_shape_full` returns false and the buffer stays Unicode. A face made from an empty blob is a valid face with no tables, and shapes every character to glyph 0. (Both were checked with a C program, since `hb-shape` can’t open the empty face.)
 
@@ -350,11 +359,11 @@ The public API has four functions that make plans:
 | `hb_shape_plan_create_cached` | 0.9.7 | none | yes |
 | `hb_shape_plan_create_cached2` | 1.4.0 | yes | yes |
 
-The versions without coordinates pass none, so they make the plan for the default position. The uncached ones make a new plan on every call, with its own copy of the features, and put it nowhere: two calls with the same arguments give two plans. `hb_shape_plan_create2` (`hb-shape-plan.cc:240`) is the function that actually builds one, cached or not. It makes the face immutable (`:267`, see [Blobs, faces, and lazy tables](blobs-faces-and-lazy-tables.html#immutability)), makes the key with a copy of the features, and calls `ot.init0` (`:280`), which runs the planner and compiles the map (`hb-ot-shape.cc:227`).
+The versions without coordinates pass none, so they make the plan for the default position. The uncached ones make a new plan on every call, with its own copy of the features, and put it nowhere: two calls with the same arguments give two plans. `hb_shape_plan_create2` (`hb-shape-plan.cc:251`) is the function that actually builds one, cached or not. It makes the face immutable (`:276`, see [Blobs, faces, and lazy tables](blobs-faces-and-lazy-tables.html#immutability)), makes the key with a copy of the features, and calls `ot.init0` (`:289`), which runs the planner and compiles the map (`hb-ot-shape.cc:223`).
 
-A plan is run with `hb_shape_plan_execute`, and it can be looked at: `hb_shape_plan_get_shaper` gives the backend’s name, `hb_ot_shape_plan_collect_lookups` the lookups in its map, and `hb_ot_shape_plan_get_feature_tags` (since 10.3.0) the features it turned on. `hb_ot_shape_glyphs_closure` uses the cache too, to find the lookups a text could use (`hb-ot-shape.cc:1310`).
+A plan is run with `hb_shape_plan_execute`, and it can be looked at: `hb_shape_plan_get_shaper` gives the backend’s name, `hb_ot_shape_plan_collect_lookups` the lookups in its map, and `hb_ot_shape_plan_get_feature_tags` (since 10.3.0) the features it turned on. `hb_ot_shape_glyphs_closure` uses the cache too, to find the lookups a text could use (`hb-ot-shape.cc:1312`).
 
-> For programmers: `hb_shape_plan_execute` takes the features again, and they should be the ones the plan was made with. The global ones were compiled into the plan and are ignored when it runs, while the ranges and values of the others are read from the features passed to `execute`. A feature the plan wasn’t made with has no mask bits and does nothing. A value bigger than the plan allowed for loses its high bits. `execute` also asserts that the font’s face is the plan’s face and that the buffer’s properties are the plan’s (`hb-shape-plan.cc:428`). `hb_shape_full` gets all of this right by construction.
+> For programmers: `hb_shape_plan_execute` takes the features again, and they should be the ones the plan was made with. The global ones were compiled into the plan and are ignored when it runs, while the ranges and values of the others are read from the features passed to `execute`. A feature the plan wasn’t made with has no mask bits and does nothing. A value bigger than the plan allowed for loses its high bits. `execute` also asserts that the font’s face is the plan’s face and that the buffer’s properties are the plan’s (`hb-shape-plan.cc:437`). `hb_shape_full` gets all of this right by construction.
 
 ## What it means
 
@@ -379,7 +388,7 @@ Nothing else about a variable font reaches the plan: deltas, metrics, and outlin
 | File | What’s there |
 |---|---|
 | `src/hb-shape-plan.hh` | `hb_shape_plan_key_t` and `hb_shape_plan_t` |
-| `src/hb-shape-plan.cc` | the key (`init`, `user_features_match`, `equal`), the four create functions, the empty plan, `execute`, and the cache in `hb_shape_plan_create_cached2` |
+| `src/hb-shape-plan.cc` | the key (`init`, `user_features_match`, `equal`), the four create functions, the empty plan, `execute`, and the cache in `_hb_shape_plan_get_cached` |
 | `src/hb-face.hh`, `src/hb-face.cc` | the cache’s two fields, and freeing it in `hb_face_destroy` |
 | `src/hb-ot-shape.hh` | `hb_ot_shape_plan_key_t` and `hb_ot_shape_plan_t` |
 | `src/hb-ot-shape.cc` | `hb_ot_shape_plan_t::init0`, the user features in the planner, and `hb_ot_shape_setup_masks` |

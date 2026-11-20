@@ -156,7 +156,7 @@ syllable_serial++;
 if (syllable_serial == 16) syllable_serial = 1;
 ```
 
-The serial need only differ from the previous syllable’s, so that `foreach_syllable` (`hb-ot-layout.hh:163`), which walks forward while the byte stays the same, can see where a syllable ends. The same byte keeps per-syllable lookups inside a syllable ([GSUB](gsub.html#skipping-step-by-step)). A broken cluster also sets a buffer scratch flag, so the dotted-circle step can skip buffers with none.
+The serial need only differ from the previous syllable’s, so that `foreach_syllable` (`hb-ot-layout.hh:169`), which walks forward while the byte stays the same, can see where a syllable ends. The same byte keeps per-syllable lookups inside a syllable ([GSUB](gsub.html#skipping-step-by-step)). A broken cluster also sets a buffer scratch flag, so the dotted-circle step can skip buffers with none.
 
 Some syllables of different types:
 
@@ -172,7 +172,7 @@ A consonant syllable, a vowel syllable, and a standalone cluster are reordered a
 
 ### A limit on syllable length
 
-`foreach_syllable` never returns a syllable longer than `HB_MAX_SYLLABLE_LENGTH`, 64 glyphs (`hb-limits.hh:62`, used at `hb-ot-layout.hh:174`); a longer one is reordered in pieces, each treated as a syllable. With 32 TAs joined by viramas, then KA and vowel sign I (66 characters), `full.ttf` put the vowel sign just before KA, and left the 32nd TA, the first piece’s base, full with a visible virama (tried, not shown). So a branch for syllables over 127 glyphs (`hb-ot-shaper-indic.cc:810`) is never taken (inferred).
+`foreach_syllable` never returns a syllable longer than `HB_MAX_SYLLABLE_LENGTH`, 64 glyphs (`hb-limits.hh:66`, used at `hb-ot-layout.hh:180`); a longer one is reordered in pieces, each treated as a syllable. With 32 TAs joined by viramas, then KA and vowel sign I (66 characters), `full.ttf` put the vowel sign just before KA, and left the 32nd TA, the first piece’s base, full with a visible virama (tried, not shown). So a branch for syllables over 127 glyphs (`hb-ot-shaper-indic.cc:813`) is never taken (inferred).
 
 ## Features and stages
 
@@ -193,7 +193,7 @@ The basic features are “applied in order, one at a time” (`:174`), each seei
 
 In consonant + virama + consonant, the second consonant may take a below-base form (RA as rakar), a post-base form, or a pre-base-reordering form; or the first may become a half form on the second as base. Which, for each consonant, is the font designer’s choice. HarfBuzz asks the font.
 
-The plan keeps, for each of `rphf`, `pref`, `blwf`, `pstf`, and `vatu`, the lookups of that feature’s stage, which are exactly that feature’s lookups (`hb_indic_would_substitute_feature_t`, `:90`; `data_create_indic`, `:341`). Its `would_substitute` asks whether any would substitute a given glyph sequence, through `hb_ot_layout_lookup_would_substitute_with_buffer`, which leaves the glyphs alone and charges the buffer’s operation budget. At the start of the initial reordering, `update_consonant_positions_indic` (`:437`) asks it about every glyph still at `BASE_C` (`consonant_position_from_face`, `:361`):
+The plan keeps, for each of `rphf`, `pref`, `blwf`, `pstf`, and `vatu`, the lookups of that feature’s stage, which are exactly that feature’s lookups (`hb_indic_would_substitute_feature_t`, `:90`; `data_create_indic`, `:341`). Its `would_substitute` asks whether any would substitute a given glyph sequence, through `hb_ot_layout_lookup_would_substitute_with_buffer`, which leaves the glyphs alone and charges the buffer’s operation budget. At the start of the initial reordering, `update_consonant_positions_indic` (`:440`) asks it about every glyph still at `BASE_C` (`consonant_position_from_face`, `:361`):
 
 ```c++
 hb_codepoint_t glyphs[3] = {virama, consonant, virama};
@@ -213,7 +213,7 @@ return POS_BASE_C;
 
 A consonant is below-base if `blwf` or `vatu` would substitute virama + consonant, post-base if `pstf` or `pref` would, and a possible base otherwise. Each question is asked in the new model’s order and the old one’s, because “some broken fonts (like Free Sans) simply copied lookups from old-spec to new-spec without modification. And oddly enough, Uniscribe seems to respect those lookups.”
 
-The consonant is the buffer’s glyph after `locl` and `ccmp`, but the virama is the `cmap`’s, so a font whose `locl` replaces the virama is asked about the wrong one. With `zero_context` (`:340`), a chaining rule with any backtrack or lookahead doesn’t count (`hb-ot-layout-gsubgpos.hh:4559`). It is set for the new model, except in Malayalam:
+The consonant is the buffer’s glyph after `locl` and `ccmp`, but the virama is the `cmap`’s, so a font whose `locl` replaces the virama is asked about the wrong one. With `zero_context` (`:340`), a chaining rule with any backtrack or lookahead doesn’t count (`hb-ot-layout-gsubgpos.hh:4741`). It is set for the new model, except in Malayalam:
 
 > testing with Malayalam shows that old and new spec both allow context. Testing with Bengali new-spec however shows that it doesn’t. So, the heuristic here is the way it is. It should *only* be changed, as we discover more cases of what Windows does. DON’T TOUCH OTHERWISE.
 
@@ -232,11 +232,11 @@ In `full.ttf`, `blwf` makes RA below-base, so KA is the base: the vowel sign goe
 
 ## Initial reordering
 
-`initial_reordering_indic` (`:974`) updates the consonant positions, inserts dotted circles into broken clusters, and reorders every syllable but symbol and non-Indic ones with `initial_reordering_consonant_syllable` (`:463`), whose comments quote Microsoft’s Devanagari specification step by step.
+`initial_reordering_indic` (`:977`) updates the consonant positions, inserts dotted circles into broken clusters, and reorders every syllable but symbol and non-Indic ones with `initial_reordering_consonant_syllable` (`:466`), whose comments quote Microsoft’s Devanagari specification step by step.
 
 ### The reph
 
-In the implicit mode, a reph needs RA + virama at the start, not followed by a joiner, and an `rphf` mask bit, which exists only if the font has the feature. Then the `rphf` probe is asked about the two glyphs (`:507`):
+In the implicit mode, a reph needs RA + virama at the start, not followed by a joiner, and an `rphf` mask bit, which exists only if the font has the feature. Then the `rphf` probe is asked about the two glyphs (`:510`):
 
 ```c++
 if (indic_plan->rphf.would_substitute (glyphs, 2, face, buffer) || …)
@@ -249,9 +249,9 @@ if (indic_plan->rphf.would_substitute (glyphs, 2, face, buffer) || …)
 }
 ```
 
-(trimmed). If it would, `limit` keeps the RA and virama out of the base search. A Malayalam dot reph is set aside without asking. If the RA is the only consonant, it is the base after all (`:590`).
+(trimmed). If it would, `limit` keeps the RA and virama out of the base search. A Malayalam dot reph is set aside without asking. If the RA is the only consonant, it is the base after all (`:593`).
 
-In Telugu’s explicit mode the reph is RA + virama + ZWJ, and the probe is asked about two glyphs or three. Kannada’s mode is implicit, but “for compatibility with legacy usage in Kannada, Ra+h+ZWJ must behave like Ra+ZWJ+h”: the shaper swaps the ZWJ and virama (`:475`, issue #435), and the probe is then asked about RA + ZWJ. `scripts.ttf` has a reph and a below-base KA in both scripts:
+In Telugu’s explicit mode the reph is RA + virama + ZWJ, and the probe is asked about two glyphs or three. Kannada’s mode is implicit, but “for compatibility with legacy usage in Kannada, Ra+h+ZWJ must behave like Ra+ZWJ+h”: the shaper swaps the ZWJ and virama (`:478`, issue #435), and the probe is then asked about RA + ZWJ. `scripts.ttf` has a reph and a below-base KA in both scripts:
 
 ```shape
 scripts.ttf  ర\u0C4Dక  --language=te
@@ -271,7 +271,7 @@ full.ttf  र\u094D\u25CC  --language=hi
 
 ### Finding the base
 
-Then the base search, from the end of the syllable backwards (`:540`):
+Then the base search, from the end of the syllable backwards (`:543`):
 
 ```c++
 unsigned int i = end;
@@ -320,17 +320,17 @@ Without the ZWJ, YA is the base under a reph; with it, RA is the base, with ya-p
 
 ### Positions, and the sort
 
-Glyphs before the base get at most `POS_PRE_C`, the base `POS_BASE_C`, the reph’s RA `POS_RA_TO_BECOME_REPH` (`:631`). The old model then moves its virama ([Old and new Indic tags](choosing-a-script-shaper.html#old-and-new-indic-tags)).
+Glyphs before the base get at most `POS_PRE_C`, the base `POS_BASE_C`, the reph’s RA `POS_RA_TO_BECOME_REPH` (`:634`). The old model then moves its virama ([Old and new Indic tags](choosing-a-script-shaper.html#old-and-new-indic-tags)).
 
-Marks with no place of their own, joiners, nuktas, register shifters, medials, and viramas, take the position of the glyph before them (`:691`), so a nukta sorts with its consonant and a virama with the consonant it kills. But a virama after a left vowel sign takes the position of what preceded the vowel sign: “Uniscribe doesn’t move the Halant with Left Matra”. Each post-base consonant takes everything since the last consonant or vowel sign before it (`:722`).
+Marks with no place of their own, joiners, nuktas, register shifters, medials, and viramas, take the position of the glyph before them (`:694`), so a nukta sorts with its consonant and a virama with the consonant it kills. But a virama after a left vowel sign takes the position of what preceded the vowel sign: “Uniscribe doesn’t move the Halant with Left Matra”. Each post-base consonant takes everything since the last consonant or vowel sign before it (`:725`).
 
-Then `hb_stable_sort` sorts the syllable by position (`:743`): “Sit tight, rock ’n roll!” A stable sort would leave several left vowel signs in typed order, the first typed furthest left; the code reverses the run, keeping each with its own nukta and virama, so the last typed is furthest from the base (`:764`, issue #3863).
+Then `hb_stable_sort` sorts the syllable by position (`:746`): “Sit tight, rock ’n roll!” A stable sort would leave several left vowel signs in typed order, the first typed furthest left; the code reverses the run, keeping each with its own nukta and virama, so the last typed is furthest from the base (`:767`, issue #3863).
 
-Clusters are merged only from the base on. The `syllable` byte is borrowed to hold each glyph’s original index, and each cycle of the permutation has its span merged (`:815`). Before the base, merging waits for the final reordering, which moves pre-base vowel signs again: “these two merge-clusters from the two sides of base will interlock to merge things correctly” (issue #2272). The old model merges everything from the base to the end.
+Clusters are merged only from the base on. The `syllable` byte is borrowed to hold each glyph’s original index, and each cycle of the permutation has its span merged (`:818`). Before the base, merging waits for the final reordering, which moves pre-base vowel signs again: “these two merge-clusters from the two sides of base will interlock to merge things correctly” (issue #2272). The old model merges everything from the base to the end.
 
 ### Masks
 
-Last, the masks (`:840`), which tell the basic features which glyph is which:
+Last, the masks (`:843`), which tell the basic features which glyph is which:
 
 | Glyphs | Masks |
 |---|---|
@@ -340,7 +340,7 @@ Last, the masks (`:840`), which tell the basic features which glyph is which:
 | after the base | `blwf`, `abvf`, and `pstf` |
 | the first virama + consonant pair after the base that `pref` would substitute | `pref` |
 
-In Telugu and Kannada (“post only”), a consonant before the base never takes a below-base form. In old-model Devanagari, RA + virama before the base gets `blwf` too, unless a ZWJ follows: that is “the correct way to request eyelash form of Ra” (`:866`). A ZWNJ clears `half` from the glyphs back to the previous consonant (`:916`); ZWJ and ZWNJ stop `cjct` “by being there”, since `cjct` doesn’t pass over them. Here virama + ZWNJ also ends KA’s syllable, and ZWJ asks for the half form explicitly:
+In Telugu and Kannada (“post only”), a consonant before the base never takes a below-base form. In old-model Devanagari, RA + virama before the base gets `blwf` too, unless a ZWJ follows: that is “the correct way to request eyelash form of Ra” (`:869`). A ZWNJ clears `half` from the glyphs back to the previous consonant (`:919`); ZWJ and ZWNJ stop `cjct` “by being there”, since `cjct` doesn’t pass over them. Here virama + ZWNJ also ends KA’s syllable, and ZWJ asks for the half form explicitly:
 
 ```shape
 full.ttf  क\u094Dत  --language=hi
@@ -372,11 +372,11 @@ The vowel sign is sorted to the front, its cluster not yet merged; the final reo
 
 ## Final reordering
 
-`final_reordering_indic` (`:1444`) runs after `cjct`, on glyphs the basic features have changed. Positions still match the glyph order, but categories may no longer fit, so `final_reordering_syllable_indic` (`:999`) first repairs one sure case: the virama glyph, ligated and then multiplied, gets category `H` back. Afterward `indic_category` and `indic_position` are released.
+`final_reordering_indic` (`:1457`) runs after `cjct`, on glyphs the basic features have changed. Positions still match the glyph order, but categories may no longer fit, so `final_reordering_syllable_indic` (`:1007`) first repairs one sure case: the virama glyph, ligated and then multiplied, gets category `H` back. Afterward `indic_category` and `indic_position` are released.
 
 ### The base again
 
-The base is the first glyph at `BASE_C` or later (`:1041`). If a glyph after it has the `pref` mask but wasn’t ligated, “this was a ‘pref’ candidate but didn’t form any. Base is around here...”, and that consonant becomes the base. In Malayalam, so does a below-base consonant whose virama is still there: “skip over unformed below- (but NOT post-) forms” (`:1067`). A base that lands on a nukta or virama steps back.
+The base is the first glyph at `BASE_C` or later (`:1049`). If a glyph after it has the `pref` mask but wasn’t ligated, “this was a ‘pref’ candidate but didn’t form any. Base is around here...”, and that consonant becomes the base. In Malayalam, so does a below-base consonant whose virama is still there: “skip over unformed below- (but NOT post-) forms” (`:1075`). A base that lands on a nukta or virama steps back.
 
 Malayalam’s probes count contextual rules, so a promised form may not form. In `scripts.ttf`, `ignore` rules block LA’s below-base form after KA and RA’s `pref` form after TA:
 
@@ -391,14 +391,14 @@ Where a form is blocked, its consonant becomes the base, and vowel sign E goes b
 
 ### Pre-base vowel signs
 
-A pre-base vowel sign moves from the front to “after last standalone halant glyph, after initial matra position and before the main consonant” (`:1100`): after the last virama that wasn’t ligated into a half form. Half forms stay after the vowel sign:
+A pre-base vowel sign moves from the front to “after last standalone halant glyph, after initial matra position and before the main consonant” (`:1108`): after the last virama that wasn’t ligated into a half form. Half forms stay after the vowel sign:
 
 ```shape
 no-blwf.ttf  क\u094Dर\u093F  --language=hi
 no-blwf-half.ttf  क\u094Dर\u093F  --language=hi
 ```
 
-The specification adds “If ZWJ or ZWNJ follow this halant, position is moved after it.” That code is in an `#if 0`: testing with Windows 7 showed that the vowel sign doesn’t pass a virama + ZWJ, and the search goes on before it, while a ZWNJ has already ended the syllable (issue #1070). The move then merges clusters up to the base. Malayalam and Tamil skip the search and put the vowel sign, and a `pref` form (`:1394`), straight before the base, as their `half` glyphs are “Chillus or ligated explicit viramas. We want to position matra after them” (`:1133`). Here NA’s half form is a **chillu**, a consonant without its vowel, written as a letter of its own:
+The specification adds “If ZWJ or ZWNJ follow this halant, position is moved after it.” That code is in an `#if 0`: testing with Windows 7 showed that the vowel sign doesn’t pass a virama + ZWJ, and the search goes on before it, while a ZWNJ has already ended the syllable (issue #1070). The move then merges clusters up to the base. Malayalam and Tamil skip the search and put the vowel sign, and a `pref` form (`:1402`), straight before the base, as their `half` glyphs are “Chillus or ligated explicit viramas. We want to position matra after them” (`:1141`). Here NA’s half form is a **chillu**, a consonant without its vowel, written as a letter of its own:
 
 ```shape
 scripts.ttf  ന\u0D4Dക\u0D46  --language=ml
@@ -406,7 +406,7 @@ scripts.ttf  ന\u0D4Dക\u0D46  --language=ml
 
 ### The reph
 
-The reph moves only if it formed (`:1229`). The test is an exclusive or:
+The reph moves only if it formed (`:1237`). The test is an exclusive or:
 
 ```c++
 if (start + 1 < end &&
@@ -451,7 +451,7 @@ scripts.ttf  \u0D4Eക\u0D3E  --language=ml
 
 ### Pre-base-reordering consonants
 
-A **pre-base-reordering consonant** follows the base in the text but is drawn before it, as Malayalam’s RA after a virama is. `pref` makes its form, and the final reordering moves it if it ligated (“We don’t check that the <pref> feature actually did it...”, `:1370`), to where a pre-base vowel sign would go. `pref.ttf` gives Devanagari YA such a form, which no Devanagari font needs but the shaper allows:
+A **pre-base-reordering consonant** follows the base in the text but is drawn before it, as Malayalam’s RA after a virama is. `pref` makes its form, and the final reordering moves it if it ligated (“We don’t check that the <pref> feature actually did it...”, `:1378`), to where a pre-base vowel sign would go. `pref.ttf` gives Devanagari YA such a form, which no Devanagari font needs but the shaper allows:
 
 ```shape
 full.ttf  क\u094Dय  --language=hi
@@ -473,7 +473,7 @@ to: end reordering indic final
 
 ### `init`
 
-Last, a pre-base vowel sign starting a word gets the `init` mask (`:1431`): at the start of the buffer, or after a glyph whose general category is none of the letters, the marks, `Cf`, `Cn`, `Co`, and `Cs`:
+Last, a pre-base vowel sign starting a word gets the `init` mask (`:1439`): after a glyph whose general category is none of the letters, the marks, `Cf`, `Cn`, `Co`, and `Cs`, or at the start of the buffer, unless the character just before it in the pre-context is one of those:
 
 ```shape
 full.ttf  क\u093F  --language=hi
@@ -482,13 +482,11 @@ full.ttf  \u0020क\u093F  --language=hi
 full.ttf  क\u093F  --language=hi  --text-before=क
 ```
 
-After KA it isn’t initial, and the two syllables become unsafe to break between. In the last line the earlier KA is given as pre-context, and the vowel sign is initial again: the test looks only inside the buffer. An application that splits a word into two runs, for a change of color say, gets the initial form mid-word even if it passes the first as context. That may be unintended (inferred: the source gives no reason, and the Arabic shaper’s joining does read context).
-
-> Since {{hb}}: fixed on HarfBuzz main by [#6713](https://github.com/harfbuzz/harfbuzz/pull/6713) (17 November 2026), so main reads the pre-context, and in the last line the vowel sign isn’t initial.
+After KA it isn’t initial, and the two syllables become unsafe to break between. In the last line the earlier KA is given as pre-context, and the vowel sign isn’t initial either, so an application that splits a word into two runs, for a change of color say, and passes the first as context, gets the same form as from one run. Only the nearest character of the pre-context counts. Before 15.2.0 the test looked only inside the buffer, and the last line was initial ([HHW-22](bugs-this-book-found.html#hhw-22)).
 
 ## The old model
 
-The old model’s virama move ([Choosing a script shaper](choosing-a-script-shaper.html#old-and-new-indic-tags)) takes the first virama after the base to after the last consonant (`:669`): KA, virama, RA, virama, with RA below-base, becomes KA, RA, virama, virama, except in Kannada. The old model also differs in three ways, all met above: its probes count contextual rules; glyphs before the base get no `blwf` mask, except Devanagari RA + virama; and after the sort everything from the base on is one cluster, because “we move halants around”.
+The old model’s virama move ([Choosing a script shaper](choosing-a-script-shaper.html#old-and-new-indic-tags)) takes the first virama after the base to after the last consonant (`:672`): KA, virama, RA, virama, with RA below-base, becomes KA, RA, virama, virama, except in Kannada. The old model also differs in three ways, all met above: its probes count contextual rules; glyphs before the base get no `blwf` mask, except Devanagari RA + virama; and after the sort everything from the base on is one cluster, because “we move halants around”.
 
 ## Script by script
 
@@ -496,15 +494,15 @@ The rules that apply to one script or two, with where each is:
 
 | Script | Rule | Where |
 |---|---|---|
-| Devanagari | old model: RA + virama before the base gets `blwf`, unless ZWJ follows | `:866` |
-| Devanagari, Bengali | RRA (U+0931), and Bengali RRA and RHA, aren’t decomposed (issue #779); Bengali YA + nukta is recomposed to U+09DF, though Unicode excludes it | `:1481`, `:1516` |
-| Bengali | RA + ZWJ + virama + YA: RA is the base, YA ya-phalaa | `:572` |
-| Gurmukhi | U+0A40 VOWEL SIGN II is `MPst`, so a bindi may come before it, and sorts with it (`sm? MPst` in the grammar) | `gen-indic-table.py:255`; `:713` |
+| Devanagari | old model: RA + virama before the base gets `blwf`, unless ZWJ follows | `:869` |
+| Devanagari, Bengali | RRA (U+0931), and Bengali RRA and RHA, aren’t decomposed (issue #779); Bengali YA + nukta is recomposed to U+09DF, though Unicode excludes it | `:1494`, `:1529` |
+| Bengali | RA + ZWJ + virama + YA: RA is the base, YA ya-phalaa | `:575` |
+| Gurmukhi | U+0A40 VOWEL SIGN II is `MPst`, so a bindi may come before it, and sorts with it (`sm? MPst` in the grammar) | `gen-indic-table.py:255`; `:716` |
 | Gurmukhi | U+0A51 UDAAT is a vowel sign at `BELOW_C` (issue #524) | `gen-indic-table.py:292`, `:388` |
-| Tamil | pre-base vowel signs and `pref` forms go straight before the base; Tamil AU isn’t decomposed | `:1133`, `:1394`, `:1485` |
-| Telugu | reph only with ZWJ; no below-base forms before the base | `:511`, `:850` |
-| Kannada | RA + virama + ZWJ becomes RA + ZWJ + virama; no below-base forms before the base; the old model’s virama stays before a final virama | `:475`, `:850`, `:671` |
-| Malayalam | the dot reph; contextual rules count in the probes; unformed below-base forms make a new base; pre-base glyphs straight before the base | `:529`, `:340`, `:1067`, `:1133` |
+| Tamil | pre-base vowel signs and `pref` forms go straight before the base; Tamil AU isn’t decomposed | `:1141`, `:1402`, `:1498` |
+| Telugu | reph only with ZWJ; no below-base forms before the base | `:514`, `:853` |
+| Kannada | RA + virama + ZWJ becomes RA + ZWJ + virama; no below-base forms before the base; the old model’s virama stays before a final virama | `:478`, `:853`, `:674` |
+| Malayalam | the dot reph; contextual rules count in the probes; unformed below-base forms make a new base; pre-base glyphs straight before the base | `:532`, `:340`, `:1075`, `:1141` |
 
 ## Uniscribe
 
@@ -514,10 +512,10 @@ Microsoft’s specifications say what Uniscribe was meant to do; fonts were test
 |---|---|
 | `consonant_position_from_face`, `:367` | asks the probes in both orders, because Uniscribe honors old-order lookups in new-model fonts |
 | `data_create_indic`, `:331` | uses zero-context probes except for Malayalam and the old model, from testing what Windows does |
-| initial reordering, `:641` | moves the old model’s virama unconditionally, except in Kannada, where “Uniscribe does this only if there is *not* a Halant after last consonant already” |
-| initial reordering, `:701` | doesn’t move a virama with a left vowel sign: “Uniscribe doesn’t move the Halant with Left Matra” |
-| final reordering, `:1111` | doesn’t move a pre-base vowel sign past ZWJ, from testing with Windows 7 |
-| final reordering, `:1330` | puts a reph before a final virama only after a vowel sign + virama, “Uniscribe doesn’t do this” otherwise |
+| initial reordering, `:644` | moves the old model’s virama unconditionally, except in Kannada, where “Uniscribe does this only if there is *not* a Halant after last consonant already” |
+| initial reordering, `:704` | doesn’t move a virama with a left vowel sign: “Uniscribe doesn’t move the Halant with Left Matra” |
+| final reordering, `:1119` | doesn’t move a pre-base vowel sign past ZWJ, from testing with Windows 7 |
+| final reordering, `:1338` | puts a reph before a final virama only after a vowel sign + virama, “Uniscribe doesn’t do this” otherwise |
 | `indic_features`, `:192` | applies the presentation features together, for the Windows Bengali font |
 
 `NEWS` for 12.3.0 records the removal of “the disabled by default uniscribe-bug-compatible mode” from the Indic and Khmer shapers. Asking the font goes back to 0.9.6: “Make reph and ‘pref’ logic introspect the font.”

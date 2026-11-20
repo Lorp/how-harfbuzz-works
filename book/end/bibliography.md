@@ -21,13 +21,13 @@
 * IANA, *Language Subtag Registry*: <https://www.iana.org/assignments/language-subtag-registry>
 * W3C, *Compositing and Blending Level 1*, which COLR version 1’s composite modes follow: <https://www.w3.org/TR/compositing-1/>
 * fontTools, `Lib/fontTools/ttLib/tables/otBase.py`: the `USE_HARFBUZZ_REPACKER` option, which writes GSUB and GPOS through HarfBuzz’s repacker by way of uharfbuzz: <https://github.com/fonttools/fonttools/blob/4.38.0/Lib/fontTools/ttLib/tables/otBase.py>
-* HarfBuzz, `docs/serializer.md` and `docs/repacker.md`: <https://github.com/harfbuzz/harfbuzz/tree/15.1.0/docs>
+* HarfBuzz, `docs/serializer.md` and `docs/repacker.md`: <https://github.com/harfbuzz/harfbuzz/tree/15.2.0/docs>
 * Behdad Esfahbod, “HarfBuzz Study: Introducing HarfRust”, 10 June 2025: <https://docs.google.com/document/d/1aH_waagdEM5UhslQxCeFEb82ECBhPlZjy5_MwLNLBYo/preview>
 * HarfRust: <https://github.com/harfbuzz/harfrust>; rustybuzz: <https://github.com/harfbuzz/rustybuzz>; Fontations: <https://github.com/googlefonts/fontations>
 * D. Röttsches, R. Sheeter, C. Brokaw, “Memory safety for web fonts”, Chrome for Developers, 19 March 2025: <https://developer.chrome.com/blog/memory-safety-fonts>
 * The users’ sources read for chapter 42: Chromium (<https://chromium.googlesource.com/chromium/src/>), Skia (<https://github.com/google/skia>), Firefox (<https://github.com/mozilla-firefox/firefox>), Android (<https://android.googlesource.com/>), Pango (<https://github.com/GNOME/pango>), LibreOffice (<https://github.com/LibreOffice/core>), Qt (<https://github.com/qt/qtbase>), OpenJDK and JEP 258 (<https://github.com/openjdk/jdk>, <https://openjdk.org/jeps/258>), Godot (<https://github.com/godotengine/godot>); harfbuzzjs (<https://github.com/harfbuzz/harfbuzzjs>) and uharfbuzz (<https://github.com/harfbuzz/uharfbuzz>)
 * fontTools, `varLib.instancer` and its `solver.py`, which HarfBuzz’s instancer ports, and `varLib/iup.py`: <https://github.com/fonttools/fonttools/tree/main/Lib/fontTools/varLib/instancer>
-* HarfBuzz, `AVAR2-INSTANCING.md`: <https://github.com/harfbuzz/harfbuzz/blob/15.1.0/AVAR2-INSTANCING.md>
+* HarfBuzz, `AVAR2-INSTANCING.md`: <https://github.com/harfbuzz/harfbuzz/blob/15.2.0/AVAR2-INSTANCING.md>
 * Unicode, UAX #14, *Unicode Line Breaking Algorithm*: <https://www.unicode.org/reports/tr14/>
 * Microsoft, OpenType specification, the MATH, BASE, STAT, `name`, `meta`, and OS/2 chapters, and the baseline tag registry: <https://learn.microsoft.com/en-us/typography/opentype/spec/>
 * W3C, *CSS Inline Layout Module Level 3*, baseline synthesis: <https://www.w3.org/TR/css-inline-3/>

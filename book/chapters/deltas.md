@@ -6,7 +6,7 @@ A position in the design space, as [the previous chapter](design-space.html) sho
 
 A delta belongs to a **region**: for each axis, a start, a peak, and an end, in normalized coordinates. At the peak, the delta counts in full. Between the start and the peak, and between the peak and the end, it counts in proportion. Outside the start and end, it doesn’t count at all. On one axis, that weight, the **scalar**, is a tent. On several, it’s the product of the tents, so a region that peaks at (+1, +1) counts in full only at that corner.
 
-Here is the tent, `VarRegionAxis::evaluate` (`hb-ot-layout-common.hh:2549`):
+Here is the tent, `VarRegionAxis::evaluate` (`hb-ot-layout-common.hh:2608`):
 
 ```c++
 float evaluate (int coord) const
@@ -61,13 +61,13 @@ variations/var.ttf  I  --variations=wght=900
 
 Regions and deltas are kept in an **item variation store**, a structure shared by every variation table except gvar. It has a list of regions, and one or more `VarData` tables of rows. Each row is one **item**, such as one glyph’s advance or one metric, with a delta for each region the `VarData` uses. To save space, the first columns of a row can be 16-bit and the rest 8-bit, or, with the `LONG_WORDS` bit, 32-bit and 16-bit. An item is addressed by two numbers, *outer* (which `VarData`) and *inner* (which row).
 
-`VarData::_get_delta` (`hb-ot-layout-common.hh:3073`) walks a row in its runs of long, short, and byte values, multiplying each by its region’s scalar and skipping regions whose scalar is 0. A `VarData` with no regions returns at once, with a comment that “This is quite common.”
+`VarData::_get_delta` (`hb-ot-layout-common.hh:3135`) walks a row in its runs of long, short, and byte values, multiplying each by its region’s scalar and skipping regions whose scalar is 0. A `VarData` with no regions returns at once, with a comment that “This is quite common.”
 
 ### No rounding in the store
 
 The store returns a `float`, and never rounds. Rounding is left to whoever asked, and they don’t all do it the same way:
 
-* Advances, from HVAR or VVAR (`hb-ot-hmtx-table.hh:353`) and from phantom points (`OT/glyf/glyf.hh:492`), are rounded **in font units**, before the font’s size is applied.
+* Advances, from HVAR or VVAR (`hb-ot-hmtx-table.hh:353`) and from phantom points (`OT/glyf/glyf.hh:513`), are rounded **in font units**, before the font’s size is applied.
 * MVAR metrics, device tables and VORG are scaled first and rounded after.
 
 So an advance is always a whole number of font units, even when the text is enormous. At a weight where `I`’s exact advance is 345.2 units, a font size 100 times its units per em gives 34500, not 34520:
@@ -82,15 +82,15 @@ The addition itself is in floating point, too: the advance from `hmtx` plus the 
 
 ### The scalar cache
 
-A glyph’s advance usually depends on only a few regions, but a run of text asks for many glyphs, at the same position. So HarfBuzz keeps a cache of region scalars, `hb_scalar_cache_t` (`hb-ot-layout-common.hh:2637`): one float per region, with NaN meaning “not worked out yet”. The values are stored as relaxed atomics. A scalar depends only on the region and the position, so two threads that fill in the same entry at once write the same number, and no lock is needed.
+A glyph’s advance usually depends on only a few regions, but a run of text asks for many glyphs, at the same position. So HarfBuzz keeps a cache of region scalars, `hb_scalar_cache_t` (`hb-ot-layout-common.hh:2696`): one float per region, with NaN meaning “not worked out yet”. The values are stored as relaxed atomics. A scalar depends only on the region and the position, so two threads that fill in the same entry at once write the same number, and no lock is needed.
 
-That matters for GPOS. The cache used for GDEF’s store, which holds the deltas for GPOS device tables and anchors, is the OpenType shaper’s per-font data (`hb-ot-shape.cc:433`), shared by every shaping call on that font at once. The caches in HarfBuzz’s font functions, for advances and outlines, are handed to one caller at a time and thrown away when the position changes, as the previous chapter showed.
+That matters for GPOS. The cache used for GDEF’s store, which holds the deltas for GPOS device tables and anchors, is the OpenType shaper’s per-font data (`hb-ot-shape.cc:432`), shared by every shaping call on that font at once. The caches in HarfBuzz’s font functions, for advances and outlines, are handed to one caller at a time and thrown away when the position changes, as the previous chapter showed.
 
 If memory runs out, `create` returns the shared empty cache, and an empty cache answers 0 for every region. Variations quietly disappear: the font behaves as if it were at its default.
 
 ### Index maps
 
-A table that needs many items can address them through a **delta-set index map**, `DeltaSetIndexMap` (`hb-ot-layout-common.hh:4015`), which maps item numbers (glyph IDs, for HVAR) to outer and inner indices. HarfBuzz follows the specification where it says what to do: an index past the end of the map uses the last entry (`if (v >= mapCount) v = mapCount - 1;`). Where it doesn’t say, HarfBuzz chooses to keep going: a map with no entries, and a map in a format HarfBuzz doesn’t know, pass the index through unchanged, and an unknown format even passes the sanitizer.
+A table that needs many items can address them through a **delta-set index map**, `DeltaSetIndexMap` (`hb-ot-layout-common.hh:4088`), which maps item numbers (glyph IDs, for HVAR) to outer and inner indices. HarfBuzz follows the specification where it says what to do: an index past the end of the map uses the last entry (`if (v >= mapCount) v = mapCount - 1;`). Where it doesn’t say, HarfBuzz chooses to keep going: a map with no entries, and a map in a format HarfBuzz doesn’t know, pass the index through unchanged, and an unknown format even passes the sanitizer.
 
 Without a map, HVAR’s glyph *n* is outer 0, inner *n*. `get_advance_delta_unscaled` (`hb-ot-var-hvar-table.hh:436`) has a guard for fonts with more than 65,536 glyphs: “An oversized glyph id must not select another table.” Without it, glyph 65,536 would become outer 1, inner 0.
 
@@ -164,7 +164,7 @@ The same store, read the same way, serves almost every other variable table:
 | avar version 2 | the axes themselves (see [Design space](design-space.html)) |
 | CFF2 | blends in outlines, which use only the store’s region scalars, not its deltas |
 
-VARC uses a variant, the **multiple item variation store**, whose items are lists of deltas rather than single numbers, and whose regions name only the axes they use. It is in the 2026 ISO standard, not in Microsoft’s 1.9.1, and it comes up again in [Variable components](variable-components.html). One detail belongs here. An ordinary store applies no deltas at the default (`ItemVarStoreInstancer`: “treat explicit all-zero coordinates as the default instance, which uses unadjusted values (OFF 7.1)”, `hb-ot-layout-common.hh:4219`). The multiple store does, because a region that names no axes has a scalar of 1 everywhere, even at the default.
+VARC uses a variant, the **multiple item variation store**, whose items are lists of deltas rather than single numbers, and whose regions name only the axes they use. It is in the 2026 ISO standard, not in Microsoft’s 1.9.1, and it comes up again in [Variable components](variable-components.html). One detail belongs here. An ordinary store applies no deltas at the default (`ItemVarStoreInstancer`: “treat explicit all-zero coordinates as the default instance, which uses unadjusted values (OFF 7.1)”, `hb-ot-layout-common.hh:4292`). The multiple store does, because a region that names no axes has a scalar of 1 everywhere, even at the default.
 
 ## Where to read the source
 

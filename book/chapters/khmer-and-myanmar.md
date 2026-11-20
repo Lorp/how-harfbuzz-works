@@ -101,14 +101,14 @@ The basic features have mask bits, and the reordering sets them. `cfar`, “Conj
 
 ### Reordering
 
-`reorder_khmer` (`:302`) inserts dotted circles, then calls `reorder_consonant_syllable` (`:206`) on every consonant syllable and broken cluster. Its comment cites Microsoft’s Devanagari specification, but the steps quoted inside are the Khmer specification’s. It does three things.
+`reorder_khmer` (`:305`) inserts dotted circles, then calls `reorder_consonant_syllable` (`:209`) on every consonant syllable and broken cluster. Its comment cites Microsoft’s Devanagari specification, but the steps quoted inside are the Khmer specification’s. It does three things.
 
 **Masks.** Every glyph after the first gets `blwf`, `abvf`, and `pstf`. The specification gives each subscript one of the three, by its subscript type; HarfBuzz lets the font’s lookups choose, by which glyphs they match.
 
-**COENG + RO.** A COENG followed by RO is moved, with the RO, to the start of the syllable, and the two get the `pref` mask (`:239`):
+**COENG + RO.** A COENG followed by RO is moved, with the RO, to the start of the syllable, and the two get the `pref` mask (`:242`):
 
 ```c++
-if (info[i].khmer_category() == K_Cat(H) && num_coengs <= 2 && i + 1 < end)
+if (info[i].khmer_category() == K_Cat(H) && num_coengs < 2 && i + 1 < end)
 {
   num_coengs++;
 
@@ -168,7 +168,7 @@ khmer-late.ttf  ង\u17D2រ\u17D2គ  --language=km
 
 ### Split vowels
 
-Five vowel signs, U+17BE, U+17BF, U+17C0, U+17C4, and U+17C5, are written in two parts, the first like U+17C1 KHMER VOWEL SIGN E, before the consonant. Unicode doesn’t decompose them. HarfBuzz’s `decompose_khmer` (`:326`) does, into U+17C1 followed by the sign itself, and `compose_khmer` won’t put them back together ([The shapers’ compose and decompose](normalization.html#the-shapers-compose-and-decompose)). U+17C1 is a `VPre`, so the reordering moves it; the sign that is left stands for its own second part, and a font’s `abvf` or `pstf` replaces the whole sign’s glyph with that part, as the Khmer specification says:
+Five vowel signs, U+17BE, U+17BF, U+17C0, U+17C4, and U+17C5, are written in two parts, the first like U+17C1 KHMER VOWEL SIGN E, before the consonant. Unicode doesn’t decompose them. HarfBuzz’s `decompose_khmer` (`:329`) does, into U+17C1 followed by the sign itself, and `compose_khmer` won’t put them back together ([The shapers’ compose and decompose](normalization.html#the-shapers-compose-and-decompose)). U+17C1 is a `VPre`, so the reordering moves it; the sign that is left stands for its own second part, and a font’s `abvf` or `pstf` replaces the whole sign’s glyph with that part, as the Khmer specification says:
 
 ```shape
 khmer.ttf  ក\u17BE  --language=km
@@ -192,15 +192,16 @@ The KA is in the next syllable, and the rule still matches. In the Indic shaper,
 
 ### The subscript count
 
-The test `num_coengs <= 2` is meant to apply the specification’s rule, quoted in the comment above it: a COENG is handled “(and subscript count is less than two)”. But the counter starts at zero and is checked before it is incremented, so a third COENG passes too. And after a COENG + RO the code sets the counter to 2, “Done”, which the next COENG still passes. So a second COENG + RO in one syllable is moved as well, in front of the first:
+The test `num_coengs < 2` applies the specification’s rule, quoted in the comment above it: a COENG is handled “(and subscript count is less than two)”. The counter starts at zero and is checked before it is incremented, so the first and second COENG pass, and after a COENG + RO the code sets the counter to 2, “Done”, so that no later COENG does. So one COENG + RO is moved, and only if it is the first or second COENG of the syllable:
 
 ```shape
+khmer.ttf  ក\u17D2ក\u17D2រ  --language=km
 khmer.ttf  ក\u17D2រ\u17D2រ  --language=km
 khmer.ttf  ក\u17D2ក\u17D2ក\u17D2រ  --language=km
 khmer.ttf  ក\u17D2ក\u17D2ក\u17D2ក\u17D2រ  --language=km
 ```
 
-Two subscript ROs are not good Khmer, and the grammar allows any number of subscripts where the specification allows two, so this only matters for text that is wrong already. Whether Uniscribe did the same isn’t recorded; the comment “Done” suggests the loop was meant to stop (inferred). In the last line the fourth COENG + RO is neither moved nor given `pref`, and is left as COENG and a full RO.
+In the first line the COENG + RO is the second, and is moved. In the second, the first is moved and the second COENG + RO is left as COENG and a full RO, after the base; in the last two it is the third or fourth, and is neither moved nor given `pref`. Two subscript ROs, or more than two subscripts, are not good Khmer, and the grammar allows any number of subscripts where the specification allows two, so this only matters for text that is wrong already. Before 15.2.0 the test was `num_coengs <= 2`, which let a third COENG pass, and a second COENG + RO was moved in front of the first ([HHW-29](bugs-this-book-found.html#hhw-29)).
 
 ## Myanmar
 
@@ -258,20 +259,20 @@ A **kinzi** is NGA (or RA, or MON NGA) + ASAT + VIRAMA before a consonant, which
 
 ### Features and stages
 
-`collect_features_myanmar` (`:111`) is close to the Indic shaper’s: find syllables; `locl` and `ccmp`, per syllable (“The Indic specs do not require ccmp, but we apply it here since if there is a use of it, it’s typically at the beginning”); reorder; then `rphf`, `pref`, `blwf`, and `pstf`, each with a pause after it, “applied in order, one at a time”; clear the syllables; then `pres`, `abvs`, `blws`, and `psts`, “all at once”, outside the syllable. [Feature order](feature-order.html#myanmar) lists these stages beside the other shapers’. The basic features are per syllable but global: none has a mask bit, so every glyph of the syllable may take every one of them, and a font’s lookups must say by their own rules which glyphs they apply to. The features have manual ZWJ but not manual ZWNJ, so a ZWNJ in a rule’s context is passed over. There is no `override_features`, so `liga` stays on: `NEWS` for 2.7.3 says “Don’t disable liga feature in myanmar shaper, to match Uniscribe.” Marks are zeroed by their GDEF class before GPOS (`HB_OT_SHAPE_ZERO_WIDTH_MARKS_BY_GDEF_EARLY`, `:361`, [Zeroing marks](fallbacks.html#zeroing-marks)), where Khmer and Indic zero nothing; the specification too says “mark glyphs have their width set to zero by OTLS”.
+`collect_features_myanmar` (`:111`) is close to the Indic shaper’s: find syllables; `locl` and `ccmp`, per syllable (“The Indic specs do not require ccmp, but we apply it here since if there is a use of it, it’s typically at the beginning”); reorder; then `rphf`, `pref`, `blwf`, and `pstf`, each with a pause after it, “applied in order, one at a time”; clear the syllables; then `pres`, `abvs`, `blws`, and `psts`, “all at once”, outside the syllable. [Feature order](feature-order.html#myanmar) lists these stages beside the other shapers’. The basic features are per syllable but global: none has a mask bit, so every glyph of the syllable may take every one of them, and a font’s lookups must say by their own rules which glyphs they apply to. The features have manual ZWJ but not manual ZWNJ, so a ZWNJ in a rule’s context is passed over. There is no `override_features`, so `liga` stays on: `NEWS` for 2.7.3 says “Don’t disable liga feature in myanmar shaper, to match Uniscribe.” Marks are zeroed by their GDEF class before GPOS (`HB_OT_SHAPE_ZERO_WIDTH_MARKS_BY_GDEF_EARLY`, `:364`, [Zeroing marks](fallbacks.html#zeroing-marks)), where Khmer and Indic zero nothing; the specification too says “mark glyphs have their width set to zero by OTLS”.
 
 ### Reordering
 
-`initial_reordering_consonant_syllable` (`:179`) is the only reordering. Its comment cites Microsoft’s Myanmar specification, whose rules are four:
+`initial_reordering_consonant_syllable` (`:182`) is the only reordering. Its comment cites Microsoft’s Myanmar specification, whose rules are four:
 
 > - Kinzi sequences (K) are reordered directly after the cluster base
 > - The medial ra (MR) is reordered before the base consonant
 > - Pre-base vowels (VPre) are reordered to the start of the syllable cluster. A sequence of multiple prebase vowels is permitted. Such sequences are moved as a block to the beginning of the cluster
 > - Anusvara (A) coming immediately after one or more below-base vowels (VBlw) will reorder immediately before them
 
-First the kinzi and the base. If the syllable starts with `Ra`, `As`, `H`, those three are a kinzi: no font is asked, as the Indic shaper asks `rphf` about a reph. The base is the *first* consonant after it (`:203`), where the Indic base search takes the last that has no below-base or post-base form. Myanmar’s stacked consonants always go below the first, so there is nothing to decide.
+First the kinzi and the base. If the syllable starts with `Ra`, `As`, `H`, those three are a kinzi: no font is asked, as the Indic shaper asks `rphf` about a reph. The base is the *first* consonant after it (`:206`), where the Indic base search takes the last that has no below-base or post-base form. Myanmar’s stacked consonants always go below the first, so there is nothing to decide.
 
-Then every glyph gets a position from the Indic list ([Categories and positions](indic-model.html#categories-and-positions)), in a loop that “may be ugly, but it implements all of Myanmar reordering!” (`:213`):
+Then every glyph gets a position from the Indic list ([Categories and positions](indic-model.html#categories-and-positions)), in a loop that “may be ugly, but it implements all of Myanmar reordering!” (`:216`):
 
 | Glyphs | Position |
 |---|---|
@@ -284,7 +285,7 @@ Then every glyph gets a position from the Indic list ([Categories and positions]
 | everything after that | `POS_AFTER_SUB` |
 | a variation selector | the position of the glyph before it |
 
-A stable sort by position follows (`:273`), “Sit tight, rock ’n roll!”, and moving glyphs merges their clusters. Since the kinzi is the first glyph at `POS_AFTER_MAIN`, it lands just after the base, ahead of the stacked consonants. Last, a run of several pre-base vowel signs is reversed, each with its variation selector, as in the Indic shaper (issue #3863).
+A stable sort by position follows (`:276`), “Sit tight, rock ’n roll!”, and moving glyphs merges their clusters. Since the kinzi is the first glyph at `POS_AFTER_MAIN`, it lands just after the base, ahead of the stacked consonants. Last, a run of several pre-base vowel signs is reversed, each with its variation selector, as in the Indic shaper (issue #3863).
 
 Here are GA with a kinzi, KA with medial RA, the same with vowel sign E, and the three together:
 
@@ -353,4 +354,4 @@ myanmar.ttf  \u1031  --language=my
 * Khmer moves COENG + RO and the pre-base vowel signs to the start of the syllable in every font, marks the pair for `pref` and what follows it for `cfar`, and leaves the rest to the font’s lookups. Its split vowels are decomposed by HarfBuzz into vowel sign E and the sign itself.
 * Khmer’s `locl`, `ccmp`, and five basic features share one stage, so their lookups run in LookupList order, because Uniscribe was found to do that. Its presentation features see across syllables.
 * Myanmar takes a kinzi from the start of the syllable without asking the font, makes the first consonant the base, and sorts E, medial RA, the base, and the kinzi into the specification’s order. Its basic features run one at a time, with no masks.
-* The Khmer shaper lets a second COENG + RO and a third subscript through the specification’s limit of two, which only text that is wrong already shows.
+* The Khmer shaper moves only one COENG + RO, and only if it is the first or second subscript, as the specification’s limit of two says.

@@ -10,12 +10,10 @@ The examples use three small test fonts, built from `fonts/dotted-circles-and-br
 
 | | Function | When | Shapers | When it inserts | Checks the font | What it inserts |
 |---|---|---|---|---|---|---|
-| 1 | `hb_insert_dotted_circle` (`hb-ot-shape.cc:552`) | step 3, before `preprocess_text` | all | a mark at the start of a paragraph | yes | the character, with U+25CC’s own properties |
-| 2 | `_hb_preprocess_text_vowel_constraints` (`hb-ot-shaper-vowel-constraints.cc:37`) | `preprocess_text` | Indic, USE | inside a listed sequence of characters | no | the character, copying the next character’s properties |
-| 3 | `preprocess_text_hangul` (`hb-ot-shaper-hangul.cc:232`) | `preprocess_text` | Hangul | a tone mark with no syllable | yes | the character, copying the tone mark’s properties |
+| 1 | `hb_insert_dotted_circle` (`hb-ot-shape.cc:551`) | step 3, before `preprocess_text` | all | a mark at the start of a paragraph | yes | the character, with U+25CC’s own properties |
+| 2 | `_hb_preprocess_text_vowel_constraints` (`hb-ot-shaper-vowel-constraints.cc:62`) | `preprocess_text` | Indic, USE | inside a listed sequence of characters | no | the character, with U+25CC’s own properties |
+| 3 | `preprocess_text_hangul` (`hb-ot-shaper-hangul.cc:232`) | `preprocess_text` | Hangul | a tone mark with no syllable | yes | the character, with U+25CC’s own properties |
 | 4 | `hb_syllabic_insert_dotted_circles` (`hb-ot-shaper-syllabic.cc:33`) | in GSUB, at the first reordering pause | Indic, Khmer, Myanmar, USE | a broken cluster | yes | the glyph, with a category of the shaper’s |
-
-> Since {{hb}}: fixed on HarfBuzz main by [#6710](https://github.com/harfbuzz/harfbuzz/pull/6710) and [#6711](https://github.com/harfbuzz/harfbuzz/pull/6711) (17 November 2026), so on main paths 2 and 3 also give the circle U+25CC’s own properties (the last column of rows 2 and 3).
 
 So the vowel constraints are not a fifth way, beside four others: they are one of the four. No other code in {{hb}} inserts U+25CC. `NEWS` first mentions them in 0.9.4: “Implement dotted-circle insertion.”
 
@@ -23,7 +21,7 @@ All four obey the buffer flag `HB_BUFFER_FLAG_DO_NOT_INSERT_DOTTED_CIRCLE`, new 
 
 ## At the start of a paragraph
 
-The first path is the only one outside the script shapers, and the strictest about when it applies. Here it is whole (`hb-ot-shape.cc:552`):
+The first path is the only one outside the script shapers, and the strictest about when it applies. Here it is whole (`hb-ot-shape.cc:551`):
 
 ```c++
 static void
@@ -96,7 +94,7 @@ Which sequences count as broken is the grammars’ business, and it changes with
 
 ### Where the circle goes
 
-Each shaper calls the same function at the start of its reordering, in the GSUB pause after its first features: Indic in `initial_reordering_indic` (`hb-ot-shaper-indic.cc:983`), Khmer in `reorder_khmer` (`:309`), Myanmar in `reorder_myanmar` (`:330`), and USE in `reorder_use` (`:455`). Trimmed, it is (`hb-ot-shaper-syllabic.cc:33`):
+Each shaper calls the same function at the start of its reordering, in the GSUB pause after its first features: Indic in `initial_reordering_indic` (`hb-ot-shaper-indic.cc:986`), Khmer in `reorder_khmer` (`hb-ot-shaper-khmer.cc:312`), Myanmar in `reorder_myanmar` (`hb-ot-shaper-myanmar.cc:333`), and USE in `reorder_use` (`hb-ot-shaper-use.cc:476`). Trimmed, it is (`hb-ot-shaper-syllabic.cc:33`):
 
 ```c++
   if (unlikely (buffer->flags & HB_BUFFER_FLAG_DO_NOT_INSERT_DOTTED_CIRCLE))
@@ -155,7 +153,7 @@ It walks the buffer once and puts one circle at the start of each broken syllabl
 | Myanmar | `myanmar_broken_cluster` | `DOTTEDCIRCLE` | nothing | none |
 | USE | `use_broken_cluster` | `B` | `R` | none |
 
-The category is the one a typed U+25CC gets from the shaper’s table, a base in every case, so once the circle is in, the broken cluster is reordered like any other syllable with a base. In the Indic shaper it goes through the code for standalone clusters (`:962`, “We already inserted dotted-circles, so just call the standalone_cluster”), and the circle becomes the base. The Indic position `POS_END` differs from the `POS_BASE_C` a typed circle has, but the base search sets the base’s position to `POS_BASE_C` anyway (`:635`).
+The category is the one a typed U+25CC gets from the shaper’s table, a base in every case, so once the circle is in, the broken cluster is reordered like any other syllable with a base. In the Indic shaper it goes through the code for standalone clusters (`hb-ot-shaper-indic.cc:965`, “We already inserted dotted-circles, so just call the standalone_cluster”), and the circle becomes the base. The Indic position `POS_END` differs from the `POS_BASE_C` a typed circle has, but the base search sets the base’s position to `POS_BASE_C` anyway (`:638`).
 
 One lone vowel sign in each script, with and without a circle in the font:
 
@@ -182,7 +180,7 @@ to: end reordering indic initial
 
 ### After the repha
 
-A circle goes after any glyphs at the start of the syllable that have the shaper’s repha category: `Repha` in the Indic shaper, `R` in USE. Both are categories of characters, not of sequences. In the Indic table one character has `Repha`, U+0D4E MALAYALAM LETTER DOT REPH (`hb-ot-shaper-indic-table.cc:96`); in USE, `R` is given to characters whose Indic syllabic category is `Consonant_Preceding_Repha` or `Consonant_Prefixed` (`gen-use-table.py:282`). With the Malayalam glyphs of [the Indic model](indic-model.html)’s `scripts.ttf`, the dot reph is passed over, and then moved after its new base:
+A circle goes after any glyphs at the start of the syllable that have the shaper’s repha category: `Repha` in the Indic shaper, `R` in USE. Both are categories of characters, not of sequences. In the Indic table one character has `Repha`, U+0D4E MALAYALAM LETTER DOT REPH (`hb-ot-shaper-indic-table.cc:96`); in USE, `R` is given to characters whose Indic syllabic category is `Consonant_Preceding_Repha` or `Consonant_Prefixed` (`gen-use-table.py:283`). With the Malayalam glyphs of [the Indic model](indic-model.html)’s `scripts.ttf`, the dot reph is passed over, and then moved after its new base:
 
 ```shape
 indic-model/scripts.ttf  \u0D4E\u0D3E  --language=ml
@@ -199,9 +197,11 @@ universal-shaping-engine/deva3.ttf  र\u094D\u0941  --language=hi
 
 The first line shows RA with a visible virama after the circle, where the second has the reph; it looks like a bug (the comment “Insert dottedcircle after possible Repha” suggests the reph was meant to be kept). When the circle comes in before the shaper looks, from the vowel constraints below, the reph does form on it, and HarfBuzz’s own test, `indic-vowel-letter-spoofing.tests`, expects exactly that for RA, virama, and LETTER I. The third line is USE, under `dev3`, where RA + virama is a syllable of its own, a virama-terminated cluster, so the vowel sign after it is broken by itself and the reph, formed in the first syllable, stays before the circle.
 
+> Since {{hb}}: fixed on HarfBuzz main by [#6830](https://github.com/harfbuzz/harfbuzz/pull/6830) (20 November 2026), so main puts the circle after RA + virama, and the first line has the reph on the circle, as the second does.
+
 ### Clusters
 
-The circle takes the cluster and the mask of the first glyph of the syllable, even when it goes in after a repha, as the second Malayalam line shows: the circle is in cluster 0 with the dot reph, not cluster 1 with the vowel sign. After a space, a vowel sign is a broken cluster in the Indic shaper (USE, as [Spaces as bases](universal-shaping-engine.html#spaces-as-bases) shows, lets it sit on the space):
+The circle takes the cluster and the mask of the first glyph of the syllable, even when it goes in after a repha, as the second Malayalam line shows: the circle is in cluster 0 with the dot reph, not cluster 1 with the vowel sign. After a space, a vowel sign is a broken cluster in the Indic shaper (and in USE, as [Spaces and symbols](universal-shaping-engine.html#spaces-and-symbols) shows):
 
 ```shape
 circle.ttf  क \u093F  --language=hi
@@ -212,7 +212,7 @@ At the default cluster level, the vowel sign was already merged into the space�
 
 ### What the circle is to GDEF
 
-The circle goes in as a glyph ID, after GSUB has begun, so it misses two things every other glyph got. Its Unicode properties are all zero, which reads as general category Cc, a control character, with combining class 0. And its glyph properties are zero, because GDEF classes, or synthesized classes in a font without GDEF, were given out at the start of GSUB (`hb_ot_layout_substitute_start`, and `hb_synthesize_glyph_classes`, `hb-ot-shape.cc:856`), before the pause. So the inserted circle is neither a base nor a mark to HarfBuzz, whatever the font’s GDEF says about the dotted circle glyph, until a substitution replaces it.
+The circle goes in as a glyph ID, after GSUB has begun, so it misses two things every other glyph got. Its Unicode properties are all zero, which reads as general category Cc, a control character, with combining class 0. And its glyph properties are zero, because GDEF classes, or synthesized classes in a font without GDEF, were given out at the start of GSUB (`hb_ot_layout_substitute_start`, and `hb_synthesize_glyph_classes`, `hb-ot-shape.cc:858`), before the pause. So the inserted circle is neither a base nor a mark to HarfBuzz, whatever the font’s GDEF says about the dotted circle glyph, until a substitution replaces it.
 
 That mostly doesn’t matter. GPOS mark attachment looks back for the nearest glyph that isn’t a mark (`MarkBasePosFormat1.hh:105`), and the circle isn’t one, so a mark attaches to it as to a typed circle. The syllabic shapers have no fallback positioning, so without GPOS a mark is left where it is:
 
@@ -242,9 +242,7 @@ hebrew-thai-lao-and-hangul/hangul.ttf  \u302E  --language=ko
 hebrew-thai-lao-and-hangul/hangul.ttf  \u302E  --language=ko  --text-before=가
 ```
 
-It doesn’t look at the pre-context either. [Tone marks](hebrew-thai-lao-and-hangul.html#tone-marks) shows the rest: the circle is made with `replace_glyphs`, which copies the tone mark’s entry, so the circle has the tone mark’s properties, a spacing mark, and after a lone jamo the fallback positioner treats it as one; and with `BOT`, path 1 has already put a circle before the tone mark, which to this shaper isn’t a syllable, so the text gets two.
-
-> Since {{hb}}: fixed on HarfBuzz main by [#6711](https://github.com/harfbuzz/harfbuzz/pull/6711) and [#6712](https://github.com/harfbuzz/harfbuzz/pull/6712) (17 November 2026), so main gives the circle U+25CC’s own properties, and with `BOT` uses the circle path 1 inserted as the tone mark’s base, so there is one.
+It doesn’t look at the pre-context either. The circle is made with `replace_glyphs`, which copies the tone mark’s entry, and is then given U+25CC’s own Unicode properties (`:247`), so it is a base, not a spacing mark like the tone mark. With `BOT`, path 1 has already put a circle before the tone mark, and the shaper takes a dotted circle as a tone mark’s base (`:402`), so the text gets one circle, not two. [Tone marks](hebrew-thai-lao-and-hangul.html#tone-marks) shows both. Before 15.2.0 the circle kept the tone mark’s properties, and with `BOT` there were two ([HHW-19](bugs-this-book-found.html#hhw-19), [HHW-20](bugs-this-book-found.html#hhw-20)).
 
 ## Vowel constraints
 
@@ -267,17 +265,18 @@ The list is Microsoft’s: `src/ms-use/IndicShapingInvalidCluster.txt`, whose he
 
 ### The code
 
-The function is the Indic and USE shapers’ `preprocess_text` (`hb-ot-shaper-indic.cc:1465`, `hb-ot-shaper-use.cc:474`), so it runs before normalization, on characters. Its Devanagari case begins (trimmed):
+The function is the Indic and USE shapers’ `preprocess_text` (`hb-ot-shaper-indic.cc:1478`, `hb-ot-shaper-use.cc:495`), so it runs before normalization, on characters. Its Devanagari case begins (trimmed):
 
 ```c++
     case HB_SCRIPT_DEVANAGARI:
       for (buffer->idx = 0; buffer->idx + 1 < count && buffer->successful;)
       {
+	unsigned int start = buffer->out_len;
 	bool matched = false;
-	switch (buffer->cur ().codepoint)
+	switch (_vowel_constraint_glyph (buffer, 0))
 	{
 	  case 0x0905u:
-	    switch (buffer->cur (1).codepoint)
+	    switch (_vowel_constraint_glyph (buffer, 1))
 	    {
 	      case 0x093Au: case 0x093Bu: case 0x093Eu: case 0x0945u:
 	      ...
@@ -287,22 +286,26 @@ The function is the Indic and USE shapers’ `preprocess_text` (`hb-ot-shaper-in
 	    break;
 	  ...
 	  case 0x0930u:
-	    if (0x094Du == buffer->cur (1).codepoint &&
+	    if (0x094Du == _vowel_constraint_glyph (buffer, 1) &&
 		buffer->idx + 2 < count &&
-		0x0907u == buffer->cur (2).codepoint)
+		0x0907u == _vowel_constraint_glyph (buffer, 2))
 	    {
-	      (void) buffer->next_glyph ();
+	      _next_vowel_constraint_glyph (buffer);
 	      matched = true;
 	    }
 	    break;
 	}
-	(void) buffer->next_glyph ();
-	if (matched) _output_with_dotted_circle (buffer);
+	_next_vowel_constraint_glyph (buffer);
+	if (matched)
+	{
+	  _output_with_dotted_circle (buffer);
+	  buffer->unsafe_to_break_in_outbuffer (start, buffer->out_len);
+	}
       }
       break;
 ```
 
-The circle goes before the last character of the sequence: between A and AA, and between the virama and I. `_output_with_dotted_circle` (`:31`) outputs U+25CC with `output_glyph`, then copies the next character. It checks the flag (`:45`), but nothing checks the font:
+The circle goes before the last character of the sequence: between A and AA, and between the virama and I. `_output_with_dotted_circle` (`hb-ot-shaper-vowel-constraints.cc:56`) outputs U+25CC with `output_glyph`, then copies the next character. It checks the flag (`:70`), but nothing checks the font:
 
 ```shape
 circle.ttf  अ\u093E  --language=hi
@@ -325,9 +328,9 @@ After RA + virama the circle is the base of a standalone cluster that begins wit
 
 ### What the circle is given
 
-`output_glyph` makes the new entry by copying the current one, which is the character the circle goes before (`hb-buffer.hh:313`). So the circle gets that character’s cluster, mask, and Unicode properties. `_output_dotted_circle` clears one of them, the continuation bit, so that the circle starts a grapheme of its own; the rest stay. At the default cluster level, step 4 had already merged the vowel sign into the cluster of the letter before it, so all three glyphs share cluster 0; at level 1 the circle has the vowel sign’s cluster, 1.
+`output_glyph` makes the new entry by copying the current one, which is the character the circle goes before (`hb-buffer.hh:313`). So the circle gets that character’s cluster and mask. `_output_dotted_circle` (`hb-ot-shaper-vowel-constraints.cc:47`) then gives it U+25CC’s own Unicode properties, as path 1 does, and clears the continuation bit, so that the circle starts a grapheme of its own. At the default cluster level, step 4 had already merged the vowel sign into the cluster of the letter before it, so all three glyphs share cluster 0; at level 1 the circle has the vowel sign’s cluster, 1.
 
-The general category it keeps is the vowel sign’s, a mark. In a font with GDEF that is harmless, since GDEF gives the dotted circle glyph its class. In a font without GDEF, HarfBuzz synthesizes classes from the general category, so the circle becomes a mark, and USE, which zeroes marks by class before GPOS ([Zeroing marks](fallbacks.html#zeroing-marks)), takes away its advance. Brahmi is shaped by USE:
+Its general category is So, a base, so the circle keeps its advance even in a font without GDEF, where HarfBuzz synthesizes classes from the general category. Brahmi is shaped by USE, which zeroes marks by class before GPOS ([Zeroing marks](fallbacks.html#zeroing-marks)):
 
 ```shape
 circle.ttf  \u{11005}\u{11038}  --language=sa
@@ -335,20 +338,18 @@ bare.ttf  \u{11005}\u{11038}  --language=sa
 bare.ttf  \u{11038}  --language=sa
 ```
 
-In `bare.ttf` the circle has no advance and is moved back over the letter A, as a zeroed mark is; a lone vowel sign, which gets its circle from path 4, keeps the circle’s advance. A circle with the properties of U+25CC, as path 1 gives it, would avoid this; it looks like a bug.
-
-> Since {{hb}}: fixed on HarfBuzz main by [#6710](https://github.com/harfbuzz/harfbuzz/pull/6710) (17 November 2026), so main gives the circle U+25CC’s own properties, and in `bare.ttf` it keeps its advance.
+In `bare.ttf`, which has no GDEF, the circle between A and the vowel sign keeps its advance, as the one path 4 gives a lone vowel sign does. Before 15.2.0 the circle copied the vowel sign’s properties, became a mark, and lost its advance ([HHW-35](bugs-this-book-found.html#hhw-35)).
 
 ### Only adjacent characters
 
-The match is on characters next to each other in the buffer, so anything between them breaks it. A ZWJ, which the Indic grammar allows inside a syllable, hides the sequence; CGJ ends the syllable, so the vowel sign after it gets a circle from path 4 instead:
+The match is on characters next to each other in the buffer, except that default ignorables between them are passed over (`_vowel_constraint_glyph`, `:24`). A ZWJ, which the Indic grammar allows inside a syllable, doesn’t hide the sequence, and nor does CGJ, which ends the syllable:
 
 ```shape
 circle.ttf  अ\u200D\u093E  --language=hi
 circle.ttf  अ\u034F\u093E  --language=hi
 ```
 
-The first line shows LETTER A and VOWEL SIGN AA together with no circle, which is what the constraint exists to prevent. The same goes for a sequence split between runs: the function doesn’t look at the pre-context, though there, path 4 catches the vowel sign as a broken cluster.
+In both, the circle goes in after the joiner, before the vowel sign, and the matched characters are made unsafe to break between (`:138`), since the circle depends on all of them. Before 15.2.0 the ZWJ hid the sequence, and LETTER A and VOWEL SIGN AA came out together with no circle ([HHW-34](bugs-this-book-found.html#hhw-34)). Anything else between the two characters breaks the match, and so does a split between runs: the function doesn’t look at the pre-context, though there, path 4 catches the vowel sign as a broken cluster.
 
 > For type designers: give the font a dotted circle, mapped to U+25CC and classed as a base in GDEF, with the anchors of a base for every mark class. Three of the four paths do nothing without it, and the fourth puts `.notdef` in its place. Expect the inserted circle in places a typed one would be, and test the shaping of lone vowel signs as well as complete syllables.
 
@@ -356,7 +357,7 @@ The first line shows LETTER A and VOWEL SIGN AA together with no circle, which i
 
 ## Configuration
 
-`HB_NO_OT_SHAPER_VOWEL_CONSTRAINTS` empties the vowel constraints: the function returns at once (`hb-ot-shaper-vowel-constraints.cc:42`). It is implied by `HB_NO_OT_SHAPE_FALLBACK` (`hb-config.hh:174`), which `HB_NO_LEGACY` implies (`:156`). The other three paths have no macro of their own; they go with the `ot` shaper (`HB_NO_OT_SHAPE` leaves out `hb-ot-shaper-syllabic.cc`).
+`HB_NO_OT_SHAPER_VOWEL_CONSTRAINTS` empties the vowel constraints: the function returns at once (`hb-ot-shaper-vowel-constraints.cc:67`). It is implied by `HB_NO_OT_SHAPE_FALLBACK` (`hb-config.hh:174`), which `HB_NO_LEGACY` implies (`:156`). The other three paths have no macro of their own; they go with the `ot` shaper (`HB_NO_OT_SHAPE` leaves out `hb-ot-shaper-syllabic.cc`).
 
 ## Where to read the source
 
@@ -378,7 +379,5 @@ The first line shows LETTER A and VOWEL SIGN AA together with no circle, which i
 * Four functions insert U+25CC DOTTED CIRCLE: one at the start of a paragraph, for every shaper; the vowel constraints, for Indic and USE; the Hangul shaper’s, for tone marks; and one for broken clusters, shared by Indic, Khmer, Myanmar, and USE. One buffer flag turns them all off.
 * The first needs `BOT`, no pre-context, and a leading mark, and runs before the others, so its circle leaves nothing broken. It inserts the character, with U+25CC’s own properties.
 * A broken cluster is a syllable with no base. Its circle goes in at the syllable’s start, after a repha character but not after RA + virama, as a glyph with the shaper’s base category, the syllable’s first cluster, and no Unicode or GDEF properties.
-* The vowel constraints are Microsoft’s 103 sequences in 16 scripts, generated into code. They insert the character without checking the font, so a font without a dotted circle gets `.notdef`, and the circle copies the properties of the vowel sign after it, so in a font without GDEF, USE zeroes it.
+* The vowel constraints are Microsoft’s 103 sequences in 16 scripts, generated into code, matched across default ignorables such as ZWJ. They insert the character, with U+25CC’s own properties, without checking the font, so a font without a dotted circle gets `.notdef`.
 * Only the first path reads the pre-context. A syllable split between runs gets a circle at the split.
-
-> Since {{hb}}: fixed on HarfBuzz main by [#6710](https://github.com/harfbuzz/harfbuzz/pull/6710) (17 November 2026), so main gives the vowel constraints’ circle U+25CC’s own properties (the item on the vowel constraints).

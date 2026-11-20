@@ -128,7 +128,7 @@ int lsb = hb_min (xMin, xMax);
 extents->x_bearing = lsb;
 ```
 
-and the drawing code shifts every point by the difference (`OT/glyf/Glyph.hh:587`). The `L` in the test font is drawn from x = 80, but `hmtx` says its left side bearing is 160. Its extents, above, start at 160, and when HarfBuzz draws it, so does its outline:
+and the drawing code shifts every point by the difference (`OT/glyf/Glyph.hh:588`). The `L` in the test font is drawn from x = 80, but `hmtx` says its left side bearing is 160. Its extents, above, start at 160, and when HarfBuzz draws it, so does its outline:
 
 ```draw
 font: metrics.ttf
@@ -152,7 +152,7 @@ This also explains the zero x-bearings in `metrics-short.ttf` and `metrics-nohmt
 
 In a variable font, an advance can change across the design space. hb-ot has three ways to find it, and tries them in this order (`hb-ot-font.cc:382`).
 
-First, it checks whether the font is at its default location. `has_nonzero_coords` is set when the font’s variation coordinates are stored (`hb-font.cc:2177`), and is false when every normalized coordinate is zero. Then the plain `hmtx` value is right, whatever variation tables the font has, and nothing is cached: an array read is as fast as a cache.
+First, it checks whether the font is at its default location. `has_nonzero_coords` is set when the font’s variation coordinates are stored (`hb-font.cc:2202`), and is false when every normalized coordinate is zero. Then the plain `hmtx` value is right, whatever variation tables the font has, and nothing is cached: an array read is as fast as a cache.
 
 Otherwise, if the font has an **HVAR** table, HarfBuzz adds HVAR’s delta to the `hmtx` advance (`hb-ot-hmtx-table.hh:475`):
 
@@ -176,7 +176,7 @@ phantoms[PHANTOM_TOP].y    = v_orig;
 phantoms[PHANTOM_BOTTOM].y = v_orig - (int) v_adv;
 ```
 
-`gvar` stores deltas for these four points just as it does for the outline’s, so after the deltas are applied, the distance from the left phantom point to the right one is the advance at that location (`OT/glyf/glyf.hh:468`). The result is rounded to a whole number of font units. In a composite glyph, a component with the `USE_MY_METRICS` flag gives the composite its phantom points, and with them its advance.
+`gvar` stores deltas for these four points just as it does for the outline’s, so after the deltas are applied, the distance from the left phantom point to the right one is the advance at that location (`OT/glyf/glyf.hh:489`). The result is rounded to a whole number of font units. In a composite glyph, a component with the `USE_MY_METRICS` flag gives the composite its phantom points, and with them its advance.
 
 If there’s neither, which can happen with a CFF2 font that leaves out HVAR although the specification requires it, the advance is the unvaried `hmtx` one.
 
@@ -219,7 +219,7 @@ A font with no `vmtx`, which is most fonts, gets the same advance for every glyp
 
 ### Origins
 
-Glyphs are drawn from their horizontal origin, at the left end of the baseline. In vertical text they should hang from a different point, the **vertical origin**, usually centered above the glyph. The shaper moves each glyph by the difference between the two (`hb-ot-shape.cc:1022`). Since hb-ot’s horizontal origin is always (0, 0), the offsets `hb-shape` prints for vertical text are just the vertical origin, negated.
+Glyphs are drawn from their horizontal origin, at the left end of the baseline. In vertical text they should hang from a different point, the **vertical origin**, usually centered above the glyph. The shaper moves each glyph by the difference between the two (`hb-ot-shape.cc:1024`). Since hb-ot’s horizontal origin is always (0, 0), the offsets `hb-shape` prints for vertical text are just the vertical origin, negated.
 
 The x of the vertical origin is always half the glyph’s horizontal advance (`hb-ot-font.cc:649`). The y comes from the first of three sources that is there:
 
@@ -261,7 +261,7 @@ return false;
 
 (trimmed of the `#ifdef`s that leave out each part in smaller builds). Bitmaps come first, then color, then outlines. So in a font with both a color version of a glyph and an outline, the extents are the color glyph’s.
 
-**glyf.** At the default location, the extents are the box in the glyph’s header, with the left edge taken from `hmtx` as described above. HarfBuzz doesn’t recompute it from the points. At any other location it has to: it applies `gvar`’s deltas to every point and takes the box around them, rounded to whole font units (`OT/glyf/glyf.hh:527`). In both cases the box includes the off-curve points: the header’s box does by definition, and the computed one is taken around every point. A curve rarely reaches its control points, so this box can be larger than the ink. An empty glyph, like `space`, has extents of zero.
+**glyf.** At the default location, the extents are the box in the glyph’s header, with the left edge taken from `hmtx` as described above. HarfBuzz doesn’t recompute it from the points. At any other location it has to: it applies `gvar`’s deltas to every point and takes the box around them (`OT/glyf/glyf.hh:548`). Since 15.2.0 that box is scaled before it is rounded (`:460`), so a fractional outline is rounded once, at the font’s scale; before, it was rounded to whole font units first, and could come out a unit smaller. In both cases the box includes the off-curve points: the header’s box does by definition, and the computed one is taken around every point. A curve rarely reaches its control points, so this box can be larger than the ink. An empty glyph, like `space`, has extents of zero.
 
 **CFF and CFF2.** HarfBuzz runs the glyph’s charstring with operators that collect a bounding box instead of drawing (`hb-ot-cff1-table.cc:410`, `hb-ot-cff2-table.cc:106`). Like `glyf`’s, the box includes the curves’ control points. A CFF2 charstring is run at the font’s variation coordinates. Neither looks at `hmtx`, which is why the CFF `L` above has its ink at 80.
 
@@ -277,7 +277,7 @@ Its extents are the union of the other two, from the top of the `H` to the botto
 
 **VARC**, variable composites, have extents worked out from their components; see [Variable components](variable-components.html). `SVG` glyphs are missing from the list: HarfBuzz doesn’t read extents from SVG documents, so an SVG glyph has the extents of its outline.
 
-One thing happens before any of this. When a font has synthetic bold or slant, `hb_font_t` doesn’t ask the font functions for extents first: it paints the glyph, or failing that draws it, so that the extents include the synthetic changes (`hb-font.hh:586`). That belongs to the font object, and is in the [previous chapter](fonts-and-font-functions.html).
+One thing happens before any of this. When a font has synthetic bold or slant, `hb_font_t` doesn’t ask the font functions for extents first: it paints the glyph, or failing that draws it, so that the extents include the synthetic changes (`hb-font.hh:608`). That belongs to the font object, and is in the [previous chapter](fonts-and-font-functions.html).
 
 ## Font extents
 
@@ -300,11 +300,11 @@ metrics.ttf  --show-extents  --get-metric=hcla
 metrics-typo.ttf  --show-extents  --get-metric=hcla
 ```
 
-If the font has no `hhea` and doesn’t ask for typographic metrics, hb-ot has no answer, and the font object makes one up: an ascender of 0.8 em and a descender of −0.2 em, with no line gap (`hb-font.hh:785`). Vertical font extents come from `vhea` only, and without it are half an em either side.
+If the font has no `hhea` and doesn’t ask for typographic metrics, hb-ot has no answer, and the font object makes one up: an ascender of 0.8 em and a descender of −0.2 em, with no line gap (`hb-font.hh:807`). Vertical font extents come from `vhea` only, and without it are half an em either side.
 
 ### MVAR
 
-In a variable font, MVAR can vary any of these numbers. It holds a list of records, each a four-letter tag (`hasc` for the horizontal ascender, `xhgt` for the x-height, and so on) and an index into an item variation store. HarfBuzz finds the record by binary search and adds its delta to the value from `hhea` or `OS/2` before scaling (`hb-ot-var-mvar-table.hh:132`). The same goes for the other metrics `hb_ot_metrics_get_position` can fetch: x-height, cap height, sub- and superscript sizes, strikeout, and underline. The variable test fonts vary their x-height:
+In a variable font, MVAR can vary any of these numbers. It holds a list of records, each a four-letter tag (`hasc` for the horizontal ascender, `xhgt` for the x-height, and so on) and an index into an item variation store. HarfBuzz finds the record by binary search and adds its delta to the value from `hhea` or `OS/2` before scaling (`hb-ot-var-mvar-table.hh:134`). The same goes for the other metrics `hb_ot_metrics_get_position` can fetch: x-height, cap height, sub- and superscript sizes, strikeout, and underline. The variable test fonts vary their x-height:
 
 ```info
 variations/var.ttf  --get-metric=xhgt  --variations=wght=100
@@ -331,15 +331,13 @@ variations/var.ttf  --get-metric=xhgt  --variations=wght=777  --font-size=100000
 
 At weight 777, the `I`’s advance interpolates to about 385.4 units, but at a scale of a million units per em it comes out as exactly 385,000. The x-height, about 522.6 units, comes out to the nearest millionth of an em.
 
-Glyph extents are scaled by `scale_glyph_extents` (`hb-font.hh:201`), which finds the box’s corners in floating point, takes the floor of the left and top edges and the ceiling of the right and bottom ones, and works the width and height out from the rounded corners. At small sizes this shows:
+Glyph extents are scaled by `scale_glyph_extents` (`hb-font.hh:201`), which finds the box’s corners in floating point and rounds them outwards (`round_glyph_extents`, `:223`): the floor of the left and bottom edges and the ceiling of the right and top ones, or the other way round where a negative scale flips an axis. The width and height are worked out from the rounded corners. At small sizes this shows:
 
 ```shape
 metrics.ttf  HLp  --font-size=13  --show-extents
 ```
 
-At 13 units per em, the `H` runs from 1.04 to 6.76 across, and is reported as 1 to 7: wider, so that it covers the ink. Up and down, the same rule has the opposite effect. Because y grows upwards, the top edge is the larger number, and taking its floor moves it down. The `p` runs from −2.73 to 6.5, and is reported as −2 to 6: smaller than its ink at both ends. The 14.2.1 release notes say that extents are scaled “so the reported box always covers the glyph”, and across, it does. Up and down, as of {{hb}}, it doesn’t.
-
-> Since {{hb}}: fixed on HarfBuzz main by [#6707](https://github.com/harfbuzz/harfbuzz/pull/6707) (17 November 2026), so main rounds the box outwards up and down too: the `p` is reported as −3 to 7.
+At 13 units per em, the `H` runs from 1.04 to 6.76 across, and is reported as 1 to 7: wider, so that it covers the ink. The `p` runs from −2.73 to 6.5 up and down, and is reported as −3 to 7. The 14.2.1 release notes say that extents are scaled “so the reported box always covers the glyph”. Until 15.2.0 that was true only across: the floor was taken of the top edge too, and since y grows upwards that moved it down, so the `p` came out as −2 to 6, smaller than its ink at both ends ([HHW-4](bugs-this-book-found.html#hhw-4)).
 
 Bitmap extents are converted from the strike’s pixels in two steps, each rounded: from pixels to font units, then from font units to the font’s scale.
 
@@ -371,6 +369,4 @@ To see these numbers for any font, run `hb-shape` with `--show-extents`, with `-
 * Vertical origins come from VORG, else from `vmtx` with `glyf`, else from centering the glyph’s extents in the line. A CFF font needs VORG.
 * Glyph extents are tried from `sbix`, `CBDT`, `COLR`, `VARC`, `glyf`, `CFF2`, and `CFF`, in that order. Outline extents include control points.
 * Font extents are `OS/2`’s typographic metrics if `USE_TYPO_METRICS` is set, and `hhea`’s otherwise. The Windows metrics are never used for them. MVAR varies them.
-* Scaled extents are rounded outwards across, but inwards up and down.
-
-> Since {{hb}}: fixed on HarfBuzz main by [#6707](https://github.com/harfbuzz/harfbuzz/pull/6707) (17 November 2026), so main rounds scaled extents outwards in both directions (the item on scaled extents).
+* Scaled extents are rounded outwards, so the box covers the ink.

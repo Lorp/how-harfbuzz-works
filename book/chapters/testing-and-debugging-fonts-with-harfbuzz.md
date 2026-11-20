@@ -6,7 +6,7 @@ HarfBuzz is the natural engine for both. Chrome, Firefox, Android, and most othe
 
 The chapter is for font makers and font engineers. Its examples use small test fonts built from feature files with the program in [Testing with a font of your own](testing-harfbuzz.html#testing-with-a-font-of-your-own), so their glyphs are boxes. How HarfBuzz tests itself is in [Testing HarfBuzz](testing-harfbuzz.html).
 
-> For type designers: this chapter uses `hb-shape`, `hb-info`, `hb-subset`, and the drawing tools without explaining their switches. [The command-line tools](command-line-tools.html) is the place to get familiar with them: it describes each switch, with recipes for single questions about a font.
+> This chapter uses `hb-shape`, `hb-info`, `hb-subset`, and the drawing tools without explaining their switches. [The command-line tools](command-line-tools.html) is the place to get familiar with them: it describes each switch, with recipes for single questions about a font.
 
 ## When a font doesn’t work
 
@@ -197,7 +197,7 @@ HarfBuzz’s runner is `test/shape/run-tests.py`, in its source tree. It is one 
 $ python3 run-tests.py /path/to/hb-shape myfont.tests
 ```
 
-Two things it does are worth having in a font’s tests. It runs every test with `--verify --unsafe-to-concat --safe-to-insert-tatweel` (`run-tests.py:284`), so a test also checks that the font gives the same result when the text is cut where a line could break; more on that [below](#results-that-change-at-a-line-break). And it runs every test once for each kind of font functions the `hb-shape` was built with (`:147`), so that a build with FreeType checks HarfBuzz’s metrics against FreeType’s too. An `@shapers=` or `@font-funcs=` line in the file narrows that ([How a test is run](testing-harfbuzz.html#how-a-test-is-run)).
+Two things it does are worth having in a font’s tests. It runs every test with `--verify --unsafe-to-concat --safe-to-insert-tatweel` (`run-tests.py:284`), so a test also checks that the font gives the same result when the text is cut where a line could break; more on that [below](#results-that-change-at-a-line-break). And it runs every test once for each kind of font functions the `hb-shape` was built with (`:143`–`:150`), so that a build with FreeType checks HarfBuzz’s metrics against FreeType’s too. An `@shapers=` or `@font-funcs=` line in the file narrows that ([How a test is run](testing-harfbuzz.html#how-a-test-is-run)).
 
 Run on release 1, every test passes. Here is what it printed for release 2, saved as `myfont.ttf` in its place, run by hand with the book’s `hb-shape` (its path shortened to `hb-shape`, the first three lines left out, and the options the runner adds shown as `…`):
 

@@ -38,7 +38,7 @@ Every outline source draws through `hb_draw_funcs_t`’s inline methods (`hb-dra
 
 Each outline source works through an `hb_draw_session_t` (`hb-draw.hh:193`), an internal helper that holds the funcs, the client’s data, and a fresh draw state for one glyph. Its destructor closes whatever path is still open, so even a glyph whose data ends mid-contour reaches the client closed.
 
-These rules don’t remove degenerate contours. A `glyf` contour of one point, which old fonts used as anchors, arrives as a `move_to`, a `line_to` to the same point, and a `close_path`: the path builder draws a line back to the contour’s first point (`OT/glyf/path-builder.hh:168`), and that line opens the path. A client that fills will draw nothing there; a client that strokes, or counts contours, will see it.
+These rules don’t remove degenerate contours. A `glyf` contour of one point, which old fonts used as anchors, arrives as a `move_to`, a `line_to` to the same point, and a `close_path`: the path builder draws a line back to the contour’s first point (`OT/glyf/path-builder.hh:164`), and that line opens the path. A client that fills will draw nothing there; a client that strokes, or counts contours, will see it.
 
 ### Callbacks a client leaves out
 
@@ -70,11 +70,11 @@ Since 14.2.0 the API also has `hb_draw_line`, `hb_draw_rectangle`, and `hb_draw_
 
 ### Above the outline sources
 
-Between the client and the outline is the font layer (`hb-font.hh:690`), which passes the request to the font funcs, rescales it through any parent fonts, and applies synthetic slant and bold, as [Fonts and font functions](fonts-and-font-functions.html#synthetic-bold-and-slant) explains. The rest of this chapter is hb-ot’s side of that callback.
+Between the client and the outline is the font layer (`hb-font.hh:712`), which passes the request to the font funcs, rescales it through any parent fonts, and applies synthetic slant and bold, as [Fonts and font functions](fonts-and-font-functions.html#synthetic-bold-and-slant) explains. The rest of this chapter is hb-ot’s side of that callback.
 
 ## Where the outline comes from
 
-hb-ot tries four sources, in a fixed order, and the first that says it has the glyph wins (`hb-ot-font.cc:900`):
+hb-ot tries four sources, in a fixed order, and the first that says it has the glyph wins (`hb-ot-font.cc:912`):
 
 ```c++
 hb_draw_session_t draw_session {draw_funcs, draw_data};
@@ -92,13 +92,13 @@ return false;
 
 (trimmed of `#ifdef`s). [VARC](variable-components.html) comes first, so a glyph it covers is drawn from it whatever `glyf` or CFF holds. Then `glyf`, then CFF2, then CFF. A font with both `glyf` and CFF outlines is drawn from `glyf`.
 
-“Has the glyph” means a glyph ID within the table’s range. A `glyf` glyph with no contours, like a space, counts: `glyf` draws nothing and returns true, and CFF isn’t asked. So does a glyph whose `loca` entry is broken, which `glyf` treats as empty (`OT/glyf/glyf.hh:574`). Only a glyph past the end of `loca` falls through to the next table.
+“Has the glyph” means a glyph ID within the table’s range. A `glyf` glyph with no contours, like a space, counts: `glyf` draws nothing and returns true, and CFF isn’t asked. So does a glyph whose `loca` entry is broken, which `glyf` treats as empty (`OT/glyf/glyf.hh:595`). Only a glyph past the end of `loca` falls through to the next table.
 
 Bitmaps and color glyphs aren’t on this list. They are painted, through a different callback; when a color glyph has no paint data, painting falls back to the outline. [Color](color.html) covers that side. [Glyph extents](where-metrics-come-from.html#glyph-extents) are found in yet another order, with bitmaps and color first.
 
 ## glyf: from points to a path
 
-A `glyf` glyph is either simple, a list of contours made of points, or composite, a list of other glyphs placed with transforms. For both, `glyf_accelerator_t::get_points` (`OT/glyf/glyf.hh:288`) first gathers every point of the whole glyph into one array, with gvar’s deltas applied and the four phantom points at the end, as [Varying outlines](varying-outlines.html#a-glyphs-points-and-four-more) describes. Only then are the points turned into draw calls, by `path_builder_t` (`OT/glyf/path-builder.hh`), which scales each point to the font’s size as it reads it. So a broken glyph fails before anything is drawn: a `glyf` glyph is drawn whole or not at all.
+A `glyf` glyph is either simple, a list of contours made of points, or composite, a list of other glyphs placed with transforms. For both, `glyf_accelerator_t::get_points` (`OT/glyf/glyf.hh:310`) first gathers every point of the whole glyph into one array, with gvar’s deltas applied and the four phantom points at the end, as [Varying outlines](varying-outlines.html#a-glyphs-points-and-four-more) describes. Only then are the points turned into draw calls, by `path_builder_t` (`OT/glyf/path-builder.hh`), which scales each point to the font’s size as it reads it. So a broken glyph fails before anything is drawn: a `glyf` glyph is drawn whole or not at all.
 
 ### Simple glyphs
 
@@ -118,7 +118,7 @@ text: b12
 
 The `offcurve` glyph is a rounded square through the midpoints of the square’s sides, four quadratic curves with the corners as their control points.
 
-One detail decides where a contour starts. If its first point is off-curve, HarfBuzz starts with the last point, and if that is off-curve too, at the midpoint of the two (`glyf.hh:334–385`). The simpler loop that would just take points in order is still in the source, under `if (false)`, with the comment “FreeType and CoreText do it differently, so we match those”. It makes no difference to the shape, but it does to a client that looks at where each contour begins.
+One detail decides where a contour starts. If its first point is off-curve, HarfBuzz starts with the last point, and if that is off-curve too, at the midpoint of the two (`glyf.hh:343–391`). The simpler loop that would just take points in order is still in the source, under `if (false)`, with the comment “FreeType and CoreText do it differently, so we match those”. It makes no difference to the shape, but it does to a client that looks at where each contour begins.
 
 ### Composite glyphs
 
@@ -153,7 +153,7 @@ text: bdpq
 
 ### Matching points
 
-A component whose `ARGS_ARE_XY_VALUES` flag is clear is placed by **point matching**: its two arguments are point numbers, one in the composite so far and one in the component, and the component is moved so that the two points meet (`OT/glyf/Glyph.hh:539`). This is how TrueType attached accents before GPOS existed, and because it works on points after gvar has moved them, an accent placed this way follows its base through a variable font.
+A component whose `ARGS_ARE_XY_VALUES` flag is clear is placed by **point matching**: its two arguments are point numbers, one in the composite so far and one in the component, and the component is moved so that the two points meet (`OT/glyf/Glyph.hh:540`). This is how TrueType attached accents before GPOS existed, and because it works on points after gvar has moved them, an accent placed this way follows its base through a variable font.
 
 The test font’s `i` is a `dotlessi` and a `dotaccent`. The dot glyph has a second contour of a single point 150 units below the dot, and the composite matches that point, number 4, with point 1 of `dotlessi`, the top of its stem. The test font’s `x` is a composite of `b` and that `i`, side by side:
 
@@ -162,13 +162,13 @@ font: outlines.ttf
 text: bix
 ```
 
-In `i` the dot is 150 units above the stem, as intended. In `x` it is 250 units higher. The point numbers are meant to count the points of the composite being built, here `i`, but HarfBuzz counts from the start of the whole glyph’s array, which is the same thing only at the top level. Inside `x`, point 1 is the top of `b`’s stem, at 750, not the top of `dotlessi`’s, at 500. fontTools, asked for the same glyph’s coordinates, puts the dot where it is in `i`. This is a bug in 15.1.0, found while writing this chapter. It affects only composites that match points and are themselves used as components, which are rare.
+In `i` and in `x` alike the dot is 150 units above the stem, as intended. The point numbers count the points of the composite being built, here `i`, even inside `x`, where the whole glyph’s array also holds `b`’s points before them, so point 1 is the top of `dotlessi`’s stem, at 500. fontTools, asked for the same glyph’s coordinates, agrees. Before 15.2.0, HarfBuzz counted from the start of the whole glyph’s array, which is the same thing only at the top level, so inside `x` point 1 was the top of `b`’s stem, at 750, and the dot was drawn 250 units too high ([HHW-27](bugs-this-book-found.html#hhw-27)). That affected only composites that match points and are themselves used as components, which are rare.
 
 ## Cubic curves in glyf
 
 TrueType outlines are quadratic, and CFF outlines cubic. A proposal for HarfBuzz’s “boring expansion” of OpenType adds cubic curves to `glyf`, and HarfBuzz supports it: experimentally since 7.0.0, whose `NEWS` points to the specification (`glyf1-cubicOutlines.md` in the `boring-expansion-spec` repository), and by default since 15.0.0, as part of the ISO standard’s new tables.
 
-The extension uses bit 7 of a point’s flag byte, which was reserved: `FLAG_CUBIC`, 0x80 (`SimpleGlyph.hh:23`). An off-curve point with that bit set is a control point of a cubic curve, and two in a row are the two controls of one cubic. Between two such pairs there is an implied on-curve point, at the midpoint of the second control of one pair and the first of the next, just as between two quadratic control points. The path builder handles both kinds in one pass: it holds up to two control points, draws a `cubic_to` when it has two cubic ones, and a `quadratic_to` when it has one. A cubic control point on its own, or the third of three in a row, is drawn as a quadratic one (inferred from `path-builder.hh:41–127`). The contour-start rotation above is skipped for a contour that starts and ends with cubic control points, since moving one point to the front would pair the controls differently (`glyf.hh:362–371`).
+The extension uses bit 7 of a point’s flag byte, which was reserved: `FLAG_CUBIC`, 0x80 (`SimpleGlyph.hh:23`). An off-curve point with that bit set is a control point of a cubic curve, and two in a row are the two controls of one cubic. Between two such pairs there is an implied on-curve point, at the midpoint of the second control of one pair and the first of the next, just as between two quadratic control points. The path builder handles both kinds in one pass: it holds up to two control points, draws a `cubic_to` when it has two cubic ones, and a `quadratic_to` when it has one. A cubic control point on its own, or the third of three in a row, is drawn as a quadratic one (inferred from `path-builder.hh:41–123`). The contour-start rotation above is skipped for a contour that starts and ends with cubic control points, since moving one point to the front would pair the controls differently (`glyf.hh:370–386`).
 
 HarfBuzz reads the bit only in the `GLYF` table, the one the ISO standard introduces for fonts with more than 65,535 glyphs ([Fonts as bytes](fonts-as-bytes.html#smalltypes-and-mediumtypes)). In `glyf` it masks it off (`SimpleGlyph.hh:138`):
 
@@ -198,18 +198,18 @@ A CFF glyph is a **charstring**, a small program in Adobe’s Type 2 format: num
 
 | Layer | Where | What it adds |
 |---|---|---|
-| `interp_env_t` | `hb-cff-interp-common.hh:574` | the byte cursor, and the argument stack: 513 numbers, as doubles |
+| `interp_env_t` | `hb-cff-interp-common.hh:579` | the byte cursor, and the argument stack: 513 numbers, as doubles |
 | `cs_interp_env_t` | `hb-cff-interp-cs-common.hh:113` | the current point, the subroutines, a call stack 10 deep, hint counts, the budget |
 | `cs_opset_t` | `hb-cff-interp-cs-common.hh:247` | what each charstring operator does |
 | `path_procs_t` | `hb-cff-interp-cs-common.hh:459` | the path operators, turned into `moveto`, `line`, and `curve` |
 | `cff1_…`, `cff2_…` | `hb-cff1-interp-cs.hh`, `hb-cff2-interp-cs.hh` | the differences between the two formats |
-| `cff1_path_param_t`, `cff2_path_param_t` | `hb-ot-cff1-table.cc:453`, `hb-ot-cff2-table.cc:164` | the draw session, and scaling to the font’s size |
+| `cff1_path_param_t`, `cff2_path_param_t` | `hb-ot-cff1-table.cc:437`, `hb-ot-cff2-table.cc:152` | the draw session, and scaling to the font’s size |
 
 With other parameters, the same templates collect a bounding box for [extents](where-metrics-come-from.html#glyph-extents).
 
 The path operators, from `rlineto` to `vhcurveto`, differ only in how they pack their coordinates, and `path_procs_t` unpacks each into lines and cubic curves. The four flex operators, which a hinting rasterizer may flatten at small sizes, are always drawn as their two curves. A charstring never produces a quadratic: CFF outlines reach the client entirely as `move_to`, `line_to`, `cubic_to`, and `close_path`.
 
-Much of a charstring is for hinting, and HarfBuzz reads it only to get past it. The stem operators, `hstem`, `vstem`, and their `hm` forms, only count their stems, because the count says how many bytes of mask follow each `hintmask` and `cntrmask`, which are then skipped. `dotsection` does nothing. The width, which can come before the first stack-clearing operator, is noticed and dropped: advances come from `hmtx`. An operator HarfBuzz doesn’t know, including the arithmetic operators that Type 2 inherited from PostScript and few fonts use, clears the stack and is otherwise ignored (`hb-cff-interp-common.hh:646`; “Ignore unknown CFF operators”, `NEWS` 10.4.0).
+Much of a charstring is for hinting, and HarfBuzz reads it only to get past it. The stem operators, `hstem`, `vstem`, and their `hm` forms, only count their stems, because the count says how many bytes of mask follow each `hintmask` and `cntrmask`, which are then skipped. `dotsection` does nothing. The width, which can come before the first stack-clearing operator, is noticed and dropped: advances come from `hmtx`. An operator HarfBuzz doesn’t know, including the arithmetic operators that Type 2 inherited from PostScript and few fonts use, clears the stack and is otherwise ignored (`hb-cff-interp-common.hh:675`; “Ignore unknown CFF operators”, `NEWS` 10.4.0).
 
 ### Subroutines
 
@@ -217,7 +217,7 @@ Shared pieces of outline are stored once, as subroutines, global or local to a f
 
 ### seac
 
-A CFF (version 1) charstring can end with `endchar` and four extra numbers. That is the **seac** form, inherited from Type 1’s “standard encoding accented character”: draw the glyph for one StandardEncoding code, then the glyph for another, moved by an offset. The codes are looked up through the font’s charset, so it works only for glyphs with standard names. `process_seac` (`hb-ot-cff1-table.cc:528`) draws both glyphs into the same session, and refuses a seac inside a seac. In `cff.otf`, `odieresis` is the charstring `600 150 600 111 200 endchar`: a width of 600, then an offset of (150, 600), `o` (code 111), and `dieresis` (code 200):
+A CFF (version 1) charstring can end with `endchar` and four extra numbers. That is the **seac** form, inherited from Type 1’s “standard encoding accented character”: draw the glyph for one StandardEncoding code, then the glyph for another, moved by an offset. The codes are looked up through the font’s charset, so it works only for glyphs with standard names. `process_seac` (`hb-ot-cff1-table.cc:512`) draws both glyphs into the same session, and refuses a seac inside a seac. In `cff.otf`, `odieresis` is the charstring `600 150 600 111 200 endchar`: a width of 600, then an offset of (150, 600), `o` (code 111), and `dieresis` (code 200):
 
 ```draw
 font: cff.otf
@@ -226,7 +226,7 @@ text: oö
 
 ### CFF2: blend and vsindex
 
-CFF2 charstrings vary. Each varying number is given with a delta for each region of the variation store, followed by the `blend` operator, which replaces them with the value at the font’s position. Which of the store’s lists of regions applies is set by the Private DICT, or, for one charstring, by a `vsindex` operator at its start. HarfBuzz computes the region scalars at the first `blend` and adds the deltas without rounding (`hb-cff2-interp-cs.hh:142–162, 314`), as [Varying outlines](varying-outlines.html#cff2) says. A `vsindex` after a `blend`, or a second one, is an error, and the glyph fails (`:168`).
+CFF2 charstrings vary. Each varying number is given with a delta for each region of the variation store, followed by the `blend` operator, which replaces them with the value at the font’s position. Which of the store’s lists of regions applies is set by the Private DICT, or, for one charstring, by a `vsindex` operator at its start. HarfBuzz computes the region scalars at the first `blend` and adds the deltas without rounding (`hb-cff2-interp-cs.hh:142–162, 314`), as [Varying outlines](varying-outlines.html#cff2) says. A `vsindex` after a `blend`, or a second one, is an error, and the glyph fails (`:173`).
 
 HarfBuzz’s test font `AdobeVFPrototype_vsindex.otf` has an `A` and a `B` whose charstrings are the same except that `B`’s starts with `1 vsindex`. The second list of regions swaps two of the first list’s regions, which peak at the heaviest weight, for ones that peak halfway there, in normalized coordinates:
 
@@ -246,7 +246,7 @@ CFF2 also drops `endchar`: a charstring simply ends. HarfBuzz’s CFF2 interpret
 
 Unlike a `glyf` glyph, a charstring is drawn as it is run. If it fails halfway, by overflowing the stack, calling a subroutine that doesn’t exist, or running out of budget, the part already drawn has reached the client by the time `hb_font_draw_glyph_or_fail` returns false.
 
-A CFF (version 1) charstring that ends without `endchar` shows another side of this. Running off the end isn’t an error in CFF: the interpreter reads an invalid operator, ignores it, and carries on until it has counted 200,000 operators. In a test font made while writing this chapter, such a glyph was drawn, and then reported as a failure. Each one also used 200,000 units of the budget described next, so in `hb-vector` a line of about 80 of them used all of it, and the glyphs after them weren’t drawn. It is probably a bug, though only a malformed font can trigger it.
+A CFF (version 1) charstring that ends without `endchar` shows another side of this. Since 15.2.0, running out of bytes where an operator should be is an error (`hb-cff-interp-common.hh:594`), so such a glyph is drawn as far as it goes and then reported as a failure, at once. Before, the interpreter read an invalid operator, ignored it, and carried on until it had counted 200,000 operators, using 200,000 units of the budget described next for each such glyph, so a line of them could use it all and stop the glyphs after them from being drawn ([HHW-28](bugs-this-book-found.html#hhw-28)).
 
 ## Limits, and the shared budget
 
@@ -259,10 +259,10 @@ A CFF (version 1) charstring that ends without `endchar` shows another side of t
 | `HB_GLYF_MAX_POINTS` | 200,000 | points in one composite |
 | `HB_CFF_MAX_OPS` | 200,000 | operators in one charstring, subroutines included |
 | `kMaxCallLimit` | 10 | subroutine nesting (`hb-cff-interp-cs-common.hh:59`) |
-| argument stack | 513 | numbers on a charstring’s stack (`hb-cff-interp-common.hh:443`) |
-| `HB_BUDGET_GLYPH` | 2²⁴ | the work budget, below |
+| argument stack | 513 | numbers on a charstring’s stack (`hb-cff-interp-common.hh:445`) |
+| `HB_BUDGET_GLYPH` | 2²⁵ | the work budget, below |
 
-A composite that contains itself, directly or further down, is caught by a cycle detector, and the component that closes the cycle is skipped while the rest of the glyph is drawn (`Glyph.hh:470`). The other limits fail the glyph. In `limits.ttf`, `spiral64` is a square and `spiral63`, turned 15° and shrunk; `spiral63` is a square and `spiral62`, and so on down to `spiral0`, a plain square. So `spiralN` nests N composites deep:
+A composite that contains itself, directly or further down, is caught by a cycle detector, and the component that closes the cycle is skipped while the rest of the glyph is drawn (`Glyph.hh:471`). The other limits fail the glyph. In `limits.ttf`, `spiral64` is a square and `spiral63`, turned 15° and shrunk; `spiral63` is a square and `spiral62`, and so on down to `spiral0`, a plain square. So `spiralN` nests N composites deep:
 
 ```draw
 font: limits.ttf
@@ -273,12 +273,12 @@ text: 12
 
 ### The budget
 
-Each limit bounds one table, but tables drive each other: VARC loads `glyf` and CFF outlines, COLR paints outlines, and a renderer draws thousands of glyphs. Limits that are safe one at a time multiply. So since 14.5.0 every drawing session also carries one **work budget**, a count that every piece of work subtracts from and nothing adds back to (`NEWS`; `hb-limits.hh:197`):
+Each limit bounds one table, but tables drive each other: VARC loads `glyf` and CFF outlines, COLR paints outlines, and a renderer draws thousands of glyphs. Limits that are safe one at a time multiply. So since 14.5.0 every drawing session also carries one **work budget**, a count that every piece of work subtracts from and nothing adds back to (`NEWS`; `hb-limits.hh:273`):
 
 ```c++
 /* The common finite default for one top-level glyph rendering session.
  * Nested outline and paint work shares the same live counter. */
-#define HB_BUDGET_GLYPH ((int64_t) 1 << 24)
+#define HB_BUDGET_GLYPH ((int64_t) 1 << 25)
 
 static HB_ALWAYS_INLINE bool
 hb_budget_spend (int64_t &budget, unsigned int cost, unsigned int mult = 1)
@@ -288,18 +288,18 @@ hb_budget_spend (int64_t &budget, unsigned int cost, unsigned int mult = 1)
 }
 ```
 
-The units are rough weights. `glyf` charges 16 for each glyph it loads and each component it prepares, 1 for each point it reads, 1 for each point each time a composite level transforms it, and 1 for each point at the end (`Glyph.hh:350, 378, 523`; `SimpleGlyph.hh:198`; `glyf.hh:309`). gvar charges 1 per point for each tuple that applies (`hb-ot-var-gvar-table.hh:825`). The charstring interpreter charges 1 per operator, and `blend` 1 per delta. It caps its own operator count at whatever budget is left, so it can’t overshoot (`hb-cff-interp-cs-common.hh:892`). VARC charges for its components and axis values. When the budget runs out, the work in hand fails, and so does everything after it in the session.
+The units are rough weights. `glyf` charges 16 for each glyph it loads and each component it prepares, 1 for each point it reads, 1 for each point each time a composite level transforms it, and 1 for each point at the end (`Glyph.hh:350, 378, 523`; `SimpleGlyph.hh:198`; `glyf.hh:306`). gvar charges 1 per point for each tuple that applies (`hb-ot-var-gvar-table.hh:858`). The charstring interpreter charges 1 per operator, and `blend` 1 per delta. It caps its own operator count at whatever budget is left, so it can’t overshoot (`hb-cff-interp-cs-common.hh:892`). VARC charges for its components and axis values. When the budget runs out, the work in hand fails, and so does everything after it in the session.
 
-Where the budget lives depends on the client. The draw funcs have three more callbacks, added with it: `set_budget`, `get_budget`, and `get_budget_remaining`, which returns a pointer to a live count. If the client’s funcs provide that pointer, the draw session uses it, and the count carries over from one glyph to the next until the client resets it. If not, each call to `hb_font_draw_glyph_or_fail` gets its own budget of 2²⁴ (`hb-draw.hh:195–201`). `hb_draw_set_budget` sets a client’s policy: a number, `HB_BUDGET_DEFAULT` for 2²⁴, or `HB_BUDGET_UNLIMITED`, which leaves only the structural limits. For funcs that don’t track a budget, `hb_draw_get_budget_remaining` reports “unlimited”, though each call is still limited to 2²⁴.
+Where the budget lives depends on the client. The draw funcs have three more callbacks, added with it: `set_budget`, `get_budget`, and `get_budget_remaining`, which returns a pointer to a live count. If the client’s funcs provide that pointer, the draw session uses it, and the count carries over from one glyph to the next until the client resets it. If not, each call to `hb_font_draw_glyph_or_fail` gets its own budget of 2²⁵ (`hb-draw.hh:195–201`; 2²⁴ before 15.2.0). `hb_draw_set_budget` sets a client’s policy: a number, `HB_BUDGET_DEFAULT` for 2²⁵, or `HB_BUDGET_UNLIMITED`, which leaves only the structural limits. For funcs that don’t track a budget, `hb_draw_get_budget_remaining` reports “unlimited”, though each call is still limited to 2²⁵.
 
-HarfBuzz’s own renderers track it, and `hb-vector` keeps one budget for its whole output. In `limits.ttf`, `heavy` is a square and 120 components, each of them 120 components of an empty glyph. That is 14,521 glyphs to load, inside the edge limit, and about half a million units of budget, for one square. Here are 34 of them, then `s`, a plain square:
+HarfBuzz’s own renderers track it, and `hb-vector` keeps one budget for its whole output. In `limits.ttf`, `heavy` is a square and 120 components, each of them 120 components of an empty glyph. That is 14,521 glyphs to load, inside the edge limit, and about half a million units of budget, for one square. Here are 66 of them, then `s`, a plain square:
 
 ```draw
 font: limits.ttf
-text: hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhs
+text: hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhs
 ```
 
-Thirty-two are drawn. The thirty-third runs the budget out, and from there on nothing is drawn, not even the plain square, which on its own costs almost nothing. The shaping beneath is unaffected: the budget belongs to drawing.
+Sixty-four are drawn. The sixty-fifth runs the budget out, and from there on nothing is drawn, not even the plain square, which on its own costs almost nothing. The shaping beneath is unaffected: the budget belongs to drawing.
 
 > For programmers: a client with its own draw funcs gets a fresh budget for every glyph, which is safe and usually what it wants. A renderer that draws whole pages from untrusted fonts can provide `get_budget_remaining` to bound the page as a whole, and then has to recharge it, with `set_budget`, at whatever unit of work it thinks right.
 
@@ -311,20 +311,20 @@ Thirty-two are drawn. The thirty-third runs the budget out, and from there on no
 | `src/hb-draw.hh` | `hb_draw_funcs_t`’s lazy `move_to` and closing `close_path`, 113–189; `hb_draw_session_t`, 193 |
 | `src/hb-font.hh`, `src/hb-font.cc` | `draw_glyph_or_fail`, with synthetic slant and bold, 690; the sub-font adaptor, `hb-font.cc:770` |
 | `src/hb-ot-font.cc` | `hb_ot_draw_glyph_or_fail`, 900: VARC, `glyf`, CFF2, CFF |
-| `src/OT/glyf/glyf.hh` | `get_points`, 288, and the contour-start rotation; `GLYF` and `LOCA`, 224 |
+| `src/OT/glyf/glyf.hh` | `get_points`, 310, and the contour-start rotation; `GLYF` and `LOCA`, 224 |
 | `src/OT/glyf/Glyph.hh` | loading composites, 326: limits, cycles, transforms, point matching |
 | `src/OT/glyf/SimpleGlyph.hh`, `src/OT/glyf/CompositeGlyph.hh` | flags and points; component flags and transforms |
 | `src/OT/glyf/path-builder.hh` | points to draw calls: implied points, cubic pairs |
 | `src/hb-cff-interp-common.hh`, `src/hb-cff-interp-cs-common.hh` | the charstring interpreter: stacks, operators, subroutines, `interpret`, 887 |
 | `src/hb-cff1-interp-cs.hh`, `src/hb-ot-cff1-table.cc` | CFF: width, `seac`, 528; drawing, 453 |
 | `src/hb-cff2-interp-cs.hh`, `src/hb-ot-cff2-table.cc` | CFF2: `blend`, `vsindex`, the made-up `endchar`; drawing, 164 |
-| `src/hb-limits.hh` | the limits, and the budget, 197 |
+| `src/hb-limits.hh` | the limits, and the budget, 273 |
 
 ## In short
 
 * A client gets an outline as `move_to`, `line_to`, `quadratic_to`, `cubic_to`, and `close_path` calls, scaled and unrounded, unhinted. Moves are sent lazily, every contour is closed back to its start, and a missing `quadratic_to` becomes `cubic_to`.
 * hb-ot draws from VARC, then `glyf`, then CFF2, then CFF. An empty `glyf` glyph still counts as drawn.
-* `glyf` points become curves through implied on-curve points between off-curve ones. Composites are transformed and flattened before anything is drawn; `ROUND_XY_TO_GRID` and the overlap flags are ignored. Point matching inside a nested composite counts points from the wrong place in 15.1.0.
+* `glyf` points become curves through implied on-curve points between off-curve ones. Composites are transformed and flattened before anything is drawn; `ROUND_XY_TO_GRID` and the overlap flags are ignored. Point matching inside a nested composite counts from the composite’s own first point since 15.2.0.
 * Cubic `glyf` curves use flag bit 0x80, in pairs, and HarfBuzz reads the bit only in `GLYF`, not `glyf`.
 * CFF and CFF2 charstrings run in one templated interpreter that ignores hints, follows subroutines 10 deep, draws `seac` accents, and applies CFF2 blends unrounded. A charstring that fails halfway has already drawn part of its glyph.
-* Nesting, components, points, and operators each have a limit, and since 14.5.0 a shared budget of 2²⁴ units bounds a whole drawing session, per glyph for most clients, and per output for HarfBuzz’s own renderers, like `hb-vector`. Those renderers are the subjects of [hb-raster](hb-raster.html), [hb-vector](hb-vector.html), and [hb-gpu](hb-gpu.html).
+* Nesting, components, points, and operators each have a limit, and since 14.5.0 a shared budget of 2²⁵ units bounds a whole drawing session, per glyph for most clients, and per output for HarfBuzz’s own renderers, like `hb-vector`. Those renderers are the subjects of [hb-raster](hb-raster.html), [hb-vector](hb-vector.html), and [hb-gpu](hb-gpu.html).

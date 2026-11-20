@@ -14,21 +14,24 @@ Which fallbacks run is decided once, when the shape plan is made, in `hb_ot_shap
 bool disable_gpos = plan.shaper->gpos_tag &&
                     plan.shaper->gpos_tag != plan.map.chosen_script[1];
 bool has_gpos = !disable_gpos && hb_ot_layout_has_positioning (face);
-
-if (has_kerx && !(has_gsub && has_gpos)) plan.apply_kerx = true;
-else if (has_gpos)                        plan.apply_gpos = true;
-
-if (!plan.apply_kerx && (!has_gpos_kern || !plan.apply_gpos))
+plan.apply_gpos = has_gpos;
+if (has_kerx && !(has_gsub && has_gpos))
 {
-  if (has_kerx) plan.apply_kerx = true;
-  else if (hb_ot_layout_has_kerning (face))
-    plan.apply_kern = script_fallback_position; // Not all shapers apply legacy `kern`
+  plan.apply_kerx = true;
+  plan.apply_gpos = false;
 }
+
+bool needs_kerning = !has_gpos_kern || !plan.apply_gpos;
+if (needs_kerning && has_kerx)
+  plan.apply_kerx = true;
+if (needs_kerning && !plan.apply_kerx && hb_ot_layout_has_kerning (face))
+  plan.apply_kern = script_fallback_position; // Not all shapers apply legacy `kern`
 
 plan.apply_fallback_kern = script_fallback_position &&
                            !(plan.apply_gpos || plan.apply_kerx || plan.apply_kern);
 
-plan.zero_marks = script_zero_marks && !plan.apply_kerx &&
+plan.zero_marks = script_zero_marks &&
+                  (!plan.apply_kerx || plan.apply_gpos) &&
                   (!plan.apply_kern || !hb_ot_layout_has_machine_kerning (face));
 
 plan.adjust_mark_positioning_when_zeroing = !plan.apply_gpos && !plan.apply_kerx &&
@@ -45,7 +48,7 @@ Four plan flags come out of it, besides the choice of table:
 
 | Flag | Means | True when |
 |---|---|---|
-| `zero_marks` | marks lose their advance (step 18, or before GPOS) | the shaper zeroes marks, and there is no `kerx` and no state-machine `kern` |
+| `zero_marks` | marks lose their advance (step 18, or before GPOS) | the shaper zeroes marks, `kerx` isn’t applied or GPOS is applied too, and there is no state-machine `kern` |
 | `adjust_mark_positioning_when_zeroing` | a zeroed mark is moved back by its old advance | no GPOS, no `kerx`, no cross-stream `kern`, no `morx` |
 | `fallback_mark_positioning` | marks are recategorized (step 10) and placed from extents (step 20) | the same, `morx` aside, and the shaper allows it |
 | `apply_fallback_kern` | the font funcs are asked for kerning (step 17) | the shaper allows it, and there is no GPOS, `kerx`, or `kern` to apply |
@@ -98,7 +101,7 @@ The fatha is placed the same with `morx` as without. Thai, whose shaper doesn’
 
 A **mark** here is a glyph whose GDEF class is mark. If the font has no GDEF glyph classes, HarfBuzz makes them up from the general categories: a non-spacing mark (Mn) that isn’t a default ignorable is a mark, and everything else is a base ([GSUB](gsub.html#glyph-properties)). A spacing mark (Mc) is a base, so it keeps its advance.
 
-Shapers that zero marks do it either “early”, before GPOS, or “late”, after it (`hb_ot_position_plan`, `hb-ot-shape.cc:1029`). Either way it is `zero_mark_widths_by_gdef` (`:988`), which sets each mark’s advance to zero, and first, if asked, moves its offset back by the advance it had:
+Shapers that zero marks do it either “early”, before GPOS, or “late”, after it (`hb_ot_position_plan`, `hb-ot-shape.cc:1031`). Either way it is `zero_mark_widths_by_gdef` (`:990`), which sets each mark’s advance to zero, and first, if asked, moves its offset back by the advance it had:
 
 ```c++
 if (_hb_glyph_info_is_mark (&info[i]))
@@ -109,7 +112,7 @@ if (_hb_glyph_info_is_mark (&info[i]))
 }
 ```
 
-The adjustment is made only when `adjust_mark_positioning_when_zeroing` is set and the run is forward, left to right or top to bottom (`:1040`). The comment there explains why:
+The adjustment is made only when `adjust_mark_positioning_when_zeroing` is set and the run is forward, left to right or top to bottom (`:1042`). The comment there explains why:
 
 > If the font has no GPOS and direction is forward, then when zeroing mark widths, we shift the mark with it, such that the mark is positioned hanging over the previous glyph. When direction is backward we don’t shift and it will end up hanging over the next glyph after the final reordering.
 
@@ -124,7 +127,7 @@ with-gpos.ttf  \u0E01\u0E48\u0E01  --language=th
 
 Without GPOS the tone mark is moved back 200 units, over its KO KAI. With a GPOS that has no anchors for it, it loses its advance and stays where it was drawn, over the start of the next letter.
 
-When fallback positioning runs, the offsets this step sets are replaced, as the comment at `:1037` says: “If fallback positioning happens, we don’t care about this as it will be overridden.”
+When fallback positioning runs, the offsets this step sets are replaced, as the comment at `:1039` says: “If fallback positioning happens, we don’t care about this as it will be overridden.”
 
 ## Recategorizing marks
 
@@ -152,7 +155,7 @@ Unicode’s canonical combining classes from 200 to 240 are named after position
 
 Any class of 200 or more is kept, and so is any other class, such as 1 (overlays), 7 (nuktas), and 9 (viramas, apart from Thai’s). Only marks with general category Mn are touched (`:180`).
 
-It runs in step 10 (`hb-ot-shape.cc:895`), in an odd place, as its own comment admits: “This is unfortunate to go here, but necessary...”. It has to come after normalization, which sorts marks by their classes and decides from them which marks may compose with a base. Positional classes would sort differently, and two marks given the same class would block each other’s composition ([Normalization](normalization.html#round-two-reorder)). And it has to come before step 11, which replaces each character in the buffer with its glyph, because the Thai and Lao cases look at the character itself.
+It runs in step 10 (`hb-ot-shape.cc:897`), in an odd place, as its own comment admits: “This is unfortunate to go here, but necessary...”. It has to come after normalization, which sorts marks by their classes and decides from them which marks may compose with a base. Positional classes would sort differently, and two marks given the same class would block each other’s composition ([Normalization](normalization.html#round-two-reorder)). And it has to come before step 11, which replaces each character in the buffer with its glyph, because the Thai and Lao cases look at the character itself.
 
 Most rows of that table are rarely used. Thai and Lao always get the Thai shaper, which doesn’t allow fallback positioning: `NEWS` for 0.9.7 says “Disable fallback positioning for Indic and Thai shapers”, while 0.9.4’s had announced “Better fallback glyph positioning, specially with Thai / Lao marks”. Tibetan goes to the USE, which doesn’t allow it either, unless the font has a `DFLT` or `latn` script and no `tibt`, which sends it to the default shaper. So the Thai rows run only for Thai text given another script, as here:
 
@@ -190,11 +193,20 @@ base_extents.y_bearing += buffer->pos[base].y_offset;
 /* Use horizontal advance for horizontal positioning.
  * Generally a better idea.  Also works for zero-ink glyphs.  See:
  * https://github.com/harfbuzz/harfbuzz/issues/1532 */
-base_extents.x_bearing = 0;
+base_extents.x_bearing = buffer->pos[base].x_offset;
 base_extents.width = font->get_glyph_h_advance (buffer->info[base].codepoint);
 ```
 
-(trimmed). So the box a mark is placed against is the base’s ink vertically and its advance horizontally. So a mark goes in the middle of the letter’s space even when its ink is off-center, and a base with no ink still has a width to center on. If the base has no extents, its marks are given no advance and left where they are (`:340`).
+(trimmed). So the box a mark is placed against is the base’s ink vertically and its advance horizontally, both moved by the base’s offset. So a mark goes in the middle of the letter’s space even when its ink is off-center, and a base with no ink still has a width to center on. If the base has no extents, its marks are given no advance and left where they are (`:340`).
+
+The horizontal offset matters after kerning. `kern` and fallback kerning split a pair’s kerning between the two glyphs’ advances and move the second glyph back by half ([Legacy kern](legacy-kern.html#how-the-kerning-is-applied)), and its mark moves with it:
+
+```shape
+fallback.ttf  oo\u0301  --language=en
+kern-table.ttf  oo\u0301  --language=en
+```
+
+The second `o` has an advance of 450 and is drawn 50 units left of its pen position, so its ink is centered 200 units from that position, and the acute, at −25, is centered over it. Before 15.2.0 the box ignored the base’s horizontal offset, and the acute was at 25, as if the `o` hadn’t moved ([HHW-16](bugs-this-book-found.html#hhw-16)).
 
 ### Each mark, by its class
 
@@ -283,25 +295,14 @@ The dagesh keeps its class, so it is centered and left at its drawn height, insi
 
 ### What it doesn’t take into account
 
-**The base’s horizontal offset.** The base’s vertical offset is added to its box, but its horizontal one isn’t. `kern` and fallback kerning split a pair’s kerning between the two glyphs’ advances and move the second glyph back by half ([Legacy kern](legacy-kern.html#how-the-kerning-is-applied)). Its mark is then placed as if it hadn’t moved:
-
-```shape
-fallback.ttf  oo\u0301  --language=en
-kern-table.ttf  oo\u0301  --language=en
-```
-
-The second `o` has an advance of 450 and is drawn 50 units left of its pen position, so its ink is centered 200 units from that position. The acute is centered 250 units from it, as if the `o` hadn’t moved. To be centered over the ink it would need an offset of −25, not 25. This looks like a bug.
-
-> Since {{hb}}: fixed on HarfBuzz main by [#6701](https://github.com/harfbuzz/harfbuzz/pull/6701) (17 November 2026), so main includes the base’s x offset, and the acute over the kerned `o` is at −25.
-
-**Left and Right.** The comment in `position_mark` says “We don’t position LEFT and RIGHT marks”, but classes 224 and 226 fall into the `default` case of the horizontal switch, which centers the mark, and every placed mark loses its advance. The few characters in those classes are spacing marks, Mc, such as the Hangul tone marks and U+1D16D MUSICAL SYMBOL COMBINING AUGMENTATION DOT, which should follow its note:
+**Left and Right.** Classes 224 and 226 fall into the `default` case of the horizontal switch, which centers the mark, and every placed mark loses its advance. The comment says so (“Classes without dedicated placement are centered horizontally”, `:228`). The few characters in those classes are spacing marks, Mc, such as the Hangul tone marks and U+1D16D MUSICAL SYMBOL COMBINING AUGMENTATION DOT, which should follow its note:
 
 ```shape
 fallback.ttf  o\u{1D16D}  --language=en
 with-gpos.ttf  o\u{1D16D}  --language=en
 ```
 
-Without GPOS the dot is centered on the `o` and loses its 200-unit advance; with GPOS it keeps both. That too looks like a bug, or at least a comment that no longer matches the code.
+Without GPOS the dot is centered on the `o` and loses its 200-unit advance; with GPOS it keeps both. Until 15.2.0 the comment said “We don’t position LEFT and RIGHT marks”. This book reported the mismatch ([HHW-17](bugs-this-book-found.html#hhw-17)), and HarfBuzz rewrote the comment and kept the centering, which it added deliberately in 2012 ([#6742](https://github.com/harfbuzz/harfbuzz/pull/6742)).
 
 **Synthetic slant.** Fallback positioning runs after `position_finish_offsets`, which is where a synthetically slanted font has its vertically offset glyphs moved sideways to follow the slant ([Fonts and font functions](fonts-and-font-functions.html#slant)). So a fallback-placed mark doesn’t follow the slant. Its extents are measured from the slanted outline, as [Fonts and font functions](fonts-and-font-functions.html#extents-of-a-synthetic-font) shows, and centering them on the upright advance puts the mark over the middle of the upright letter, not over its slanted top. Synthetic bold, which changes the extents, is taken into account:
 
@@ -312,7 +313,7 @@ fallback.ttf  o\u0301  --language=en  --show-extents  --font-bold=0.1
 
 ## Spaces
 
-[Normalization](normalization.html#spaces-and-one-hyphen) maps a space character the font has no glyph for to the glyph for U+0020, records which kind of space it was in the byte that holds a mark’s combining class, and sets the buffer flag `HAS_SPACE_FALLBACK`. In step 15, after the default advances are read and only if that flag is set (`hb-ot-shape.cc:1024`), `_hb_ot_shape_fallback_spaces` (`hb-ot-shape-fallback.cc:559`) gives each such space its width. The **space fallback types** come from `space_fallback_type` (`hb-unicode.hh:219`):
+[Normalization](normalization.html#spaces-and-one-hyphen) maps a space character the font has no glyph for to the glyph for U+0020, records which kind of space it was in the byte that holds a mark’s combining class, and sets the buffer flag `HAS_SPACE_FALLBACK`. In step 15, after the default advances are read and only if that flag is set (`hb-ot-shape.cc:1026`), `_hb_ot_shape_fallback_spaces` (`hb-ot-shape-fallback.cc:559`) gives each such space its width. The **space fallback types** come from `space_fallback_type` (`hb-unicode.hh:219`):
 
 | Type | Characters | Width |
 |---|---|---|
@@ -371,7 +372,7 @@ hb_position_t get_kerning (hb_codepoint_t first, hb_codepoint_t second) const
 
 The machine skips marks, kerns only glyphs whose mask has the `kern` feature’s bit, and splits each value between the two glyphs ([Legacy kern](legacy-kern.html#how-the-kerning-is-applied) has the details). `kern` is one of the features added with `F_HAS_FALLBACK`, so its bit exists even when no table has the feature ([From features to lookups](from-features-to-lookups.html#finding-the-features-in-the-font)), and `--features=-kern` turns the fallback off. A right-to-left buffer is reversed around the call and back, so that pairs are asked for in visual order (`:540`).
 
-Only one font funcs implementation in HarfBuzz sets `glyph_h_kerning`: hb-ft, which asks FreeType’s `FT_Get_Kerning` (`hb-ft.cc:719`) ([Fonts and font functions](fonts-and-font-functions.html#the-other-funcs)). hb-ot doesn’t, and doesn’t need to. Since 2.0.0, whose `NEWS` says “Apply TrueType kern table internally, instead of relying on hb_font_t callbacks”, the shaper reads the font’s `kern` table itself, and when there is one, the plan applies it and never gets as far as the fallback. The kerning callbacks were deprecated in that release. 2.5.2 undeprecated the horizontal one “and re-enable[d it] in hb-ft, such that Type1 fonts will continue kerning”. That is the case the fallback is for: a font whose kerning HarfBuzz can’t read as a table, but whose font funcs can supply.
+Only one font funcs implementation in HarfBuzz sets `glyph_h_kerning`: hb-ft, which asks FreeType’s `FT_Get_Kerning` (`hb-ft.cc:726`) ([Fonts and font functions](fonts-and-font-functions.html#the-other-funcs)). hb-ot doesn’t, and doesn’t need to. Since 2.0.0, whose `NEWS` says “Apply TrueType kern table internally, instead of relying on hb_font_t callbacks”, the shaper reads the font’s `kern` table itself, and when there is one, the plan applies it and never gets as far as the fallback. The kerning callbacks were deprecated in that release. 2.5.2 undeprecated the horizontal one “and re-enable[d it] in hb-ft, such that Type1 fonts will continue kerning”. That is the case the fallback is for: a font whose kerning HarfBuzz can’t read as a table, but whose font funcs can supply.
 
 Our build has no FreeType, so `hb-shape` has only the `ot` funcs, and this fallback can’t be shown here. The trace above has no “start fallback kern”: the plan asked for it, and it returned at once, since the `ot` funcs have no kerning callback.
 
@@ -403,6 +404,6 @@ Our build has no FreeType, so `hb-shape` has only the `ot` funcs, and this fallb
 * Shapers zero marks by GDEF class, or by classes made up from Mn. Without GPOS, a zeroed mark in a forward run is moved back by its old advance.
 * Recategorizing turns script-specific combining classes into positional ones, after normalization and before glyph mapping. Its Thai, Lao, and Tibetan rows are rarely reached.
 * The positioner places each mark from extents: against the base’s ink vertically and its advance horizontally, by class, a sixteenth of an em away, stacking marks of the same class, dividing ligatures equally.
-* It ignores the base’s horizontal offset, centers Left and Right marks, and doesn’t follow synthetic slant.
+* It follows the base’s offsets, centers Left and Right marks, and doesn’t follow synthetic slant.
 * Missing space characters get widths from their kind: fractions of an em, a digit’s or full stop’s advance, or half a space.
 * Fallback kerning asks the font funcs; only hb-ft implements it, for fonts like Type 1 whose kerning isn’t in a table HarfBuzz reads.

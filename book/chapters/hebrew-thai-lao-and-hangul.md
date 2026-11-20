@@ -68,9 +68,9 @@ hebrew-mark-DFLT.ttf  ש\u05BC\u05C1  --language=he
 
 The old font gets its single glyphs. HET has no dagesh form in Unicode, so its dagesh stays a mark, placed by HarfBuzz’s [fallback](fallbacks.html#hebrew-and-arabic) positioner. With a `mark` feature, the letters and points stay apart for GPOS to place, unless the feature is turned off, which takes it out of the plan.
 
-The last line is the odd one. The test is whether the plan has a `mark` feature (`has_gpos_mark`, `hb-ot-shape.cc:196`), and planning finds the `DFLT` one. But the Hebrew shaper’s `gpos_tag` says that GPOS is only used if the script it chose is `hebr` ([Choosing a script shaper](choosing-a-script-shaper.html#hebrew-and-its-gpos-tag)). So that font’s GPOS is ignored, and its presentation forms aren’t used either: the points are placed by the fallback positioner, though the font has glyphs that would do better. The two checks look at different things (read from the code, and shown live here).
+The last line gets the presentation form too. The Hebrew shaper’s `gpos_tag` says that GPOS is only used if the script it chose is `hebr` ([Choosing a script shaper](choosing-a-script-shaper.html#hebrew-and-its-gpos-tag)), so that font’s GPOS is ignored. The test for composing is whether GPOS is applied and has a `mark` feature (`has_gpos_mark`, `hb-ot-shape.cc:192`), and a `mark` feature in an ignored GPOS doesn’t count. Before 15.2.0 the test looked only for the feature, so planning found the `DFLT` one, and the font got neither its GPOS nor its presentation forms ([HHW-21](bugs-this-book-found.html#hhw-21)).
 
-> For type designers: a Hebrew font gets presentation forms only if it has no `mark` feature at all, in any script, and gets its GPOS only if GPOS has a `hebr` script. A font that has both kinds of data should put its GPOS under `hebr`.
+> For type designers: a Hebrew font gets its GPOS only if GPOS has a `hebr` script, and gets presentation forms only if its GPOS isn’t used or has no `mark` feature. A font that has both kinds of data, and wants its GPOS to place the points, should put it under `hebr`.
 
 `HB_NO_OT_SHAPER_HEBREW_FALLBACK` leaves the presentation forms out, and `HB_NO_OT_SHAPE_FALLBACK` implies it.
 
@@ -218,7 +218,7 @@ The PUA fallback is Thai only: its tables hold only Thai code points, and the te
 
 A Korean syllable is written as a block of two or three letters, **jamo**: a leading consonant (L), a vowel (V), and an optional trailing consonant (T). Unicode encodes the jamo, U+1100 to U+11FF and two extension blocks, and also 11,172 **precomposed syllables**, U+AC00 to U+D7A3, one for each combination of the 19 modern leading consonants, 21 vowels, and 28 trailing choices (27 consonants or none). The syllables decompose to jamo by arithmetic, and the jamo compose back. The other jamo, in U+1100 to U+11FF and the extension blocks U+A960 and U+D7B0, are for **Old Hangul**, Korean as written before the twentieth century, whose syllables have no precomposed characters. A font shows an Old Hangul syllable by combining jamo glyphs, chosen by the features `ljmo`, `vjmo`, and `tjmo`.
 
-So one syllable can come as a precomposed character `<LV>` or `<LVT>`, as jamo `<L,V>` or `<L,V,T>`, or as `<LV,T>`, and a font may have a glyph for the precomposed syllable, or jamo that combine, or both. Fonts, a comment in normalization says, “are not designed to mix-and-match pre-composed syllables and Jamo” (`hb-ot-shape-normalize.cc:440`). The Hangul shaper’s job is to pick one for each syllable, from what the font has.
+So one syllable can come as a precomposed character `<LV>` or `<LVT>`, as jamo `<L,V>` or `<L,V,T>`, or as `<LV,T>`, and a font may have a glyph for the precomposed syllable, or jamo that combine, or both. Fonts, a comment in normalization says, “are not designed to mix-and-match pre-composed syllables and Jamo” (`hb-ot-shape-normalize.cc:443`). The Hangul shaper’s job is to pick one for each syllable, from what the font has.
 
 ### Composing and decomposing, with the font in mind
 
@@ -265,7 +265,7 @@ hangul.ttf  가ᇫ  --language=ko
 
 ### The jamo features
 
-`collect_features_hangul` adds `ljmo`, `vjmo`, and `tjmo` to the plan. They aren’t global: each gets its own mask bit ([From features to lookups](from-features-to-lookups.html#mask-bits)). While it composes and decomposes, the shaper writes into a spare byte of each jamo it leaves (`hangul_shaping_feature`, a buffer variable that [Buffers](buffers.html) lists) which of the three it should get, and `setup_masks_hangul` turns that into the feature’s mask bit (`:408`). So a font’s `ljmo` lookup only touches an L that begins a syllable of jamo. A leading consonant on its own isn’t one:
+`collect_features_hangul` adds `ljmo`, `vjmo`, and `tjmo` to the plan. They aren’t global: each gets its own mask bit ([From features to lookups](from-features-to-lookups.html#mask-bits)). While it composes and decomposes, the shaper writes into a spare byte of each jamo it leaves (`hangul_shaping_feature`, a buffer variable that [Buffers](buffers.html) lists) which of the three it should get, and `setup_masks_hangul` turns that into the feature’s mask bit (`:416`). So a font’s `ljmo` lookup only touches an L that begins a syllable of jamo. A leading consonant on its own isn’t one:
 
 ```shape
 hangul.ttf  ᄀ  --language=ko
@@ -296,7 +296,7 @@ hangul.ttf  가\u302F  --language=ko
 
 The double dot stays where it was typed, and since the font has no GPOS, HarfBuzz’s fallback positioner centers it over the syllable, as it does any mark of its class ([Fallbacks](fallbacks.html#what-it-doesnt-take-into-account)).
 
-A tone mark that doesn’t follow a recognized syllable gets a dotted circle, unless the buffer says not to or the font has none. It is the Hangul shaper’s own way of inserting one, one of four in HarfBuzz ([Dotted circles and broken clusters](dotted-circles-and-broken-clusters.html)). A tone mark with an advance goes before the circle, and a zero-width one after it. Two things about it look like bugs:
+A tone mark that doesn’t follow a recognized syllable gets a dotted circle, unless the buffer says not to or the font has none. It is the Hangul shaper’s own way of inserting one, one of four in HarfBuzz ([Dotted circles and broken clusters](dotted-circles-and-broken-clusters.html)). A tone mark with an advance goes before the circle, and a zero-width one after it:
 
 ```shape
 hangul.ttf  \u302E  --language=ko
@@ -304,9 +304,7 @@ hangul.ttf  ᄀ\u302E  --language=ko
 hangul.ttf  \u302E  --language=ko  --bot
 ```
 
-The dotted circle is made by `replace_glyphs`, which copies the tone mark’s buffer entry, Unicode properties and all (`:245`). So the circle is a spacing mark too, and when it follows a base, as it does after a lone KIYEOK in the second line, the fallback positioner treats it as one: it loses its advance and is placed over the KIYEOK. The generic dotted circle, inserted at the start of text, gets the properties of U+25CC instead (`hb-ot-shape.cc:567`). And that generic circle comes first: at the beginning of text (`--bot`), HarfBuzz has already put a dotted circle before the tone mark, but to the Hangul shaper that circle isn’t a syllable, so it adds a second.
-
-> Since {{hb}}: fixed on HarfBuzz main by [#6711](https://github.com/harfbuzz/harfbuzz/pull/6711) and [#6712](https://github.com/harfbuzz/harfbuzz/pull/6712) (17 November 2026), so main gives the circle U+25CC’s own properties, and it keeps its advance; with `--bot`, the circle already there serves as the tone mark’s base, and there is one.
+The dotted circle is made by `replace_glyphs`, which copies the tone mark’s buffer entry, and is then given the Unicode properties of U+25CC (`:247`), as the generic dotted circle inserted at the start of text is (`hb-ot-shape.cc:566`). So the circle is a base, and keeps its advance even after a lone KIYEOK, in the second line, where the tone mark, a spacing mark to the fallback positioner, is placed over the KIYEOK. At the beginning of text (`--bot`), the generic circle comes first, and the Hangul shaper takes a dotted circle as a tone mark’s base (`:402`), so the text gets one circle. Before 15.2.0 the shaper’s circle kept the tone mark’s properties and lost its advance after a base, and with `--bot` there were two circles ([HHW-19](bugs-this-book-found.html#hhw-19), [HHW-20](bugs-this-book-found.html#hhw-20)).
 
 ### Old Hangul and `KOH`
 
@@ -336,11 +334,9 @@ None of this chapter’s tables is generated: the Hebrew presentation forms, the
 
 ## In short
 
-* Hebrew: after normalization sorts the points, one sequence is swapped so that a meteg or accent below follows a patah or qamats. Old fonts with no `mark` feature get Hebrew presentation forms, composed from letters and points. A `mark` feature under `DFLT` stops that, though the GPOS it is in is ignored.
+* Hebrew: after normalization sorts the points, one sequence is swapped so that a meteg or accent below follows a patah or qamats. Old fonts with no `mark` feature get Hebrew presentation forms, composed from letters and points. So do fonts whose GPOS is ignored because it has no `hebr` script.
 * Thai and Lao: SARA AM is always split into NIKHAHIT and SARA AA, and the NIKHAHIT moved back before any tone mark, so the font needs those two glyphs.
 * Thai fonts without a `thai` GSUB script get marks and consonants swapped for the Windows or Mac private-use glyphs that old fonts used, chosen by two small state machines.
 * Lao shares the Thai shaper because its block mirrors Thai’s, 0x80 higher; the PUA fallback is Thai only.
 * Hangul: each syllable becomes a precomposed glyph if the font has the whole of it, and jamo with `ljmo`, `vjmo`, and `tjmo` otherwise. `calt` is kept off jamo only.
-* Hangul tone marks move before their syllable unless they have zero width. The dotted circle the shaper adds for a stray tone mark is given the tone mark’s properties, which looks like a bug.
-
-> Since {{hb}}: fixed on HarfBuzz main by [#6711](https://github.com/harfbuzz/harfbuzz/pull/6711) (17 November 2026), so main gives the tone mark’s dotted circle U+25CC’s own properties (the item on Hangul tone marks).
+* Hangul tone marks move before their syllable unless they have zero width. A stray tone mark gets a dotted circle, with U+25CC’s own properties, or uses one already there as its base.

@@ -3,7 +3,7 @@
   "subtitle": "From Unicode to positioned glyphs, and everything in between",
   "author": "Laurence Penney",
   "with": "Claude",
-  "harfbuzz": "15.1.0",
+  "harfbuzz": "15.2.0",
   "publisher": "Axis-Praxis Press",
   "edition": "Draft",
   "repository": "https://github.com/Lorp/how-harfbuzz-works",

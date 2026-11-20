@@ -137,8 +137,8 @@ A font with a `morx` table that HarfBuzz uses gets none of the GSUB stages: `mor
 
 | What | Where |
 |---|---|
-| The features every shaper asks for, and in what order | `hb_ot_shape_collect_features`, `src/hb-ot-shape.cc:321` |
-| Running the stages, and the trace’s lookup messages | `hb_ot_map_t::apply`, `src/hb-ot-layout.cc:2083` |
+| The features every shaper asks for, and in what order | `hb_ot_shape_collect_features`, `src/hb-ot-shape.cc:317` |
+| Running the stages, and the trace’s lookup messages | `hb_ot_map_t::apply`, `src/hb-ot-layout.cc:2094` |
 | Each shaper’s features and pauses | `collect_features_*` in `src/hb-ot-shaper-arabic.cc`, `-indic.cc`, `-khmer.cc`, `-myanmar.cc`, `-use.cc`, `-hangul.cc` |
 | The fonts | `fonts/feature-order/build-fonts.py` |
 | The `order` block | `blockOrder`, `tools/build-site.mjs` |

@@ -17,7 +17,7 @@ apps.ttf  ببب  --language=ar
 
 In *office* the ligature has cluster 1 and the *c* after it 4, so the ligature covers characters 1, 2, and 3. In right-to-left text the glyphs come out in visual order, so the clusters fall along the buffer instead of rising: the first glyph is the last beh. An application that goes from text to glyphs (to color a range, or to find where a selection starts) looks for the cluster that contains the character; one that goes from glyphs to text (to find what was clicked) takes the glyph’s cluster and the next one.
 
-Cursor positions come from the same arithmetic. A boundary between two clusters is a place a cursor can go, and its position is the sum of the advances before it. Inside a cluster of several characters, HarfBuzz gives no position. For a ligature, the font may: GDEF can hold **ligature carets**, and `hb_ot_layout_get_ligature_carets` (`hb-ot-layout.cc:397`) returns them, one fewer than the ligature has components. The test font gives *ffi* carets at 300 and 600. The documentation warns that the positions are “unshaped”, so kerning applied to the ligature has to be added by the caller, and the function reads only GDEF, not the AAT `lcar` table. A font without carets leaves the application to divide the ligature itself, for example into equal parts (a common choice, not something HarfBuzz does).
+Cursor positions come from the same arithmetic. A boundary between two clusters is a place a cursor can go, and its position is the sum of the advances before it. Inside a cluster of several characters, HarfBuzz gives no position. For a ligature, the font may: GDEF can hold **ligature carets**, and `hb_ot_layout_get_ligature_carets` (`hb-ot-layout.cc:395`) returns them, one fewer than the ligature has components. The test font gives *ffi* carets at 300 and 600. The documentation warns that the positions are “unshaped”, so kerning applied to the ligature has to be added by the caller, and the function reads only GDEF, not the AAT `lcar` table. A font without carets leaves the application to divide the ligature itself, for example into equal parts (a common choice, not something HarfBuzz does).
 
 The cluster level decides how coarse all this is. At the default, level 0, a mark joins the cluster of its base before shaping starts, so a cursor can never land between them. At level 1, which the header recommends for new programs, marks keep clusters of their own where the order allows it. Levels 2 and 3 give finer clusters that can be out of order, which this chapter’s arithmetic doesn’t handle. All four are compared in [Buffers](buffers.html#the-four-cluster-levels). Whichever level is used, grapheme boundaries for cursor movement are the application’s business: HarfBuzz’s notion of a grapheme is only “similar to” Unicode’s, as the header puts it.
 
@@ -29,9 +29,9 @@ The cluster level decides how coarse all this is. At the default, level 0, a mar
 | `UNSAFE_TO_CONCAT` | `#2` | changing the text on one side of the start of this cluster might change the result on the other |
 | `SAFE_TO_INSERT_TATWEEL` | `#4` | a U+0640 TATWEEL can be inserted before this cluster without disturbing the shaping |
 
-The definitions are the header’s (`hb-buffer.h:76`–`153`), and they are worded with care. The unsafe flags are promises by their absence. A glyph *without* `UNSAFE_TO_BREAK` is a place where the run can be cut and the two halves are already what shaping them separately would give. A glyph *with* it is only a warning: the result might change, and often won’t. Every flag is about the boundary at the *start* of its glyph’s cluster, and after shaping every glyph of a cluster carries the same flags (`hb_propagate_flags`, `hb-ot-shape.cc:1109`), so any of them can be read. There is no flag for the end of the text, which matters below.
+The definitions are the header’s (`hb-buffer.h:76`–`153`), and they are worded with care. The unsafe flags are promises by their absence. A glyph *without* `UNSAFE_TO_BREAK` is a place where the run can be cut and the two halves are already what shaping them separately would give. A glyph *with* it is only a warning: the result might change, and often won’t. Every flag is about the boundary at the *start* of its glyph’s cluster, and after shaping every glyph of a cluster carries the same flags (`hb_propagate_flags`, `hb-ot-shape.cc:1111`), so any of them can be read. There is no flag for the end of the text, which matters below.
 
-`UNSAFE_TO_CONCAT` is the weaker condition, and implies nothing on its own: “the absence of this flag will NOT by itself mean that it IS safe to concat text. Only two pieces of text both of which clear of this flag can be concatenated safely.” Unsafe to break always implies unsafe to concat, since `unsafe_to_break` sets both (`hb-buffer.hh:506`). Unsafe to concat costs more to work out, because it has to be recorded where a lookup *failed* to match, so it is only made when the buffer has `HB_BUFFER_FLAG_PRODUCE_UNSAFE_TO_CONCAT` (`:526`), and otherwise cleared at the end. Without that flag, a `#2` can’t be trusted either way. The tatweel flag likewise needs `HB_BUFFER_FLAG_PRODUCE_SAFE_TO_INSERT_TATWEEL`.
+`UNSAFE_TO_CONCAT` is the weaker condition, and implies nothing on its own: “the absence of this flag will NOT by itself mean that it IS safe to concat text. Only two pieces of text both of which clear of this flag can be concatenated safely.” Unsafe to break always implies unsafe to concat, since `unsafe_to_break` sets both (`hb-buffer.hh:509`). Unsafe to concat costs more to work out, because it has to be recorded where a lookup *failed* to match, so it is only made when the buffer has `HB_BUFFER_FLAG_PRODUCE_UNSAFE_TO_CONCAT` (`:529`), and otherwise cleared at the end. Without that flag, a `#2` can’t be trusted either way. The tatweel flag likewise needs `HB_BUFFER_FLAG_PRODUCE_SAFE_TO_INSERT_TATWEEL`.
 
 Here is a paragraph with both unsafe flags asked for:
 
@@ -42,7 +42,7 @@ apps.ttf  a fine non-Toxic office  --language=en  --show-flags  --unsafe-to-conc
 
 The kerning pairs leave the only marks. The hyphen is kerned against the *T* (its advance is 200, not 300), so the *T* is unsafe to break; the *T* is kerned against the *o*, so the *o* is too. The hyphen itself is clear, because a pair marks only its interior: breaking *before* the hyphen would not separate the pair. Every other boundary in the paragraph is safe. The ligatures leave nothing to see, since each is a single cluster with no boundary inside it.
 
-Not every backend is this precise. The Core Text, DirectWrite, Uniscribe, Graphite, `kbts`, and `wasm` backends mark the whole buffer unsafe to break ([hb_shape and its backends](hb_shape-and-its-backends.html)). The `ot` shaper’s AAT paths mark the whole buffer unsafe to concat: `morx` (`hb-aat-layout-morx-table.hh:1465`, shown in [AAT inside HarfBuzz](aat-inside-harfbuzz.html#clusters-and-safe-breaking)), `kerx` (`hb-aat-layout-kerx-table.hh:1058`), and the machine that applies the legacy `kern` table (`hb-kern.hh:54`):
+Not every backend is this precise. The Core Text, DirectWrite, Uniscribe, Graphite, `kbts`, and `wasm` backends mark the whole buffer unsafe to break ([hb_shape and its backends](hb_shape-and-its-backends.html)). The `ot` shaper’s AAT paths mark the whole buffer unsafe to concat: `morx` (`hb-aat-layout-morx-table.hh:1517`, shown in [AAT inside HarfBuzz](aat-inside-harfbuzz.html#clusters-and-safe-breaking)), `kerx` (`hb-aat-layout-kerx-table.hh:1116`), and the machine that applies the legacy `kern` table (`hb-kern.hh:54`):
 
 ```shape
 aat-positioning/kerx.ttf  AVTo  --language=en  --show-flags  --unsafe-to-concat
@@ -107,42 +107,35 @@ The ligature splits into an *f* on one line and an *fi* on the next. The flags e
 apps.ttf  a fine non-Toxic office  --language=en  --verify  --unsafe-to-concat
 ```
 
-Two things about the test matter to an application. The pieces are cut from the text with `hb_buffer_append`, which since 2.9.1 copies the neighboring characters as pre- and post-context (`hb-buffer.cc:2139`–`2154`). So the promise that is checked is about pieces shaped *with* their context, and an application should supply it too. And all three checks are skipped at cluster levels 2 and 3 (`hb-buffer-verify.cc:65`), so flags made at those levels are never tested, and [one of the ways flags are set at level 3](buffers.html#the-four-cluster-levels) treats it as ordered when it isn’t.
+Two things about the test matter to an application. The pieces are cut from the text with `hb_buffer_append`, which since 2.9.1 copies the neighboring characters as pre- and post-context (`hb-buffer.cc:2144`–`2159`). So the promise that is checked is about pieces shaped *with* their context, and an application should supply it too. And all three checks are skipped at cluster levels 2 and 3 (`hb-buffer-verify.cc:65`), so flags made at those levels are never tested. Until 15.2.0 [one of the ways flags are set](buffers.html#the-four-cluster-levels) treated level 3 as ordered when it isn’t, and nothing caught it ([HHW-5](bugs-this-book-found.html#hhw-5)).
 
-> Since {{hb}}: fixed on HarfBuzz main by [#6706](https://github.com/harfbuzz/harfbuzz/pull/6706) (17 November 2026), so main scans the whole range at level 3 as well.
+Run over every `shape` example in this book, `--verify` passes with {{hb}}. With 15.1.0 it failed on several kinds of text, among them these three, each a break the flags called safe that wasn’t, and each fixed in 15.2.0.
 
-`--verify` doesn’t fail for the examples in most chapters of this book, but it does for some, and each failure is a break the flags call safe that isn’t. Run over every `shape` example in the book, it fails on three kinds of text. The book’s build stops when `hb-shape` fails, so the failures are shown here by shaping the pieces by hand.
-
-The USE shaper gives a Devanagari syllable `init` when it starts a word, and doesn’t count a space as the end of one ([The Universal Shaping Engine](universal-shaping-engine.html#topographical-forms)): the first vowel sign below is initial in the whole text, but not when the text is cut at the space, which carries no flag:
+The USE shaper gave a Devanagari syllable `init` when it started a word, and didn’t count a space as the end of one, so the first vowel sign below was initial in the whole text but not when the text was cut at the space. Since 15.2.0 a space ends a word ([The Universal Shaping Engine](universal-shaping-engine.html#topographical-forms)), and the vowel sign is the plain form either way:
 
 ```shape
 universal-shaping-engine/deva3.ttf  क\u093F क  --language=hi  --show-flags
-universal-shaping-engine/deva3.ttf  क\u093F  --language=hi
 ```
 
-Cross-stream kerning in a legacy `kern` table (or `kerx`) raises every glyph after a pair, but marks only the pair. Cut before the second *A*, which is unflagged, and the *A T* come down to the baseline:
+Cross-stream kerning in a legacy `kern` table (or `kerx`) raises every glyph after a pair, but marked only the pair unsafe to break, so a cut before the second *A* brought *A T* down to the baseline ([HHW-58](bugs-this-book-found.html#hhw-58)). Now every glyph it raises is flagged (`#1`):
 
 ```shape
 legacy-kern/cross.ttf  AVAT  --language=en  --show-flags
-legacy-kern/cross.ttf  AT  --language=en
 ```
 
-And the Hangul shaper, at cluster level 1, splits a precomposed syllable into jamo to add a trailing consonant that follows it, and leaves the trailing consonant in its own cluster with no flag (`hb-ot-shaper-hangul.cc:385`), though apart the two are a syllable glyph and a separate jamo:
+And the Hangul shaper, at cluster level 1, splits a precomposed syllable into jamo to add a trailing consonant that follows it, and leaves the trailing consonant in its own cluster (`hb-ot-shaper-hangul.cc:387`), though apart the two are a syllable glyph and a separate jamo. It left that cluster unflagged ([HHW-59](bugs-this-book-found.html#hhw-59)); now it is unsafe to break:
 
 ```shape
 hebrew-thai-lao-and-hangul/hangul.ttf  가\u11EB  --language=ko  --cluster-level=1  --show-flags
-hebrew-thai-lao-and-hangul/hangul.ttf  가  --language=ko  --cluster-level=1
 ```
 
-> Since {{hb}}: fixed on HarfBuzz main by [#6709](https://github.com/harfbuzz/harfbuzz/pull/6709) (17 November 2026), so main flags the trailing consonant unsafe to break, and the Hangul text passes `--verify`.
-
-Each of these looks like a HarfBuzz bug. For an application, they mean the flags are as good as the code that sets them, and `--verify` is how to find out for a given font and text.
+For an application, these mean the flags are as good as the code that sets them, and `--verify` is how to find out for a given font and text.
 
 ## Context at the edges of a run
 
-The run handed to HarfBuzz is rarely a whole paragraph, and the characters around it can matter. `hb_buffer_add_utf8` and its siblings take the whole string with an `item_offset` and `item_length`, and keep up to five characters on either side as pre- and post-context (`hb_buffer_add_utf`, `hb-buffer.cc:1868`). The pre-context is taken only while the buffer is empty and the offset is greater than 0 (`:1903`), so it can come from a separate first call with a length of 0, which is how `hb-shape --text-before` supplies it (`util/shape-options.hh:117`). `hb_buffer_clear_contents` forgets both. The clusters are offsets into the whole string, which keeps them meaningful to the application.
+The run handed to HarfBuzz is rarely a whole paragraph, and the characters around it can matter. `hb_buffer_add_utf8` and its siblings take the whole string with an `item_offset` and `item_length`, and keep up to five characters on either side as pre- and post-context (`hb_buffer_add_utf`, `hb-buffer.cc:1852`). The pre-context is taken only while the buffer is empty and the offset is greater than 0 (`:1887`), so it can come from a separate first call with a length of 0, which is how `hb-shape --text-before` supplies it (`util/shape-options.hh:117`). `hb_buffer_clear_contents` forgets both. The clusters are offsets into the whole string, which keeps them meaningful to the application.
 
-In {{hb}}, the context is read in only two places in the `ot` shaper: the Arabic joining machine, which starts from the pre-context and ends with the post-context (`hb-ot-shaper-arabic.cc:309`, `:358`), and the test for a dotted circle at the start of a paragraph (`hb-ot-shape.cc:558`). The `harfrust` backend passes it on. Lookups never see it. So context makes a run split inside an Arabic word join as though it were whole, but it can’t make a ligature, or a kerning pair, across the split:
+In {{hb}}, the context is read in only three places in the `ot` shaper: the Arabic joining machine, which starts from the pre-context and ends with the post-context (`hb-ot-shaper-arabic.cc:309`, `:358`); the test for a dotted circle at the start of a paragraph (`hb-ot-shape.cc:557`); and, since 15.2.0, the Indic shaper’s test for a word start, which gives a pre-base vowel sign `init` only when the character before the syllable, in the run or in the pre-context, is not a letter, a mark, or a format, private-use, or unassigned character (`hb-ot-shaper-indic.cc:1444`). The `harfrust` backend passes it on. Lookups never see it. So context makes a run split inside an Arabic word join as though it were whole, but it can’t make a ligature, or a kerning pair, across the split:
 
 ```shape
 apps.ttf  بب  --show-flags  --unsafe-to-concat
@@ -170,7 +163,7 @@ Reshaping is cheap in another way as well: the plan is cached, so shaping a few 
 
 HarfBuzz doesn’t itemize. Before it is called, the application splits each paragraph into runs of one script, one direction, one language, and one font, with one set of features. The directions come from the Unicode bidirectional algorithm, the scripts from Unicode’s script property with the application’s own rules for characters such as spaces, digits, and punctuation that belong to no one script, the languages from the document’s markup or settings ([Why shaping exists](why-shaping-exists.html#runs-and-the-three-things-harfbuzz-must-be-told)), and the fonts from its own fallback, when the chosen font lacks a character. Each run goes to HarfBuzz in logical order, as the text is stored, not reordered for display: HarfBuzz reverses a right-to-left run itself, after positioning, and mirrors brackets in it ([The pipeline, step by step](pipeline-step-by-step.html#into-visual-order)).
 
-`hb_buffer_guess_segment_properties` (`hb-buffer.cc:746`) is not an itemizer. It looks for the first character whose script isn’t Common, Inherited, or Unknown, takes the direction from that script, and the language from the locale ([Why shaping exists](why-shaping-exists.html#runs-and-the-three-things-harfbuzz-must-be-told)). Given mixed text, it calls the whole run by the first script it sees:
+`hb_buffer_guess_segment_properties` (`hb-buffer.cc:730`) is not an itemizer. It looks for the first character whose script isn’t Common, Inherited, or Unknown, takes the direction from that script, and the language from the locale ([Why shaping exists](why-shaping-exists.html#runs-and-the-three-things-harfbuzz-must-be-told)). Given mixed text, it calls the whole run by the first script it sees:
 
 ```shape
 apps.ttf  a بب  --language=ar
@@ -191,7 +184,7 @@ An application can also ask before shaping, with `hb_font_get_nominal_glyph`. Wh
 
 HarfBuzz has no justifier. It measures the run and leaves the spacing of lines to the application. Two things in it are made for justification.
 
-The tatweel flag marks where an Arabic word can be lengthened with U+0640 TATWEEL without changing how it joins. The Arabic joining machine sets it at every join (`hb-ot-shaper-arabic.cc:335`); the header is careful to say that it “does not determine the script-specific elongation places”, only where elongation won’t interrupt shaping. Choosing among the flagged places, by the rules of the script and the taste of the typography, is still the application’s job. A flagged cluster is always unsafe to break as well, and a cluster unsafe to break for another reason loses the flag (`hb-ot-shape.cc:1145`):
+The tatweel flag marks where an Arabic word can be lengthened with U+0640 TATWEEL without changing how it joins. The Arabic joining machine sets it at every join (`hb-ot-shaper-arabic.cc:335`); the header is careful to say that it “does not determine the script-specific elongation places”, only where elongation won’t interrupt shaping. Choosing among the flagged places, by the rules of the script and the taste of the typography, is still the application’s job. A flagged cluster is always unsafe to break as well, and a cluster unsafe to break for another reason loses the flag (`hb-ot-shape.cc:1147`):
 
 ```shape
 apps.ttf  ببب  --show-flags  --safe-to-insert-tatweel
@@ -200,11 +193,11 @@ apps.ttf  ب\u0640بب  --show-flags  --safe-to-insert-tatweel
 
 Both the medial and final behs (clusters 1 and 2) are `#5`, unsafe to break and safe for a tatweel. With a tatweel inserted before the middle one, the forms are the same and the word is 300 units wider. The text has changed, so the word has to be shaped again, and its clusters move along by one; an application that wants clusters to keep pointing into its own text can add the tatweel with `hb_buffer_add` and the cluster of the character it was inserted before (inferred from how clusters work, not tried here).
 
-The other is `hb_shape_justify` (`hb-shape.cc:255`, new in 7.1.0), which shapes a run again and again at different settings of a font’s `jstf` axis (HarfBuzz’s own tag: OpenType registers no such axis), or failing that `wdth`, until its advance falls between two targets. It is still experimental: it exists only in a build with `-Dexperimental_api=true`, and with it `hb-shape --justify-to`. This book’s build is not one. Syriac’s `stch`, which stretches a mark across a word, is a different thing: the font asks for it, and HarfBuzz does it while shaping ([Joining scripts](joining-scripts.html#stretching-stch)).
+The other is `hb_shape_justify` (`hb-shape.cc:257`, new in 7.1.0), which shapes a run again and again at different settings of a font’s `jstf` axis (HarfBuzz’s own tag: OpenType registers no such axis), or failing that `wdth`, until its advance falls between two targets. It is still experimental: it exists only in a build with `-Dexperimental_api=true`, and with it `hb-shape --justify-to`. This book’s build is not one. Syriac’s `stch`, which stretches a mark across a word, is a different thing: the font asks for it, and HarfBuzz does it while shaping ([Joining scripts](joining-scripts.html#stretching-stch)).
 
 ## Pitfalls
 
-**Feature ranges are in cluster units.** `hb_feature_t`’s `start` and `end` are compared with cluster values, not glyph or character indices (`set_masks`, `hb-buffer.cc:539`). An application that adds text from a larger string has clusters in that string’s code units, counting from its start, and its ranges have to be in the same units. A range that cuts through a ligature changes which ligature forms, since every component needs the feature:
+**Feature ranges are in cluster units.** `hb_feature_t`’s `start` and `end` are compared with cluster values, not glyph or character indices (`set_masks`, `hb-buffer.cc:532`). An application that adds text from a larger string has clusters in that string’s code units, counting from its start, and its ranges have to be in the same units. A range that cuts through a ligature changes which ligature forms, since every component needs the feature:
 
 ```shape
 apps.ttf  office  --language=en  --features=-liga[3]
@@ -242,7 +235,7 @@ Each trap below follows from something HarfBuzz does inside, explained in the ch
 
 **Failure is quiet.** `hb_shape` returns nothing, and `hb_shape_full` returns true even when the buffer has run out of memory or of its operation budget, as [Pitfalls](#pitfalls) says. `hb_buffer_allocation_successful` is the test.
 
-**The language comes from the locale, once.** `hb_buffer_guess_segment_properties` takes the language from the process’s locale, through `hb_language_get_default` (`hb-common.cc:384`). That function reads `LC_CTYPE` the first time it is called and keeps the answer for the life of the process. So the same program can shape differently on two machines, and differently from `hb-shape`, which sets its locale from the environment (`util/options.hh:287`). A C program that never calls `setlocale` is in the `C` locale, and gets the language `c`, which matches no language system in a font. With a font that has Turkish forms, the language decides whether *fi* becomes a ligature:
+**The language comes from the locale, once.** `hb_buffer_guess_segment_properties` takes the language from the process’s locale, through `hb_language_get_default` (`hb-common.cc:387`). That function reads `LC_CTYPE` the first time it is called and keeps the answer for the life of the process. So the same program can shape differently on two machines, and differently from `hb-shape`, which sets its locale from the environment (`util/options.hh:287`). A C program that never calls `setlocale` is in the `C` locale, and gets the language `c`, which matches no language system in a font. With a font that has Turkish forms, the language decides whether *fi* becomes a ligature:
 
 ```shape
 choosing-a-script-shaper/turkish.ttf  fi  --language=en
@@ -264,7 +257,7 @@ The same comment warns that the first call uses `setlocale`, which many C librar
 | `src/hb-buffer.cc` | `hb_buffer_add_utf` and its context, `hb_buffer_append`, `guess_segment_properties`, `set_masks` |
 | `src/hb-buffer-verify.cc` | the three checks behind `HB_BUFFER_FLAG_VERIFY` |
 | `src/hb-ot-shape.cc` | `hb_propagate_flags` |
-| `src/hb-ot-shaper-arabic.cc` | the joining machine: the only reader of context, and the tatweel flag |
+| `src/hb-ot-shaper-arabic.cc` | the joining machine: the main reader of context, and the tatweel flag |
 | `src/hb-ot-layout.cc` | `hb_ot_layout_get_ligature_carets` |
 | `src/hb-shape.cc` | `hb_shape_full`, and the experimental `hb_shape_justify` |
 | `docs/usermanual-clusters.xml`, `docs/usermanual-what-is-harfbuzz.xml` | the manual on clusters, and on what HarfBuzz leaves to applications |
@@ -274,7 +267,7 @@ The same comment warns that the first call uses `setlocale`, which many C librar
 * A glyph’s cluster is the offset of the first character it came from; a cluster covers the characters up to the next cluster value. Cursors go between clusters, or inside a ligature at GDEF’s carets.
 * No `UNSAFE_TO_BREAK` on a glyph means the run can be cut at the start of its cluster with nothing reshaped. No `UNSAFE_TO_CONCAT` on both pieces means they can be joined; it must be asked for with `HB_BUFFER_FLAG_PRODUCE_UNSAFE_TO_CONCAT`.
 * A line breaker shapes the paragraph once, cuts where the flags allow, and reshapes only around flagged breaks, or as little as the unsafe-to-concat method needs. A break inside a cluster always needs reshaping.
-* `--verify` checks the flags by reshaping. A few shapers and tables in {{hb}} set them too optimistically.
-* Context, given through the `item_offset` of the add functions, reaches only Arabic joining and the dotted-circle test, never lookups.
+* `--verify` checks the flags by reshaping. Every example in this book passes it in {{hb}}; in 15.1.0 a few shapers and tables set the flags too optimistically.
+* Context, given through the `item_offset` of the add functions, reaches only Arabic joining, the dotted-circle test, and the Indic shaper’s word starts, never lookups.
 * Itemization, font fallback, line breaking, and justification are the application’s; HarfBuzz offers the tatweel flag, and an experimental justifier that uses variation axes.
 * Before shipping: check that the file was a font and that shaping succeeded, set the language instead of letting it come from the locale, and count clusters in the units the text was added in.

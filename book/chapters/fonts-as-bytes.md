@@ -48,7 +48,7 @@ typedef struct OpenTypeOffsetTable
 } OpenTypeFontFace;
 ```
 
-`TableRecord` is `Tag tag`, `CheckSum checkSum`, `Offset32 offset`, and `HBUINT32 length`, 16 bytes (`hb-open-file.hh:54`). `BinSearchArrayOf` is an array whose count is followed by `searchRange`, `entrySelector`, and `rangeShift`, values precomputed for a binary search. HarfBuzz never reads them. The header type, `BinSearchHeader`, converts itself to a number by returning only its `len` (`hb-open-type.hh:1111`), so the generic sorted array uses the whole 8-byte header as its count.
+`TableRecord` is `Tag tag`, `CheckSum checkSum`, `Offset32 offset`, and `HBUINT32 length`, 16 bytes (`hb-open-file.hh:54`). `BinSearchArrayOf` is an array whose count is followed by `searchRange`, `entrySelector`, and `rangeShift`, values precomputed for a binary search. HarfBuzz never reads them. The header type, `BinSearchHeader`, converts itself to a number by returning only its `len` (`hb-open-type.hh:1118`), so the generic sorted array uses the whole 8-byte header as its count.
 
 HarfBuzz can list the directory itself:
 
@@ -114,7 +114,7 @@ There is an unsigned 24-bit type but no signed one. A comment at `hb-open-type.h
 
 A few types add behavior to a plain number. `Tag` converts to a `const char *` pointing at its own four bytes, which are *not* followed by a NUL, so the code prints tags with `"%.4s"`. A tag is always four bytes; a shorter name is padded with spaces, as in the table `'cvt '`, the language system `'TRK '`, or the script `'nko '`, and the spaces are part of the tag. `Index` (a 16-bit index into a list of scripts, features, or languages) and `VarIdx` (a 32-bit index into an item variation store) each have a value that means “none”, `0xFFFF` and `0xFFFFFFFF`, which matters for Null objects below. The fixed-point types (`HBFixed`, `hb-open-type.hh:247`) refuse to convert to an integer, so an `F2DOT14` can’t be used as one by accident.
 
-None of these structs can be made on its own. The array types declare `HB_DELETE_CREATE_COPY_ASSIGN` (`hb-meta.hh:221`), which deletes their default constructor and copying, and so does any struct that holds one. There is no way to make a Coverage table except by pointing at bytes that hold one.
+None of these structs can be made on its own. The array types declare `HB_DELETE_CREATE_COPY_ASSIGN` (`hb-meta.hh:188`), which deletes their default constructor and copying, and so does any struct that holds one. There is no way to make a Coverage table except by pointing at bytes that hold one.
 
 ## How big is a struct?
 
@@ -153,7 +153,7 @@ const HBUINT16 &markFilteringSet = StructAfter<const HBUINT16> (subTable);
 
 `StructAfter<T> (x)` is `StructAtOffset<T> (&x, x.get_size ())`: the `T` that starts where `x` ends. `StructAtOffset<T> (p, n)` is the most basic tool of all, a cast of “the bytes *n* on from *p*” to a `T` (`hb-machinery.hh:45`–`84`).
 
-Fields added in later versions are declared anyway, and read only after a version check. A version 1.0 GSUB header is ten bytes, and 1.1 adds an offset to FeatureVariations. `GSUBGPOS` declares every field, says `DEFINE_SIZE_MIN (10)`, and reads `featureVars` only if the version is 1.1 or more (`hb-ot-layout-gsubgpos.hh:6485`): in a 1.0 table those bytes are whatever comes next.
+Fields added in later versions are declared anyway, and read only after a version check. A version 1.0 GSUB header is ten bytes, and 1.1 adds an offset to FeatureVariations. `GSUBGPOS` declares every field, says `DEFINE_SIZE_MIN (10)`, and reads `featureVars` only if the version is 1.1 or more (`hb-ot-layout-gsubgpos.hh:6763`): in a 1.0 table those bytes are whatever comes next.
 
 ## Offsets that know their targets
 
@@ -175,7 +175,7 @@ struct OffsetTo : Offset<OffsetType, has_null>
 };
 ```
 
-That is `hb-open-type.hh:410`–`446`, much trimmed. `Offset16To<Coverage>` is the same with a 16-bit offset. The `operator +` lets the code write what the specification says. Here are two lines of `SingleSubstFormat1_3::apply` (`OT/Layout/GSUB/SingleSubstFormat1.hh:206`):
+That is `hb-open-type.hh:417`–`453`, much trimmed. `Offset16To<Coverage>` is the same with a 16-bit offset. The `operator +` lets the code write what the specification says. Here are two lines of `SingleSubstFormat1_3::apply` (`OT/Layout/GSUB/SingleSubstFormat1.hh:201`):
 
 ```c++
 unsigned int index = (this+coverage).get_coverage (glyph_id);
@@ -186,7 +186,7 @@ if (index == NOT_COVERED) return_trace (false);
 
 The code always names the base, because OpenType counts offsets from different places, and only the code holding the offset knows which. A coverage offset counts from the start of its subtable, an offset in a ScriptList from the start of the ScriptList, a Device-table offset in a GPOS value record from the start of the *subtable* that holds the record, and a TTC’s directory offsets from the start of the file. HarfBuzz has types for some of these patterns:
 
-* `List16OfOffsetTo<Type, OffsetType>` (`hb-open-type.hh:857`) is an array of offsets counted from the start of the array itself, which is what the LookupList is. Its `operator []` follows the offset, so `lookupList[i]` is the *i*th Lookup, not the *i*th number.
+* `List16OfOffsetTo<Type, OffsetType>` (`hb-open-type.hh:864`) is an array of offsets counted from the start of the array itself, which is what the LookupList is. Its `operator []` follows the offset, so `lookupList[i]` is the *i*th Lookup, not the *i*th number.
 * `RecordListOf<Type>` (`hb-ot-layout-common.hh:955`) is the same for an array of tag-and-offset records, such as the ScriptList and FeatureList.
 * The `BaseType` parameter can name a type that the base must be. GPOS uses a dummy type, `ValueBase` (`OT/Layout/GPOS/ValueFormat.hh:12`), for Device-table offsets, so that only a pointer that has been declared to be a value record’s base can be added to one, and passing `this` by mistake doesn’t compile.
 
@@ -194,9 +194,9 @@ The code always names the base, because OpenType counts offsets from different p
 
 An offset of zero would point at the base itself, which is never what a font means. So OpenType uses zero for “there is no table here”, and `OffsetTo` follows it. A zero offset doesn’t give a pointer to the base. It gives the target type’s **Null object**: a read-only, empty instance of the type, which every method can be called on. The code that follows the offset doesn’t check for zero. It just uses what it gets.
 
-Not every offset may be null. In a resource fork, for example, an offset of zero is a real offset to the first resource. For those, HarfBuzz has `NNOffsetTo`, `NNOffset16To`, and the rest (“non-null”, `hb-open-type.hh:545`), where `has_null` is false and zero means zero.
+Not every offset may be null. In a resource fork, for example, an offset of zero is a real offset to the first resource. For those, HarfBuzz has `NNOffsetTo`, `NNOffset16To`, and the rest (“non-null”, `hb-open-type.hh:552`), where `has_null` is false and zero means zero.
 
-A nullable offset to a type that can’t be Null doesn’t compile. A `static_assert` in `OffsetTo` (`hb-open-type.hh:416`) refuses one to any type with a `min_size` but no `null_size`, such as `UnsizedArrayOf`, whose length the struct can’t know. Its Null object would have no safe size, so an offset that might produce one isn’t allowed.
+A nullable offset to a type that can’t be Null doesn’t compile. A `static_assert` in `OffsetTo` (`hb-open-type.hh:423`) refuses one to any type with a `min_size` but no `null_size`, such as `UnsizedArrayOf`, whose length the struct can’t know. Its Null object would have no safe size, so an offset that might produce one isn’t allowed.
 
 ## Arrays
 
@@ -214,9 +214,9 @@ There are several kinds of array, because OpenType stores lengths in several way
 | `VarSizedBinSearchArrayOf` | a header giving the size and number of elements | AAT lookup tables |
 | `List16OfOffsetTo`, `Array16OfOffset16To`, and so on | a count, then offsets to the elements | the LookupList, a lookup’s subtables |
 
-They share one rule: indexing past the end doesn’t read past the end. `ArrayOf::operator []` checks the index against `len` and returns `Null (Type)` if it is too big (`hb-open-type.hh:719`), and so do the other sized arrays. `UnsizedArrayOf` doesn’t know its length, so it can’t check, and its users have to; reading `arrayZ` directly skips the check too.
+They share one rule: indexing past the end doesn’t read past the end. `ArrayOf::operator []` checks the index against `len` and returns `Null (Type)` if it is too big (`hb-open-type.hh:726`), and so do the other sized arrays. `UnsizedArrayOf` doesn’t know its length, so it can’t check, and its users have to; reading `arrayZ` directly skips the check too.
 
-`HeadlessArrayOf`, the GSUB chapter’s ligature `component`, is indexed from 1. `VarSizedBinSearchArrayOf` (`hb-open-type.hh:1168`) is for AAT lookups, where the element size is in the font, and a last element of `0xFFFF`s is a terminator that isn’t counted.
+`HeadlessArrayOf`, the GSUB chapter’s ligature `component`, is indexed from 1. `VarSizedBinSearchArrayOf` (`hb-open-type.hh:1175`) is for AAT lookups, where the element size is in the font, and a last element of `0xFFFF`s is a terminator that isn’t counted.
 
 ### A Coverage table, byte by byte
 
@@ -274,7 +274,7 @@ Format 2 stores ranges instead: `RangeRecord`s of a first glyph, a last glyph, a
 
 ## Null objects
 
-The Null pool is 640 bytes of zeros, `_hb_NullPool` (`hb-null.hh:40`, defined in `hb-static.cc:51`). `Null (T)` returns those bytes as a `const T &` (`hb-null.hh:110`–`124`):
+The Null pool is 640 bytes of zeros, `_hb_NullPool` (`hb-null.hh:40`, defined in `hb-static.cc:51`). `Null (T)` returns those bytes as a `const T &` (`hb-null.hh:110`–`129`):
 
 ```c++
 template <typename Type>
@@ -330,21 +330,19 @@ The “zero is nothing” rule has exceptions, where a field’s zero value mean
 
 The `RangeRecord`’s Null is nine bytes, enough for the 24-bit kind, and is declared by hand (`OT/Layout/Common/RangeRecord.hh:88`), because the macro can’t yet handle a type two namespaces deep.
 
-### Where the rule breaks
+### Where the rule broke
 
-“Every default case does the empty thing” is a convention, not something the compiler checks. {{hb}} has at least one place where it doesn’t hold. `Coverage::get_population` counts a Coverage table’s glyphs, and for an unknown format, including the Null Coverage’s format 0, its `default` case returns `NOT_COVERED` (`Coverage.hh:138`), which is `0xFFFFFFFF`, not 0. `SingleSubstFormat1_3::sanitize` charges the sanitizer’s work budget half the population of its coverage (`OT/Layout/GSUB/SingleSubstFormat1.hh:125`), so that a tiny table can’t make it do a lot of work. With a null coverage offset, that charge is about two billion, the budget runs out, and the whole table is rejected. `null-coverage-f1.ttf` is `bytes.ttf` with lookup 1, a format 1 single substitution, given a null coverage offset:
+“Every default case does the empty thing” is a convention, not something the compiler checks, and until 15.2.0 there was a place where it didn’t hold. `Coverage::get_population` counts a Coverage table’s glyphs, and for an unknown format, including the Null Coverage’s format 0, its `default` case returned `NOT_COVERED`, which is `0xFFFFFFFF`, not 0. `SingleSubstFormat1_3::sanitize` charged the sanitizer’s work budget half the population of its coverage, so that a tiny table couldn’t make it do a lot of work. With a null coverage offset, that charge was about two billion, the budget ran out, and the whole table was rejected ([HHW-1](bugs-this-book-found.html#hhw-1)). In {{hb}} the `default` case returns 0 (`Coverage.hh:138`), and the sanitizer no longer charges for the population at all ([Trust nothing: the sanitizer](trust-nothing-the-sanitizer.html#max_ops)). `null-coverage-f1.ttf` is `bytes.ttf` with lookup 1, a format 1 single substitution, given a null coverage offset:
 
 ```shape
 null-coverage-f1.ttf  aex
 ```
 
-Made to lookup 0, a format 2 subtable, the change switched off one lookup. Made to lookup 1, a format 1 subtable, it switches off all of GSUB. Real fonts don’t have null coverage offsets, so this is unlikely to matter, but it shows what holds the Null pattern together: every method of every type, in its `default` case.
-
-> Since {{hb}}: fixed on HarfBuzz main by [#6696](https://github.com/harfbuzz/harfbuzz/pull/6696) (17 November 2026), so main’s `get_population` returns 0 for an unknown format, and a null coverage switches off only its own subtable.
+Lookup 0 still makes `a.alt1` and `e.init`, and only lookup 1 is switched off: the `x` stays an `x`. Made to lookup 1, the change now does what it does to lookup 0, a format 2 subtable. Real fonts don’t have null coverage offsets, so this was unlikely to matter, but it shows what holds the Null pattern together: every method of every type, in its `default` case.
 
 ### Crap: Null’s writable twin
 
-`Null (T)` is `const`. Code with a *writable* struct, such as the subsetter, sometimes follows an offset or an index that isn’t there, and needs something writable back. It gets `Crap (T)` (`hb-null.hh:174`–`188`): a second 640-byte pool, into which the Null object’s bytes are copied each time. The name is spelled out in a comment, “Common Region for Access Protection”: writing there only stops a bug from doing damage elsewhere. Nothing correct relies on what is in it, which is why threads can share it without a lock. `CrapOrNull (T)` picks whichever fits the constness, and `hb_nonnull_ptr_t<T>` (`hb-null.hh:205`) is a pointer that reads as `Null (T)` when it is null; `hb_blob_ptr_t`, which holds a loaded table, keeps its blob in one.
+`Null (T)` is `const`. Code with a *writable* struct, such as the subsetter, sometimes follows an offset or an index that isn’t there, and needs something writable back. It gets `Crap (T)` (`hb-null.hh:179`–`193`): a second 640-byte pool, into which the Null object’s bytes are copied each time. The name is spelled out in a comment, “Common Region for Access Protection”: writing there only stops a bug from doing damage elsewhere. Nothing correct relies on what is in it, which is why threads can share it without a lock. `CrapOrNull (T)` picks whichever fits the constness, and `hb_nonnull_ptr_t<T>` (`hb-null.hh:210`) is a pointer that reads as `Null (T)` when it is null; `hb_blob_ptr_t`, which holds a loaded table, keeps its blob in one.
 
 ## Dispatch contexts
 
@@ -411,20 +409,20 @@ The main contexts in {{hb}}:
 
 | Context | At each subtable, it… | Returns | Stops when |
 |---|---|---|---|
-| `hb_sanitize_context_t` (`hb-sanitize.hh:123`) | checks it | `bool`, true by default | a check fails |
-| `hb_ot_apply_context_t` (`hb-ot-layout-gsubgpos.hh:1127`) | applies it to the buffer | `bool`, false by default | a subtable applies |
-| `hb_accelerate_subtables_context_t` (`:1419`) | records it, its `apply` function, and its coverage digest | nothing | never |
-| `hb_would_apply_context_t` (`:286`) | asks whether it would apply to a glyph sequence | `bool` | |
-| `hb_closure_context_t`, `hb_closure_lookups_context_t` (`:68`, `:207`) | adds the glyphs it can produce, or the lookups it reaches | nothing | |
-| `hb_collect_glyphs_context_t` (`:329`) | collects its input, context, and output glyphs | nothing | |
-| `hb_depend_context_t` (`:402`) | records glyph dependencies, for hb-depend | nothing | |
+| `hb_sanitize_context_t` (`hb-sanitize.hh:119`) | checks it | `bool`, true by default | a check fails |
+| `hb_ot_apply_context_t` (`hb-ot-layout-gsubgpos.hh:1219`) | applies it to the buffer | `bool`, false by default | a subtable applies |
+| `hb_accelerate_subtables_context_t` (`:1515`) | records it, its `apply` function, and its coverage digest | nothing | never |
+| `hb_would_apply_context_t` (`:310`) | asks whether it would apply to a glyph sequence | `bool` | |
+| `hb_closure_context_t`, `hb_closure_lookups_context_t` (`:68`, `:231`) | adds the glyphs it can produce, or the lookups it reaches | nothing | |
+| `hb_collect_glyphs_context_t` (`:353`) | collects its input, context, and output glyphs | nothing | |
+| `hb_depend_context_t` (`:426`) | records glyph dependencies, for hb-depend | nothing | |
 | `hb_subset_context_t` (`hb-subset.hh:40`) | writes its subset copy | `bool` | |
 
 There are a dozen more: small questions about lookups in `hb-ot-layout-gsubgpos.hh` and `hb-ot-layout.cc`, subsetting helpers in `hb-ot-layout-common.hh`, the AAT apply context, and painting, closure, and dependency contexts for COLRv1 paint graphs (`OT/Color/COLR/COLR.hh:65`). Writing a font is not among them. The serializer, `hb_serialize_context_t`, is not a dispatch context: tables have `serialize` methods that are called directly, and the subset context holds a serializer and walks the old table by dispatch, writing the new one as it goes.
 
 ### Choosing the method to call
 
-The sanitizer walks *every* struct through `c->dispatch`, not only the leaves, so its `dispatch` has to call `sanitize` where a struct has one and the struct’s own `dispatch` where it doesn’t. It chooses at compile time (`hb-sanitize.hh:154`):
+The sanitizer walks *every* struct through `c->dispatch`, not only the leaves, so its `dispatch` has to call `sanitize` where a struct has one and the struct’s own `dispatch` where it doesn’t. It chooses at compile time (`hb-sanitize.hh:150`):
 
 ```c++
 template <typename T, typename ...Ts> auto
@@ -435,11 +433,11 @@ _dispatch (const T &obj, hb_priority<0>, Ts&&... ds) HB_AUTO_RETURN
 ( obj.dispatch (this, std::forward<Ts> (ds)...) )
 ```
 
-`hb_priority<1>` derives from `hb_priority<0>` (`hb-meta.hh:79`), so when both overloads compile, C++ prefers the first. When the struct has no `sanitize`, the first doesn’t compile and is quietly dropped, leaving the second. So `SingleSubst`, which has no `sanitize`, is sanitized through its `dispatch`, which picks the format, whose `sanitize` is called. The subset context does the same with `subset`, and the apply context uses the trick to prefer `apply (c, cache)` to `apply (c)`. The sanitizer also overrides `may_dispatch`, to check that the format field itself is inside the table before anything switches on it (`hb-sanitize.hh:136`).
+`hb_priority<1>` derives from `hb_priority<0>` (`hb-meta.hh:71`), so when both overloads compile, C++ prefers the first. When the struct has no `sanitize`, the first doesn’t compile and is quietly dropped, leaving the second. So `SingleSubst`, which has no `sanitize`, is sanitized through its `dispatch`, which picks the format, whose `sanitize` is called. The subset context does the same with `subset`, and the apply context uses the trick to prefer `apply (c, cache)` to `apply (c)`. The sanitizer also overrides `may_dispatch`, to check that the format field itself is inside the table before anything switches on it (`hb-sanitize.hh:132`).
 
 ### Dispatch once, not every glyph
 
-Following the chain of `dispatch` calls through Lookup, Extension, lookup type, and format for every glyph would be slow. So HarfBuzz walks it once per lookup, when the lookup’s accelerator is made (`hb-ot-layout-gsubgpos.hh:6197`). At each leaf, `hb_accelerate_subtables_context_t` stores the subtable’s address, a pointer to a function that calls that format’s `apply`, and a digest of its coverage (`:1562`). From then on, `accel.apply` in the GSUB chapter’s loop runs through that flat array, and the switches on lookup type and format aren’t run again while shaping.
+Following the chain of `dispatch` calls through Lookup, Extension, lookup type, and format for every glyph would be slow. So HarfBuzz walks it once per lookup, when the lookup’s accelerator is made (`hb-ot-layout-gsubgpos.hh:6463`). At each leaf, `hb_accelerate_subtables_context_t` stores the subtable’s address, a pointer to a function that calls that format’s `apply`, and a digest of its coverage (`:1661`). From then on, `accel.apply` in the GSUB chapter’s loop runs through that flat array, and the switches on lookup type and format aren’t run again while shaping.
 
 > For programmers: a new operation over layout tables is a new context, derived from `hb_dispatch_context_t<YourContext, YourReturn>`, with a `default_return_value` and a `dispatch` that calls your method on each leaf. Every struct that already dispatches can then be walked by it; only the leaves need the new method.
 

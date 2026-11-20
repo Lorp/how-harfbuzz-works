@@ -197,8 +197,9 @@ closure (hb_face_t *face, hb_subset_depend_t *depend, const char *text, bool use
     p += len;
   }
 
-  /* From the graph: .notdef and the cmap glyphs, then GSUB to a fixed point,
-   * then MATH once, then COLR, VARC and composites to a fixed point. */
+  /* From the graph: .notdef and the cmap glyphs, then MATH once, GSUB to a
+   * fixed point, MATH once more, then COLR, VARC and composites to a fixed
+   * point: the subsetter's order since HarfBuzz 15.2.0. */
   hb_set_t *glyphs = hb_set_create ();
   hb_set_add (glyphs, 0);
   hb_codepoint_t u = HB_SET_VALUE_INVALID, g;
@@ -206,6 +207,9 @@ closure (hb_face_t *face, hb_subset_depend_t *depend, const char *text, bool use
     if (hb_font_get_nominal_glyph (font, u, &g)) hb_set_add (glyphs, g);
   const hb_set_t *features = hb_subset_input_set (input, HB_SUBSET_SETS_LAYOUT_FEATURE_TAG);
   hb_set_t *tables = hb_set_create ();
+  hb_set_add (tables, HB_OT_TAG_MATH);
+  follow (depend, glyphs, tables, features, use_context);
+  hb_set_clear (tables);
   hb_set_add (tables, HB_OT_TAG_GSUB);
   while (follow (depend, glyphs, tables, features, use_context)) ;
   hb_set_clear (tables);

@@ -4,7 +4,7 @@
 
 Read it [online](https://lorp.github.io/how-harfbuzz-works/) or as a [PDF](https://lorp.github.io/how-harfbuzz-works/print/how-harfbuzz-works.pdf).
 
-**How HarfBuzz Works** is a book about the inside of [HarfBuzz](https://github.com/harfbuzz/harfbuzz), the text shaping engine in Chrome, Firefox, Android, GNOME, LibreOffice and most other modern software that puts text on a screen. It follows text through HarfBuzz 15.1.0, from Unicode characters to positioned glyphs, and on to the outlines, color glyphs and subset fonts HarfBuzz also makes. It’s for type designers and font engineers who want to know why their fonts shape the way they do, and for programmers who use HarfBuzz, port it or work on it.
+**How HarfBuzz Works** is a book about the inside of [HarfBuzz](https://github.com/harfbuzz/harfbuzz), the text shaping engine in Chrome, Firefox, Android, GNOME, LibreOffice and most other modern software that puts text on a screen. It follows text through HarfBuzz 15.2.0, from Unicode characters to positioned glyphs, and on to the outlines, color glyphs and subset fonts HarfBuzz also makes. It’s for type designers and font engineers who want to know why their fonts shape the way they do, and for programmers who use HarfBuzz, port it or work on it.
 
 “I skimmed a few chapters. Genuinely useful to aspiring HarfBuzz developers.”  
 — *Behdad Esfahbod*
@@ -59,7 +59,7 @@ You’ll need:
 * **Google Chrome, `qpdf` and `pdftotext`** (from Poppler), and the network, for the PDF.
 
 ```sh
-tools/build-harfbuzz.sh   # HarfBuzz 15.1.0 into .cache/harfbuzz (twice: plain, and with detailed traces)
+tools/build-harfbuzz.sh   # HarfBuzz 15.2.0 into .cache/harfbuzz (twice: plain, and with detailed traces)
 npm install               # once
 npm run build             # the book as HTML, into site/
 npm run pdf               # the book as a PDF, with its .pages.txt, into site/print/

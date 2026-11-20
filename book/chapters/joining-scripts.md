@@ -28,9 +28,9 @@ enum hb_arabic_joining_type_t {
 };
 ```
 
-Three things in it differ from the file. C is folded into D: for the machine, a join-causing character is a letter that joins both ways and has no forms. Two Syriac joining groups replace the joining type of their letters: Alaph, and Dalath and Rish, are R letters with special behavior, so the generator writes their group instead (`gen-arabic-table.py`, `print_joining_table`). And characters the file doesn’t list get X, which `get_joining_type` (`:89`) turns at run time into T for non-spacing and enclosing marks and format characters, and into U for everything else.
+Three things in it differ from the file. C is folded into D: for the machine, a join-causing character is a letter that joins both ways and has no forms. Two Syriac joining groups replace the joining type of their letters: Alaph, and Dalath and Rish, are R letters with special behavior, so the generator writes their group instead (`gen-arabic-table.py`, `print_joining_table`). And characters the file doesn’t list get X, which `get_joining_type` (`hb-ot-shaper-arabic.cc:89`) turns at run time into T for non-spacing and enclosing marks and format characters, and into U for everything else.
 
-The table was made from `ArabicShaping-18.0.0.txt` and covers every script that file covers, which is how the same code serves the joining scripts under USE. The generator also reads `Blocks.txt`, but nothing it prints uses it (read from the code).
+The table was made from `ArabicShaping-18.0.0.txt` and covers every script that file covers, which is how the same code serves the joining scripts under USE. The generator still asks for `Blocks.txt` on its command line, but no longer reads it (read from the code).
 
 ## The joining state machine
 
@@ -146,9 +146,9 @@ The pause after `calt` (issue 1573) is left out if the font has an `rclt` featur
 
 ## Reordering marks
 
-Unicode’s canonical ordering sorts a run of marks by combining class, and [Normalization](normalization.html) explains that HarfBuzz sorts by its own modified classes. For Arabic, this puts a hamza above, class 230, after a fatha or a shadda, whose classes are in the 27–35 range. But a hamza above is part of the letter: it should be drawn next to it, under any vowel. Unicode Technical Report #53, *Unicode Arabic Mark Rendering*, names such marks **modifier combining marks** and asks for them to be moved to the front of the run. `reorder_marks_arabic` (`:721`), the shaper’s `reorder_marks` hook, does that, straight after each run has been sorted.
+Unicode’s canonical ordering sorts a run of marks by combining class, and [Normalization](normalization.html) explains that HarfBuzz sorts by its own modified classes. For Arabic, this puts a hamza above, class 230, after a fatha or a shadda, whose classes are in the 27–35 range. But a hamza above is part of the letter: it should be drawn next to it, under any vowel. Unicode Technical Report #53, *Unicode Arabic Mark Rendering*, names such marks **modifier combining marks** and asks for them to be moved to the front of the run. `reorder_marks_arabic` (`:725`), the shaper’s `reorder_marks` hook, does that, straight after each run has been sorted.
 
-Its list has fourteen marks (`:692`): hamza above and below, noon ghunna, small high and low seen, small high yeh and noon, and seven from the Arabic Extended-A block. For class 220, then for 230, it finds the first mark of that class in the run. If it and those right after it are on the list, it moves them to the front of the run, merges the clusters of everything it moved past, and renumbers them. Only marks at the head of their class are moved: a hamza above after a madda, both 230, stays behind the madda (read from the code).
+Its list has fourteen marks (`:696`): hamza above and below, noon ghunna, small high and low seen, small high yeh and noon, and seven from the Arabic Extended-A block. For class 220, then for 230, it finds the first mark of that class in the run. If it and those right after it are on the list, it moves them to the front of the run, merges the clusters of everything it moved past, and renumbers them. Only marks at the head of their class are moved: a hamza above after a madda, both 230, stays behind the madda (read from the code).
 
 ```trace
 font: joining.ttf
@@ -170,7 +170,7 @@ from: start compose
 to: end compose
 ```
 
-The alef and the madda compose across the hamza. Canonically, that text is not equivalent to U+0622 U+0654. HarfBuzz accepts this, in the comment at `:771`, as the price of keeping the CGJ logic right.
+The alef and the madda compose across the hamza. Canonically, that text is not equivalent to U+0622 U+0654. HarfBuzz accepts this, in the comment at `:775`, as the price of keeping the CGJ logic right.
 
 ## Stretching: `stch`
 
@@ -197,10 +197,11 @@ stch.ttf  \u070Fܒܒܒ  --language=syr  --features=-stch
 
 One beth is 500 units wide. The ends are 100 each and the bar 200, so 300 is left for bars: one bar is too short and two too long, so there are two, overlapping by 100, and the tiles run from −500 to 0, exactly over the beth. Three beths get seven bars, each overlapping the next by 16 units. Integer division leaves 4 units over, so the line starts at −1504 over a word 1500 wide. Without `stch` the mark is one zero-width glyph.
 
-The fit is not always that close. When the bars fit with no gap, no extra copy is added and the variable `w_remaining` is not set to zero, so the tiles start at half the word’s width less the ends (`:625`), not at the word’s edge. With two beths, a 1000-unit word, the line runs from −600 to 400:
+When the bars fit with no gap, no extra copy is added, and the tiles start at the word’s edge. With two beths, a 1000-unit word, the line runs from −1000 to 0. When the word is narrower than the two ends and a bar, the line is longer than the word, and is centered over it (`:591`, `:627`): the mark on its own, over no letters at all, gets a line from −200 to 200:
 
 ```shape
 stch.ttf  \u070Fܒܒ  --language=syr
+stch.ttf  \u070F  --language=syr
 ```
 
 ```draw
@@ -208,7 +209,7 @@ font: stch.ttf
 text: \u070Fܒܒ \u070Fܒ
 ```
 
-In the drawing, the word on the right has one beth, and its line fits it. The word on the left has two, and its line is moved 400 units right, across the space and into the other word. This looks like a bug: the exact fit is the one case where the result is worse than an approximate one. When the word is narrower than the two ends and a bar, the line is also off center, by half the width left after the ends.
+In the drawing, the word on the right has one beth and the word on the left two, and each line fits its word. Before 15.2.0 neither case was centered: an exact fit put the tiles at half the word’s width less the ends, so the two-beth line ran from −600 to 400, across the space and into the other word ([HHW-24](bugs-this-book-found.html#hhw-24)).
 
 Two limits keep a hostile font from making the buffer huge. A run of tiles is never repeated past 256 glyphs in all (`STCH_MAX_GLYPHS`, `:572`), and the arithmetic uses 64-bit integers and saturating additions; NEWS records fixes for overflows here in 13.1.0 and 13.1.1.
 
@@ -254,7 +255,7 @@ from: start table GSUB
 to: end table GSUB
 ```
 
-The ligature tables are in presentation forms, not in letters: lam-alef is U+FEDF U+FE8E or U+FEE0 U+FE8E, because by then the single substitutions have run. `gen-arabic-table.py` builds them from the compatibility decompositions in `UnicodeData.txt`, so that `<initial> 0644 0645` for U+FCCC becomes initial lam then medial meem. It doesn’t take all of them, only those on its `LIGATURES` list (`gen-arabic-table.py:139`). It also adds three made-up entries for Private Use code points (`:156`), LELLAH, a lam-meem-jeem, and shadda with fathatan, for the legacy fonts below. The components of a ligature must each have a *nominal* glyph in the font, or the ligature is left out (`hb-ot-shaper-arabic-fallback.hh:164`); NEWS for 15.1.0 lists a fix to wrong ligatures “when a component is missing from the font”.
+The ligature tables are in presentation forms, not in letters: lam-alef is U+FEDF U+FE8E or U+FEE0 U+FE8E, because by then the single substitutions have run. `gen-arabic-table.py` builds them from the compatibility decompositions in `UnicodeData.txt`, so that `<initial> 0644 0645` for U+FCCC becomes initial lam then medial meem. It doesn’t take all of them, only those on its `LIGATURES` list (`gen-arabic-table.py:114`). It also adds three made-up entries for Private Use code points (`:131`), LELLAH, a lam-meem-jeem, and shadda with fathatan, for the legacy fonts below. The components of a ligature must each have a *nominal* glyph in the font, or the ligature is left out (`hb-ot-shaper-arabic-fallback.hh:164`); NEWS for 15.1.0 lists a fix to wrong ligatures “when a component is missing from the font”.
 
 > For type designers: a modern Arabic font gets none of this, as long as it has any one of the four joining features for the script and language in use. A font with presentation forms in its `cmap` but only, say, `init` in GSUB gets no other forms and no lam-alef.
 
@@ -271,7 +272,7 @@ win1256.ttf  با  --language=ar  --no-glyph-names
 
 Both behs become glyph 4: these lookups give initial and medial beh the same glyph. Lam and alef become glyph 165, which the `medi` lookup then makes 170, the final lam-alef. The final alef is glyph 0, which in such fonts was presumably a real glyph, at the unused position of the NUL byte (inferred).
 
-The second is fonts in the legacy Simplified and Traditional Arabic encodings, which use Private Use code points. This is handled in `cmap`, not the shaper (`hb-ot-cmap-table.hh:2219`). If the `cmap` is a symbol (3,0) subtable and the `OS/2` table is version 0 with an `fsSelection` high byte of 0xB2 or 0xB3 (the Windows 3.1 “font pages” of those encodings), a character not found as it is is looked up again through a map from Unicode to the encoding’s PUA codes, made by `gen-arabic-pua.py` from `ArabicPUASimplified.txt` and `ArabicPUATraditional.txt`. FreeType’s font funcs do the same (`hb-ft.cc:450`). Presentation forms are mapped too, so fallback shaping works as for any font. `pua.ttf` maps only PUA code points:
+The second is fonts in the legacy Simplified and Traditional Arabic encodings, which use Private Use code points. This is handled in `cmap`, not the shaper (`hb-ot-cmap-table.hh:2269`). If the `cmap` is a symbol (3,0) subtable and the `OS/2` table is version 0 with an `fsSelection` high byte of 0xB2 or 0xB3 (the Windows 3.1 “font pages” of those encodings), a character not found as it is is looked up again through a map from Unicode to the encoding’s PUA codes, made by `gen-arabic-pua.py` from `ArabicPUASimplified.txt` and `ArabicPUATraditional.txt`. FreeType’s font funcs do the same (`hb-ft.cc:455`). Presentation forms are mapped too, so fallback shaping works as for any font. `pua.ttf` maps only PUA code points:
 
 ```shape
 pua.ttf  بلا  --language=ar
@@ -304,7 +305,7 @@ The same machine, but less around it. USE adds only `isol`, `init`, `medi`, and 
 |---|---|
 | `src/hb-ot-shaper-arabic.cc` | joining types, the state machine, the features and pauses, `stch`, mark reordering |
 | `src/hb-ot-shaper-arabic-table.hh` | generated: joining types, `shaping_table`, and the ligature tables |
-| `src/gen-arabic-table.py` | its generator, from `ArabicShaping.txt`, `UnicodeData.txt`, and `Blocks.txt` |
+| `src/gen-arabic-table.py` | its generator, from `ArabicShaping.txt` and `UnicodeData.txt` |
 | `src/hb-ot-shaper-arabic-fallback.hh` | lookups synthesized from presentation forms, and the Windows-1256 detection |
 | `src/hb-ot-shaper-arabic-win1256.hh` | the hand-written Windows-1256 lookups |
 | `src/hb-ot-shaper-arabic-pua.hh`, `src/gen-arabic-pua.py` | maps from Unicode to the legacy PUA encodings |
@@ -318,6 +319,6 @@ The same machine, but less around it. USE adds only `isol`, `init`, `medi`, and 
 * A seven-state machine walks the text once, from pre-context to post-context, skipping transparent characters and correcting each letter’s form when it sees the next. Each action sets one feature’s mask bit.
 * Syriac Alaph has `fin2`, `fin3`, and `med2` forms. Each joining feature has its own stage, before `rlig`; for Arabic only, `calt` is a stage after `rlig`.
 * Modifier combining marks such as hamza above are moved to the front of their mark run and renumbered 25 or 26, which can let a later mark compose across them.
-* `stch` turns a mark into fixed and repeating tiles, which are repeated and laid over the following word after positioning. An exact fit misplaces them.
+* `stch` turns a mark into fixed and repeating tiles, which are repeated and laid over the following word after positioning, centered on a word they don’t fit exactly.
 * Arabic in a font with none of `isol`, `fina`, `medi`, and `init` is shaped with lookups synthesized from the presentation forms in its `cmap`, or built-in ones for Windows-1256 fonts.
 * Mongolian, N’Ko, and the other joining scripts are shaped by USE with the same state machine, but only the four basic forms, in one stage, and with no fallback or `stch`.

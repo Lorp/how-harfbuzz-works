@@ -46,13 +46,13 @@ The flags (`hb_subset_flags_t`) are booleans, all off by default:
 
 | Flag | Effect |
 |---|---|
-| `NO_HINTING` | drop the hinting tables (`fpgm`, `prep`, `cvt `, `cvar`, `hdmx`, `VDMX`), glyf instructions, CFF hints, and GPOS device tables |
-| `RETAIN_GIDS` | keep every glyph at its old glyph ID |
+| `NO_HINTING` | drop the hinting tables (`fpgm`, `prep`, `cvt `, `cvar`, `hdmx`, `VDMX`), glyf instructions, CFF hints, and GPOS device tables; ignored for fonts that need their hinting (see below) |
+| `RETAIN_GIDS` | keep every glyph at its old glyph ID; set by the plan itself when a kept table can’t be renumbered (see below) |
 | `DESUBROUTINIZE` | inline CFF and CFF2 subroutines |
 | `NAME_LEGACY` | keep non-Unicode `name` records |
 | `SET_OVERLAPS_FLAG` | mark every simple glyf glyph as overlapping |
 | `PASSTHROUGH_UNRECOGNIZED` | copy tables the subsetter doesn’t know, instead of dropping them |
-| `NOTDEF_OUTLINE` | keep the outline of a glyf `.notdef` (otherwise it is emptied) |
+| `NOTDEF_OUTLINE` | keep the outline of `.notdef` (otherwise it is emptied, in glyf, CFF, and CFF2 alike) |
 | `GLYPH_NAMES` | keep `post` glyph names |
 | `NO_PRUNE_UNICODE_RANGES` | leave the `OS/2` Unicode range bits alone |
 | `NO_LAYOUT_CLOSURE` (7.2.0) | don’t add glyphs that GSUB can produce |
@@ -60,17 +60,17 @@ The flags (`hb_subset_flags_t`) are booleans, all off by default:
 | `NO_BIDI_CLOSURE` (11.1.0) | don’t add the mirrors of the requested characters |
 | `DOWNGRADE_CFF2` (13.0.0), `CFF_IDENTITY_CHARSET` (14.3.0) | CFF conversions |
 
-Two more need `HB_EXPERIMENTAL_API` (`hb-subset.h:86`): `IFTB_REQUIREMENTS` forces long outline offsets, for incremental font transfer, and `RETAIN_NUM_GLYPHS` keeps the glyph count with `RETAIN_GIDS`. `hb_subset_input_set_flags` replaces the whole word, so setting one flag clears the others.
+Two more need `HB_EXPERIMENTAL_API` (`hb-subset.h:89`): `IFTB_REQUIREMENTS` forces long outline offsets, for incremental font transfer, and `RETAIN_NUM_GLYPHS` keeps the glyph count with `RETAIN_GIDS`. `hb_subset_input_set_flags` replaces the whole word, so setting one flag clears the others.
 
 Three things in the input aren’t sets. The axis settings, from `hb_subset_input_pin_axis_location` and its relatives, turn subsetting into instancing; they are inputs to the plan here, and [Instancing](instancing.html) is about what they do. A glyph map (`hb_subset_input_old_to_new_glyph_mapping`, 7.3.0) asks for particular new glyph IDs. And with the experimental API, `hb_subset_input_override_name_table` replaces, adds, or removes a `name` record.
 
 ## The plan
 
-The plan is built by the constructor of `hb_subset_plan_t` (`hb-subset-plan.cc:686`); any failure clears its `successful` flag, and `hb_subset_plan_create_or_fail` then returns `NULL`. It copies the input, creates an empty face builder for the output, and refuses to pass a `VARC` table through unchanged while glyph IDs change or axes are instanced. It normalizes the axis settings, then works out the characters to keep (`_populate_unicodes_to_retain`), the glyphs to keep (`_populate_gids_to_retain`), and their new IDs (`_create_old_gid_to_new_gid_map`). Last, it collects what particular tables will need, such as the GDEF mark glyph sets still in use and, when instancing, new metrics. The result is sixty-six members (`hb-subset-plan-member-list.hh`): glyph maps and sets, the lookups and features kept and their new indices, COLR layers and palettes, `name` IDs, axis locations, a cache of sanitized source tables. Each table’s `subset` reads what it needs from there.
+The plan is built by the constructor of `hb_subset_plan_t` (`hb-subset-plan.cc:773`); any failure clears its `successful` flag, and `hb_subset_plan_create_or_fail` then returns `NULL`. It copies the input, and since 15.2.0 it corrects two of the flags first. It clears `NO_HINTING` for a font that needs its hinting to render correctly (`hb-subset-plan.cc:779`): a glyf font whose family name, or the checksums of its `cvt `, `fpgm`, and `prep`, are on a list of legacy CJK fonts, such as MingLiU and DFKai-SB, taken from FreeType, which loads these fonts only with their hinting (`hb-subset-hinting.hh`, from FreeType’s `ttobjs.c`). And it sets `RETAIN_GIDS` when a table that refers to glyphs but can’t be subset is going to be kept (`:795`): `EBDT`, `EBLC`, `JSTF`, `LTSH`, `SVG `, the AAT layout tables, Apple’s bitmap and other glyph tables, or the Graphite tables, kept because the caller passes them through (the list is `unsubsettable_glyph_tables`, `:713`). Such a table is copied as it is, so its glyph IDs must still be right. Then the constructor creates an empty face builder for the output, and refuses to pass a `VARC` table through unchanged while glyph IDs change or axes are instanced. It normalizes the axis settings, then works out the characters to keep (`_populate_unicodes_to_retain`), the glyphs to keep (`_populate_gids_to_retain`), and their new IDs (`_create_old_gid_to_new_gid_map`). Last, it collects what particular tables will need, such as the GDEF mark glyph sets still in use and, when instancing, new metrics. The result is sixty-six members (`hb-subset-plan-member-list.hh`): glyph maps and sets, the lookups and features kept and their new indices, COLR layers and palettes, `name` IDs, axis locations, a cache of sanitized source tables. Each table’s `subset` reads what it needs from there.
 
 ## Characters first
 
-`_populate_unicodes_to_retain` (`hb-subset-plan.cc:244`) maps the requested characters to glyphs through `cmap`, and drops any the font doesn’t have. Before that, `_unicode_closure` adds to them. Since 11.1.0 it adds the **bidi closure**: the mirror of each character, from the Unicode Bidi_Mirroring_Glyph property, so that ( brings ) with it. Shaping right-to-left text replaces a character with its mirror when the font has one ([The pipeline, step by step](pipeline-step-by-step.html#mirroring)), so a subset without the mirror would draw an unmirrored glyph. `paren.ttf` was cut from the demo font with the text `(`, and `paren-nobidi.ttf` the same way with `--no-bidi-closure`:
+`_populate_unicodes_to_retain` (`hb-subset-plan.cc:248`) maps the requested characters to glyphs through `cmap`, and drops any the font doesn’t have. Before that, `_unicode_closure` adds to them. Since 11.1.0 it adds the **bidi closure**: the mirror of each character, from the Unicode Bidi_Mirroring_Glyph property, so that ( brings ) with it. Shaping right-to-left text replaces a character with its mirror when the font has one ([The pipeline, step by step](pipeline-step-by-step.html#mirroring)), so a subset without the mirror would draw an unmirrored glyph. `paren.ttf` was cut from the demo font with the text `(`, and `paren-nobidi.ttf` the same way with `--no-bidi-closure`:
 
 ```shape
 demo.ttf  (  --direction=rtl
@@ -109,20 +109,23 @@ The user manual says that `hb-subset` makes a font “that covers the input text
 
 ## The glyph closure, stage by stage
 
-The **glyph closure** is the set of glyphs the subset must contain for the requested characters to work: their own glyphs, and every glyph that can come from them. `_populate_gids_to_retain` (`hb-subset-plan.cc:448`) builds it in stages. Here it is, trimmed to its structure:
+The **glyph closure** is the set of glyphs the subset must contain for the requested characters to work: their own glyphs, and every glyph that can come from them. `_populate_gids_to_retain` (`hb-subset-plan.cc:453`) builds it in stages. Here it is, trimmed to its structure:
 
 ```c++
 plan->_glyphset_gsub.add (0); // Not-def
 _cmap_closure (plan->source, &plan->unicodes, &plan->_glyphset_gsub);
-plan->_glyphset_cmaped = plan->_glyphset_gsub;
 
 if (!drop_tables->has (HB_OT_TAG_MATH))
   _math_closure (plan, &plan->_glyphset_gsub);
-plan->_glyphset_mathed = plan->_glyphset_gsub;
 
 layout_populate_gids_to_retain (plan, drop_tables);   /* GSUB, then GPOS */
 
-hb_set_t cur_glyphset = plan->_glyphset_gsub;
+/* GSUB outputs can have MATH metrics and variants of their own. */
+plan->_glyphset_mathed = plan->_glyphset_gsub;
+if (!drop_tables->has (HB_OT_TAG_MATH))
+  _math_closure (plan, &plan->_glyphset_mathed);
+
+hb_set_t cur_glyphset = plan->_glyphset_mathed;
 if (!drop_tables->has (HB_OT_TAG_COLR))
   _colr_closure (plan, &cur_glyphset);
 plan->_glyphset_colred = cur_glyphset;
@@ -138,20 +141,21 @@ for (hb_codepoint_t gid : cur_glyphset)        /* CFF seac accents */
   _add_cff_seac_components (*cff, gid, &plan->_glyphset);
 ```
 
-Each stage reads the set the stages before it built, adds to it, and is never run again. A stage is skipped when its table is being dropped (5.3.0 fixed glyphs being added from dropped MATH and COLR tables). After each one, the set is copied into a member of the plan, a snapshot, and the snapshots are the key to the design:
+Each stage reads the set the stages before it built and adds to it. Only MATH runs twice, before and after GSUB; the others run once. A stage is skipped when its table is being dropped (5.3.0 fixed glyphs being added from dropped MATH and COLR tables). After the layout stage and the stages after it, the set is copied into a member of the plan, a snapshot, and the snapshots are the key to the design:
 
 | Stage | Adds | Snapshot | Read later by |
 |---|---|---|---|
-| `.notdef`, `cmap` | glyph 0, the characters’ glyphs (found earlier), and `cmap` format 14 variation glyphs | `_glyphset_cmaped` | MATH’s glyph variants |
-| MATH | size variants and assembly parts of those glyphs | `_glyphset_mathed` | MATH’s glyph info |
-| layout | glyphs GSUB can produce | `_glyphset_gsub` | GSUB, GPOS, GDEF |
+| `.notdef`, `cmap` | glyph 0, the characters’ glyphs (found earlier), and `cmap` format 14 variation glyphs | | |
+| MATH | size variants and assembly parts of those glyphs | | |
+| layout | glyphs GSUB can produce | `_glyphset_gsub` | GSUB, GPOS, GDEF, MATH’s glyph variants |
+| MATH again | size variants and assembly parts of the glyphs GSUB added | `_glyphset_mathed` | MATH’s glyph info |
 | COLR | COLRv0 layers and every glyph a COLRv1 paint graph uses ([Color](color.html)) | `_glyphset_colred` | COLR |
 | VARC | the components of [variable composites](variable-components.html) | `_glyphset_varced` | VARC |
 | glyf, CFF | composite components; the two glyphs of a CFF `seac` accent | `_glyphset` | everything else |
 
 The `name` stage in the middle collects no glyphs: it keeps the `name` IDs that STAT, fvar, CPAL, and the kept GSUB and GPOS features refer to.
 
-The order follows how a glyph reaches each table. Text becomes glyphs through `cmap`; MATH comes next, so that GSUB is closed over its size variants too (in the math font below, the mirrored display-size integral is kept only because of that). After GSUB, the stages add glyphs that are only *drawn*: a color layer, a component, an accent CFF builds from two glyphs. None is ever in a buffer, so none goes back to GSUB, and GSUB, GPOS, and GDEF are subset against `_glyphset_gsub`, without them: a kerning pair only a COLR layer could use is dropped (inferred from the snapshots; no comment states the reason).
+The order follows how a glyph reaches each table. Text becomes glyphs through `cmap`; MATH comes next, so that GSUB is closed over its size variants too, and again after GSUB, for the variants of the glyphs GSUB produces. After GSUB, the stages add glyphs that are only *drawn*: a size variant a math engine picks, a color layer, a component, an accent CFF builds from two glyphs. None is ever in a buffer, so none goes back to GSUB, and GSUB, GPOS, and GDEF are subset against `_glyphset_gsub`, without them: a kerning pair only a COLR layer could use is dropped (inferred from the snapshots; no comment states the reason).
 
 The demo font’s ★ is a COLRv0 glyph with two layers. The second, `star.ring`, is a glyf composite of two copies of `dot`. Cutting a subset for ★ runs three stages: `cmap` finds `star`, COLR adds the two layers, and glyf adds `dot`, which COLR has never heard of:
 
@@ -164,16 +168,16 @@ font: star.ttf
 table: COLR
 ```
 
-The glyf stage has limits. Components are followed `HB_MAX_NESTING_LEVEL` (64) deep, within a budget of `HB_MAX_COMPOSITE_OPERATIONS_PER_GLYPH` (64) operations per glyph in the set; and the kept glyphs’ bytes may add up to at most `HB_SUBSET_GLYF_MAX_BYTES_FACTOR` (16) times the glyf table’s size, or the plan fails (`hb-limits.hh:126`), since a `loca` could point many glyph IDs at the same bytes.
+The glyf stage has limits. Components are followed `HB_MAX_NESTING_LEVEL` (64) deep, within a budget of `HB_MAX_COMPOSITE_OPERATIONS_PER_GLYPH` (64) operations per glyph in the set; and the kept glyphs’ bytes may add up to at most `HB_SUBSET_GLYF_MAX_BYTES_FACTOR` (16) times the glyf table’s size, or the plan fails (`hb-limits.hh:178`), since a `loca` could point many glyph IDs at the same bytes.
 
 ## The layout stage
 
-The layout stage (`hb-subset-plan-layout.cc`) does more than add glyphs. For GSUB and then GPOS, `_closure_glyphs_lookups_features` (`:410`) decides which features and lookups survive:
+The layout stage (`hb-subset-plan-layout.cc`) does more than add glyphs. For GSUB and then GPOS, `_closure_glyphs_lookups_features` (`:405`) decides which features and lookups survive:
 
 1. **Collect.** The table’s feature and script tags are filtered by the input’s sets, and `hb_ot_layout_collect_features` turns the survivors into feature indices, from every language system of the kept scripts. Their lookups are collected, including lookups that FeatureVariations can substitute.
-2. **Close the glyphs.** For GSUB only, unless `NO_LAYOUT_CLOSURE` is set, `hb_ot_layout_lookups_substitute_closure` adds every glyph those lookups can produce (`:436`).
+2. **Close the glyphs.** For GSUB only, unless `NO_LAYOUT_CLOSURE` is set, `hb_ot_layout_lookups_substitute_closure` adds every glyph those lookups can produce (`:431`).
 3. **Close the lookups.** `closure_lookups` adds the lookups that contextual lookups call, then removes every lookup whose coverage doesn’t intersect the glyph set: those can never fire.
-4. **Prune features.** `prune_features` drops a feature that has no lookups left, with two exceptions (`hb-ot-layout-gsubgpos.hh:6630`): a `size` feature with parameters, and `pref`, which is kept even when empty because HarfBuzz chooses its Khmer shaper by whether the font has it (“Never ever drop feature 'pref'”). Then features with the same tag and, after subsetting, the same lookups are merged (12.0.0), and language systems are pruned.
+4. **Prune features.** `prune_features` drops a feature that has no lookups left, with two exceptions (`hb-ot-layout-gsubgpos.hh:6908`): a `size` feature with parameters, and `pref`, which is kept even when empty because HarfBuzz chooses its Khmer shaper by whether the font has it (“Never ever drop feature 'pref'”). Then features with the same tag and, after subsetting, the same lookups are merged (12.0.0), and language systems are pruned.
 
 [GPOS](gpos.html) takes part in steps 1, 3, and 4, but adds no glyphs. Since GSUB is closed first, GPOS’s step 3 sees every glyph that can reach it.
 
@@ -213,7 +217,7 @@ if.ttf  fi
 
 So the closure over-approximates on purpose. Keeping a glyph that turns out not to be needed costs bytes; dropping one that is needed changes the text.
 
-The function that runs it is short (`hb-ot-layout.cc:1675`, trimmed):
+The function that runs it is short (`hb-ot-layout.cc:1670`, trimmed):
 
 ```c++
 do
@@ -226,13 +230,13 @@ do
          glyphs_length != glyphs->get_population ());
 ```
 
-Each pass runs every lookup in index order, and each lookup’s output is added to the set as soon as it finishes (`c->flush ()` in `SubstLookup::closure`), so a later lookup in the same pass sees it. A lookup that has already run with the same set of input glyphs is skipped. Passes repeat while the set grows, but at most `HB_CLOSURE_MAX_STAGES` + 2 times: 14.
+Each pass runs every lookup in index order, and each lookup’s output is added to the set as soon as it finishes (`c->flush ()` in `SubstLookup::closure`), so a later lookup in the same pass sees it. A lookup that has already run with the same set of input glyphs is skipped. Passes repeat while the set grows, but at most `HB_CLOSURE_MAX_STAGES` + 2 times: 18. Since 15.2.0 the closure also has a work budget, `HB_BUDGET_LAYOUT_CLOSURE` (2²⁸ units, `hb-limits.hh:389`), charged for every subtable it visits and every coverage it walks; when it is spent, the closure stops where it is, as it does at the limit on lookup visits.
 
 ## Why fixed stages, and not a fixpoint
 
 A **fixpoint** would be the obvious design: run every closure again and again until a whole round adds nothing. HarfBuzz doesn’t, at either level.
 
-Between tables, the order above makes most of a loop unnecessary: what later stages add is drawn, not shaped. Within GSUB, the bound is explained by the comment on its definition (`hb-limits.hh:65`):
+Between tables, the order above makes most of a loop unnecessary: what later stages add is drawn, not shaped. Within GSUB, the bound is explained by the comment on its definition (`hb-limits.hh:69`):
 
 ```c++
 /*
@@ -241,25 +245,26 @@ Between tables, the order above makes most of a loop unnecessary: what later sta
  * This must be larger than the number of times add_gsub_pause() is
  * called in a collect_features call of any shaper.
  */
-#define HB_CLOSURE_MAX_STAGES 12
+#define HB_CLOSURE_MAX_STAGES 16
 ```
 
 The reasoning is that shaping itself runs in stages. Within a stage, lookups run once each, in index order, which is the order of one pass. A lookup can run again only in a later stage, after a pause ([From features to lookups](from-features-to-lookups.html#stages-and-pauses)), so a chain of substitutions that goes back to a lower lookup index needs one more pass per stage, and no more passes are needed than there are stages.
 
-The second reason is in `SubstLookup.hh:209`, where a contextual lookup calls a nested one. The nested lookup’s output is *not* added to the set straight away:
+The second reason is in `SubstLookup.hh:209`, where a contextual lookup calls a nested one. The nested lookup’s output is *not* added to the set straight away, only when the outer lookup finishes:
 
 ```c++
-/* While in theory we should flush here, it will cause timeouts because a recursive
- * lookup can keep growing the glyph set.  Skip, and outer loop will retry up to
- * HB_CLOSURE_MAX_STAGES time, which should be enough for every realistic font. */
-//c->flush ();
+/* Keep global flushing outside recursion so a recursive lookup cannot
+ * keep expanding the global set. Contextual sequences include pending
+ * outputs when revisiting an input position. */
 ```
+
+The second sentence is new in 15.2.0. When a rule applies a second nested lookup at a position an earlier one has already changed, `context_closure_recurse_lookups` (`hb-ot-layout-gsubgpos.hh:2486`) lets it see the earlier lookups’ pending output as well as the set, so a chain of nested lookups at one position is followed in a single pass. Before 15.2.0 each pass got one step further along such a chain, and the pass limit cut it short ([HHW-43](bugs-this-book-found.html#hhw-43)).
 
 The limit is a defense against hostile fonts as much as a shortcut: a closure run to a fixpoint could be made to run for a very long time (8.1.0 reverted an optimization that “could cause timeout during subsetting with malicious fonts”). [hb-depend](hb-depend.html) takes the other side: its closure follows edges “to a fixed point”, while “the subsetter’s iterative closure (`HB_CLOSURE_MAX_STAGES`) truncates these chains” (`docs/depend-for-closure.md`).
 
-### Where the fixed order misses
+### Testing the closure
 
-“Enough for every realistic font” is a judgment, and it can be tested. `nested.ttf` has one contextual rule in `ccmp` that applies twenty single substitutions to the same glyph, one after another, `a` → `s1` → `s2` … → `s20`. Its feature file (`fonts/subsetting/nested.fea`) defines the twenty lookups `L19` down to `L0`, and then:
+The fixed order and the pass limit are judgments, and they can be tested. `nested.ttf` has one contextual rule in `ccmp` that applies twenty single substitutions to the same glyph, one after another, `a` → `s1` → `s2` … → `s20`. Its feature file (`fonts/subsetting/nested.fea`) defines the twenty lookups `L19` down to `L0`, and then:
 
 ```
 feature ccmp {
@@ -267,7 +272,7 @@ feature ccmp {
 } ccmp;
 ```
 
-Shaping applies all twenty. The closure applies the first nested lookup to `a`, but the output of `L0` isn’t flushed until the outer lookup ends, so `L1` doesn’t see `s1` until the next pass, and each pass adds one glyph. After 14 passes the closure stops, with `s14`:
+Shaping applies all twenty. The closure applies `L0` to `a`, and `L1`, at the same position, sees `L0`’s pending `s1`, and so on down the rule, so one pass reaches `s20`, and the subset keeps `a`, all twenty substitutes, and `.notdef`, and shapes as the original does:
 
 ```info
 nested.ttf  --show-glyph-count
@@ -279,11 +284,9 @@ nested.ttf  a
 nested-a.ttf  a
 ```
 
-The subset shapes differently from the original. The bound also leaves less margin than its comment asks for: the Indic shaper’s `collect_features_indic` calls `add_gsub_pause` 14 times (`hb-ot-shaper-indic.cc:249`–`265`), more than the 12 the comment allows, though only a chain running backwards through the lookup list across most of those stages would notice.
+Before 15.2.0, `L1` didn’t see `s1` until the next pass, each pass added one glyph, and the closure stopped with `s14`, so the subset shaped differently from the original ([HHW-43](bugs-this-book-found.html#hhw-43)). The bound also left less margin than its comment asks for, 12 against the Indic shaper’s 14 calls to `add_gsub_pause` (`hb-ot-shaper-indic.cc:249`–`265`); 15.2.0 raised it to 16 ([HHW-44](bugs-this-book-found.html#hhw-44)). A chain that runs backwards through the lookup list, one stage at a time, across more than 18 stages would still be cut, though the Indic shaper, for one, pauses only 14 times.
 
-> Since {{hb}}: partly fixed on HarfBuzz main by [#6725](https://github.com/harfbuzz/harfbuzz/pull/6725) (17 November 2026): `HB_CLOSURE_MAX_STAGES` is 16, more than the Indic shaper’s 14 pauses; the closure still cuts long chains, and `nested-a.ttf` cut by main shapes `a` as `s18`.
-
-The order between tables misses something too. MATH is subset against the snapshots taken before GSUB ran: its glyph variants and assemblies against `_glyphset_cmaped`, its italics corrections, accent positions, and kerning against `_glyphset_mathed` (`hb-ot-math-table.hh:232`, `:1064`). A glyph that only GSUB produces keeps its outline and loses its MATH data. `math.ttf` has an integral, a display-size variant of it, and an `rtlm` feature (a default one) that replaces both with mirrored forms for right-to-left math. All four glyphs have italics corrections, and both integrals have a list of sizes. Cut for ∫, the subset keeps all four glyphs and shapes as the original does:
+The order between tables is tested by MATH. `math.ttf` has an integral, a display-size variant of it, and an `rtlm` feature (a default one) that replaces both with mirrored forms for right-to-left math. All four glyphs have italics corrections, and both integrals have a list of sizes. Cut for ∫, the subset keeps all four glyphs and shapes as the original does:
 
 ```info
 math-integral.ttf  --list-glyphs
@@ -294,7 +297,7 @@ math.ttf  ∫  --direction=rtl
 math-integral.ttf  ∫  --direction=rtl
 ```
 
-But its MATH table has lost the mirrored integral’s sizes and both mirrored glyphs’ italics corrections. No HarfBuzz tool prints a MATH table, so here is fontTools reading the original, the subset, and a third subset that also asked for `integral.rtlm` by name (`fonts/subsetting/math-summary.txt`, written by `build.sh`):
+It keeps their MATH data too. MATH’s glyph variants and assemblies are subset against `_glyphset_gsub`, and its italics corrections, accent positions, and kerning against `_glyphset_mathed` (`hb-ot-math-table.hh:1064`, `:232`), both taken after GSUB. No HarfBuzz tool prints a MATH table, so here is fontTools reading the original and the subset (`fonts/subsetting/math-summary.txt`, written by `build.sh`):
 
 ```
 math.ttf
@@ -303,23 +306,19 @@ math.ttf
     integral -> integral, integral.size1
     integral.rtlm -> integral.rtlm, integral.rtlm.size1
 math-integral.ttf
-  italics correction: integral, integral.size1
-  vertical variants:
-    integral -> integral, integral.size1
-math-rtlm.ttf
   italics correction: integral, integral.size1, integral.rtlm, integral.rtlm.size1
   vertical variants:
     integral -> integral, integral.size1
     integral.rtlm -> integral.rtlm, integral.rtlm.size1
 ```
 
-A math engine laying out right-to-left display math with the subset would find no larger integral; `ssty` glyphs, if kept, would lose their italics corrections and kerning the same way. The third subset shows a workaround: requested glyphs count as part of the `cmap` stage. The hb-depend documentation calls MATH single-pass on purpose for the glyphs MATH itself adds (“Math layout engines do not recursively stretch assembly parts”); nothing explains the loss for glyphs GSUB adds, and it looks like a bug.
+Before 15.2.0, MATH was subset against snapshots taken before GSUB ran, and this subset lost the mirrored integral’s sizes and both mirrored glyphs’ italics corrections: a math engine laying out right-to-left display math would have found no larger integral ([HHW-45](bugs-this-book-found.html#hhw-45)).
 
 > For programmers: if a subset must work with features or engines beyond plain shaping, check it the way this page does: shape the same text with both fonts, with the same features. `hb-shape --verify` checks a font against itself; only a comparison checks a subset.
 
 ## The glyph map
 
-`_create_old_gid_to_new_gid_map` (`hb-subset-plan.cc:575`) numbers the kept glyphs, in one of three ways:
+`_create_old_gid_to_new_gid_map` (`hb-subset-plan.cc:592`) numbers the kept glyphs, in one of three ways:
 
 * By default, the kept glyphs are numbered from 0 in their old order, so `.notdef` stays 0 and nothing else keeps its number.
 * With `RETAIN_GIDS`, every glyph keeps its number, and the font has as many glyphs as the highest one kept, plus one. The gaps are empty glyphs. This is for glyph IDs that are stored outside the font, or that must match across several subsets of one font: NEWS for 8.0.1 speaks of “retain-gid (used for IFT)”, incremental font transfer.
@@ -331,7 +330,7 @@ The same “fi” subset with `--retain-gids` keeps `f`, `i`, and `f_i` at 6, 7,
 fi-retain.ttf  --list-glyphs
 ```
 
-The documentation of `hb_subset_input_old_to_new_glyph_mapping` allows a map that changes the order of glyphs, but much of the layout subsetting assumes it doesn’t. A typical `subset` method walks its table in old glyph order, maps each glyph, and writes the results in that order, which is new glyph order only if the map keeps the order, as the default one does (`hb-subset-plan.cc:651`). The Coverage serializer notices and sorts (`CoverageFormat2.hh:117`). A kerning pair set doesn’t (`PairSet.hh:255`), though its records must be sorted by second glyph, because shaping finds them by binary search. `kern.ttf` kerns A against eight glyphs, each by its own amount; `kern-map.ttf` was cut with a `--gid-map` numbering those eight backwards:
+The documentation of `hb_subset_input_old_to_new_glyph_mapping` allows a map that changes the order of glyphs, but much of the layout subsetting assumes it doesn’t. A typical `subset` method walks its table in old glyph order, maps each glyph, and writes the results in that order, which is new glyph order only if the map keeps the order, as the default one does (`hb-subset-plan.cc:668`). The Coverage serializer notices and sorts (`CoverageFormat2.hh:117`). A kerning pair set doesn’t (`PairSet.hh:255`), though its records must be sorted by second glyph, because shaping finds them by binary search. `kern.ttf` kerns A against eight glyphs, each by its own amount; `kern-map.ttf` was cut with a `--gid-map` numbering those eight backwards:
 
 ```info
 kern-map.ttf  --list-glyphs
@@ -344,24 +343,26 @@ kern-map.ttf  ACAGAOAQATAVAWAY
 
 Of the eight pairs, only the one the binary search reaches first survives. Class definitions are written the same way (`ClassDef_remap_and_serialize`, `hb-ot-layout-common.hh:1500`), and a font kerned by classes loses most of its classes (tested, not shown). This looks like a bug; meanwhile a custom map is safe only if it keeps the old order.
 
+> Since {{hb}}: changed on HarfBuzz main by [#6831](https://github.com/harfbuzz/harfbuzz/pull/6831) (20 November 2026): the documentation of `hb_subset_input_old_to_new_glyph_mapping` and `hb-subset --help` now say that a map that reorders glyphs breaks pair kerning and class definitions, and is safe only when the layout tables are dropped; the behavior is unchanged.
+
 ## Writing the tables
 
-`hb_subset_plan_execute_or_fail` (`hb-subset.cc:439`) lists the source font’s tables and asks of each whether it is dropped, in `_should_drop_table` (`:219`):
+`hb_subset_plan_execute_or_fail` (`hb-subset.cc:441`) lists the source font’s tables and asks of each whether it is dropped, in `_should_drop_table` (`:221`):
 
 * any table in the input’s drop set;
 * the hinting tables `cvt `, `fpgm`, `prep`, `hdmx`, and `VDMX` with `NO_HINTING`, and `cvar` with `NO_HINTING` or when every axis is pinned;
 * `avar`, `fvar`, `gvar`, `HVAR`, `VVAR`, and `MVAR` when every axis is pinned, because the font is no longer variable;
 * in a build with `HB_NO_SUBSET_LAYOUT`, GDEF, GSUB, GPOS, `kern`, and the AAT layout tables.
 
-The rest go into a set of pending tables, and a loop subsets each table whose dependencies are met (`_dependencies_satisfied`, `:265`), until none is left. A table waits for what another table’s subsetting computes: when instancing, `hmtx`, `vmtx`, `maxp`, and `OS/2` wait for `glyf`, whose instanced outlines give new metrics; GSUB and GPOS wait for GDEF unless every axis is pinned; and with `avar` version 2, the variation tables wait for `avar`. A round that makes no progress fails the subset. Within a round, tables go in tag order as numbers, so capitalized tags (`COLR`, `GSUB`, `OS/2`) come before lower-case ones (`cmap`, `glyf`).
+The rest go into a set of pending tables, and a loop subsets each table whose dependencies are met (`_dependencies_satisfied`, `:267`), until none is left. A table waits for what another table’s subsetting computes: when instancing, `hmtx`, `vmtx`, `maxp`, and `OS/2` wait for `glyf`, whose instanced outlines give new metrics; GSUB and GPOS wait for GDEF unless every axis is pinned; and with `avar` version 2, the variation tables wait for `avar`. A round that makes no progress fails the subset. Within a round, tables go in tag order as numbers, so capitalized tags (`COLR`, `GSUB`, `OS/2`) come before lower-case ones (`cmap`, `glyf`).
 
-For each table, `_subset_table` (`:307`) chooses:
+For each table, `_subset_table` (`:309`) chooses:
 
 * **Passed through.** A table in the no-subset set is copied unchanged.
 * **Subset.** A table HarfBuzz knows is subset by its own `subset` method, through one of five families of dispatchers (`hb-subset-table-{layout,var,cff,color,other}.cc`). Some tables are written by others: `loca` and `head` by `glyf` (`head` by itself when there is no `glyf`), `hhea` by `hmtx`, `vhea` by `vmtx`, `CBDT` by `CBLC`. `fvar`, `avar`, `STAT`, `cvar`, and `MVAR` are copied unless axes are being instanced, and `cvt ` unless `cvar` deltas must be applied to it.
 * **Dropped.** Anything else is dropped, unless `PASSTHROUGH_UNRECOGNIZED` is set.
 
-AAT and Graphite tables aren’t subset; `hb-subset.cc` advises such fonts to “use the retain glyph ids option and configure the subset to pass through the layout tables untouched”.
+AAT and Graphite tables aren’t subset; `hb-subset.cc` advises such fonts to “configure the subset to pass through the unsupported tables untouched”, and since 15.2.0 the plan then keeps the glyph IDs by itself, as above.
 
 A table whose `subset` returns false, meaning nothing of it is left, is left out of the font. The demo font loses `COLR` and `CPAL` when ★ isn’t asked for, and `fpgm` and `prep`, which are passed through by default, go with `--no-hinting`:
 
@@ -371,9 +372,9 @@ if.ttf  --list-tables
 if-nohint.ttf  --list-tables
 ```
 
-Each table is serialized into a buffer of a guessed size (`_hb_subset_estimate_table_size`, `hb-subset-table.hh:75`): 8 KiB plus the source table’s size times the square root of the fraction of glyphs kept, or plus the whole size for GSUB, GPOS, GDEF, and `name`. If it runs out of room, the buffer is doubled and the table subset again, up to 256 times the source table’s size; if an offset overflows, the repacker rearranges the table’s objects. [Writing tables](writing-tables.html) is about both.
+Each table is serialized into a buffer of a guessed size (`_hb_subset_estimate_table_size`, `hb-subset-table.hh:78`): 8 KiB plus the source table’s size times the square root of the fraction of glyphs kept, or plus the whole size for GSUB, GPOS, GDEF, and `name`. If it runs out of room, the buffer is doubled and the table subset again, up to 256 times the source table’s size or 1 MiB, whichever is larger (`HB_SUBSET_MAX_TABLE_SIZE_FACTOR` and `HB_SUBSET_MAX_TABLE_SIZE_MIN`, `hb-subset-table.hh:54`; the floor is new in 15.2.0, for small tables that grow when renumbered); if an offset overflows, the repacker rearranges the table’s objects. [Writing tables](writing-tables.html) is about both.
 
-A face made with `hb_face_create_for_tables` may be unable to list its tables. The subsetter then asks it for each tag in its own list of known tables (`known_tables`, `hb-subset.cc:72`) and in the no-subset set, so an unknown table in such a face is lost even with `PASSTHROUGH_UNRECOGNIZED`.
+A face made with `hb_face_create_for_tables` may be unable to list its tables. The subsetter then asks it for each tag in its own list of known tables (`known_tables`, `hb-subset.cc:74`) and in the no-subset set, so an unknown table in such a face is lost even with `PASSTHROUGH_UNRECOGNIZED`.
 
 The source tables are read through the plan’s `source_table`, which sanitizes each one once and caches it. It uses a plain sanitizer, without the `lazy_some_gpos` flag that shaping uses, so a GPOS that shaping tolerates can be rejected here ([Trust nothing](trust-nothing-the-sanitizer.html) has the details).
 
@@ -385,7 +386,7 @@ Each table’s `subset` keeps what refers to kept glyphs, characters, lookups, o
 
 | Table | What its subset does | Source |
 |---|---|---|
-| `cmap` | keeps the Unicode subtables, (0, 3), (0, 4), (3, 1), (3, 10), and format 14; drops a format 12 that would map nothing beyond its format 4 sibling; if format 4 overflows, falls back to format 12 alone | `hb-ot-cmap-table.hh` |
+| `cmap` | keeps the Unicode subtables, (0, 3), (0, 4), (3, 1), (3, 10), and format 14, and the symbol subtable (3, 0); drops a format 12 that would map nothing beyond its format 4 sibling; if format 4 overflows, falls back to format 12 alone | `hb-ot-cmap-table.hh` |
 | `glyf`, `loca`, `head` | copies the kept glyphs, trims their padding, drops instructions with `NO_HINTING`, empties `.notdef`; chooses short `loca` offsets when the glyphs total less than 0x1FFFF bytes and sets `head.indexToLocFormat` | `OT/glyf/glyf.hh` |
 | `hmtx`, `hhea` (and vertical) | metrics of the kept glyphs; trailing glyphs with the same advance as the last long metric are written short | `hb-ot-hmtx-table.hh` |
 | `maxp` | `numGlyphs`; resets the hinting maxima with `NO_HINTING` | `hb-ot-maxp-table.hh` |
@@ -398,11 +399,11 @@ Each table’s `subset` keeps what refers to kept glyphs, characters, lookups, o
 | MATH | against the early snapshots, as above | `hb-ot-math-table.hh` |
 | COLR, CPAL | records, layers, and paints of kept glyphs; every palette, but only the color entries still used, renumbered | `OT/Color/COLR/COLR.hh`, `OT/Color/CPAL/CPAL.hh` |
 | CBLC, CBDT, `sbix` | each strike’s bitmaps for the kept glyphs | `OT/Color/CBDT/CBDT.hh`, `OT/Color/sbix/sbix.hh` |
-| CFF, CFF2 | charstrings of the kept glyphs; the subroutines they still call, renumbered, or none with `DESUBROUTINIZE`; hints dropped with `NO_HINTING` | `hb-subset-cff1.cc`, `hb-subset-cff2.cc`, `hb-subset-cff-common.hh` |
+| CFF, CFF2 | charstrings of the kept glyphs; the subroutines they still call, renumbered, or none with `DESUBROUTINIZE`; hints dropped with `NO_HINTING`; empties `.notdef` | `hb-subset-cff1.cc`, `hb-subset-cff2.cc`, `hb-subset-cff-common.hh` |
 | VARC | records of kept glyphs with the conditions, axis lists, and variation data they use | `OT/Var/VARC/VARC-subset.hh` |
 | `gvar`, HVAR, VVAR | variation data of the kept glyphs ([Instancing](instancing.html) has the rest) | `hb-ot-var-gvar-table.hh`, `hb-ot-var-hvar-table.hh` |
 
-Two rows hold surprises. The first is `cmap`’s list of subtables (`hb-ot-cmap-table.hh:2502`): a symbol font’s (3, 0) isn’t on it, and when that is a font’s only subtable, the subset has no `cmap` at all. fontTools’ subsetter drops (3, 0) by default too, but has `--symbol-cmap` to keep it; HarfBuzz has no such option. `symbol.ttf` maps U+F061, which shaping also finds for “a” (`_hb_symbol_pua_map`). The legacy Arabic fonts of [Joining scripts](joining-scripts.html#legacy-encodings) are symbol fonts too. Cut for “a”, the subset keeps the glyph and loses the way to it:
+Two rows changed in 15.2.0. The first is `cmap`’s list of subtables (`hb-ot-cmap-table.hh:2573`), which now has a symbol font’s (3, 0). Before, a font whose only subtable was (3, 0) lost its `cmap` altogether ([HHW-51](bugs-this-book-found.html#hhw-51)). fontTools’ subsetter drops (3, 0) by default, and keeps it with `--symbol-cmap`. A symbol font maps its characters into the Private Use Area: `symbol.ttf` maps U+F061, which shaping also finds for “a” (`_hb_symbol_pua_map`), and the plan now adds U+F061 to the characters to keep when “a” is asked for and only U+F061 is mapped (`closure_symbol_unicodes`, `hb-ot-cmap-table.hh:2414`). The legacy Arabic fonts of [Joining scripts](joining-scripts.html#legacy-encodings) are symbol fonts too. Cut for “a”, the subset keeps the glyph and the way to it:
 
 ```info
 symbol-a.ttf  --list-tables
@@ -413,14 +414,12 @@ symbol.ttf  a
 symbol-a.ttf  a
 ```
 
-The second is `.notdef`. `NOTDEF_OUTLINE` is read only by the glyf and `gvar` code, so a CFF `.notdef` keeps its outline either way, while fontTools’ subsetter empties both (`fontTools/subset/cff.py`). Here are `if.ttf` and a CFF subset, each shaping a character it lacks:
+The second is `.notdef`. `NOTDEF_OUTLINE` is now read by the CFF and CFF2 code as well as by glyf and `gvar` (`hb-subset-cff-common.hh:446`), so a CFF `.notdef` is emptied like a glyf one, as fontTools’ subsetter does (`fontTools/subset/cff.py`); before 15.2.0 it kept its outline either way ([HHW-52](bugs-this-book-found.html#hhw-52)). Here are `if.ttf` and a CFF subset, each shaping a character it lacks:
 
 ```shape
 if.ttf  Z  --show-extents
 cff-o.otf  Z  --show-extents
 ```
-
-Neither is documented, and the first leaves no way to subset a symbol font with HarfBuzz; both look like bugs.
 
 ## Preprocessing
 
@@ -433,6 +432,7 @@ A server that cuts many subsets from one font can do part of the work once. `hb_
 | `src/hb-subset.h` | the public API: flags, sets, plan functions |
 | `src/hb-subset-input.cc` | the input, its defaults, `keep_everything`, axis settings, `hb_subset_preprocess` |
 | `src/hb-subset-plan.cc` | the plan: characters, the glyph closure stages, the glyph map |
+| `src/hb-subset-hinting.hh` | the fonts that keep their hinting with `NO_HINTING` |
 | `src/hb-subset-plan-layout.cc` | which GSUB and GPOS features and lookups survive |
 | `src/hb-subset-plan-member-list.hh` | everything the plan holds |
 | `src/hb-ot-layout.cc` | `hb_ot_layout_lookups_substitute_closure`, the pass loop |
@@ -451,11 +451,9 @@ A server that cuts many subsets from one font can do part of the work once. `hb_
 
 * A subset is planned, then written. The plan decides the characters, the glyphs, their new IDs, and the features and lookups that survive.
 * Characters gain their bidi mirrors, but not their decompositions or compositions, so text in another normalization form can shape differently.
-* The glyph closure runs in a fixed order, once each: `cmap`, MATH, GSUB, COLR, VARC, glyf and CFF components. Later stages add glyphs that are drawn, not shaped, and GSUB, GPOS, and GDEF are subset against the set taken after GSUB.
-* The GSUB closure works on sets, not strings, for at most 14 passes. A long enough chain of nested lookups goes beyond that.
-* MATH data for glyphs only GSUB produces, such as `rtlm` forms, is dropped.
+* The glyph closure runs in a fixed order: `cmap`, MATH, GSUB, MATH again, COLR, VARC, glyf and CFF components. Later stages add glyphs that are drawn, not shaped, and GSUB, GPOS, and GDEF are subset against the set taken after GSUB.
+* The GSUB closure works on sets, not strings, for at most 18 passes. Since 15.2.0 a chain of nested lookups at one position is followed in a single pass.
+* Since 15.2.0, glyphs only GSUB produces, such as `rtlm` forms, keep their MATH data.
 * Default subsets keep only the features shaping turns on by itself.
 * A custom glyph map that reorders glyphs breaks pair kerning and class definitions.
-* Tables are dropped, passed through, or subset; each subset renumbers what it keeps. A symbol `cmap` is dropped, and a CFF `.notdef` keeps its outline.
-
-> Since {{hb}}: changed on HarfBuzz main by [#6725](https://github.com/harfbuzz/harfbuzz/pull/6725) (17 November 2026): the closure runs at most 18 passes (the item on the GSUB closure).
+* Tables are dropped, passed through, or subset; each subset renumbers what it keeps, unless a kept table can’t be renumbered, and then every glyph keeps its ID.

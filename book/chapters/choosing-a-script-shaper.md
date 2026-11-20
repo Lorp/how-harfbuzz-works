@@ -24,7 +24,7 @@ The `3` tags aren’t OpenType tags. The [registry](https://learn.microsoft.com/
 
 The old tags are made by lowercasing, with a switch for the exceptions (`hb_ot_old_tag_from_script`, `:37`). Text with no script of its own, such as digits alone, has the script `HB_SCRIPT_INVALID`, which gets no tags. At most three tags are kept (`HB_OT_MAX_TAGS_PER_SCRIPT`, `hb-ot-layout.h:99`).
 
-`hb-shape --script` takes an ISO 15924 code ([The command-line tools](command-line-tools.html#direction-script-and-language)). `hb_script_from_iso15924_tag` (`hb-common.cc:445`) fixes its case, so `--script=deva` is Devanagari, but `--script=dev2` is no code at all and becomes `HB_SCRIPT_UNKNOWN`.
+`hb-shape --script` takes an ISO 15924 code ([The command-line tools](command-line-tools.html#direction-script-and-language)). `hb_script_from_iso15924_tag` (`hb-common.cc:469`) fixes its case, so `--script=deva` is Devanagari, but `--script=dev2` is no code at all and becomes `HB_SCRIPT_UNKNOWN`.
 
 ## From a language to language system tags
 
@@ -85,15 +85,15 @@ The subtags also run the other way. `hb_ot_tags_to_script_and_language` (`:653`)
 
 The map builder’s constructor (`hb-ot-map.cc:45`) takes the tags to the font, once for GSUB and once for GPOS, with two functions.
 
-`hb_ot_layout_table_select_script` (`hb-ot-layout.cc:564`) tries each script tag in order. If none is in the ScriptList, it tries three more:
+`hb_ot_layout_table_select_script` (`hb-ot-layout.cc:542`) tries each script tag in order. If none is in the ScriptList, it tries three more:
 
 1. `DFLT`, the default script;
 2. `dflt`, which isn’t a script tag at all, but “MS site has had typos and many fonts use it now :(”;
 3. `latn`, because “some old fonts put their features there even though they’re really trying to support Thai, for example :(”.
 
-Failing those, no script is chosen, and the **chosen script** is `HB_TAG_NONE`. The function returns true only for a requested tag, and the map keeps both answers for each table: `chosen_script` and `found_script` (`hb-ot-map.hh:174`).
+Failing those, no script is chosen, and the **chosen script** is `HB_TAG_NONE`. The function returns true only for a requested tag, and the map keeps both answers for each table: `chosen_script` and `found_script` (`hb-ot-map.hh:177`).
 
-`hb_ot_layout_script_select_language2` (`hb-ot-layout.cc:772`) does the same within that script: each language tag in order, then a language system record tagged `dflt` if there is one, and otherwise the script’s default language system.
+`hb_ot_layout_script_select_language2` (`hb-ot-layout.cc:750`) does the same within that script: each language tag in order, then a language system record tagged `dflt` if there is one, and otherwise the script’s default language system.
 
 Both are binary searches (`RecordArrayOf::find_index`, `hb-ot-layout-common.hh:948`), so they rely on the lists being sorted by tag, as the specification requires; a tag out of order can be missed (inferred). `hb-info --list-scripts` shows what a font has:
 
@@ -107,9 +107,7 @@ Only a script’s *presence* counts: a `dev2` with no features is still chosen o
 
 So GSUB and GPOS can settle on different scripts: a font may keep its Devanagari substitutions under `dev2` and its kerning under `DFLT`. Each table’s features come from its own choice. Only GSUB’s picks the shaper; GPOS’s matters to Hebrew, as a later section shows.
 
-The trace line “start table GPOS script tag” doesn’t show GPOS’s choice. It prints GSUB’s chosen script (`hb-ot-layout.cc:2149` formats `chosen_script[0]`, not `chosen_script[1]`), so in a font with no GSUB it says `''` even when GPOS found a script. The Hebrew trace below shows it.
-
-> Since {{hb}}: fixed on HarfBuzz main by [#6686](https://github.com/harfbuzz/harfbuzz/pull/6686) (17 November 2026), so main’s trace prints the script GPOS chose.
+The trace line “start table GPOS script tag” shows GPOS’s choice (`hb-ot-layout.cc:2160` formats `chosen_script[1]`), and “start table GSUB script tag” GSUB’s, so a trace shows both. The Hebrew trace below has a GPOS script and no GSUB. Before 15.2.0 the GPOS line printed GSUB’s choice ([HHW-2](bugs-this-book-found.html#hhw-2)).
 
 ## From tags to a shaper
 
@@ -241,7 +239,7 @@ indic_plan->is_old_spec = indic_plan->config->has_old_spec &&
                           ((plan->map.chosen_script[0] & 0x000000FFu) != '2');
 ```
 
-All nine Indic scripts have `has_old_spec` set. In the old mode, the shaper moves the first virama after the base to after the last consonant (`:669`), the order old fonts’ lookups expect: `ra virama`, not `virama ra`. It also merges clusters differently and sets the `blwf` mask on fewer glyphs; [The Indic model](indic-model.html) has the rest. This font’s `blwf` was written for the new order, so under `deva` it no longer matches:
+All nine Indic scripts have `has_old_spec` set. In the old mode, the shaper moves the first virama after the base to after the last consonant (`:672`), the order old fonts’ lookups expect: `ra virama`, not `virama ra`. It also merges clusters differently and sets the `blwf` mask on fewer glyphs; [The Indic model](indic-model.html) has the rest. This font’s `blwf` was written for the new order, so under `deva` it no longer matches:
 
 ```trace
 font: indic-deva.ttf
@@ -278,7 +276,7 @@ myanmar-mym2.ttf  ကြ  --language=my
 myanmar-mymr.ttf  ကြ  --language=my
 ```
 
-`Qaag` is not a Unicode script. It is a code from ISO 15924’s private-use range that HarfBuzz uses for **Zawgyi**, a font encoding for Burmese that uses the Myanmar block’s code points in its own way (`hb-ot-shaper.hh:267`, and HarfBuzz issue #1162, though the source itself calls it only “Ugly Zawgyi encoding”). No character has that script, so an application must set it. The `myanmar_zawgyi` shaper has every hook null, uses the lightest normalization, and zeroes no marks: “Disable all auto processing” (`hb-ot-shaper-myanmar.cc:367`). `HB_NO_OT_SHAPER_MYANMAR_ZAWGYI` leaves it out, and `Qaag` then gets the default shaper.
+`Qaag` is not a Unicode script. It is a code from ISO 15924’s private-use range that HarfBuzz uses for **Zawgyi**, a font encoding for Burmese that uses the Myanmar block’s code points in its own way (`hb-ot-shaper.hh:267`, and HarfBuzz issue #1162, though the source itself calls it only “Ugly Zawgyi encoding”). No character has that script, so an application must set it. The `myanmar_zawgyi` shaper has every hook null, uses the lightest normalization, and zeroes no marks: “Disable all auto processing” (`hb-ot-shaper-myanmar.cc:370`). `HB_NO_OT_SHAPER_MYANMAR_ZAWGYI` leaves it out, and `Qaag` then gets the default shaper.
 
 ### Hebrew and its GPOS tag
 
@@ -289,7 +287,7 @@ hebrew-hebr.ttf  אִ  --language=he
 hebrew-DFLT.ttf  אִ  --language=he
 ```
 
-Under `DFLT` the anchor is ignored, and fallback mark positioning centers the hiriq. Under `hebr` GPOS runs, though its trace line names GSUB’s chosen script, which here is none:
+Under `DFLT` the anchor is ignored, and fallback mark positioning centers the hiriq. Under `hebr` GPOS runs, and its trace line names the script it chose:
 
 ```trace
 font: hebrew-hebr.ttf
@@ -315,7 +313,7 @@ from: start table morx
 to: end table morx
 ```
 
-Tamil with no GSUB would get the Indic shaper. Here it gets `dumber`, and the whole trace has no Indic step: the font’s own chain subtables split the vowel sign O and move its first part before KA. The original shaper’s settings are kept before the swap (`script_fallback_position`, `script_zero_marks`), and later decisions, such as whether legacy `kern` may apply, use them. [AAT inside HarfBuzz](aat-inside-harfbuzz.html) covers the rest.
+Tamil with no GSUB would get the Indic shaper. Here it gets `dumber`, and the whole trace has no Indic step: the font’s own chain subtables split the vowel sign O and move its first part before KA. (The first three are skipped, as no glyph in the buffer could make their state machines act.) The original shaper’s settings are kept before the swap (`script_fallback_position`, `script_zero_marks`), and later decisions, such as whether legacy `kern` may apply, use them. [AAT inside HarfBuzz](aat-inside-harfbuzz.html) covers the rest.
 
 ## What the choice decides
 

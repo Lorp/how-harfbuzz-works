@@ -29,11 +29,11 @@ latin-gsub.ttf  fi fl  --direction=ttb
 
 Horizontally, only `morx`’s ligature is made. Vertically, the font’s GSUB rules out `morx`, and only GSUB’s is.
 
-When the plan uses `morx`, step 13 of [the pipeline](pipeline-step-by-step.html#substituting) calls `hb_aat_layout_substitute` (`hb-ot-shape.cc:916`) instead of the GSUB lookups. Four things follow:
+When the plan uses `morx`, step 13 of [the pipeline](pipeline-step-by-step.html#substituting) calls `hb_aat_layout_substitute` (`hb-ot-shape.cc:918`) instead of the GSUB lookups. Four things follow:
 
 * **No GSUB.** Not one GSUB lookup runs, not even `ccmp` or `rvrn`. The OpenType map is still built, from the same features, because GPOS may still use it.
 * **The `dumber` shaper.** The planner replaces any script shaper but the default one with `dumber`, which reorders nothing and inserts no dotted circles ([AAT fonts](choosing-a-script-shaper.html#aat-fonts)). The font is expected to do all of that itself.
-* **Glyph classes.** If the font has no GDEF classes, they are made from Unicode before `morx` runs, as they would be for GSUB. If it has GDEF, every glyph `morx` writes gets its class from GDEF (`hb-aat-layout-common.hh:202–281`).
+* **Glyph classes.** If the font has no GDEF classes, they are made from Unicode before `morx` runs, as they would be for GSUB. If it has GDEF, every glyph `morx` writes gets its class from GDEF (`hb-aat-layout-common.hh:200–279`).
 * **Deleted glyphs.** Glyphs that `morx` deletes stay in the buffer, marked, until GPOS is about to run, or until after positioning if it isn’t ([step 22](pipeline-step-by-step.html#after-positioning)).
 
 Whether GPOS, `kerx`, or `kern` then positions the glyphs is decided separately: see [AAT positioning](aat-positioning.html), and [Fallbacks](fallbacks.html) for marks.
@@ -46,7 +46,7 @@ A `morx` table is a version (2 or 3; `mort` is version 1) and a list of **chains
 * **feature entries**, each a feature type and setting, with an enable mask and a disable mask;
 * subtables, each with a coverage field, its type, and its own 32-bit **sub-feature flags**.
 
-The chains are independent. For each, HarfBuzz works out a set of flags, and each subtable in the chain runs if its sub-feature flags share a bit with them. The flags start as the default flags, and each feature entry whose type and setting were asked for changes them: `flags = (flags & disable) | enable` (`Chain::compile_flags`, `hb-aat-layout-morx-table.hh:1138`). The chain of `latin.ttf` has three subtables, with flags 0x1 (a ligature), 0x4 (word-final e), and 0x2 (small capitals), and these default flags and feature entries:
+The chains are independent. For each, HarfBuzz works out a set of flags, and each subtable in the chain runs if its sub-feature flags share a bit with them. The flags start as the default flags, and each feature entry whose type and setting were asked for changes them: `flags = (flags & disable) | enable` (`Chain::compile_flags`, `hb-aat-layout-morx-table.hh:1185`). The chain of `latin.ttf` has three subtables, with flags 0x1 (a ligature), 0x4 (word-final e), and 0x2 (small capitals), and these default flags and feature entries:
 
 ```table
 font: latin.ttf
@@ -68,7 +68,7 @@ Two subtables don’t run here, for different reasons. Subtable 0 is skipped “
 
 ### Coverage
 
-The top byte of a subtable’s coverage field (`ChainSubtable::Coverage`, `hb-aat-layout-morx-table.hh:1055`) says which text it applies to and in which order it reads the glyphs:
+The top byte of a subtable’s coverage field (`ChainSubtable::Coverage`, `hb-aat-layout-morx-table.hh:1102`) says which text it applies to and in which order it reads the glyphs:
 
 | Bit | Name | Meaning |
 |---|---|---|
@@ -77,7 +77,7 @@ The top byte of a subtable’s coverage field (`ChainSubtable::Coverage`, `hb-aa
 | 0x20 | `AllDirections` | applies to both, and `Vertical` is ignored |
 | 0x10 | `Logical` | reads in logical order instead of layout order |
 
-The buffer is in logical order during substitution. HarfBuzz reverses it before a subtable that wants the other order, and back when a later one does, or the chain ends (`:1239`):
+The buffer is in logical order during substitution. HarfBuzz reverses it before a subtable that wants the other order, and back when a later one does, or the chain ends (`:1294`):
 
 | `Logical` | `Backwards` | Order | Buffer reversed when |
 |---|---|---|---|
@@ -129,7 +129,7 @@ The same chain, the same feature entries, and without `feat` neither request doe
 
 ### Ranges
 
-A feature can apply to part of the text, as it can for GSUB (a range in `hb_feature_t`, `smcp[1:2]` in `hb-shape`’s syntax). Since 7.0.0, `hb_aat_map_builder_t::compile` (`hb-aat-map.cc:85`) sorts the features’ starts and ends, and compiles each chain’s flags once for every stretch of text with the same active features, giving each chain a list of flags and the clusters they cover (`mortmorx::compile_flags`, `hb-aat-layout-morx-table.hh:1426`). A budget, `HB_BUDGET_AAT_MAP` (2²⁴), limits the work; when it runs out, the last range compiled is stretched to the end of the text.
+A feature can apply to part of the text, as it can for GSUB (a range in `hb_feature_t`, `smcp[1:2]` in `hb-shape`’s syntax). Since 7.0.0, `hb_aat_map_builder_t::compile` (`hb-aat-map.cc:85`) sorts the features’ starts and ends, and compiles each chain’s flags once for every stretch of text with the same active features, giving each chain a list of flags and the clusters they cover (`mortmorx::compile_flags`, `hb-aat-layout-morx-table.hh:1478`). A budget, `HB_BUDGET_AAT_MAP` (2²⁴), limits the work; when it runs out, the last range compiled is stretched to the end of the text.
 
 While a subtable runs, the driver looks up each glyph’s cluster in that list. Where the subtable’s flag is off, the machine goes back to its start state and the glyph passes untouched:
 
@@ -142,7 +142,7 @@ In the second line the `i` of cluster 1 is outside the ligature’s flags, so th
 
 ### Asked for twice
 
-When the same feature is asked for twice, the OpenType map lets the later request win ([When a tag is asked for twice](from-features-to-lookups.html#when-a-tag-is-asked-for-twice)). The AAT map does the opposite. `compile` sorts the active features by type, by selector pair, and then by the order they were asked for, and keeps the first request for each feature (`hb-aat-map.cc:139–155`):
+When the same feature is asked for twice, the OpenType map lets the later request win ([When a tag is asked for twice](from-features-to-lookups.html#when-a-tag-is-asked-for-twice)), and so does the AAT map. `compile` sorts the active features by type, by selector pair, and then by the order they were asked for, latest first (`feature_info_t::cmp`, `hb-aat-map.hh:77`), and keeps the first of each feature after the sort (`hb-aat-map.cc:139–155`):
 
 ```shape
 latin.ttf  fifi  --features=-liga,liga
@@ -150,20 +150,18 @@ latin.ttf  fifi  --features=liga,-liga
 gsub/ligatures.ttf  fi  --features=-liga,liga
 ```
 
-The same request turns ligatures off in a `morx` font and on in a GSUB font. Nothing in the source says this is intended.
-
-> Since {{hb}}: fixed on HarfBuzz main by [#6714](https://github.com/harfbuzz/harfbuzz/pull/6714) (17 November 2026), so on main the later request wins in AAT too, as it does in OpenType.
+The same request turns ligatures on in a `morx` font and in a GSUB font. Before 15.2.0, the AAT map kept the earliest request, so `-liga,liga` turned ligatures off in a `morx` font ([HHW-41](bugs-this-book-found.html#hhw-41), fixed by [#6714](https://github.com/harfbuzz/harfbuzz/pull/6714)).
 
 ## The state machine
 
-Every `morx` subtable but one is a **state machine**, a finite-state transducer, and HarfBuzz runs them all with one loop. A machine’s `StateTable` (`hb-aat-layout-common.hh:920`) has four parts:
+Every `morx` subtable but one is a **state machine**, a finite-state transducer, and HarfBuzz runs them all with one loop. A machine’s `StateTable` (`hb-aat-layout-common.hh:926`) has four parts:
 
 * a **class table**, an AAT lookup table ([Arrays](fonts-as-bytes.html#arrays)) that gives each glyph a class;
 * a **state array**, one row per state and one column per class, each cell the index of an entry;
 * an **entry table**, each entry a new state, 16 bits of flags, and, for some subtable types, a few more fields;
 * `nClasses`, the width of a row.
 
-The first four classes are reserved (`:912`):
+The first four classes are reserved (`:918`):
 
 | Class | Name | Given to |
 |---|---|---|
@@ -176,7 +174,7 @@ Two states are reserved too: 0, start of text, and 1, start of line. HarfBuzz al
 
 ### The loop
 
-`StateTableDriver::drive` (`:1282`) is that loop. Trimmed of the range check, a fast path, and the safe-to-break bookkeeping, with two of its variables written out, it is:
+`StateTableDriver::drive` (`:1344`) is that loop. Trimmed of the range check, a fast path, and the safe-to-break bookkeeping, with two of its variables written out, it is:
 
 ```c++
 int state = STATE_START_OF_TEXT;
@@ -201,13 +199,13 @@ for (buffer->idx = 0; buffer->successful;)
 
 At each glyph it finds the class and the entry, lets the subtable act, and moves to the new state. When the glyphs run out, it makes one more transition, with class 0, so a machine can finish what it started, and stops.
 
-An entry with the **DontAdvance** flag doesn’t move on: the machine reads the same position again, in its new state. That is how a font runs two rules on one glyph, and how it could loop for ever, so each such transition takes one from the buffer’s operations budget, `max_ops` (4,096 per glyph, at least 65,536; `hb-limits.hh:41–45`), and once that is spent, DontAdvance is ignored. `loop.ttf` has a subtable in which `a`, in state 0, marks itself and goes back to state 0 without advancing, and after it a second subtable that makes every `e` into `e.sc`:
+An entry with the **DontAdvance** flag doesn’t move on: the machine reads the same position again, in its new state. That is how a font runs two rules on one glyph, and how it could loop for ever, so each such transition takes one from the buffer’s operations budget, `max_ops` (65,536 per glyph, at least 524,288; `hb-limits.hh:40–50`), and once that is spent, DontAdvance is ignored. `loop.ttf` has a subtable in which `a`, in state 0, marks itself and goes back to state 0 without advancing, and after it a second subtable that makes every `e` into `e.sc`:
 
 ```shape
 loop.ttf  ae
 ```
 
-The loop ends, but the budget is gone. Before each subtable HarfBuzz charges a pass over the buffer (`charge_buffer_pass`, `hb-aat-layout-common.hh:171`), and that fails, so the buffer is marked as failed and the second subtable never runs: the `e` stays an `e`.
+The loop ends when the budget is gone, after about half a million transitions on the `a`, and then the machine moves on. The second subtable still runs, and the `e` becomes `e.sc`: unlike OpenType shaping, which marks the buffer as failed when the budget runs out, AAT carries on, and nothing tells the client the budget ran out ([HHW-86](bugs-this-book-found.html#hhw-86)). In 15.1.0, HarfBuzz charged each subtable a pass over the buffer, and with the budget spent that charge failed, so the buffer was marked as failed and the second subtable never ran. 15.2.0 dropped that charge and raised the budget, sixteenfold per glyph and eightfold at the minimum, because “Very complex fonts exceeded the old limits” (`NEWS`).
 
 The fast path, from 12.3.0, skips runs of glyphs of one class that lead from the start state back to it and do nothing.
 
@@ -234,13 +232,13 @@ to: end table morx
 
 ### Before the loop
 
-Each chain has an accelerator, made when it is first used (`hb-aat-layout-morx-table.hh:998`). For each subtable it collects the glyphs whose class, in state 0, leads to another state, an action, or a mark or push (`StateTable::collect_initial_glyphs`, `hb-aat-layout-common.hh:934`), and a subtable is skipped if the buffer holds none of them: the “no glyph matches” of the trace above. `morx` version 3 adds a glyph coverage table per subtable for the same purpose; HarfBuzz checks it and doesn’t otherwise read it. The accelerator also caches glyph classes.
+Each chain has an accelerator, made when it is first used (`hb-aat-layout-morx-table.hh:1045`). For each subtable it collects the glyphs whose class, in state 0, leads to another state, an action, or a mark or push (`StateTable::collect_initial_glyphs`, `hb-aat-layout-common.hh:940`), and a subtable is skipped if the buffer holds none of them: the “no glyph matches” of the trace above. `morx` version 3 adds a glyph coverage table per subtable for the same purpose; HarfBuzz checks it and doesn’t otherwise read it. The accelerator also caches glyph classes.
 
-The machine itself is mostly checked as it runs, since the entries and actions it reaches depend on the text ([The AAT tables](trust-nothing-the-sanitizer.html#the-aat-tables)). A table has at most 1,024 subtables (`HB_AAT_MAX_SUBTABLES`, `hb-limits.hh:98`), and one known-broken `morx`, that of AALMAGHRIBI.ttf, is ignored (`hb-aat-layout.cc:215`, issue #4108).
+The machine itself is mostly checked as it runs, since the entries and actions it reaches depend on the text ([The AAT tables](trust-nothing-the-sanitizer.html#the-aat-tables)). A table has at most 1,024 subtables (`HB_AAT_MAX_SUBTABLES`, `hb-limits.hh:110`), and one known-broken `morx`, that of AALMAGHRIBI.ttf, is ignored (`hb-aat-layout.cc:215`, issue #4108).
 
 ## The five kinds of subtable
 
-A subtable’s type is the low byte of its coverage field: 0 Rearrangement, 1 Contextual, 2 Ligature, 4 Noncontextual, 5 Insertion. Type 3 is unused, and a subtable of an unknown type is skipped (`ChainSubtable::dispatch`, `hb-aat-layout-morx-table.hh:1080`). Each state-machine type has a `driver_context_t` whose `transition` is called by the loop.
+A subtable’s type is the low byte of its coverage field: 0 Rearrangement, 1 Contextual, 2 Ligature, 4 Noncontextual, 5 Insertion. Type 3 is unused, and a subtable of an unknown type is skipped (`ChainSubtable::dispatch`, `hb-aat-layout-morx-table.hh:1127`). Each state-machine type has a `driver_context_t` whose `transition` is called by the loop.
 
 ### Rearrangement
 
@@ -328,7 +326,7 @@ After an insertion at the current glyph, HarfBuzz moves past the inserted glyphs
 
 ## mort
 
-`mort` is the older form, from QuickDraw GX ([Apple: GX, AAT, and ATSUI](why-shaping-exists.html#apple-gx-aat-and-atsui)). HarfBuzz reads it with the same templates, `mortmorx<…, ObsoleteTypes>` instead of `ExtendedTypes` (`hb-aat-layout-common.hh:1195–1269`). The differences are in the sizes and in how things are found:
+`mort` is the older form, from QuickDraw GX ([Apple: GX, AAT, and ATSUI](why-shaping-exists.html#apple-gx-aat-and-atsui)). HarfBuzz reads it with the same templates, `mortmorx<…, ObsoleteTypes>` instead of `ExtendedTypes` (`hb-aat-layout-common.hh:1257–1331`). The differences are in the sizes and in how things are found:
 
 | | `morx` (`ExtendedTypes`) | `mort` (`ObsoleteTypes`) |
 |---|---|---|
@@ -339,7 +337,7 @@ After an insertion at the current glyph, HarfBuzz moves past the inserted glyphs
 | contextual replacements | per-entry lookup tables | offsets into one glyph array |
 | ligature actions | an index, with a PerformAction flag | an offset in the low 14 bits of the flags |
 
-A state given as an offset can come before the first state: some Apple `kern` tables start that way, and HarfBuzz allows such negative states in `kern` and `mort` alike (`StateTable::sanitize`, `:999`). 15.1.0 fixed those tables, which had been ignored. The `mort` font of the text-rendering tests in HarfBuzz’s test suite has one chain of five subtables, one of each kind:
+A state given as an offset can come before the first state: some Apple `kern` tables start that way, and HarfBuzz allows such negative states in `kern` and `mort` alike (`StateTable::sanitize`, `:1061`). 15.1.0 fixed those tables, which had been ignored. The `mort` font of the text-rendering tests in HarfBuzz’s test suite has one chain of five subtables, one of each kind:
 
 ```trace
 font: hb:test/shape/data/text-rendering-tests/fonts/TestAATMort.ttf
@@ -354,9 +352,9 @@ A B is rearranged into B A, C is replaced by D, E F become `one` and a deleted g
 
 Two small tables complete the picture.
 
-**feat**, the feature name table, lists a font’s feature types, their selectors, whether they are exclusive and which is the default, and `name` IDs for a menu (`hb-aat-layout-feat-table.hh`). Besides being the gate described above, it is what three functions read for applications, since 2.2.0: `hb_aat_layout_get_feature_types`, `hb_aat_layout_feature_type_get_name_id`, and `hb_aat_layout_feature_type_get_selector_infos` (`hb-aat-layout.cc:423–482`). The last gives each selector’s name ID and the selectors that enable and disable it: for an exclusive feature, the disabling one is the default; otherwise it is the selector plus one, by Apple’s convention that “on” selectors are even and “off” ones odd. The AAT map relies on that convention when it treats two selectors that differ only in the lowest bit as one feature (`hb-aat-map.cc:149–152`).
+**feat**, the feature name table, lists a font’s feature types, their selectors, whether they are exclusive and which is the default, and `name` IDs for a menu (`hb-aat-layout-feat-table.hh`). Besides being the gate described above, it is what three functions read for applications, since 2.2.0: `hb_aat_layout_get_feature_types`, `hb_aat_layout_feature_type_get_name_id`, and `hb_aat_layout_feature_type_get_selector_infos` (`hb-aat-layout.cc:420–479`). The last gives each selector’s name ID and the selectors that enable and disable it: for an exclusive feature, the disabling one is the default; otherwise it is the selector plus one, by Apple’s convention that “on” selectors are even and “off” ones odd. The AAT map relies on that convention when it treats two selectors that differ only in the lowest bit as one feature (`hb-aat-map.cc:149–152`).
 
-**ltag**, the language tag table, is a list of language-tag strings such as `sr` or `zh-Hant` (`hb-aat-ltag-table.hh`). HarfBuzz uses it twice. A `name` record on platform 0 (Unicode) has its language ID looked up in it (`OT/name/name.hh:109`). And in `morx`, a feature entry of type 39, Language Tag, with setting *n*, applies when the buffer’s language matches tag *n* − 1, with or without any feature request, and with or without `feat` (`hb-aat-layout-morx-table.hh:1168`). The match is “rudimentary”, as the source says: the font’s tag, lower-cased, must be the buffer’s language or a prefix of it ending at a hyphen (`ltag::matches_language`, `hb-aat-ltag-table.hh:79`). This test font from HarfBuzz has tags `sr` and `Zh_Hant`, and a Noncontextual subtable for each:
+**ltag**, the language tag table, is a list of language-tag strings such as `sr` or `zh-Hant` (`hb-aat-ltag-table.hh`). HarfBuzz uses it twice. A `name` record on platform 0 (Unicode) has its language ID looked up in it (`OT/name/name.hh:109`). And in `morx`, a feature entry of type 39, Language Tag, with setting *n*, applies when the buffer’s language matches tag *n* − 1, with or without any feature request, and with or without `feat` (`hb-aat-layout-morx-table.hh:1215`). The match is “rudimentary”, as the source says: the font’s tag, lower-cased, must be the buffer’s language or a prefix of it ending at a hyphen (`ltag::matches_language`, `hb-aat-ltag-table.hh:79`). This test font from HarfBuzz has tags `sr` and `Zh_Hant`, and a Noncontextual subtable for each:
 
 ```shape
 hb:test/shape/data/in-house/fonts/882a555639995ed746c7575416acb689ecb9549d.ttf  A  --language=en
@@ -371,16 +369,16 @@ hb:test/shape/data/in-house/fonts/882a555639995ed746c7575416acb689ecb9549d.ttf  
 
 ## Clusters and safe breaking
 
-Ligatures merge the clusters of their components, rearrangement those of its whole stretch, and an inserted glyph takes the cluster of the glyph it was inserted at. Deleted glyphs, when they are finally removed, hand their clusters to a neighbor (`hb-buffer.cc:694`).
+Ligatures merge the clusters of their components, rearrangement those of its whole stretch, and an inserted glyph takes the cluster of the glyph it was inserted at. Deleted glyphs, when they are finally removed, hand their clusters to a neighbor (`hb-buffer.cc:678`).
 
-For safe breaking, `morx` is careless in one way and careful in another. Before it runs anything, `mortmorx::apply` marks the whole buffer unsafe to concatenate (`hb-aat-layout-morx-table.hh:1465`). A GSUB font marks only the glyphs a lookup looked at:
+For safe breaking, `morx` is careless in one way and careful in another. Before it runs anything, `mortmorx::apply` marks the whole buffer unsafe to concatenate (`hb-aat-layout-morx-table.hh:1517`). A GSUB font marks only the glyphs a lookup looked at:
 
 ```shape
 gsub/ligatures.ttf  la la  --show-flags  --unsafe-to-concat
 latin.ttf  la la  --show-flags  --unsafe-to-concat
 ```
 
-Unsafe to break is worked out glyph by glyph, as precisely as the driver can (issue #2860). Breaking before the current glyph is safe only if this transition has no action, if starting afresh from state 0 here would reach the same state, with the same DontAdvance and no action, and if the current state’s end-of-text entry has no action (`hb-aat-layout-common.hh:1366–1426`):
+Unsafe to break is worked out glyph by glyph, as precisely as the driver can (issue #2860). Breaking before the current glyph is safe only if this transition has no action, if starting afresh from state 0 here would reach the same state, with the same DontAdvance and no action, and if the current state’s end-of-text entry has no action (`hb-aat-layout-common.hh:1428–1488`):
 
 ```shape
 latin.ttf  fife fee  --show-flags
@@ -393,7 +391,7 @@ The second `e` of `fee` is flagged: breaking before it would leave the first `e`
 
 | File | What’s there |
 |---|---|
-| `src/hb-ot-shape.cc` | `_hb_apply_morx` (`:60`), the swap to `dumber` (`:100`), the plan’s AAT map (`:114`), the call to `hb_aat_layout_substitute` (`:916`), and the removal of deleted glyphs (`:945`, `:954`) |
+| `src/hb-ot-shape.cc` | `_hb_apply_morx` (`:60`), the swap to `dumber` (`:100`), the plan’s AAT map (`:114`), the call to `hb_aat_layout_substitute` (`:918`), and the removal of deleted glyphs (`:947`, `:956`) |
 | `src/hb-aat-layout.cc` | the feature mapping table (`:106`), the `morx` blocklist, `hb_aat_layout_substitute`, the `feat` API, and the apply context’s sanitizer |
 | `src/hb-aat-map.cc`, `src/hb-aat-map.hh` | the AAT map builder: features to type and selector, `feat` as a gate, ranges, and the budget |
 | `src/hb-aat-layout-morx-table.hh` | the five subtable types and their `transition`s, `ChainSubtable` and its coverage, `Chain::compile_flags` and `Chain::apply`, `mortmorx` and its accelerator |
@@ -401,7 +399,7 @@ The second `e` of `fee` is flagged: breaking before it would leave the first `e`
 | `src/hb-aat-layout-feat-table.hh`, `src/hb-aat-ltag-table.hh` | `feat` and `ltag` |
 | `test/shape/data/in-house/tests/aat-morx.tests`, `test/shape/data/text-rendering-tests/tests/MORX-*.tests`, `test/shape/data/text-rendering-tests/tests/MORT-1.tests` | HarfBuzz’s `morx` and `mort` tests |
 
-`HB_NO_AAT_SHAPE` leaves `morx`, `mort`, `kerx`, and `trak` shaping out of the build; `HB_NO_AAT` does that and also leaves out the `feat` and `ltag` API and `ltag`’s use in `name` (`HB_NO_OT_NAME_LANGUAGE_AAT`). `HB_MINI` sets `HB_NO_AAT`, and `HB_NO_SHAPER` and `HB_NO_OT_SHAPE` set `HB_NO_AAT_SHAPE` (`hb-config.hh:94–171`). `HB_NO_AAT_LAYOUT_BLOCKLIST`, set by `HB_NO_LEGACY`, keeps AALMAGHRIBI.ttf’s `morx`. The feature mapping table is compiled whenever AAT is in, or Core Text is, since the `coretext` backend uses it to pass features to Core Text (`hb-coretext-shape.cc:220`).
+`HB_NO_AAT_SHAPE` leaves `morx`, `mort`, `kerx`, and `trak` shaping out of the build; `HB_NO_AAT` does that and also leaves out the `feat` and `ltag` API and `ltag`’s use in `name` (`HB_NO_OT_NAME_LANGUAGE_AAT`). `HB_MINI` sets `HB_NO_AAT`, and `HB_NO_SHAPER` and `HB_NO_OT_SHAPE` set `HB_NO_AAT_SHAPE` (`hb-config.hh:95–171`). `HB_NO_AAT_LAYOUT_BLOCKLIST`, set by `HB_NO_LEGACY`, keeps AALMAGHRIBI.ttf’s `morx`. The feature mapping table is compiled whenever AAT is in, or Core Text is, since the `coretext` backend uses it to pass features to Core Text (`hb-coretext-shape.cc:220`).
 
 ## In short
 

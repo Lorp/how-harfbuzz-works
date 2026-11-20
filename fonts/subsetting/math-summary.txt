@@ -4,9 +4,10 @@ math.ttf
     integral -> integral, integral.size1
     integral.rtlm -> integral.rtlm, integral.rtlm.size1
 math-integral.ttf
-  italics correction: integral, integral.size1
+  italics correction: integral, integral.size1, integral.rtlm, integral.rtlm.size1
   vertical variants:
     integral -> integral, integral.size1
+    integral.rtlm -> integral.rtlm, integral.rtlm.size1
 math-rtlm.ttf
   italics correction: integral, integral.size1, integral.rtlm, integral.rtlm.size1
   vertical variants:

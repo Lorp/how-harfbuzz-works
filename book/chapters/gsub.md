@@ -63,7 +63,7 @@ The names differ a little between the views. For this lookup:
 
 ## The order lookups run in
 
-Planning hands over the lookups in **stages**, separated by pauses where a script shaper can step in (an Indic shaper, for example, reorders glyphs between stages). Within a stage, HarfBuzz sorts the lookups by their index in the LookupList (`hb-ot-map.cc:389`; [From features to lookups](from-features-to-lookups.html#stages-and-pauses) covers stages and pauses). It doesn’t sort them by feature, and it doesn’t keep the order in which the features were asked for. [Feature order](feature-order.html) gives the stages for every shaper.
+Planning hands over the lookups in **stages**, separated by pauses where a script shaper can step in (an Indic shaper, for example, reorders glyphs between stages). Within a stage, HarfBuzz sorts the lookups by their index in the LookupList (`hb-ot-map.cc:382`; [From features to lookups](from-features-to-lookups.html#stages-and-pauses) covers stages and pauses). It doesn’t sort them by feature, and it doesn’t keep the order in which the features were asked for. [Feature order](feature-order.html) gives the stages for every shaper.
 
 For the default shaper, which handles Latin, nearly every feature is in the same stage. So `ccmp`, `liga`, `calt`, and the rest are not applied one feature after another: their lookups are merged into one list and run in lookup order. The test font’s `ccmp` turns `x` into `f i`. It comes after `liga` in the feature file, so its lookup is lookup 4, after `liga`’s lookup 0. The font `ccmp-first.ttf` is the same except that the `ccmp` block comes first in its feature file:
 
@@ -181,7 +181,7 @@ When a lookup matches a sequence, the second glyph onwards is found by a **skipp
 
 *May this glyph be skipped?* `SKIP_YES` if the lookup flags say to ignore it. `SKIP_MAYBE` if it’s a default-ignorable character that this lookup is allowed to pass over (more on which in a moment). `SKIP_NO` otherwise.
 
-*Does it match?* If the rule names glyphs, they’re compared: `MATCH_YES` or `MATCH_NO`. If it doesn’t (some fast paths just want “the next glyph”), it’s `MATCH_MAYBE`. A glyph whose mask lacks the lookup’s bits, or one in a different syllable when the lookup works per syllable, is always `MATCH_NO`.
+*Does it match?* If the rule names glyphs, they’re compared: `MATCH_YES` or `MATCH_NO`. If it doesn’t (some fast paths just want “the next glyph”), it’s `MATCH_MAYBE`. A glyph whose mask lacks the lookup’s bits is always `MATCH_NO`. A glyph in a different syllable, when the lookup works per syllable, is ruled out before either question is asked: it fails even if the lookup flags would skip it (`hb-ot-layout-gsubgpos.hh:1088`). Before 15.2.0 it only counted as `MATCH_NO`, so a glyph of another syllable could still be skipped, and since a syllable’s serial number has only 4 bits and wraps, a rule could match a glyph sixteen syllables later ([#6672](https://github.com/harfbuzz/harfbuzz/pull/6672), HarfBuzz issue #6670).
 
 The answers are then combined like this:
 
@@ -341,7 +341,7 @@ to: end lookup 3
 
 A nested lookup may change the length of the buffer, by ligating or multiplying, and `apply_lookup` then has to work out where the later positions in the pattern have moved to. It assumes that new glyphs were added straight after the current position, and that removed ones were the positions after it. A long comment in the source explains that this guess is not always right (HarfBuzz discussion #3538) and how it could be improved.
 
-Nesting is limited. A lookup can nest 64 deep at most (`HB_MAX_NESTING_LEVEL`); one level deeper and the whole buffer is marked unsuccessful (`hb-ot-layout-gsubgpos.hh:1145`), so a single self-recursive rule stops all further shaping. A pattern can be at most 64 glyphs long (`HB_MAX_CONTEXT_LENGTH`). And the buffer has a budget of operations (`max_ops`): 4,096 for each glyph, and at least 65,536. A font built to make shaping run for ever just stops when it runs out. These limits are in `hb-limits.hh`, and the [Limits](limits.html) appendix lists them all.
+Nesting is limited. A lookup can nest 64 deep at most (`HB_MAX_NESTING_LEVEL`); one level deeper and the whole buffer is marked unsuccessful (`hb-ot-layout-gsubgpos.hh:1237`), so a single self-recursive rule stops all further shaping. A pattern can be at most 64 glyphs long (`HB_MAX_CONTEXT_LENGTH`). And the buffer has a budget of operations (`max_ops`): 65,536 for each glyph, and at least 524,288 (4,096 and 65,536 before 15.2.0). A font built to make shaping run for ever just stops when it runs out. These limits are in `hb-limits.hh`, and the [Limits](limits.html) appendix lists them all.
 
 ### Extension
 
@@ -371,7 +371,7 @@ fea: constructs.fea calt
 print: spec fea
 ```
 
-The rules for a glyph are tried in order, and the first that matches wins (`hb-ot-layout-gsubgpos.hh:4964`). Before *i*, the first rule matches, applies nothing, and so stops the second being tried. The lookup itself carries on at the next glyph: an `ignore` rule passes over one position, and doesn’t end the lookup.
+The rules for a glyph are tried in order, and the first that matches wins (`hb-ot-layout-gsubgpos.hh:5152`). Before *i*, the first rule matches, applies nothing, and so stops the second being tried. The lookup itself carries on at the next glyph: an `ignore` rule passes over one position, and doesn’t end the lookup.
 
 ```shape
 constructs.ttf  fi  --language=en

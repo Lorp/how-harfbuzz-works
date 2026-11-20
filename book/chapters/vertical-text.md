@@ -8,7 +8,7 @@ The examples use four small test fonts, built by `fonts/vertical-text/build-font
 
 ## What HarfBuzz does, and what it leaves to the application
 
-A vertical run is a run like any other: one font, one script, one language, and one direction. HarfBuzz never chooses vertical for itself. When a buffer’s direction is left unset, `hb_buffer_guess_segment_properties` takes the script’s horizontal direction, and left to right if it has none (`hb-buffer.cc:765`). An application that wants a column says so with `hb_buffer_set_direction`, or `hb-shape --direction=ttb`.
+A vertical run is a run like any other: one font, one script, one language, and one direction. HarfBuzz never chooses vertical for itself. When a buffer’s direction is left unset, `hb_buffer_guess_segment_properties` takes the script’s horizontal direction, and left to right if it has none (`hb-buffer.cc:749`). An application that wants a column says so with `hb_buffer_set_direction`, or `hb-shape --direction=ttb`.
 
 In a column of Japanese, most characters stand upright, but Latin words and many symbols are usually turned on their side. HarfBuzz has no notion of that choice. Every glyph in a vertical run is set upright, one below another. A sideways run is a horizontal run, shaped left to right and rotated by the application when it draws it. HarfBuzz’s manual says only that HarfBuzz lays text out “on a single horizontal (or vertical) line”, and that if the direction changes within a string, “you will need to shape each run independently” (`docs/usermanual-what-is-harfbuzz.xml:346`, `:395`). Nor does HarfBuzz carry the data an application needs to choose. The Unicode functions it consults have no Vertical_Orientation property (the list is at `hb-unicode.hh:44`), so splitting a column into upright and sideways runs is the application’s work, done before HarfBuzz is called (inferred from what is missing).
 
@@ -27,7 +27,7 @@ The four directions are numbered so that two bit tests sort them (`hb-common.h:2
 
 ### Bottom to top becomes top to bottom
 
-Step 5 of the pipeline, `hb_ensure_native_direction`, puts the text in the order the font expects. For horizontal text, that depends on the script. For vertical text it doesn’t: everything becomes top to bottom (`hb-ot-shape.cc:635`, trimmed):
+Step 5 of the pipeline, `hb_ensure_native_direction`, puts the text in the order the font expects. For horizontal text, that depends on the script. For vertical text it doesn’t: everything becomes top to bottom (`hb-ot-shape.cc:634`, trimmed):
 
 ```c++
 /* TODO vertical:
@@ -46,7 +46,7 @@ if ((HB_DIRECTION_IS_HORIZONTAL (direction) &&
 
 A bottom-to-top run is reversed, grapheme by grapheme, and from then on it *is* a top-to-bottom run. Every lookup, every positioning step, sees TTB. The fonts are written for reading order down the column, and this is the one order they get.
 
-Right-to-left text is reversed back at the end of positioning, so that the glyphs come out in left-to-right visual order. Vertical text isn’t: that reversal tests the buffer’s current direction (`hb-ot-shape.cc:1102`), which by then is TTB. The direction is restored to BTT only as `hb_ot_shape_internal` returns (`:1200`). So a bottom-to-top run comes out top to bottom, its last character first, which is the visual order of a column drawn downwards:
+Right-to-left text is reversed back at the end of positioning, so that the glyphs come out in left-to-right visual order. Vertical text isn’t: that reversal tests the buffer’s current direction (`hb-ot-shape.cc:1104`), which by then is TTB. The direction is restored to BTT only as `hb_ot_shape_internal` returns (`:1202`). So a bottom-to-top run comes out top to bottom, its last character first, which is the visual order of a column drawn downwards:
 
 ```shape
 vertical.ttf  「水」  --direction=ttb  --language=ja
@@ -67,11 +67,11 @@ from: start decompose
 to: end table GSUB
 ```
 
-That is what a column read upwards needs. The opening bracket is at the bottom and must open upwards, which is the shape of the closing bracket in a top-to-bottom column (the writer’s reading; HarfBuzz’s source doesn’t say why). The `rtlm` mask bit that mirroring sets on other characters does nothing here, because `rtlm` is only asked for in right-to-left text (`hb-ot-shape.cc:338`).
+That is what a column read upwards needs. The opening bracket is at the bottom and must open upwards, which is the shape of the closing bracket in a top-to-bottom column (the writer’s reading; HarfBuzz’s source doesn’t say why). The `rtlm` mask bit that mirroring sets on other characters does nothing here, because `rtlm` is only asked for in right-to-left text (`hb-ot-shape.cc:334`).
 
 ## The features a vertical run gets
 
-Planning asks for features in a fixed order ([From features to lookups](from-features-to-lookups.html)). A vertical run gets the same list as a horizontal one, with two differences. It gets none of the direction features `ltra`, `ltrm`, `rtla`, and `rtlm`. And where a horizontal run gets `calt`, `clig`, `curs`, `dist`, `kern`, `liga`, and `rclt`, a vertical run gets one feature (`hb-ot-shape.cc:374`, trimmed):
+Planning asks for features in a fixed order ([From features to lookups](from-features-to-lookups.html)). A vertical run gets the same list as a horizontal one, with two differences. It gets none of the direction features `ltra`, `ltrm`, `rtla`, and `rtlm`. And where a horizontal run gets `calt`, `clig`, `curs`, `dist`, `kern`, `liga`, and `rclt`, a vertical run gets `vert`, turned on, and `vkrn`, added but off (`hb-ot-shape.cc:370`, trimmed):
 
 ```c++
 if (HB_DIRECTION_IS_HORIZONTAL (planner->props.direction))
@@ -79,6 +79,9 @@ if (HB_DIRECTION_IS_HORIZONTAL (planner->props.direction))
     map->add_feature (horizontal_features[i]);
 else
 {
+  /* Keep a fallback mask when vertical kerning is requested. */
+  map->add_feature (HB_TAG ('v','k','r','n'), F_GLOBAL_HAS_FALLBACK, 0);
+
   /* We only apply `vert` feature. See:
    * https://github.com/harfbuzz/harfbuzz/commit/d71c0df2d17f4590d5611239577a6cb532c26528
    * https://lists.freedesktop.org/archives/harfbuzz/2013-August/003490.html */
@@ -128,11 +131,11 @@ vertical.ttf  水。」  --direction=ttb  --language=ja  --features=vkrn
 vertical.ttf  水、水  --direction=ttb  --language=ja  --features=vpal
 ```
 
-The specification wants four of these on by default ([OpenType features u–z](https://learn.microsoft.com/en-us/typography/opentype/spec/features_uz)). `valt` is meant for fonts without `vmtx`, `vrt2` would replace the `vert` that HarfBuzz always applies, and `vrtr` is for sideways runs, which HarfBuzz never sees. That leaves `vkrn`, which “should be active by default” in most vertical text, and where HarfBuzz departs from the specification. HarfBuzz’s comment above, “We only apply `vert` feature”, points to a 2013 mailing-list thread for the reason. `vkrn` still has a part in the plan: in vertical text the plan’s kerning mask is `vkrn`’s rather than `kern`’s (`hb-ot-shape.cc:127`), so the legacy `kern` table, if a font uses one, applies only where `vkrn` is turned on ([Legacy kern](legacy-kern.html)).
+The specification wants four of these on by default ([OpenType features u–z](https://learn.microsoft.com/en-us/typography/opentype/spec/features_uz)). `valt` is meant for fonts without `vmtx`, `vrt2` would replace the `vert` that HarfBuzz always applies, and `vrtr` is for sideways runs, which HarfBuzz never sees. That leaves `vkrn`, which “should be active by default” in most vertical text, and where HarfBuzz departs from the specification. HarfBuzz’s comment above, “We only apply `vert` feature”, points to a 2013 mailing-list thread for the reason. `vkrn` still has a part in the plan: in vertical text the plan’s kerning mask is `vkrn`’s rather than `kern`’s (`hb-ot-shape.cc:127`), so the legacy `kern` table, if a font uses one, applies only where `vkrn` is turned on ([Legacy kern](legacy-kern.html#vertical-subtables)). The `vkrn` added in the excerpt above, with a value of 0 and `F_GLOBAL_HAS_FALLBACK`, makes sure it has a mask bit when it is asked for, even in a font whose GPOS lacks it; before 15.2.0 it had none, and a vertical `kern` subtable could never apply.
 
 ### Finding `vert` anywhere
 
-`F_GLOBAL_SEARCH` is the only flag of its kind, and `vert` the only feature that has it ([From features to lookups](from-features-to-lookups.html)). Every other feature is looked for in the language system HarfBuzz chose for the run. If `vert` isn’t there, in GSUB or GPOS, the map takes the first feature tagged `vert` in the whole FeatureList, whatever script lists it, or none (`hb-ot-map.cc:311`). The comment points to HarfBuzz issue #63 for the fonts that needed it.
+`F_GLOBAL_SEARCH` is the only flag of its kind, and `vert` the only feature that has it ([From features to lookups](from-features-to-lookups.html)). Every other feature is looked for in the language system HarfBuzz chose for the run. If `vert` isn’t there, in GSUB or GPOS, the map takes the first feature tagged `vert` in the whole FeatureList, whatever script lists it, or none (`hb-ot-map.cc:303`). The comment points to HarfBuzz issue #63 for the fonts that needed it.
 
 `vert-kana.ttf` is the test font with `vert` listed only under `kana`. Its `hani` language system, the one chosen for this text, lists only `liga`:
 
@@ -157,7 +160,7 @@ The rotated `a` appears only on request. The comma is vertical either way, but n
 
 ## The fallback to presentation forms
 
-Unicode encodes vertical forms of some punctuation as characters of their own: U+FE10 to U+FE19 and U+FE30 to U+FE48, the “vertical forms” and the vertical half of the “CJK compatibility forms”. HarfBuzz uses them when a font gives it nothing better. In step 7 (`hb-ot-shape.cc:675`):
+Unicode encodes vertical forms of some punctuation as characters of their own: U+FE10 to U+FE19 and U+FE30 to U+FE48, the “vertical forms” and the vertical half of the “CJK compatibility forms”. HarfBuzz uses them when a font gives it nothing better. In step 7 (`hb-ot-shape.cc:674`):
 
 ```c++
 #ifndef HB_NO_VERTICAL
@@ -218,11 +221,11 @@ A font with a `morx` table is shaped with it in vertical text only if it has no 
 
 ### Advances and origins
 
-In step 15 each glyph gets its vertical advance and an offset that is its vertical origin, negated (`hb-ot-shape.cc:1019`): `0,-1000` and −500, −880 for every full-width glyph in the test fonts, −250, −880 for the 500-unit `a`. From then on, offsets carry the origin with them. GPOS works on top of these offsets, not in place of them. Nothing adds the origins back afterward, so an application draws each glyph at the pen position plus its offset, just as in horizontal text, and moves the pen down by the advance.
+In step 15 each glyph gets its vertical advance and an offset that is its vertical origin, negated (`hb-ot-shape.cc:1021`): `0,-1000` and −500, −880 for every full-width glyph in the test fonts, −250, −880 for the 500-unit `a`. From then on, offsets carry the origin with them. GPOS works on top of these offsets, not in place of them. Nothing adds the origins back afterward, so an application draws each glyph at the pen position plus its offset, just as in horizontal text, and moves the pen down by the advance.
 
 ### Value records
 
-GPOS value records have an advance for each direction. `apply_value` uses `xAdvance` only in horizontal text and `yAdvance` only in vertical, and negates `yAdvance`, “y_advance values grow downward but font-space grows upward” (`ValueFormat.hh:115`). Placements apply in both. So the `vkrn` value above, `<0 0 0 -300>`, made the full stop’s advance −700 instead of −1,000, and the `vpal` value `<0 250 0 -500>` moved the comma up 250 and halved its advance. A `kern` pair written with only an x advance does nothing in a column, even when an application asks for `kern`, though a `liga` asked for applies as usual:
+GPOS value records have an advance for each direction. `apply_value` uses `xAdvance` only in horizontal text and `yAdvance` only in vertical, and negates `yAdvance`, “y_advance values grow downward but font-space grows upward” (`ValueFormat.hh:137`). Placements apply in both. So the `vkrn` value above, `<0 0 0 -300>`, made the full stop’s advance −700 instead of −1,000, and the `vpal` value `<0 250 0 -500>` moved the comma up 250 and halved its advance. A `kern` pair written with only an x advance does nothing in a column, even when an application asks for `kern`, though a `liga` asked for applies as usual:
 
 ```shape
 vertical.ttf  ab  --direction=ttb  --language=en  --features=kern
@@ -248,9 +251,9 @@ vertical.ttf  が  --direction=ttb  --language=ja
 vertical.ttf  が  --direction=ltr  --language=ja
 ```
 
-When the mark attaches, its offset is set to the distance between the anchors, 800 across and 50 up. Across the column, the base’s offset is added at once: in vertical text that is x, so the mark’s x offset becomes 800 − 500 = 300 (`MarkArray.hh:76`). Along the column, the base’s y offset, −880, is added when attachments are resolved after GPOS, and the advances from the base to the mark are subtracted: the base’s −1,000 (`GPOS.hh:113`). 50 − 880 + 1,000 = 170. It is the same arithmetic as in horizontal text with x and y exchanged, and it puts the two anchors on the same point.
+When the mark attaches, its offset is set to the distance between the anchors, 800 across and 50 up. Across the column, the base’s offset is added at once: in vertical text that is x, so the mark’s x offset becomes 800 − 500 = 300 (`MarkArray.hh:76`). Along the column, the base’s y offset, −880, is added when attachments are resolved after GPOS, and the advances from the base to the mark are subtracted: the base’s −1,000 (`GPOS.hh:112`). 50 − 880 + 1,000 = 170. It is the same arithmetic as in horizontal text with x and y exchanged, and it puts the two anchors on the same point.
 
-The mark’s advance is zero, although `vmtx` gives it 1,000. The default shaper zeroes the advances of GDEF marks after GPOS, and `zero_mark_width` clears both advances, whatever the direction (`hb-ot-shape.cc:978`). When a font has no GPOS, the mark’s offset is moved back by the advance it had, in y as well as x, so that it hangs over the glyph before it ([Fallbacks](fallbacks.html)).
+The mark’s advance is zero, although `vmtx` gives it 1,000. The default shaper zeroes the advances of GDEF marks after GPOS, and `zero_mark_width` clears both advances, whatever the direction (`hb-ot-shape.cc:980`). When a font has no GPOS, the mark’s offset is moved back by the advance it had, in y as well as x, so that it hangs over the glyph before it ([Fallbacks](fallbacks.html)).
 
 ### Cursive chains
 
@@ -279,18 +282,18 @@ The unused branch also differs from the others (`CursivePosFormat1.hh:155`, trim
 
 ```c++
 case HB_DIRECTION_TTB:
-  pos[i].y_advance = hb_saturate_add ((hb_position_t) roundf (exit_y), pos[i].y_offset);
+  pos[i].y_advance = hb_saturate_add (hb_clamp_to<hb_position_t> (roundf (exit_y)), pos[i].y_offset);
   ...
 case HB_DIRECTION_BTT:
   ...
-  pos[j].y_advance = (hb_position_t) roundf (entry_y);
+  pos[j].y_advance = hb_clamp_to<hb_position_t> (roundf (entry_y));
 ```
 
 In the other three directions, the advance set from an anchor includes the glyph’s offset along the line, which in vertical text is its origin. Here it doesn’t. If the branch were ever reached, the advance would be wrong by the glyph’s vertical origin. It can’t be reached through `hb_shape`, so it changes nothing today.
 
 ## Compiled out
 
-`HB_NO_VERTICAL` removes the vertical support from the font side: the `vhea`, `vmtx`, and `VORG` slots on the face ([Blobs, faces, and lazy tables](blobs-faces-and-lazy-tables.html)), hb-ot’s vertical advance, origin, and font-extents functions, the vertical phantom points of `glyf`, and the presentation-form fallback. `HB_LEAN` sets it. Vertical runs still shape: the planning and positioning above don’t depend on it, and the font object answers for the missing functions with its own defaults ([Fonts and font functions](fonts-and-font-functions.html#the-nil-tier-and-the-default-tier)). Inside `apply_value` it makes every run count as horizontal, so in a column `yAdvance` is ignored and `xAdvance` applied (`ValueFormat.hh:98`).
+`HB_NO_VERTICAL` removes the vertical support from the font side: the `vhea`, `vmtx`, and `VORG` slots on the face ([Blobs, faces, and lazy tables](blobs-faces-and-lazy-tables.html)), hb-ot’s vertical advance, origin, and font-extents functions, the vertical phantom points of `glyf`, and the presentation-form fallback. `HB_LEAN` sets it. Vertical runs still shape: the planning and positioning above don’t depend on it, and the font object answers for the missing functions with its own defaults ([Fonts and font functions](fonts-and-font-functions.html#the-nil-tier-and-the-default-tier)). Inside `apply_value` it makes every run count as horizontal, so in a column `yAdvance` is ignored and `xAdvance` applied (`ValueFormat.hh:120`).
 
 ## Where to read the source
 

@@ -63,7 +63,7 @@ shared_tuple_scalar_cache = nullptr;
 
 A tuple’s index field holds the shared tuple’s number in its low 12 bits and flags above them. The cache is used only when the field, ignoring the flag for private point numbers, is a plain index, and an intermediate tuple never stores its scalar there. Before the fix, an intermediate tuple and a plain one with the same shared peak could read each other’s scalars from the cache. Which one was wrong depended on which glyph was drawn first.
 
-The research for this chapter reproduced the bug. It changed one tuple in one of HarfBuzz’s test fonts, `TestGVARFour.ttf`, so that one shared peak was used plainly by `O` and as an intermediate by `I`. HarfBuzz 12.3.0 drew `I` correctly on its own and wrongly in “OI” and “IO”. 15.1.0 draws it the same in every case, and agrees with fontTools.
+The research for this chapter reproduced the bug. It changed one tuple in one of HarfBuzz’s test fonts, `TestGVARFour.ttf`, so that one shared peak was used plainly by `O` and as an intermediate by `I`. HarfBuzz 12.3.0 drew `I` correctly on its own and wrongly in “OI” and “IO”. 15.1.0 and later draw it the same in every case, and agree with fontTools.
 
 ## Points that aren’t there: IUP
 
@@ -73,7 +73,7 @@ A tuple can list the points it gives deltas for, instead of giving deltas for al
 * if it lies beyond both, it takes the delta of the nearer one;
 * if the two have the same coordinate, it takes their delta when they agree, and 0 when they don’t.
 
-That is `infer_delta` (`hb-ot-var-gvar-table.hh:665`):
+That is `infer_delta` (`hb-ot-var-gvar-table.hh:687`):
 
 ```c++
 if (prev_val == next_val)
@@ -105,7 +105,7 @@ The specification infers from each tuple’s deltas before multiplying them by t
 
 ### The fast path
 
-Most tuples in most fonts give deltas for every point. For those, `apply_deltas_to_points` (`hb-ot-var-gvar-table.hh:769`) doesn’t build any arrays: it decodes each delta, multiplies it by the scalar, and adds it straight into the point (`decompile_deltas_add_to_points`, 692). But that’s only safe if no later tuple needs IUP, because IUP needs the default points, and the fast path has changed them. So before taking the fast path, HarfBuzz looks ahead: if any remaining tuple, with a scalar that isn’t 0, has its own list of points, it takes the slow path, which keeps the deltas apart until a copy of the default points has been made.
+Most tuples in most fonts give deltas for every point. For those, `apply_deltas_to_points` (`hb-ot-var-gvar-table.hh:791`) doesn’t build any arrays: it decodes each delta, multiplies it by the scalar, and adds it straight into the point (`decompile_deltas_add_to_points`, 692). But that’s only safe if no later tuple needs IUP, because IUP needs the default points, and the fast path has changed them. So before taking the fast path, HarfBuzz looks ahead: if any remaining tuple, with a scalar that isn’t 0, has its own list of points, it takes the slow path, which keeps the deltas apart until a copy of the default points has been made.
 
 ## Composites
 
@@ -123,25 +123,25 @@ The diaeresis’s offset goes from 52 units at slant 0 to 92 at −15. Each comp
 
 ## Where the outline lands
 
-Two steps happen after the deltas are applied. First, at the top level, every point is shifted by the varied left phantom (`Glyph.hh:585`), under a comment that reads “Undocumented rasterizer behavior: Shift points horizontally by the updated left side bearing”. So a delta on phantom 0 moves the outline, not just the metrics.
+Two steps happen after the deltas are applied. First, at the top level, every point is shifted by the varied left phantom (`Glyph.hh:586`), under a comment that reads “Undocumented rasterizer behavior: Shift points horizontally by the updated left side bearing”. So a delta on phantom 0 moves the outline, not just the metrics.
 
-Second, the points stay floats. Drawing doesn’t round them at all, while extents and advances are rounded in font units, before the font’s size is applied:
+Second, the points stay floats. Drawing doesn’t round them at all. Advances are rounded in font units, before the font’s size is applied. Extents, since 15.2.0, are scaled first and then rounded outward, so that the box always holds the ink (`glyf.hh:460`, `hb-font.hh:214`):
 
 ```shape
 variations/var.ttf  V  --variations=wght=613  --show-extents  --font-size=100000
 ```
 
-At weight 613, `V`’s right edge is drawn at fractional positions: in `hb-vector`’s output, the top right corner is at x = 316.33. But at 100 times the font’s size, its extents come out as multiples of 100: a width of 23600, not 23633. A renderer that draws the outline and an application that lays out boxes from the extents see slightly different glyphs.
+At weight 613, `V`’s right edge is drawn at fractional positions: in `hb-vector`’s output, the top right corner is at x = 316.33. At 100 times the font’s size, the advance is still a multiple of 100, 39600, but the extents follow the outline, with a width of 23633. At the font’s own size the same width is 237, rounded up from 236.33. Before 15.2.0 extents were rounded in font units too, and here came out as 23600, a third of a unit narrower than the ink. An application that lays out boxes from the extents and a renderer that draws the outline now agree, to within a unit of the font’s scale; advances still move in whole font units.
 
 ## When things go wrong
 
 HarfBuzz treats damage to gvar in two ways. If a glyph’s variation header can’t be read, its variations are dropped and the glyph is drawn at the default, with the comment “so isn’t applied at all”. But if the data inside a tuple is broken, a run that is too long or a list of points that runs off the end, the whole glyph fails: it isn’t drawn, and if its advance came from the phantoms, it falls back to half an em.
 
-Some other robustness choices: a point number past the end of the glyph is skipped; a point listed twice gets both deltas added; gvar’s own glyph count is never read, and the face’s glyph count is used instead (`hb-ot-var-gvar-table.hh:659`). And HarfBuzz accepts one encoding the specification doesn’t have. The packed deltas in gvar have three kinds of run: zeros, bytes, and 16-bit words. HarfBuzz reads them with the same decoder as VARC’s data, which has a fourth, 32-bit run, marked by both flag bits. No conforming font has one in gvar, since to a reader that follows the specification those bits mean a run of zeros.
+Some other robustness choices: a point number past the end of the glyph is skipped; a point listed twice gets both deltas added; gvar’s own glyph count is never read, and the face’s glyph count is used instead (`hb-ot-var-gvar-table.hh:681`). And HarfBuzz accepts one encoding the specification doesn’t have. The packed deltas in gvar have three kinds of run: zeros, bytes, and 16-bit words. HarfBuzz reads them with the same decoder as VARC’s data, which has a fourth, 32-bit run, marked by both flag bits. No conforming font has one in gvar, since to a reader that follows the specification those bits mean a run of zeros.
 
 ## GVAR
 
-A font with more than 65,535 glyphs uses `GVAR`, from the 2026 ISO standard. In HarfBuzz both tables come from one template, `gvar_GVAR<T, Types>` (`hb-ot-var-gvar-table.hh:318`), with `SmallTypes` for gvar and `MediumTypes` for GVAR, as in the GSUB chapter’s beyond-64k formats. The glyph count is 24-bit in GVAR, and so is the offset to each glyph’s serialized data, which the standard’s table says too, although a note beside it says the glyph count is the only difference. The standard also says that “bit 1” of the flags selects long offsets, where Microsoft’s specification and HarfBuzz use bit 0.
+A font with more than 65,535 glyphs uses `GVAR`, from the 2026 ISO standard. In HarfBuzz both tables come from one template, `gvar_GVAR<T, Types>` (`hb-ot-var-gvar-table.hh:326`), with `SmallTypes` for gvar and `MediumTypes` for GVAR, as in the GSUB chapter’s beyond-64k formats. The glyph count is 24-bit in GVAR, and so is the offset to each glyph’s serialized data, which the standard’s table says too, although a note beside it says the glyph count is the only difference. The standard also says that “bit 1” of the flags selects long offsets, where Microsoft’s specification and HarfBuzz use bit 0.
 
 ## CFF2
 
@@ -149,7 +149,7 @@ CFF2 outlines vary differently. There are no stored deltas per point. Instead, a
 
 ## cvar
 
-`cvar` varies the control values that TrueType hinting instructions read. HarfBuzz doesn’t hint, so its font functions never read cvar. The only user is the subsetter: when it makes a static instance of a variable font, it adds the cvar deltas at that position into a copy of `cvt `, rounded (`hb-subset.cc:347`), so the instance hints the way the variable font would have there.
+`cvar` varies the control values that TrueType hinting instructions read. HarfBuzz doesn’t hint, so its font functions never read cvar. The only user is the subsetter: when it makes a static instance of a variable font, it adds the cvar deltas at that position into a copy of `cvt `, rounded (`hb-subset.cc:349`), so the instance hints the way the variable font would have there.
 
 ## Where to read the source
 
@@ -168,5 +168,5 @@ CFF2 outlines vary differently. There are no stored deltas per point. Instead, a
 * Points a tuple doesn’t list are inferred per contour from their neighbors, against the default outline. Phantom points are never inferred.
 * Shared peaks have cached scalars. In 15.1.0, tuples with their own intermediate regions stopped using that cache, which fixed wrong outlines.
 * A component of a composite glyph moves as one point.
-* Outlines are drawn unrounded; extents and advances are rounded in font units.
+* Outlines are drawn unrounded; advances are rounded in font units, and extents, since 15.2.0, rounded outward after scaling.
 * Broken tuple data makes a glyph vanish; a broken header only drops its variations.

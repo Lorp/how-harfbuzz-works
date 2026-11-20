@@ -378,6 +378,6 @@
 
 **Whence.** Where a serializer link’s offset is counted from: the start of the parent object (head), its end (tail), or the start of the table (absolute).
 
-**Work budget.** The number of operations HarfBuzz will spend drawing or painting, 2²⁴ per glyph, so that no font can make it draw for ever.
+**Work budget.** The number of operations HarfBuzz will spend drawing or painting, 2²⁵ per glyph, so that no font can make it draw for ever.
 
 **Zawgyi.** A font encoding for Burmese that uses the Myanmar code points in its own way. HarfBuzz shapes it, as the private script `Qaag`, with a shaper that does almost nothing.

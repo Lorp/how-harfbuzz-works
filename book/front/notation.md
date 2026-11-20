@@ -34,6 +34,6 @@ Some figures draw glyphs, with `hb-vector`, and show `hb-shape`’s result benea
 
 ## Links and source references
 
-References to HarfBuzz’s source give a file and a line, such as `hb-ot-map.cc:389`, and always mean HarfBuzz {{hb}}: the line can be found in its repository at github.com/harfbuzz/harfbuzz, under the tag {{hb}}.<span class="screen-only"> Each one links to that line.</span><span class="print-only"> On screen, each one links to that line.</span>
+References to HarfBuzz’s source give a file and a line, such as `hb-ot-map.cc:382`, and always mean HarfBuzz {{hb}}: the line can be found in its repository at github.com/harfbuzz/harfbuzz, under the tag {{hb}}.<span class="screen-only"> Each one links to that line.</span><span class="print-only"> On screen, each one links to that line.</span>
 
 <span class="screen-only">Links to other chapters, and out of the book, work as on any web page.</span><span class="print-only">Links to other parts of the book are in color, followed by the page they lead to, such as “(p. 121)”. Links out of the book are in color with a small note number, and their addresses are listed, by number, at the end of the chapter, under “Links”.</span>

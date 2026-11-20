@@ -58,7 +58,8 @@ import { boldTerm, canon, identifier, readNotes } from "./index-lib.mjs";
 import { bookVersion } from "./version.mjs";
 
 const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
-const HB_TAG = "15.1.0";
+// The HarfBuzz release the book describes, from book/book.json.
+const HB_TAG = JSON.parse(fs.readFileSync(path.join(ROOT, "book", "book.json"), "utf8")).harfbuzz;
 const HB_BUILD = process.env.HB_BUILD || path.join(ROOT, ".cache", "harfbuzz");
 const HB_SHAPE = path.join(HB_BUILD, "build", "util", "hb-shape");
 const HB_SHAPE_MSG = path.join(HB_BUILD, "build-msg", "util", "hb-shape");
@@ -1150,10 +1151,11 @@ const STATUS = {
   "In progress": ["progress", '<circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-dasharray="3 2.2"/>'],
   "Changed": ["changed", '<path d="M2.5 9.5c1.5-3 3.5-3 5.5 0s4 3 5.5 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>'],
   "Open": ["open", '<circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.8"/>'],
+  "Declined": ["declined", '<circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.8 12.2 12.2 3.8" stroke="currentColor" stroke-width="1.8"/>'],
 };
 function markStatuses(html) {
   return html.replace(/<tr>(?:(?!<\/tr>)[\s\S])*?class="kind">HHW-[\s\S]*?<\/tr>/g, (row) =>
-    row.replace(/(<td(?: id="[^"]*")?>)(Fixed|Partly fixed|In progress|Changed|Open)\b(?=(?:(?!<\/td>)[\s\S])*<\/td>\s*<\/tr>)/g, (m, td, word) => {
+    row.replace(/(<td(?: id="[^"]*")?>)(Fixed|Partly fixed|In progress|Changed|Open|Declined)\b(?=(?:(?!<\/td>)[\s\S])*<\/td>\s*<\/tr>)/g, (m, td, word) => {
       const [cls, svg] = STATUS[word];
       return `${td}<span class="status st-${cls}"><svg viewBox="0 0 16 16" aria-hidden="true">${svg}</svg></span>${word}`;
     }));

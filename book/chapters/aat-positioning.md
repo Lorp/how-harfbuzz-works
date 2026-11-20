@@ -8,7 +8,7 @@ The examples use fonts built by `fonts/aat-positioning/build-fonts.py`. All are 
 
 ## What kerx changes
 
-The **`kerx`** table, Apple’s extended kerning table, has the layout of Apple’s version 1.0 `kern` with every count, length, and offset widened to 32 bits. The header is a 16-bit version (2, 3, or 4), 16 bits of padding, and a 32-bit count of subtables. Each subtable starts with a 12-byte header: a 32-bit length, 32 bits of coverage, whose low byte is the format, and a 32-bit `tupleCount`. HarfBuzz’s struct is `kerx` (`hb-aat-layout-kerx-table.hh:1238`), another `KerxTable` beside the two `kern` versions, with `KerxSubTableHeader` (`:884`) as its header and the 32-bit `ExtendedTypes` for its fields. A version below 2 fails the sanitizer and the table is ignored (`minVersion`, `:1243`). Version 3 adds an array after the subtables saying which glyphs each subtable covers; HarfBuzz sanitizes it (`:1179`) and doesn’t use it.
+The **`kerx`** table, Apple’s extended kerning table, has the layout of Apple’s version 1.0 `kern` with every count, length, and offset widened to 32 bits. The header is a 16-bit version (2, 3, or 4), 16 bits of padding, and a 32-bit count of subtables. Each subtable starts with a 12-byte header: a 32-bit length, 32 bits of coverage, whose low byte is the format, and a 32-bit `tupleCount`. HarfBuzz’s struct is `kerx` (`hb-aat-layout-kerx-table.hh:1321`), another `KerxTable` beside the two `kern` versions, with `KerxSubTableHeader` (`:932`) as its header and the 32-bit `ExtendedTypes` for its fields. A version below 2 fails the sanitizer and the table is ignored (`minVersion`, `:1326`). Version 3 adds an array after the subtables saying which glyphs each subtable covers; HarfBuzz sanitizes it (`:1262`) and doesn’t use it.
 
 `kerx.ttf` has one format 0 subtable with `kern.ttf`’s five pairs. `fontTools` doesn’t decode `kerx`, so this listing, and the others on this page, are made from the font’s bytes by `fonts/aat-positioning/views.py`:
 
@@ -27,20 +27,20 @@ kerx.ttf  גב  --language=he
 kerx.ttf  AVTo  --language=en  --features=-kern
 ```
 
-Turning off `kern` turns off pair kerning, as with the `kern` table: formats 0, 2, and 6 check `requested_kerning` and the glyphs’ `kern` mask (`:109`).
+Turning off `kern` turns off pair kerning, as with the `kern` table: formats 0, 2, and 6 check `requested_kerning` and the glyphs’ `kern` mask (`:125`).
 
 ### Coverage
 
-The coverage bits are those of Apple’s `kern` with one more, moved to the top of a 32-bit field (`:891`):
+The coverage bits are those of Apple’s `kern` with one more, moved to the top of a 32-bit field (`:939`):
 
 | Bit | Meaning | What HarfBuzz does |
 |---|---|---|
-| `Vertical` (0x80000000) | the subtable is for vertical text | runs it only in vertical text, and the other subtables only in horizontal (`:1078`) |
+| `Vertical` (0x80000000) | the subtable is for vertical text | runs it only in vertical text, and the other subtables only in horizontal (`:1145`) |
 | `CrossStream` (0x40000000) | values move glyphs across the line | as in `kern`; see [Cross-stream](#cross-stream) |
-| `Variation` (0x20000000) | values vary | runs the subtable, unlike in `kern`, which skips it (`:1075`); see [Tuples](#tuples) |
-| `Backwards` (0x10000000) | process the glyphs from last to first | formats 1 and 4: the buffer is reversed before the subtable; formats 0, 2, and 6: the subtable is skipped (`:112`) |
+| `Variation` (0x20000000) | values vary | runs the subtable, unlike in `kern`, which skips it (`:1142`); see [Tuples](#tuples) |
+| `Backwards` (0x10000000) | process the glyphs from last to first | formats 1 and 4: the buffer is reversed before the subtable; formats 0, 2, and 6: the subtable is skipped (`:128`) |
 
-In horizontal text the buffer is put in left-to-right order before a subtable runs, reversing a right-to-left buffer, and `Backwards` reverses that once more: in right-to-left text, a subtable with `Backwards` set sees the glyphs in logical order (`:1091`). HarfBuzz’s comment on the bit says it “only applies to state-table based ‘kerx’ subtables (types 1 and 4)” (`:896`), and its pair formats return without kerning when it is set. `backwards.ttf` is `kerx.ttf` with the bit set:
+In horizontal text the buffer is put in left-to-right order before a subtable runs, reversing a right-to-left buffer, and `Backwards` reverses that once more: in right-to-left text, a subtable with `Backwards` set sees the glyphs in logical order (`:1168`). HarfBuzz’s comment on the bit says it “only applies to state-table based ‘kerx’ subtables (types 1 and 4)” (`:944`), and its pair formats return without kerning when it is set. `backwards.ttf` is `kerx.ttf` with the bit set:
 
 ```shape
 backwards.ttf  AVTo  --language=en
@@ -65,7 +65,7 @@ The pairs get the first value. Kerning in a variable font with `kerx` doesn’t 
 
 ## Five formats
 
-`KerxSubTable::dispatch` (`:927`) reads formats 0, 1, 2, 4, and 6. A subtable of any other format is skipped.
+`KerxSubTable::dispatch` (`:976`) reads formats 0, 1, 2, 4, and 6. A subtable of any other format is skipped.
 
 | Format | What it holds | Applied by | Runs with `kern` off |
 |---|---|---|---|
@@ -77,11 +77,11 @@ The pairs get the first value. Kerning in a variable font with `kerx` doesn’t 
 
 Format 3, `kern`’s compact format, has no `kerx` version. Formats 4 and 6 are new.
 
-Before running a subtable, `KerxTable::apply` checks whether any glyph in the buffer could start an action, or be the first glyph of a pair, from sets gathered once per face. If none can, the trace says “skipped subtable *n* because no glyph matches” (`:1085`).
+Before running a subtable, `KerxTable::apply` checks whether any glyph in the buffer could start an action, or be the first glyph of a pair, from sets gathered once per face. If none can, the trace says “skipped subtable *n* because no glyph matches” (`:1156`).
 
 ### Formats 0, 2, and 6
 
-Format 0 is `kern`’s format 0 with a 32-bit count and search fields; the pairs themselves are still two 16-bit glyph IDs and a 16-bit value, and they must still be sorted. Format 2 is `kern`’s class array, with AAT lookup tables for its classes. Format 6 is new: a row lookup gives the left glyph a value, a column lookup gives the right glyph one, and the kerning value is the entry of the array at their sum (`:759`). A flag, `ValuesAreLong`, makes the lookups and the array 32-bit. `format2.ttf` and `format6.ttf` hold the Latin pairs in each format:
+Format 0 is `kern`’s format 0 with a 32-bit count and search fields; the pairs themselves are still two 16-bit glyph IDs and a 16-bit value, and they must still be sorted. Format 2 is `kern`’s class array, with AAT lookup tables for its classes. Format 6 is new: a row lookup gives the left glyph a value, a column lookup gives the right glyph one, and the kerning value is the entry of the array at their sum (`:806`). A flag, `ValuesAreLong`, makes the lookups and the array 32-bit. `format2.ttf` and `format6.ttf` hold the Latin pairs in each format:
 
 ```table
 font: format6.ttf
@@ -96,7 +96,7 @@ format6.ttf  AVTo  --language=en
 
 In format 6 the row value is already an index into the array, a row number times `columnCount`, so A’s 3 and V’s 1 find −80. HarfBuzz doesn’t check the sum against `rowCount` and `columnCount`, only that the value it finds is inside the table (read from the code). A glyph missing from either lookup counts as 0, and so takes the value in the array’s first row or column, which should be 0.
 
-Format 2 counts differently in `kerx`. In `kern`, a class value is a byte offset from the start of the subtable ([Four subtable formats](legacy-kern.html#four-subtable-formats)); in `kerx`, HarfBuzz takes the sum of the two class values as a byte offset from the start of the array, and halves it to get an index (`ExtendedTypes::byteOffsetToIndex`, `hb-aat-layout-common.hh:1255`). So A’s row is at 6 and T’s at 12, as `format2.ttf`’s listing shows:
+Format 2 counts differently in `kerx`. In `kern`, a class value is a byte offset from the start of the subtable ([Four subtable formats](legacy-kern.html#four-subtable-formats)); in `kerx`, HarfBuzz takes the sum of the two class values as a byte offset from the start of the array, and halves it to get an index (`ExtendedTypes::byteOffsetToIndex`, `hb-aat-layout-common.hh:1317`). So A’s row is at 6 and T’s at 12, as `format2.ttf`’s listing shows:
 
 ```table
 font: format2.ttf
@@ -109,9 +109,9 @@ HarfBuzz {{hb}}’s `NEWS` lists a fix for “wrong `kerx` kerning (formats 1 an
 
 Format 1 is the state machine of `kern`’s format 1 ([Four subtable formats](legacy-kern.html#four-subtable-formats)): an entry can push the current glyph, and an action applies a list of values to the glyphs pushed, the whole value to each glyph’s advance and offset. In `kerx` three things differ:
 
-* An action is an index into the array of values, not a byte offset; and the array’s own offset counts from the start of the state machine, not of the subtable: “Discovered via testing”, says the comment (`:254`).
-* A list ends with the value 0xFFFF, where `kern` marks the last value by its low bit (`:320`).
-* The glyphs are not popped off the stack. HarfBuzz keeps the last eight pushed in a ring, and each action walks back through it from the latest; `kern` pops them. The comment says this is what Core Text does, “Contrary to the kerx spec’s destructive pops” (`:300`), and the 35 cases in `aat-kerx.tests` that check it “were measured on macOS 15.8.2 and 26.6.2”. The entry’s `Reset` flag, which should empty the stack, is ignored, because “CoreText ignores the kerx Reset flag” (`:269`).
+* An action is an index into the array of values, not a byte offset; and the array’s own offset counts from the start of the state machine, not of the subtable: “Discovered via testing”, says the comment (`hb-aat-layout-kerx-table.hh:276`).
+* A list ends with the value 0xFFFF, where `kern` marks the last value by its low bit (`:348`).
+* The glyphs are not popped off the stack. HarfBuzz keeps the last eight pushed in a ring, and each action walks back through it from the latest; `kern` pops them. The comment says this is what Core Text does, “Contrary to the kerx spec’s destructive pops” (`:328`), and the 35 cases in `aat-kerx.tests` that check it “were measured on macOS 15.8.2 and 26.6.2”. The entry’s `Reset` flag, which should empty the stack, is ignored, because “CoreText ignores the kerx Reset flag” (`:291`).
 
 A value is applied only to a glyph that has the `kern` mask, and a glyph that gets one is unsafe to break from there to the current glyph. This font from those tests gives three glyphs values of 50, 40, and 31; a `kern` list couldn’t hold the odd 31, since its low bit would end the list:
 
@@ -121,7 +121,7 @@ hb:test/shape/data/in-house/fonts/36f8d640bc42f35a59e607bcf7c4aa70b63d4ef4.ttf  
 
 ## Attachment: format 4 and ankr
 
-Format 4 doesn’t kern. It attaches: it moves a glyph so that a point on it sits on a point on another glyph, as GPOS’s mark attachment does. Its state machine has one flag of its own, `Mark`, which remembers the current glyph as the **marked glyph**. An entry with an action then positions the current glyph against the marked one. Each action names two points, one on each glyph, and how the points are found depends on the subtable’s action type, the top two bits of a 32-bit flags field that follows the state machine’s header (`:582`):
+Format 4 doesn’t kern. It attaches: it moves a glyph so that a point on it sits on a point on another glyph, as GPOS’s mark attachment does. Its state machine has one flag of its own, `Mark`, which remembers the current glyph as the **marked glyph**. An entry with an action then positions the current glyph against the marked one. Each action names two points, one on each glyph, and how the points are found depends on the subtable’s action type, the top two bits of a 32-bit flags field that follows the state machine’s header (`:610`):
 
 | Action type | An action holds | The point comes from |
 |---|---|---|
@@ -145,7 +145,7 @@ font: anchors.ttf
 table: ankr
 ```
 
-The action, trimmed to the anchor case and what follows it, with its namespaces shortened (`:641`–`693`):
+The action, trimmed to the anchor case and what follows it, with its namespaces shortened (`:696`–`748`):
 
 ```c++
 case 1: /* Anchor Point Actions. */
@@ -166,7 +166,7 @@ case 1: /* Anchor Point Actions. */
 break;
 /* … */
 o.attach_type() = ATTACH_TYPE_MARK;
-o.attach_chain() = (int) mark - (int) buffer->idx;
+o.attach_chain() = attach_chain; /* mark − current, in logical order */
 ```
 
 So the acute’s offset becomes the difference between the two anchors, and it is linked to the marked glyph as a GPOS mark is linked to its base. When attachments are resolved after positioning, the advances between the two are taken off ([Resolving attachments](gpos.html#resolving-attachments)). The trace shows the offsets as the subtable leaves them, before that:
@@ -184,7 +184,7 @@ anchors.ttf  A\u0301o\u0301  --language=en
 anchors.ttf  A\u0301o\u0301  --language=en  --features=-kern
 ```
 
-On A the acute moves up 80 units, to A’s higher anchor; on the narrower o it moves right by 50, to o’s center. Format 4 doesn’t look at the `kern` feature or the kerning mask at all (`:713`), so `-kern` changes nothing.
+On A the acute moves up 80 units, to A’s higher anchor; on the narrower o it moves right by 50, to o’s center. Format 4 doesn’t look at the `kern` feature or the kerning mask at all (`:760`), so `-kern` changes nothing.
 
 ```draw
 font: anchors.ttf
@@ -200,17 +200,17 @@ coords.ttf  A\u0301o\u0301  --language=en
 
 The acute on A is placed as before; on o it is placed as if o were A, 100 to the right and 80 up. The coordinates belong to the action, not to the glyphs, so a font with coordinate actions needs an entry and an action for every combination that is placed differently.
 
-Control point actions ask the font funcs for a point of the glyph’s outline, with `get_glyph_contour_point_for_origin`. HarfBuzz’s own `hb-ot` funcs don’t implement it (`hb-ot-font.cc:991` is commented out), and FreeType’s are the only ones that do ([Fonts and font functions](fonts-and-font-functions.html#the-other-funcs)). If either point can’t be found, the action does nothing (`hb-aat-layout-kerx-table.hh:626`). `points.ttf` names A’s point 1, its top left corner, and the acute’s point 0:
+Control point actions ask the font funcs for a point of the glyph’s outline, with `get_glyph_contour_point_for_origin`. None of HarfBuzz’s own font funcs provides it. The `hb-ot`, FreeType, and Fontations funcs each have an implementation, and each registers it inside `if (false)` (`hb-ot-font.cc:1004`, `hb-ft.cc:1174`, `rust/font.rs:1495`), so only a client’s own funcs can answer ([Fonts and font functions](fonts-and-font-functions.html#the-other-funcs)). FreeType’s did until 15.2.0 turned it off ([#6762](https://github.com/harfbuzz/harfbuzz/pull/6762)). If either point can’t be found, the action does nothing (`hb-aat-layout-kerx-table.hh:681`). `points.ttf` names A’s point 1, its top left corner, and the acute’s point 0:
 
 ```shape
 points.ttf  A\u0301o\u0301  --language=en
 ```
 
-With the default funcs, nothing is attached, and the acutes are left where their outlines put them. This book’s build of HarfBuzz has no FreeType, so the same font with `--font-funcs=ft` can’t be shown here. GPOS’s anchor format 2, which also names an outline point, falls back to its x and y when the point can’t be found ([Anchors](gpos.html#anchors)); a `kerx` control point action has nothing to fall back to.
+Nothing is attached, and the acutes are left where their outlines put them; `--font-funcs=ft` gives the same. GPOS’s anchor format 2, which also names an outline point, falls back to its x and y when the point can’t be found ([Anchors](gpos.html#anchors)); a `kerx` control point action has nothing to fall back to.
 
 ### Before and after
 
-The marked glyph can come after the glyph attached to it. In left-to-right text with `Backwards` set, the machine walks the buffer from the end, so the glyph it marks is later in the text than the one it then positions. GPOS can’t do that, but the code that resolves attachments allows it, adding the advances between the two instead of taking them off: “This can happen with `kerx`: a mark attaching to a base after it in the logical order” (`OT/Layout/GPOS/GPOS.hh:133`). This font from HarfBuzz’s tests has a cross-stream format 0 subtable, then a cross-stream format 1, then a format 4 with `Backwards` set, which attaches the `m` at the start of the text to the first `b`, two glyphs later:
+The marked glyph can come after the glyph attached to it. In left-to-right text with `Backwards` set, the machine walks the buffer from the end, so the glyph it marks is later in the text than the one it then positions. GPOS can’t do that, but the code that resolves attachments allows it, adding the advances between the two instead of taking them off: “This can happen with `kerx`: a mark attaching to a base after it in the logical order” (`OT/Layout/GPOS/GPOS.hh:142`). This font from HarfBuzz’s tests has a cross-stream format 0 subtable, then a cross-stream format 1, then a format 4 with `Backwards` set, which attaches the `m` at the start of the text to the first `b`, two glyphs later:
 
 ```shape
 hb:test/shape/data/in-house/fonts/1bfb8aab9b49ef30e8deae3db271ca3dbc6208a1.ttf  xzbb  --language=en
@@ -230,13 +230,13 @@ text: \u0643\u064F\u0644\u064F\u0651
 options: --language=ar
 ```
 
-An attached glyph also takes the cross-stream offset of the glyph it is attached to, followed back along any cross-stream links (`resolve_cross_offset`, `OT/Layout/GPOS/MarkArray.hh:12`, called at `hb-aat-layout-kerx-table.hh:682`), so a mark stays on a base that cross-stream kerning has raised. Its own cross-stream link is replaced by the attachment.
+An attached glyph also takes the cross-stream offset of the glyph it is attached to, followed back along any cross-stream links (`resolve_cross_offset`, `OT/Layout/GPOS/MarkArray.hh:12`, called at `hb-aat-layout-kerx-table.hh:737`), so a mark stays on a base that cross-stream kerning has raised. Its own cross-stream link is replaced by the attachment.
 
 > For type designers: format 4 sets only the attached glyph’s offset. It doesn’t zero its advance, and a plan that runs `kerx` doesn’t zero marks either (next section). A mark meant to be attached by `kerx` needs an advance of 0 in `hmtx`.
 
 ## Cross-stream
 
-A cross-stream subtable in `kerx` works as it does in `kern` ([Cross-stream](legacy-kern.html#cross-stream)). At the first one, every glyph is linked to the glyph before it as if by a cursive attachment (`:1100`). A value is written into the second glyph’s offset across the line, and when the links are resolved, each glyph carries the offsets of the glyphs before it. `cross.ttf` is `kerx.ttf` with a second, cross-stream subtable that has A V +100 and bet gimel +100:
+A cross-stream subtable in `kerx` works as it does in `kern` ([Cross-stream](legacy-kern.html#cross-stream)). At the first one, every glyph is linked to the glyph before it as if by a cursive attachment (`:1174`). A value is written into the second glyph’s offset across the line, and when the links are resolved, each glyph carries the offsets of the glyphs before it. `cross.ttf` is `kerx.ttf` with a second, cross-stream subtable that has A V +100 and bet gimel +100:
 
 ```table
 font: cross.ttf
@@ -260,22 +260,23 @@ The V is raised, and everything after it. In Hebrew the pairs are read left to r
 cross-first.ttf  גבגב  --language=he
 ```
 
-In formats 0, 2, and 6 the kern machine *sets* the second glyph’s cross-stream offset to the value, rather than adding to it (`hb-kern.hh:96`), so of two cross-stream subtables that kern the same pair, the later one wins. It takes the value 0x8000 as −32,768, as in `kern` (read from the code). Format 1 adds its values, and treats 0x8000 as a reset: the glyph’s link is cut and its offset set to 0. The comment calls this “undocumented in the spec, but described in the ‘kern’ table example” (`hb-aat-layout-kerx-table.hh:358`). Format 1 also kerns across a vertical line, where the comment says “CoreText doesn’t do crossStream kerning in vertical. We do.” (`:383`).
+In formats 0, 2, and 6 the kern machine *sets* the second glyph’s cross-stream offset to the value, rather than adding to it (`hb-kern.hh:114`), so of two cross-stream subtables that kern the same pair, the later one wins. Format 1 adds its values. Both treat the value 0x8000 as a reset: the glyph’s link is cut and its cross-stream offset set to 0 (`hb-kern.hh:97` for the kern machine). Before 15.2.0, the kern machine took 0x8000 as −32,768 (read from the code). The comment in format 1 calls the reset “undocumented in the spec, but described in the ‘kern’ table example” (`hb-aat-layout-kerx-table.hh:386`). Format 1 also kerns across a vertical line, where the comment says “CoreText doesn’t do crossStream kerning in vertical. We do.” (`:411`).
 
 ## When kerx is used
 
-The plan chooses between GPOS, `kerx`, `kern`, and fallback kerning once, when it is made (`hb-ot-shape.cc:153`–`187`). [Fallbacks](fallbacks.html#who-decides) quotes the code; for `kerx` it comes to two tests:
+The plan chooses between GPOS, `kerx`, `kern`, and fallback kerning once, when it is made (`hb-ot-shape.cc:153`–`183`). [Fallbacks](fallbacks.html#who-decides) quotes the code; for `kerx` it comes to two tests:
 
-1. If the font has `kerx` and doesn’t have both GSUB and GPOS, `kerx` is used. GSUB counts only if it will be applied, which it isn’t when the font is shaped with `morx` ([AAT inside HarfBuzz](aat-inside-harfbuzz.html)).
-2. Otherwise, if GPOS isn’t used or has no `kern` feature in the language system it chose, and the font has `kerx`, `kerx` is chosen too.
+1. If the font has `kerx` and doesn’t have both GSUB and GPOS, `kerx` is used, and GPOS isn’t. GSUB counts only if it will be applied, which it isn’t when the font is shaped with `morx` ([AAT inside HarfBuzz](aat-inside-harfbuzz.html)).
+2. Otherwise GPOS is used, and if it has no `kern` feature in the language system it chose, and the font has `kerx`, `kerx` is used as well.
 
-The first test is HarfBuzz issue #3008: “Prefer GPOS over kerx if GSUB is present”. Its `NEWS` entry, in 2.8.2, says “GPOS is preferred over kerx, if GSUB was applied”. A font with `kerx` never uses its `kern` table, and never gets fallback kerning. `plan->position` (`:271`) then runs GPOS if the plan chose it, and otherwise `kerx`: never both.
+The first test is HarfBuzz issue #3008: “Prefer GPOS over kerx if GSUB is present”. Its `NEWS` entry, in 2.8.2, says “GPOS is preferred over kerx, if GSUB was applied”. A font with `kerx` never uses its `kern` table, and never gets fallback kerning. `plan->position` (`:267`) then runs GPOS if the plan chose it, and then `kerx` if the plan chose that. When both run, `kerx` skips its state-machine subtables, formats 1 and 4, and its cross-stream ones: “Only simple, in-stream kerning may run alongside GPOS” (`hb-aat-layout-kerx-table.hh:1136`). A cross-stream subtable would link every glyph into a chain, and so break the links GPOS has made for its marks. Before 15.2.0, the second test chose `kerx` but `position` ran only GPOS, so the `kerx` never ran ([HHW-38](bugs-this-book-found.html#hhw-38), fixed by [#6761](https://github.com/harfbuzz/harfbuzz/pull/6761)).
 
 | The font has | Positioning |
 |---|---|
 | `kerx` | `kerx` |
 | `kerx` and GPOS | `kerx` |
-| `kerx`, GSUB, and GPOS | GPOS |
+| `kerx`, GSUB, and GPOS with `kern` | GPOS |
+| `kerx`, GSUB, and GPOS without `kern` | GPOS, then `kerx`’s in-stream pair subtables (since 15.2.0) |
 | `kerx`, `morx`, GSUB, and GPOS | `kerx` (GSUB isn’t applied) |
 | `morx` and GPOS, no `kerx` | GPOS (since 3.1.0) |
 
@@ -288,17 +289,17 @@ morx-kerx.ttf  AVTo  --language=en
 morx-gpos.ttf  AVTo  --language=en
 ```
 
-With `kerx`, A V is −80, split, and T o is kerned; with GPOS, A V is GPOS’s −50, all on the A, and T o isn’t kerned. The two tables are never combined.
+With `kerx`, A V is −80, split, and T o is kerned; with GPOS, A V is GPOS’s −50, all on the A, and T o isn’t kerned. Here, where GPOS has `kern`, the two tables are never combined.
 
 ### What else kerx turns off
 
-The plan treats a font with `kerx` as positioning its own marks. When `apply_kerx` is set, marks aren’t zeroed, zeroed marks aren’t moved back, and there is no fallback mark positioning (`:189`–`207`; the table in [Who decides](fallbacks.html#who-decides) lists them). In `kerx.ttf`, whose `kerx` attaches nothing, nothing places the acute:
+The plan treats a font whose `kerx` runs without GPOS as positioning its own marks. When `apply_kerx` is set and `apply_gpos` isn’t, marks aren’t zeroed; whenever `apply_kerx` is set, zeroed marks aren’t moved back, and there is no fallback mark positioning (`hb-ot-shape.cc:185`–`203`; the table in [Who decides](fallbacks.html#who-decides) lists them). In `kerx.ttf`, whose `kerx` attaches nothing, nothing places the acute:
 
 ```shape
 kerx.ttf  A\u0301V  --language=en
 ```
 
-The second test above has an odd result. With GSUB and GPOS, and a GPOS that has no `kern` feature in the language system chosen, the first test chooses GPOS and the second sets `apply_kerx` as well. `position` runs only GPOS, but the mark decisions are made as if `kerx` ran. `mark-gpos.ttf` has a GSUB, a GPOS with `mark` and no `kern`, and an acute with an advance of 200; `mark-gpos-kerx.ttf` is the same with `kerx.ttf`’s `kerx` added:
+When the second test above runs `kerx` after GPOS, GPOS places the marks, and they are zeroed as in any GPOS font. `mark-gpos.ttf` has a GSUB, a GPOS with `mark` and no `kern`, and an acute with an advance of 200; `mark-gpos-kerx.ttf` is the same with `kerx.ttf`’s `kerx` added:
 
 ```shape
 mark-gpos.ttf  A\u0301V  --language=en
@@ -306,7 +307,7 @@ mark-gpos-kerx.ttf  A\u0301V  --language=en
 mark-gpos-kerx.ttf  AVTo  --language=en
 ```
 
-With `kerx` in the font, GPOS still attaches the acute, but its 200-unit advance is no longer zeroed, and the `kerx` pairs aren’t applied either. That looks like a HarfBuzz bug. The second test seems meant to let a font whose GPOS doesn’t kern fall back on another table for kerning (inferred); with `kerx`, the fallback never runs, and the marks lose their zeroing.
+With `kerx` in the font, GPOS attaches the acute and its advance is zeroed, and then `kerx` kerns A V by −80 and T o by −100. The acute stays on the A: its offset grows by 40, as the A’s advance shrinks by 40, because attachments are resolved after both tables have run. Before 15.2.0, `position` ran only GPOS, but the mark decisions were made as if `kerx` ran, so the acute kept its 200-unit advance and the pairs weren’t kerned ([HHW-38](bugs-this-book-found.html#hhw-38)).
 
 ## Tracking: trak
 
@@ -321,7 +322,7 @@ table: trak
 
 ### Which value
 
-HarfBuzz always uses track 0 (`hb_aat_layout_track` passes no other, `hb-aat-layout.cc:398`), so `Tight` and `Loose` are never read. If a font had no track 0, `TrackData::get_tracking` would interpolate between the tracks either side of it, and a table with only one track uses that one, whatever its value (`:132`).
+HarfBuzz always uses track 0 (`hb_aat_layout_track` passes no other, `hb-aat-layout.cc:395`), so `Tight` and `Loose` are never read. If a font had no track 0, `TrackData::get_tracking` would interpolate between the tracks either side of it, and a table with only one track uses that one, whatever its value (`:132`).
 
 The point size is the font’s `ptem`, or 12 points if it isn’t set, Core Text’s default (`HB_CORETEXT_DEFAULT_FONT_SIZE`, `hb-aat-layout.hh:36`; [Three kinds of size](fonts-and-font-functions.html#three-kinds-of-size)). Below the first size in the table the first size’s value is used, above the last the last one’s, and in between the value is interpolated in a straight line between the two sizes either side (`TrackTableEntry::get_value`, `hb-aat-layout-trak-table.hh:75`). The result is scaled from font units like any other value:
 
@@ -348,23 +349,21 @@ trak.ttf  גב  --language=he  --font-ptem=6
 
 The space is added to an advance, so it lies to the right of each grapheme in the output. In left-to-right text that is after each one, and the line ends with it; in right-to-left text it is before each one in reading order, between a letter and the one read before it, and the line starts with it. Within a grapheme of several glyphs only the first glyph’s advance changes, so its glyphs aren’t pulled apart.
 
-`trak` runs last in step 17, after GPOS or `kerx` and after `kern` (`hb-ot-shape.cc:289`), but before attachments are resolved. A mark attached to a base is placed from the base’s advance as it is then, tracking included, so it stays on its base.
+`trak` runs last in step 17, after GPOS, `kerx`, and `kern` (`hb-ot-shape.cc:285`), but before attachments are resolved. A mark attached to a base is placed from the base’s advance as it is then, tracking included, so it stays on its base.
 
 ### Vertical tracking
 
-In vertical text the value comes from the vertical track table and is added to the vertical advance (`hb-aat-layout-trak-table.hh:242`). `trak.ttf`’s vertical track is +100 at every size:
+In vertical text the value comes from the vertical track table and is subtracted from the vertical advance (`hb-aat-layout-trak-table.hh:244`). `trak.ttf`’s vertical track is +100 at every size:
 
 ```shape
 trak.ttf  AV  --language=en  --direction=ttb
 ```
 
-The advance has gone from −1,000 to −900. Vertical advances are negative, growing downwards, so adding a positive value brings the glyphs *closer*. GPOS negates a vertical advance from a value record for this reason, “y_advance values grow downward but font-space grows upward” (`ValueFormat.hh:114`); `trak` doesn’t. A positive value, which loosens horizontal text, tightens a column, which looks like a bug (inferred: Core Text’s behavior in vertical text hasn’t been checked here).
-
-> Since {{hb}}: fixed on HarfBuzz main by [#6700](https://github.com/harfbuzz/harfbuzz/pull/6700) and [#6716](https://github.com/harfbuzz/harfbuzz/pull/6716) (17 November 2026), so main adds vertical tracking in the direction of the advance: here the advances become −1,100.
+The advance has gone from −1,000 to −1,100. Vertical advances are negative, growing downwards, so the value is subtracted, and a positive value loosens a column as it loosens a line. GPOS negates a vertical advance from a value record for the same reason, “y_advance values grow downward but font-space grows upward” (`ValueFormat.hh:136`). Before 15.2.0, `trak` added the value, so a positive value brought the glyphs closer ([HHW-39](bugs-this-book-found.html#hhw-39), fixed by [#6700](https://github.com/harfbuzz/harfbuzz/pull/6700)). Native Core Text layout loosens a column too, as measured for [#6716](https://github.com/harfbuzz/harfbuzz/pull/6716).
 
 ### When it applies
 
-The plan applies `trak` when the font has one and also has a STAT table (`hb-ot-shape.cc:216`):
+The plan applies `trak` when the font has one and also has a STAT table (`hb-ot-shape.cc:212`):
 
 ```c++
 /* According to Ned, trak is applied by default for "modern fonts", as detected by presence of STAT table. */
@@ -384,7 +383,7 @@ trak-nostat.ttf  AV  --language=en  --font-ptem=6
 
 Nothing else is asked. A font doesn’t need `morx` or `kerx` for its `trak` to apply, nor to be shaped without GPOS, and no feature turns it off. 10.3.0 moved tracking out of shaping and into the advances that the `hb-ot` font funcs return, and dropped “The ‘trak’ pseudo OpenType feature that could be used to disable ‘trak’ table application”; 11.0.1 moved it back, because the change “required every font functions implementation to handle it”, and the feature didn’t come back (`NEWS`).
 
-The same test is in `trak::get_tracking` (`hb-aat-layout-trak-table.hh:207`), which the Core Text font funcs use to take Core Text’s own tracking back out of the advances it reports ([The other funcs](fonts-and-font-functions.html#the-other-funcs)). `hb_aat_layout_has_tracking`, public since 2.3.0, says only whether the table is there.
+The same test is in `trak::get_coretext_tracking` (`hb-aat-layout-trak-table.hh:207`), which the Core Text font funcs use to take Core Text’s own tracking back out of the advances it reports ([The other funcs](fonts-and-font-functions.html#the-other-funcs)). It reads the horizontal track table for both directions, because, as its comment says, “CoreText adds horizontal tracking in both orientations” (`:212`); that came with [#6716](https://github.com/harfbuzz/harfbuzz/pull/6716), in 15.2.0. `hb_aat_layout_has_tracking`, public since 2.3.0, says only whether the table is there.
 
 ## Where to read the source
 
@@ -393,19 +392,19 @@ The same test is in `trak::get_tracking` (`hb-aat-layout-trak-table.hh:207`), wh
 | `src/hb-aat-layout-kerx-table.hh` | `kerx` and `KerxTable`, shared with `kern`: the header, coverage bits, subtable loop, cross-stream links, and sanitizing; formats 0, 1, 2, 4, and 6; `kerxTupleKern` |
 | `src/hb-aat-layout-ankr-table.hh` | `ankr` and `get_anchor` |
 | `src/hb-aat-layout-trak-table.hh` | `trak`: choosing a track, interpolating between sizes, `apply` |
-| `src/hb-aat-layout.cc` | `hb_aat_layout_position` (`:363`), which sets up `ankr` for `kerx`; `hb_aat_layout_track` (`:398`) |
+| `src/hb-aat-layout.cc` | `hb_aat_layout_position` (`:363`), which sets up `ankr` for `kerx`; `hb_aat_layout_track` (`:395`) |
 | `src/hb-aat-layout-common.hh` | `ExtendedTypes`, the lookup tables, the state-machine driver |
 | `src/hb-kern.hh` | the kern machine, used by formats 0, 2, and 6 |
-| `src/hb-ot-shape.cc` | the plan’s choice of positioning (`:153`), `trak` (`:216`), `hb_ot_shape_plan_t::position` (`:271`) |
+| `src/hb-ot-shape.cc` | the plan’s choice of positioning (`:153`), `trak` (`:212`), `hb_ot_shape_plan_t::position` (`:267`) |
 | `src/OT/Layout/GPOS/GPOS.hh`, `MarkArray.hh` | resolving attachments, including a base after its mark; `resolve_cross_offset` |
 | `test/shape/data/in-house/tests/` | `aat-kerx.tests`, `aat-trak.tests` |
 
-`HB_NO_AAT_SHAPE` leaves out `kerx`, `ankr`, and `trak` with the rest of AAT shaping; `HB_NO_AAT` sets it, and `HB_MINI` sets that (`hb-config.hh:130`). `HB_NO_STYLE`, which `HB_LEAN` sets (`:80`), turns `trak` off. A `kerx` table may have at most `HB_AAT_MAX_SUBTABLES`, 1,024, subtables, or it is rejected whole (`hb-limits.hh:98`).
+`HB_NO_AAT_SHAPE` leaves out `kerx`, `ankr`, and `trak` with the rest of AAT shaping; `HB_NO_AAT` sets it, and `HB_MINI` sets that (`hb-config.hh:130`). `HB_NO_STYLE`, which `HB_LEAN` sets (`:80`), turns `trak` off. A `kerx` table may have at most `HB_AAT_MAX_SUBTABLES`, 1,024, subtables, or it is rejected whole (`hb-limits.hh:110`).
 
 ## In short
 
 * `kerx` is Apple’s `kern` with 32-bit fields. HarfBuzz runs it with the same code, so its pairs are split, pass over marks, and read left to right; but it is used for every script, not only those whose shaper allows `kern`.
 * It reads formats 0, 1, 2, 4, and 6. Pair formats skip a subtable marked `Backwards`; format 2 counts class offsets from the array; format 1 follows Core Text rather than the specification; tuple values are read as their first value, so `kerx` doesn’t vary.
-* Format 4 attaches a glyph to a marked one, through `ankr` anchors, coordinates in the action, or outline points; the last needs font funcs that find points, which `hb-ot`’s don’t. It runs even with `kern` off.
-* `kerx` is used unless the font has both GSUB and GPOS (GSUB not counting under `morx`); a font that has it never uses `kern`. A plan with `kerx` leaves marks to the font, including, through a quirk, when GPOS runs in its place.
-* `trak` adds track 0’s value at the font’s point size (12 if unset), interpolated between the table’s sizes, to the first glyph of each grapheme, after all other positioning. It applies only if the font also has STAT, and nothing turns it off.
+* Format 4 attaches a glyph to a marked one, through `ankr` anchors, coordinates in the action, or outline points; the last needs font funcs that find points, which none of HarfBuzz’s own do. It runs even with `kern` off.
+* `kerx` is used in place of GPOS unless the font has both GSUB and GPOS (GSUB not counting under `morx`). With both, GPOS is used, and `kerx`’s in-stream pair subtables run after it if GPOS has no `kern`. A font that has `kerx` never uses `kern`. A plan with `kerx` and no GPOS leaves marks to the font.
+* `trak` adds track 0’s value at the font’s point size (12 if unset), interpolated between the table’s sizes, to the advance of the first glyph of each grapheme, after all other positioning; in vertical text it lengthens the vertical advance. It applies only if the font also has STAT, and nothing turns it off.

@@ -4,7 +4,7 @@ HarfBuzz is the work of many people. The lists below are HarfBuzz’s own, from 
 
 ## Authors
 
-HarfBuzz’s [`AUTHORS`](https://github.com/harfbuzz/harfbuzz/blob/15.1.0/AUTHORS) file names fourteen people:
+HarfBuzz’s [`AUTHORS`](https://github.com/harfbuzz/harfbuzz/blob/15.2.0/AUTHORS) file names fourteen people:
 
 Behdad Esfahbod, David Corbett, David Turner, Ebrahim Byagowi, Garret Rieger, Jonathan Kew, Khaled Hosny, Lars Knoll, Martin Hosken, Owen Taylor, Roderick Sheeter, Roozbeh Pournader, Simon Hausmann, and Werner Lemberg.
 
@@ -34,4 +34,4 @@ Hundreds more have contributed fixes, tests, and reports; GitHub lists them all 
 
 ## Thanks
 
-HarfBuzz’s [`THANKS`](https://github.com/harfbuzz/harfbuzz/blob/15.1.0/THANKS) file thanks Bradley Grainger, Kenichi Ishibashi, Ivan Kuckir, Ryan Lortie, Jeff Muizelaar, suzuki toshiya, and Philip Withnall.
+HarfBuzz’s [`THANKS`](https://github.com/harfbuzz/harfbuzz/blob/15.2.0/THANKS) file thanks Bradley Grainger, Kenichi Ishibashi, Ivan Kuckir, Ryan Lortie, Jeff Muizelaar, suzuki toshiya, and Philip Withnall.

@@ -1,6 +1,24 @@
 # HarfRust and HarfBuzz: every `shape` example, run through both
 
-Results of running every line of every `shape` block in `book/**/*.md` through HarfBuzz’s `ot` shaper and through HarfRust, for chapter 47 ([HarfRust](../book/chapters/harfrust.md)). Run on 18 November 2026.
+Results of running every line of every `shape` block in `book/**/*.md` through HarfBuzz’s `ot` shaper and through HarfRust, for chapter 47 ([HarfRust](../book/chapters/harfrust.md)). Run on 18 November 2026, against HarfBuzz 15.1.0; rerun on 20 November 2026, against 15.2.0, below. The sections after the rerun describe the 18 November run.
+
+## Rerun on 20 November 2026: HarfBuzz 15.2.0 and HarfRust 0.16.1
+
+The book moved to HarfBuzz 15.2.0, whose `harfrust` backend builds HarfRust 0.16.1 (`src/rust/Cargo.toml:7`), tagged 19 November 2026, whose README says “Matches HarfBuzz 15.2.0”. So the backend no longer lags a release behind. The script and results of the rerun are `compare.py` and `results.json` in the session scratchpad (`/private/tmp/claude-501/-Users-lorp-GitHub-how-harfbuzz-works/17a92970-ea22-4179-9301-0a97040b8812/scratchpad/harfrust2/`); 0.16.1 was cloned and built there too, as `hr-0.16.1/`.
+
+| | Lines |
+|---|---|
+| `shape` lines in the book | 913 |
+| not compared (own `--shapers`, `--list-shapers`) | 11 |
+| identical, backend against `ot` | 887 |
+| differ: options the backend doesn’t pass on (invisible glyph, ppem, slant) | 6 |
+| differ: real divergences | 9 |
+
+The nine: seven malformed fonts, the unsorted PairSet, and the `kerx` tuple offset. Three of the 18 November divergences are gone: HarfRust 0.16.1 fixed the `morx` noncontextual feature ranges and the `kerx` control-point action (items 1 and 3 of “Possible upstream reports” below), and HarfBuzz’s #6696 (HHW-1) makes `null-coverage-f1.ttf` agree. The backend now passes the not-found glyph (`src/rust/shape.rs:374`).
+
+`hr-shape` 0.16.1 against `ot`: 883 lines ran, 870 identical, and 4 differ only in metrics.
+
+The HarfRust chapter was rewritten from this rerun.
 
 ## What was run
 
@@ -109,4 +127,4 @@ The backend hands HarfRust the face’s raw tables (`hb_face_reference_table`, `
 
 ## Possible upstream reports
 
-For HarfRust: items 1 (noncontextual ranges) and 3 (control-point actions) look like bugs, each with a one-line font case in this book. Item 2 is a question of which base the spec means. Item 4 is a port not yet complete. For HarfBuzz: the backend’s not passing the invisible and not-found glyphs. None has been filed.
+For HarfRust: items 1 (noncontextual ranges) and 3 (control-point actions) looked like bugs, each with a one-line font case in this book; both are fixed in HarfRust 0.16.1. Item 2 is a question of which base the spec means. Item 4 is a port not yet complete. For HarfBuzz: the backend’s not passing the invisible and not-found glyphs; 15.2.0 passes the not-found glyph. None has been filed.

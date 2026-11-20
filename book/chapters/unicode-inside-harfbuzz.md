@@ -27,10 +27,10 @@ Two of the eight are deprecated, since 2.0.0, and the shaper never calls them. T
 
 | Callback | Unicode property | Where HarfBuzz uses it |
 |---|---|---|
-| `general_category` | General_Category (Lu, Mn, Cf…) | for every character, when its properties are set up (`hb-ot-layout.hh:228`); by the Arabic shaper for the characters of pre- and post-context; by the Indic, Khmer, and USE shapers’ `compose` |
-| `combining_class` | Canonical_Combining_Class | for every mark, through `modified_combining_class` (`hb-ot-layout.hh:263`) |
-| `mirroring` | Bidi_Mirroring_Glyph | in right-to-left text, before normalization (`hb_ot_rotate_chars`, `hb-ot-shape.cc:667`) |
-| `script` | Script | only when guessing the buffer’s script (`hb-buffer.cc:753`) |
+| `general_category` | General_Category (Lu, Mn, Cf…) | for every character, when its properties are set up (`hb-ot-layout.hh:234`); by the Arabic shaper for the characters of pre- and post-context; by the Indic, Khmer, and USE shapers’ `compose` |
+| `combining_class` | Canonical_Combining_Class | for every mark, through `modified_combining_class` (`hb-ot-layout.hh:269`) |
+| `mirroring` | Bidi_Mirroring_Glyph | in right-to-left text, before normalization (`hb_ot_rotate_chars`, `hb-ot-shape.cc:666`) |
+| `script` | Script | only when guessing the buffer’s script (`hb-buffer.cc:737`) |
 | `decompose` | canonical Decomposition_Mapping, one step | in normalization, and in the Indic, Khmer, and USE shapers’ own versions of it |
 | `compose` | the canonical composition of a pair | the same, and in the Hebrew shaper |
 
@@ -91,7 +91,7 @@ Which implementation is the default is decided when HarfBuzz is compiled (`hb_un
 #endif
 ```
 
-That is: HarfBuzz’s own tables, unless the build leaves them out with `HB_NO_UCD`, then GLib’s, then ICU’s. A build with none of them stops with an `#error` (`:166`), unless `HB_NO_UNICODE_FUNCS` is defined. Each is a static, immutable object, created lazily and freed at exit (`hb-ucd.cc:224`, `hb-glib.cc:146`, `hb-icu.cc:242`):
+That is: HarfBuzz’s own tables, unless the build leaves them out with `HB_NO_UCD`, then GLib’s, then ICU’s. A build with none of them stops with an `#error` (`:166`), unless `HB_NO_UNICODE_FUNCS` is defined. Each is a static, immutable object, created lazily and freed at exit (`hb-ucd.cc:228`, `hb-glib.cc:146`, `hb-icu.cc:242`):
 
 * **hb-ucd** (`hb-ucd.cc`) reads the tables in `hb-ucd-table.hh`, described in the next section.
 * **GLib** (`hb-glib.cc`) calls `g_unichar_type`, `g_unichar_combining_class`, and the rest, converting GLib’s script codes to HarfBuzz’s.
@@ -125,7 +125,7 @@ HarfBuzz first carried a copy of UCDN, a small Unicode library, from 0.9.5, and 
 
 ### Looking a property up
 
-Each property is read by one inline function. Here is the general category (`hb-ucd-table.hh:2736`):
+Each property is read by one inline function. Here is the general category (`hb-ucd-table.hh:2743`):
 
 ```c++
 static inline uint8_t _hb_ucd_gc (unsigned u)
@@ -151,15 +151,15 @@ The sizes are worked out from the array lengths. The compact set holds the same 
 
 ### Decomposition and composition
 
-Only canonical decompositions are stored (`gen-ucd-table.py:63`), each to one character or two. Compatibility decompositions, such as *ﬁ* to *f i*, aren’t, which is why `hb-ucd` doesn’t implement the deprecated `decompose_compatibility`. Hangul syllables are left out too: `hb-ucd.cc:56` composes and decomposes them by arithmetic, as Unicode defines it.
+Only canonical decompositions are stored (`gen-ucd-table.py:63`), each to one character or two. Compatibility decompositions, such as *ﬁ* to *f i*, aren’t, which is why `hb-ucd` doesn’t implement the deprecated `decompose_compatibility`. Hangul syllables are left out too: `hb-ucd.cc:60` composes and decomposes them by arithmetic, as Unicode defines it.
 
-The `dm` index points into four lists: one-character mappings into plane 0, then into plane 2, then pairs packed into 32 bits, then pairs packed into 64. A pair fits in 32 bits when its first character is below U+0800, its second is in U+0300 to U+037F, and the composite is small enough. That covers most accented Latin, Greek, and Cyrillic. The same pair lists, sorted by pair, serve composition, by binary search (`hb_ucd_compose`, `hb-ucd.cc:128`). A composite that mustn’t be recomposed, because it is a composition exclusion or has a non-zero combining class, is stored as 0, and composing its pair fails. `gen-ucd-table.py --rust` writes the same tables as Rust.
+The `dm` index points into four lists: one-character mappings into plane 0, then into plane 2, then pairs packed into 32 bits, then pairs packed into 64. A pair fits in 32 bits when its first character is below U+0800, its second is in U+0300 to U+037F, and the composite is small enough. That covers most accented Latin, Greek, and Cyrillic. The same pair lists, sorted by pair, serve composition, by binary search (`hb_ucd_compose`, `hb-ucd.cc:132`). A composite that mustn’t be recomposed, because it is a composition exclusion or has a non-zero combining class, is stored as 0, and composing its pair fails. `gen-ucd-table.py --rust` writes the same tables as Rust.
 
 ## The properties each glyph carries
 
-The callbacks are asked once per character, at the start of shaping. The answers are kept in the glyph itself, in 16 bits of its private `var2` field, named `unicode_props()` (`hb-ot-layout.hh:154`). It is allocated first in `hb_ot_shape_internal` and freed last (`hb-ot-shape.cc:1176`), so it lasts the whole of shaping, long after `codepoint` has become a glyph ID. That is how GSUB knows that a glyph came from a zero-width joiner. The buffer’s other scratch fields are in [Buffers](buffers.html).
+The callbacks are asked once per character, at the start of shaping. The answers are kept in the glyph itself, in 16 bits of its private `var2` field, named `unicode_props()` (`hb-ot-layout.hh:160`). It is allocated first in `hb_ot_shape_internal` and freed last (`hb-ot-shape.cc:1178`), so it lasts the whole of shaping, long after `codepoint` has become a glyph ID. That is how GSUB knows that a glyph came from a zero-width joiner. The buffer’s other scratch fields are in [Buffers](buffers.html).
 
-The design comment at `hb-ot-layout.hh:187` explains how the bits are shared out. The low byte means the same for every character. The high byte’s meaning depends on the general category:
+The design comment at `hb-ot-layout.hh:193` explains how the bits are shared out. The low byte means the same for every character. The high byte’s meaning depends on the general category:
 
 | Bits | Mask | Meaning |
 |---|---|---|
@@ -175,7 +175,7 @@ Worked out by hand, as an illustration: U+0301 COMBINING ACUTE ACCENT is Mn (12)
 
 ### Setting them
 
-`_hb_glyph_info_set_unicode_props` (`hb-ot-layout.hh:224`) does it, for one glyph. Here it is with its comments shortened:
+`_hb_glyph_info_set_unicode_props` (`hb-ot-layout.hh:230`) does it, for one glyph. Here it is with its comments shortened:
 
 ```c++
   hb_unicode_funcs_t *unicode = buffer->unicode;
@@ -218,13 +218,13 @@ ASCII is never ignorable and never a mark, so for it only the category is looked
 
 ### When properties change
 
-The category is “modified” because HarfBuzz changes it in a few places. A variation selector that the `cmap` doesn’t consume moves from Mn to Cf, so that the `_VS` flag fits, and moves back after positioning. A ligature formed from a non-spacing mark becomes Lo, as the [GSUB chapter](gsub.html#edge-cases-the-code-handles) says. The Thai shaper makes the NIKHAHIT it splits from SARA AM a mark (`hb-ot-shaper-thai.cc:342`). A glyph that `morx` deletes becomes Cf with the `_AAT_DELETED` and hidden bits until it is removed (`hb-ot-layout.hh:431`). The combining class changes too: the Arabic shaper renumbers marks it moves (below), and for a font with no GPOS, fallback mark positioning replaces script-specific classes with the positional ones it can place (`hb-ot-shape-fallback.cc:183`, and [Fallbacks](fallbacks.html)), after normalization has used them.
+The category is “modified” because HarfBuzz changes it in a few places. A variation selector that the `cmap` doesn’t consume moves from Mn to Cf, so that the `_VS` flag fits, and moves back after positioning. A ligature formed from a non-spacing mark becomes Lo, as the [GSUB chapter](gsub.html#edge-cases-the-code-handles) says. The Thai shaper makes the NIKHAHIT it splits from SARA AM a mark (`hb-ot-shaper-thai.cc:342`). A glyph that `morx` deletes becomes Cf with the `_AAT_DELETED` and hidden bits until it is removed (`hb-ot-layout.hh:437`). The combining class changes too: the Arabic shaper renumbers marks it moves (below), and for a font with no GPOS, fallback mark positioning replaces script-specific classes with the positional ones it can place (`hb-ot-shape-fallback.cc:183`, and [Fallbacks](fallbacks.html)), after normalization has used them.
 
 ## Continuations: just enough of graphemes
 
 The continuation bit says that a character belongs with the one before it, in one *grapheme*: what a reader sees as one character. Forming clusters merges each grapheme into one cluster at the cluster levels that work by graphemes, including the default, and text reversed into its native direction is reversed grapheme by grapheme, so that a mark stays after its base. Both are in [Buffers](buffers.html).
 
-Unicode defines graphemes in UAX #29. HarfBuzz implements only “enough of Unicode Graphemes here that shaping in reverse-direction wouldn’t break graphemes” (`hb_set_unicode_props`, `hb-ot-shape.cc:474`). It marks as continuations:
+Unicode defines graphemes in UAX #29. HarfBuzz implements only “enough of Unicode Graphemes here that shaping in reverse-direction wouldn’t break graphemes” (`hb_set_unicode_props`, `hb-ot-shape.cc:473`). It marks as continuations:
 
 * every mark, Mn, Mc, or Me (done in `_hb_glyph_info_set_unicode_props`, above);
 * the emoji skin-tone modifiers, U+1F3FB to U+1F3FF;
@@ -286,7 +286,7 @@ The result isn’t in canonical order, but only the font’s lookups ever see it
 
 > For type designers: when you write contextual lookups or mark-to-mark attachment for a sequence of marks, the sequence your lookups see is the one sorted by HarfBuzz’s modified classes, not the one typed and not Unicode’s canonical order. `hb-shape --trace` shows it, at “end reorder”.
 
-The modified class is what the high byte of `unicode_props` holds. The Arabic shaper’s `reorder_marks` hook changes it once more: it moves the “modifier combining marks”, such as hamza above and below, to the front of their run, and renumbers them 25 or 26 (the modified classes HarfBuzz names `CCC22` and `CCC26`) so that the run stays sorted, because the CGJ handling below relies on that (`hb-ot-shaper-arabic.cc:762`). [Joining scripts](joining-scripts.html) has the rest.
+The modified class is what the high byte of `unicode_props` holds. The Arabic shaper’s `reorder_marks` hook changes it once more: it moves the “modifier combining marks”, such as hamza above and below, to the front of their run, and renumbers them 25 or 26 (the modified classes HarfBuzz names `CCC22` and `CCC26`) so that the run stays sorted, because the CGJ handling below relies on that (`hb-ot-shaper-arabic.cc:766`). [Joining scripts](joining-scripts.html) has the rest.
 
 ## Default ignorables
 
@@ -301,8 +301,8 @@ The four are the Hangul fillers. The last four are the shorthand format controls
 Being default ignorable does three things to a glyph, at three points in the pipeline:
 
 1. **In GSUB and GPOS matching**, it may be passed over. Most default ignorables are skipped when a lookup looks for the next glyph, with special rules for the joiners, as the [GSUB chapter](gsub.html#joiners) explains.
-2. **After positioning**, its advance is set to zero, and its offset along the line too (`hb_ot_zero_width_default_ignorables`, `hb-ot-shape.cc:772`).
-3. **At the very end**, its glyph is replaced with an invisible one, or removed (`hb_ot_hide_default_ignorables`, `hb-ot-shape.cc:817`).
+2. **After positioning**, its advance is set to zero, and its offset along the line too (`hb_ot_zero_width_default_ignorables`, `hb-ot-shape.cc:774`).
+3. **At the very end**, its glyph is replaced with an invisible one, or removed (`hb_ot_hide_default_ignorables`, `hb-ot-shape.cc:819`).
 
 So until the end of positioning, a default ignorable is an ordinary glyph, with whatever glyph and advance the font gives it. The test font has a glyph for the soft hyphen, 300 units wide, and kerning between *a* and *b*:
 
@@ -326,7 +326,7 @@ Step 3 puts in the buffer’s **invisible glyph**, set with `hb_buffer_set_invis
 Two buffer flags change this:
 
 * `HB_BUFFER_FLAG_PRESERVE_DEFAULT_IGNORABLES` turns steps 2 and 3 off. The characters keep the glyphs and advances the font gave them.
-* `HB_BUFFER_FLAG_REMOVE_DEFAULT_IGNORABLES` (since 1.8.0) turns step 2 off and makes step 3 delete the glyphs. Where a deletion would leave a character with no glyph in its cluster, clusters are merged (`delete_glyphs_inplace`, `hb-buffer.cc:694`).
+* `HB_BUFFER_FLAG_REMOVE_DEFAULT_IGNORABLES` (since 1.8.0) turns step 2 off and makes step 3 delete the glyphs. Where a deletion would leave a character with no glyph in its cluster, clusters are merged (`delete_glyphs_inplace`, `hb-buffer.cc:678`).
 
 If both are set, preserving wins. `hb-shape` has an option for each, and `--invisible-glyph` to set the invisible glyph:
 
@@ -343,7 +343,7 @@ The soft hyphen is hidden, then drawn with the font’s own glyph, then gone. U+
 
 ### Substituted, so no longer ignorable
 
-A default ignorable that GSUB has substituted is not default ignorable anymore. The test is in `_hb_glyph_info_is_default_ignorable` itself (`hb-ot-layout.hh:349`):
+A default ignorable that GSUB has substituted is not default ignorable anymore. The test is in `_hb_glyph_info_is_default_ignorable` itself (`hb-ot-layout.hh:355`):
 
 ```c++
   return (info->unicode_props() & UPROPS_MASK_IGNORABLE) &&
@@ -369,7 +369,7 @@ A few default ignorables are there to change the shaping of the characters aroun
 * U+034F COMBINING GRAPHEME JOINER, but only some of the time (issue #554);
 * and, internally, glyphs that `morx` has deleted.
 
-The bit is used in the matcher’s `may_skip` (`hb-ot-layout-gsubgpos.hh:891`), which the GSUB chapter describes. A default ignorable may be skipped only if it isn’t a ZWNJ or ZWJ that the lookup must respect, and isn’t hidden:
+The bit is used in the matcher’s `may_skip` (`hb-ot-layout-gsubgpos.hh:964`), which the GSUB chapter describes. A default ignorable may be skipped only if it isn’t a ZWNJ or ZWJ that the lookup must respect, and isn’t hidden:
 
 ```c++
     if (unlikely (_hb_glyph_info_is_default_ignorable (&info) &&
@@ -379,7 +379,7 @@ The bit is used in the matcher’s `may_skip` (`hb-ot-layout-gsubgpos.hh:891`), 
       return SKIP_MAYBE;
 ```
 
-`ignore_hidden` is true only for GPOS (`hb-ot-layout-gsubgpos.hh:848`). So in GSUB a hidden character always stops a match. Here is the *fi* ligature with an invisible character between the letters each time:
+`ignore_hidden` is true only for GPOS (`hb-ot-layout-gsubgpos.hh:906`). So in GSUB a hidden character always stops a match. Here is the *fi* ligature with an invisible character between the letters each time:
 
 ```shape
 unicode.ttf  fi
@@ -396,7 +396,7 @@ Each of these characters says something about the one before it. A Mongolian FVS
 
 ### CGJ, sometimes
 
-The combining grapheme joiner is a mark with combining class 0. A class-0 character between two marks stops reordering from moving one past the other, and that is CGJ’s main use: to keep marks in an order that normalization would otherwise change, in Hebrew for example. The GSUB chapter’s table lists CGJ as always blocking. That is true of a CGJ doing this job. After reordering, HarfBuzz checks whether each CGJ kept anything apart (`hb-ot-shape-normalize.cc:403`):
+The combining grapheme joiner is a mark with combining class 0. A class-0 character between two marks stops reordering from moving one past the other, and that is CGJ’s main use: to keep marks in an order that normalization would otherwise change, in Hebrew for example. The GSUB chapter’s table lists CGJ as always blocking. That is true of a CGJ doing this job. After reordering, HarfBuzz checks whether each CGJ kept anything apart (`hb-ot-shape-normalize.cc:406`):
 
 ```c++
     for (unsigned int i = 1; i + 1 < count; i++)
@@ -427,13 +427,13 @@ unicode.ttf  a\u{E0067}b
 unicode.ttf  a\u200Cb
 ```
 
-Each *a* is kerned against the *b* by −100, whatever is between them. Fallback mark positioning, too, passes over hidden and ignorable glyphs when it gathers a base’s marks (`hb-ot-shape-fallback.cc:442`). And when HarfBuzz synthesizes glyph classes for a font without GDEF, it never makes a default ignorable a mark, though CGJ and the FVSes are Mn (`hb-ot-shape.cc:856`), as the GSUB chapter mentions.
+Each *a* is kerned against the *b* by −100, whatever is between them. Fallback mark positioning, too, passes over hidden and ignorable glyphs when it gathers a base’s marks (`hb-ot-shape-fallback.cc:442`). And when HarfBuzz synthesizes glyph classes for a font without GDEF, it never makes a default ignorable a mark, though CGJ and the FVSes are Mn (`hb-ot-shape.cc:858`), as the GSUB chapter mentions.
 
 ## Variation selectors
 
 The variation selectors VS1 to VS256, U+FE00 to U+FE0F and U+E0100 to U+E01EF, follow a base character to ask for a particular form of it. The Mongolian FVSes don’t count: `is_variation_selector` (`hb-unicode.hh:119`) leaves them to the Arabic shaper.
 
-Normalization gives up on a cluster that holds a variation selector (“it’s just too hard”, `hb-ot-shape-normalize.cc:208`). It asks the font’s `variation_glyph` func, which for hb-ot reads a format 14 `cmap` subtable, for a glyph for the pair. If there is one, the base and the selector become that glyph. If not, both go on with their nominal glyphs, for GSUB to deal with, and the selector is marked with the `_VS` bit. If it is still there at the end, it is hidden like any default ignorable. Since 10.0.0 an application can ask for a glyph of its choice instead, with `hb_buffer_set_not_found_variation_selector_glyph`: the selector then isn’t ignorable (`hb-ot-shape-normalize.cc:227`), and gets that glyph at zero width (`hb-ot-shape.cc:795`), so the client can see that the font didn’t support the sequence and use “a different font for example” (`NEWS`). The test font maps *a* with VS1 to `a.vs1`, and nothing else:
+Normalization gives up on a cluster that holds a variation selector (“it’s just too hard”, `hb-ot-shape-normalize.cc:208`). It asks the font’s `variation_glyph` func, which for hb-ot reads a format 14 `cmap` subtable, for a glyph for the pair. If there is one, the base and the selector become that glyph. If not, both go on with their nominal glyphs, for GSUB to deal with, and the selector is marked with the `_VS` bit. If it is still there at the end, it is hidden like any default ignorable. Since 10.0.0 an application can ask for a glyph of its choice instead, with `hb_buffer_set_not_found_variation_selector_glyph`: the selector then isn’t ignorable (`hb-ot-shape-normalize.cc:227`), and gets that glyph at zero width (`hb-ot-shape.cc:797`), so the client can see that the font didn’t support the sequence and use “a different font for example” (`NEWS`). The test font maps *a* with VS1 to `a.vs1`, and nothing else:
 
 ```shape
 unicode.ttf  a\uFE00

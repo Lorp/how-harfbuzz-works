@@ -21,7 +21,7 @@ Builds can’t run when the book is built, so the commands here are plain listin
 HarfBuzz lives on GitHub. Cloning one release, as this book does, takes a few seconds:
 
 ```
-git clone --depth 1 --branch 15.1.0 https://github.com/harfbuzz/harfbuzz.git
+git clone --depth 1 --branch {{hb}} https://github.com/harfbuzz/harfbuzz.git
 cd harfbuzz
 ```
 
@@ -71,9 +71,9 @@ Choices are made with **build options**, given to `meson setup` as `-Dname=value
 
 The first `meson setup` is the one that looks around. HarfBuzz needs nothing but a C++ compiler; everything else is optional, and with `auto`, used if found. Meson asks `pkg-config` for each library (`meson.build:115`–`:167`): FreeType, GLib and GObject, ICU, cairo, Chafa, libpng, and zlib. What it finds decides what gets built: GLib is the one that matters most to a developer, since without it there are no command-line tools (`util/meson.build:44`) and no API tests (`test/api/meson.build:2`). `BUILD.md` lists the packages to install on Linux distributions and with Homebrew.
 
-What Meson doesn’t do by default is fetch what it doesn’t find. A wrap file in `subprojects/` can build a missing dependency from source, but HarfBuzz sets `wrap_mode=nofallback` (`meson.build:8`), so that only happens when asked for with `--wrap-mode=default`, as `BUILD.md` suggests for Windows. Ragel, the tool that compiles the syllable machines, is looked for too (`src/meson.build:455`). Without it the build uses the committed C, and Meson warns, correctly, that “You have to install ragel if you are going to develop HarfBuzz itself” (`:463`). You need it only if you change a `.rl` grammar.
+What Meson doesn’t do by default is fetch what it doesn’t find. A wrap file in `subprojects/` can build a missing dependency from source, but HarfBuzz sets `wrap_mode=nofallback` (`meson.build:8`), so that only happens when asked for with `--wrap-mode=default`, as `BUILD.md` suggests for Windows. Ragel, the tool that compiles the syllable machines, is looked for too (`src/meson.build:456`). Without it the build uses the committed C, and Meson warns, correctly, that “You have to install ragel if you are going to develop HarfBuzz itself” (`:464`). You need it only if you change a `.rl` grammar.
 
-At the end, `meson setup` prints a summary (`meson.build:466`). It is worth reading every time, because a missing dependency doesn’t stop an `auto` build; it just leaves something out. Here is part of it, from `meson setup build` in a fresh tree on a Mac with Homebrew’s FreeType, GLib, cairo, and libpng installed (hand-run):
+At the end, `meson setup` prints a summary (`meson.build:470`). It is worth reading every time, because a missing dependency doesn’t stop an `auto` build; it just leaves something out. Here is part of it, from `meson setup build` in a fresh tree on a Mac with Homebrew’s FreeType, GLib, cairo, and libpng installed (hand-run):
 
 ```
   Unicode callbacks (you want at least one)
@@ -114,11 +114,9 @@ Everything lands in `build/`, laid out like the source tree. The libraries are i
 
 FreeType and GLib don’t get libraries of their own: their glue, hb-ft and hb-glib, goes into `libharfbuzz` itself ([Integrations](integrations.html) covers what each layer offers). Each library comes with a **`.pc` file**, the small text file that `pkg-config` reads to tell another project’s build which compiler and linker flags it needs (`pkg-config --cflags --libs harfbuzz`). The ones to be installed are in `build/meson-private/`. Meson also writes `build/meson-uninstalled/harfbuzz-uninstalled.pc` and its siblings, which point into the build directory, so another project can build against a HarfBuzz that was never installed: put that directory on `PKG_CONFIG_PATH`.
 
-The build also writes **`hb-features.h`** (`src/meson.build:614`), an installed header that defines `HB_HAS_FREETYPE`, `HB_HAS_RASTER`, and so on for each optional part this build has, so that an application can test for them with `#ifdef`. Two entries are never set by Meson: `HB_HAS_GRAPHITE`, because the option sets `HAVE_GRAPHITE2`, and `HB_HAS_GPU`, though hb-gpu is built (`src/meson.build:587`; [Compile-time configuration](compile-time-configuration.html#the-meson-options)).
+The build also writes **`hb-features.h`** (`src/meson.build:615`), an installed header that defines `HB_HAS_FREETYPE`, `HB_HAS_RASTER`, and so on for each optional part this build has, so that an application can test for them with `#ifdef`. Each comes from the `HAVE_*` macro of the same name (`src/meson.build:588`). Before 15.2.0, two were never set: `HB_HAS_GRAPHITE`, because the option set `HAVE_GRAPHITE2`, and `HB_HAS_GPU`, though hb-gpu was built ([HHW-56](bugs-this-book-found.html#hhw-56); [Compile-time configuration](compile-time-configuration.html#the-meson-options)).
 
-> Since {{hb}}: fixed on HarfBuzz main by [#6721](https://github.com/harfbuzz/harfbuzz/pull/6721) and [#6722](https://github.com/harfbuzz/harfbuzz/pull/6722) (17 November 2026), so main’s `hb-features.h` defines `HB_HAS_GPU` when hb-gpu is built, and `HB_HAS_GRAPHITE` when graphite2 is.
-
-The tools are in `build/util/`: `hb-shape`, `hb-view` (with cairo), `hb-info`, `hb-subset`, `hb-raster`, `hb-vector`, and `hb-ft-raster` when FreeType is found, plus `hb-gpu` when GLFW and GLEW are (`util/meson.build:225`). `hb-ft-raster`, which renders with FreeType for comparison, is built but not installed. The test programs are under `build/test/` and `build/src/`.
+The tools are in `build/util/`: `hb-shape`, `hb-view` (with cairo), `hb-info`, `hb-subset`, `hb-raster`, `hb-vector`, and `hb-ft-raster` when FreeType is found, plus `hb-gpu` when GLFW and GLEW are (`util/meson.build:224`). `hb-ft-raster`, which renders with FreeType for comparison, is built but not installed. The test programs are under `build/test/` and `build/src/`.
 
 `ninja -C build install` copies the libraries, headers, `.pc` files, and tools under the prefix, `/usr/local` unless `meson setup` was given `--prefix`. A developer usually doesn’t install at all, and runs everything from the build directory, [below](#working-in-the-tree).
 
@@ -130,7 +128,7 @@ The first build is already close to a development build. Meson’s own default b
 
 **Sanitizers.** `-Db_sanitize=address,undefined` compiles in AddressSanitizer, which stops the program at the first read or write outside an allocation, and UndefinedBehaviorSanitizer, which reports overflowing arithmetic, misaligned reads, and the like. HarfBuzz reads untrusted bytes all day ([Trust nothing: the sanitizer](trust-nothing-the-sanitizer.html) is about how), and these are how a mistake in that reading is caught before a fuzzer or a user finds it. HarfBuzz’s CI runs the whole test suite this way, and separately with `thread` and `memory` (`.github/workflows/sanitizers.yml:28`). A sanitized build is slower and larger, so it is another build directory, not a replacement for the first. Some tests then run past their time limits: the CI gives `meson test` the option `-t 10` (`:81`), which multiplies every limit by ten. On a Mac, add `-Dintrospection=disabled` too. When this chapter was written, with Meson 1.12.1 and Homebrew’s gobject-introspection 1.84.0, the introspection scanner tried to link with `-lasan`, a library Apple’s toolchain doesn’t have, and the build stopped there.
 
-**Experimental API.** `-Dexperimental_api=true` defines `HB_EXPERIMENTAL_API` (`meson.build:264`), which adds the functions not yet promised to stay the same, such as `hb_shape_justify` and the `hb_subset_depend_*` functions of [hb-depend](hb-depend.html), and builds the tool and tests that use them (`util/meson.build:192`, `test/subset/meson.build:105`). HarfBuzz’s CI turns it on in its sanitizer builds. [The other switches](compile-time-configuration.html#the-other-switches) lists what it adds.
+**Experimental API.** `-Dexperimental_api=true` defines `HB_EXPERIMENTAL_API` (`meson.build:264`), which adds the functions not yet promised to stay the same, such as `hb_shape_justify` and the `hb_subset_depend_*` functions of [hb-depend](hb-depend.html), and builds the tool and tests that use them (`util/meson.build:192`, `test/subset/meson.build:111`). HarfBuzz’s CI turns it on in its sanitizer builds. [The other switches](compile-time-configuration.html#the-other-switches) lists what it adds.
 
 **Making missing dependencies fatal.** `-Dauto_features=enabled`, a Meson option, turns every `auto` into `enabled`, so that a missing library stops `meson setup` instead of quietly removing a feature. HarfBuzz’s Linux and macOS CI builds start this way.
 
@@ -284,6 +282,8 @@ Run by hand in a fresh tree on the same Mac, that command made a working `hb-sha
 
 So a project writes its own small header defining the `HB_HAS_*` macros it wants, and compiles with `-DHB_FEATURES_H='"my-features.h"'`; `NEWS` for 14.0.0 calls this a “custom `hb-features.h`”. By hand, `c++ -O2 -c src/harfbuzz-world.cc -I src -DHB_FEATURES_H='"my-features.h"'`, with a header defining `HB_HAS_SUBSET`, `HB_HAS_RASTER`, and `HB_HAS_VECTOR`, made one object file with all four libraries in forty seconds. The header can’t be the `hb-features.h` that Meson writes, nor a copy of it, because `HB_FEATURES_H` is also that header’s include guard (`hb-features.h.in:25`): with the macro already defined, its whole body is skipped. Checked with the preprocessor: naming Meson’s header leaves `HB_HAS_RASTER` undefined. The library macros can also come from a `config.h`, compiled with `-DHAVE_CONFIG_H`, because the core sources, which come first, include it before the template tests for the other libraries. That is what HarfBuzz’s own web build of the hb-gpu demo does (`util/gpu/web/build.sh:13`, `config.h:5`).
 
+> Since {{hb}}: fixed on HarfBuzz main by [#6815](https://github.com/harfbuzz/harfbuzz/pull/6815) (20 November 2026), so main’s `harfbuzz-world.cc` can be given Meson’s `hb-features.h` ([HHW-72](bugs-this-book-found.html#hhw-72)).
+
 ### Smaller builds
 
 For an embedded system, or a download where every kilobyte counts, almost every part of the library can be compiled out with an `HB_NO_*` macro, and three ready-made sets cover the common cases. `HB_MINI` keeps a capable OpenType shaper and drops AAT and the legacy-font paths; `HB_LEAN` drops most of what isn’t shaping; `HB_TINY` is both, and makes the library single-threaded. They are passed as compiler flags, as `CONFIG.md` shows:
@@ -296,7 +296,7 @@ A tier can be partly undone with an override header. [The tiers](compile-time-co
 
 ### CMake
 
-`CMakeLists.txt` is still there, but its first act is a warning: “The main build system for HarfBuzz is Meson. CMake build support is community-maintained and is not actively supported by HarfBuzz developers” (`CMakeLists.txt:4`). It reads its version from `meson.build` (`:170`) and its library sources from `harfbuzz.cc` (`:181`), so it keeps up without being edited. It builds the libraries (`:59`–`:62`) and, with `HB_BUILD_UTILS`, some of the tools, but not `hb-raster` or `hb-vector` (`:1008`–`:1074`), and no tests. Its options are named differently (`HB_HAVE_FREETYPE`, `:35`) and off by default, except CoreText on Apple platforms (`:45`), which Meson leaves off. Meson also installs a `harfbuzz-config.cmake` in `cmakepackagedir` (`src/meson.build:1240`), so a CMake project can find a HarfBuzz built with Meson.
+`CMakeLists.txt` is still there, but its first act is a warning: “The main build system for HarfBuzz is Meson. CMake build support is community-maintained and is not actively supported by HarfBuzz developers” (`CMakeLists.txt:4`). It reads its version from `meson.build` (`:177`) and its library sources from `harfbuzz.cc` (`:188`), so it keeps up without being edited. It builds the libraries (`:59`–`:62`) and, with `HB_BUILD_UTILS`, some of the tools, but not `hb-raster` or `hb-vector` (`:1016`–`:1082`), and no tests. Its options are named differently (`HB_HAVE_FREETYPE`, `:36`) and off by default, except CoreText on Apple platforms (`:45`), which Meson leaves off. Meson also installs a `harfbuzz-config.cmake` in `cmakepackagedir` (`src/meson.build:1255`), so a CMake project can find a HarfBuzz built with Meson.
 
 ### WebAssembly, Windows, and Python
 

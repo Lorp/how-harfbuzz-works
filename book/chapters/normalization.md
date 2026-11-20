@@ -61,7 +61,7 @@ HarfBuzz’s normalization changes only the characters it asks the font for. The
 
 ## Where it runs
 
-Normalization is the second thing `hb_ot_substitute_default` does (`hb-ot-shape.cc:882`), after mirroring and vertical forms (`hb_ot_rotate_chars`) and before the shaper sets its feature masks. By then the text is in the script’s native direction and the shaper’s `preprocess_text` has run. [The pipeline, step by step](pipeline-step-by-step.html) shows where this sits in the whole of shaping. In outline (`:882`, trimmed):
+Normalization is the second thing `hb_ot_substitute_default` does (`hb-ot-shape.cc:884`), after mirroring and vertical forms (`hb_ot_rotate_chars`) and before the shaper sets its feature masks. By then the text is in the script’s native direction and the shaper’s `preprocess_text` has run. [The pipeline, step by step](pipeline-step-by-step.html) shows where this sits in the whole of shaping. In outline (`:884`, trimmed):
 
 ```c++
   hb_ot_rotate_chars (c);
@@ -73,7 +73,7 @@ Normalization is the second thing `hb_ot_substitute_default` does (`hb-ot-shape.
   HB_BUFFER_DEALLOCATE_VAR (buffer, normalizer_glyph_index);
 ```
 
-Throughout normalization the buffer holds Unicode: each `codepoint` is a character. Whenever the normalizer asks the font whether it has a character, it keeps the answer in the glyph’s scratch variable **`normalizer_glyph_index`**, the whole of `var1` (`hb-ot-shape-normalize.hh:35`; [Buffers](buffers.html#who-has-which-byte-and-when) has the table of who uses which byte when). After the masks are set, `hb_ot_map_glyphs_fast` copies it into `codepoint` for every glyph and changes the buffer’s content type to glyphs (`hb-ot-shape.cc:844`). There is no second `cmap` lookup: the “mapping” step is a copy.
+Throughout normalization the buffer holds Unicode: each `codepoint` is a character. Whenever the normalizer asks the font whether it has a character, it keeps the answer in the glyph’s scratch variable **`normalizer_glyph_index`**, the whole of `var1` (`hb-ot-shape-normalize.hh:35`; [Buffers](buffers.html#who-has-which-byte-and-when) has the table of who uses which byte when). After the masks are set, `hb_ot_map_glyphs_fast` copies it into `codepoint` for every glyph and changes the buffer’s content type to glyphs (`hb-ot-shape.cc:846`). There is no second `cmap` lookup: the “mapping” step is a copy.
 
 The questions go to the font funcs `nominal_glyph`, `nominal_glyphs`, and `variation_glyph` ([Fonts and font functions](fonts-and-font-functions.html)), which for hb-ot read `cmap`.
 
@@ -115,7 +115,7 @@ How far HarfBuzz composes is chosen by the script shaper, in its `normalization_
   }
 ```
 
-Both branches give `COMPOSED_DIACRITICS`. The code still has the shape of a choice: a font whose plan has a `mark` feature (`has_gpos_mark`, `hb-ot-shape.cc:196`) once got full decomposition, on the theory that a font able to position marks would rather have them separate. The commented-out line and its link to issue #653 record that this was given up. So a description of HarfBuzz that says it decomposes text for fonts with GPOS mark positioning is out of date. `has_gpos_mark` still matters to the Hebrew shaper, below. Nothing in {{hb}} asks for `DECOMPOSED`.
+Both branches give `COMPOSED_DIACRITICS`. The code still has the shape of a choice: a font whose plan has a `mark` feature (`has_gpos_mark`, `hb-ot-shape.cc:192`) once got full decomposition, on the theory that a font able to position marks would rather have them separate. The commented-out line and its link to issue #653 record that this was given up. So a description of HarfBuzz that says it decomposes text for fonts with GPOS mark positioning is out of date. `has_gpos_mark` still matters to the Hebrew shaper, below. Nothing in {{hb}} asks for `DECOMPOSED`.
 
 The table’s columns come from two flags worked out from the mode (`:309`):
 
@@ -136,7 +136,7 @@ The first round copies the buffer to its output side, one character or one clust
 
 Most text has long stretches with no combining marks at all, and the round treats those first (`:330`). It looks ahead for the next mark, and stops one character short of it, “Leave one base for the marks to cluster with” (`:338`). Everything before that is a run of single characters. In the short-circuiting modes, the whole run goes to the font in one call, `get_nominal_glyphs`, which writes each glyph straight into `normalizer_glyph_index` and stops at the first character the font doesn’t have (`:343`). That character, and the rest of the run, go one at a time through `decompose_current_character`.
 
-If no mark turns up in the whole buffer, the round sets nothing more, and the variable `all_simple` stays true. The second and third rounds are then skipped altogether: there is nothing to reorder or to compose with. For most Latin text, normalization is one batch `cmap` lookup.
+If no mark turns up in the whole buffer, and no decomposition made the buffer longer, the round sets nothing more, and the variable `all_simple` stays true. The second and third rounds are then skipped altogether: there is nothing to reorder or to compose with. For most Latin text, normalization is one batch `cmap` lookup.
 
 ### One character
 
@@ -214,14 +214,14 @@ Only the glyph changes: the cluster still points at U+2011.
 
 ### Not found
 
-If nothing works, the glyph is the buffer’s **not-found glyph**: `.notdef`, glyph 0, unless the application has set another with `hb_buffer_set_not_found_glyph` (since 3.1.0). The default argument of `get_nominal_glyph` is what puts it there: the call stores its third argument as the answer before asking the font (`hb-font.hh:322`), so a failed lookup leaves it in place. `hb-shape` sets it with `--not-found-glyph`. The test font has an unencoded glyph, `missing`, as glyph 27:
+If nothing works, the glyph is the buffer’s **not-found glyph**: `.notdef`, glyph 0, unless the application has set another with `hb_buffer_set_not_found_glyph` (since 3.1.0). The default argument of `get_nominal_glyph` is what puts it there: the call stores its third argument as the answer before asking the font (`hb-font.hh:344`), so a failed lookup leaves it in place. `hb-shape` sets it with `--not-found-glyph`. The test font has an unencoded glyph, `missing`, as glyph 27:
 
 ```shape
 norm.ttf  x\u0301  --not-found-glyph=27  --no-positions
 norm.ttf  x\uFE00  --not-found-glyph=27  --no-positions
 ```
 
-The second line shows a gap, described next.
+A variation selector after the missing character, in the second line, takes another path, described next, which gives the same glyph.
 
 ### Clusters with marks
 
@@ -236,13 +236,11 @@ norm.ttf  ö\uFE00  --no-positions
 
 With a selector after it, *ö* is not decomposed, and has no glyph. The selector, unmatched, becomes an invisible space glyph.
 
-The gap in the earlier example is here too. This path looks glyphs up with `set_glyph` (`:79`), which calls `get_nominal_glyph` without the not-found argument, so a missing character in a cluster with a variation selector gets glyph 0 whatever the buffer’s not-found glyph is. In the second line above it, `x` came out as `.notdef`, not `missing`. That looks like an oversight in HarfBuzz (inferred: nothing in the source says it is intended).
-
-> Since {{hb}}: fixed on HarfBuzz main by [#6699](https://github.com/harfbuzz/harfbuzz/pull/6699) (17 November 2026), so on main the `x` in the second line is `missing`.
+This path looks glyphs up with `set_glyph` (`:79`), which passes the buffer’s not-found glyph to `get_nominal_glyph`, so a missing character in a cluster with a variation selector gets it too: in the example under “Not found”, `x` came out as `missing`. Before 15.2.0 `set_glyph` passed nothing, and such a character always got glyph 0 ([HHW-11](bugs-this-book-found.html#hhw-11)).
 
 ## Round two: reorder
 
-Marks of different combining classes can be typed in any order, and all the orders are equivalent. *a* with an acute (class 230) and a dot below (220) is the same text whichever is typed first. To make equivalent strings look the same to the font, the second round sorts each run of marks by class, in place (`:372`):
+Marks of different combining classes can be typed in any order, and all the orders are equivalent. *a* with an acute (class 230) and a dot below (220) is the same text whichever is typed first. To make equivalent strings look the same to the font, the second round sorts each run of marks by class, in place (`:375`):
 
 ```c++
     for (unsigned int i = 0; i < count; i++)
@@ -272,7 +270,7 @@ Marks of different combining classes can be typed in any order, and all the orde
 
 A run is a sequence of characters with a non-zero class. The class is HarfBuzz’s modified combining class, Unicode’s class renumbered for some scripts so that the order suits fonts, and zero for anything that isn’t a mark. [Unicode inside HarfBuzz](unicode-inside-harfbuzz.html#modified-combining-classes) lists the changes and shows Hebrew and Thai marks being reordered.
 
-The sort is `hb_buffer_t::sort` (`hb-buffer.cc:2239`), an insertion sort, which is stable: marks of the same class keep their order, as Unicode requires, since swapping them would change the meaning. It is also why runs are limited. Insertion sort takes time proportional to the square of the run’s length, so a run longer than `HB_OT_SHAPE_MAX_COMBINING_MARKS`, 32 (`hb-ot-shaper.hh:42`), is left as typed, so that no text can make the sort slow.
+The sort is `hb_buffer_t::sort` (`hb-buffer.cc:2244`), an insertion sort, which is stable: marks of the same class keep their order, as Unicode requires, since swapping them would change the meaning. It is also why runs are limited. Insertion sort takes time proportional to the square of the run’s length, so a run longer than `HB_OT_SHAPE_MAX_COMBINING_MARKS`, 32 (`hb-ot-shaper.hh:42`), is left as typed, so that no text can make the sort slow.
 
 Each move merges the clusters of the characters it passes over (`merge_clusters`, [Buffers](buffers.html#merging-clusters)). At the default cluster level, marks are in their base’s cluster already and nothing visible happens. At level 1 they are merged; at level 2 they keep their own clusters, and the glyphs are marked unsafe to break instead:
 
@@ -285,13 +283,13 @@ norm.ttf  a\u0301\u0323  --cluster-level=2  --no-positions  --show-flags
 
 The two orders give the same glyphs. (The acute ends up inside *á* in the next round.)
 
-After sorting a run, the shaper’s `reorder_marks` hook may move marks again. Two shapers have one. The Arabic shaper moves the “modifier combining marks”, such as hamza above, to the front of their run, and renumbers them to keep the run sorted (`hb-ot-shaper-arabic.cc:721`; [Joining scripts](joining-scripts.html)). The Hebrew shaper swaps a sheva or hiriq with a following meteg or below mark when they come after a patah or qamats (`hb-ot-shaper-hebrew.cc:166`; [Hebrew, Thai, Lao, and Hangul](hebrew-thai-lao-and-hangul.html)).
+After sorting a run, the shaper’s `reorder_marks` hook may move marks again. Two shapers have one. The Arabic shaper moves the “modifier combining marks”, such as hamza above, to the front of their run, and renumbers them to keep the run sorted (`hb-ot-shaper-arabic.cc:725`; [Joining scripts](joining-scripts.html)). The Hebrew shaper swaps a sheva or hiriq with a following meteg or below mark when they come after a patah or qamats (`hb-ot-shaper-hebrew.cc:166`; [Hebrew, Thai, Lao, and Hangul](hebrew-thai-lao-and-hangul.html)).
 
-A mark of class zero ends a run. The combining grapheme joiner, U+034F, is such a mark, and is how a writer stops two marks being reordered. Straight after this round, HarfBuzz looks at each CGJ to see whether it kept anything apart, and lets later lookups pass over the ones that didn’t (`hb-ot-shape-normalize.cc:403`). That check, and an example, are in [Unicode inside HarfBuzz](unicode-inside-harfbuzz.html#cgj-sometimes).
+A mark of class zero ends a run. The combining grapheme joiner, U+034F, is such a mark, and is how a writer stops two marks being reordered. Straight after this round, HarfBuzz looks at each CGJ to see whether it kept anything apart, and lets later lookups pass over the ones that didn’t (`hb-ot-shape-normalize.cc:406`). That check, and an example, are in [Unicode inside HarfBuzz](unicode-inside-harfbuzz.html#cgj-sometimes).
 
 ## Round three: recompose
 
-The last round runs only in the two `COMPOSED_DIACRITICS` modes, and only if the first round found a mark somewhere (`!all_simple`). It walks the buffer again, writing to the output, and keeps track of the **starter**: the last character written whose modified class is zero, the one a mark can compose with. For each character it comes to (`:435`, trimmed):
+The last round runs only in the two `COMPOSED_DIACRITICS` modes, and only if the first round found a mark somewhere or decomposed something (`!all_simple`). It walks the buffer again, writing to the output, and keeps track of the **starter**: the last character written whose modified class is zero, the one a mark can compose with. For each character it comes to (`:438`, trimmed):
 
 ```c++
       if (_hb_glyph_info_is_unicode_mark(&buffer->cur()))
@@ -329,7 +327,7 @@ The last round runs only in the two `COMPOSED_DIACRITICS` modes, and only if the
 
 So a character is composed into the starter only if all of these hold:
 
-* **It is a mark.** Two base characters are never composed, “both an optimization to avoid trying to compose every two neighboring glyphs in most scripts AND a desired feature for Hangul”, whose fonts “are not designed to mix-and-match pre-composed syllables and Jamo” (`:438`). The Hangul shaper does its own composing, before normalization ([Hebrew, Thai, Lao, and Hangul](hebrew-thai-lao-and-hangul.html)).
+* **It is a mark.** Two base characters are never composed, “both an optimization to avoid trying to compose every two neighboring glyphs in most scripts AND a desired feature for Hangul”, whose fonts “are not designed to mix-and-match pre-composed syllables and Jamo” (`:441`). The Hangul shaper does its own composing, before normalization ([Hebrew, Thai, Lao, and Hangul](hebrew-thai-lao-and-hangul.html)).
 * **It isn’t blocked.** Either it comes straight after the starter, or the mark before it has a lower class. A mark with the same class or a higher one in between is **blocked**: Unicode’s rule, applied with the modified classes.
 * **The pair composes.** By Unicode’s composition data, or by the shaper’s `compose` hook.
 * **The font has the result.**
@@ -381,9 +379,9 @@ Composing merges the clusters of the starter and the mark, and of everything bet
 
 A shaper can replace both of the Unicode funcs’ functions used here, with its `compose` and `decompose` hooks (`hb-ot-shape-normalize.cc:299`). What they change:
 
-* **Indic.** The shaper (`hb-ot-shaper-indic.cc:1473`) doesn’t decompose four letters: DEVANAGARI LETTER RRA, the Bengali RRA and RHA (issue #779), and TAMIL LETTER AU. Its `compose` refuses any pair whose first character is a mark, so that the parts of a split vowel sign aren’t joined back together once the first round has split it. It also composes one pair that Unicode excludes, Bengali YA + NUKTA into YYA.
-* **Khmer.** The shaper (`hb-ot-shaper-khmer.cc:326`) gives five two-part vowel signs, which Unicode doesn’t decompose, a decomposition of its own: U+17C1 KHMER VOWEL SIGN E, the part written before the consonant, followed by the sign itself. Its `compose` has Indic’s rule about marks.
-* **USE.** Its `compose` (`hb-ot-shaper-use.cc:482`) has the same rule about marks.
+* **Indic.** The shaper (`hb-ot-shaper-indic.cc:1486`) doesn’t decompose four letters: DEVANAGARI LETTER RRA, the Bengali RRA and RHA (issue #779), and TAMIL LETTER AU. Its `compose` refuses any pair whose first character is a mark, so that the parts of a split vowel sign aren’t joined back together once the first round has split it. It also composes one pair that Unicode excludes, Bengali YA + NUKTA into YYA.
+* **Khmer.** The shaper (`hb-ot-shaper-khmer.cc:329`) gives five two-part vowel signs, which Unicode doesn’t decompose, a decomposition of its own: U+17C1 KHMER VOWEL SIGN E, the part written before the consonant, followed by the sign itself. Its `compose` has Indic’s rule about marks.
+* **USE.** Its `compose` (`hb-ot-shaper-use.cc:503`) has the same rule about marks.
 * **Hebrew.** The shaper composes the presentation forms that Unicode’s composition excludes, such as YOD + HIRIQ into U+FB1D, for “old fonts”: only when Unicode composition fails, and only if the plan has no `mark` feature (`hb-ot-shaper-hebrew.cc:81`). That is the one use of `has_gpos_mark` left in normalization. `HB_NO_OT_SHAPER_HEBREW_FALLBACK` leaves it out.
 
 The script chapters, [The Indic model](indic-model.html), [Khmer and Myanmar](khmer-and-myanmar.html), and [The Universal Shaping Engine](universal-shaping-engine.html), say why each script needs them.
@@ -398,18 +396,16 @@ norm.ttf  \u212B  --script=deva  --no-positions
 norm.ttf  \u212Ba\u0301  --script=deva  --no-positions
 ```
 
-The default shaper keeps the font’s angstrom glyph. The second and third lines force the Indic shaper, which uses `COMPOSED_DIACRITICS_NO_SHORT_CIRCUIT`, on the same text. In the third line, the angstrom sign is decomposed to *A* and ring above, and composed back into *Å*, which is what that mode is for.
+The default shaper keeps the font’s angstrom glyph. The second and third lines force the Indic shaper, which uses `COMPOSED_DIACRITICS_NO_SHORT_CIRCUIT`, on the same text. In both, the angstrom sign is decomposed to *A* and ring above, and composed back into *Å*, which is what that mode is for.
 
-The second line shows something else. The angstrom sign is decomposed into *A* and ring, and left that way. Recomposing is skipped when `all_simple` is true, that is, when the *input* had no marks, but in this mode the first round can make marks out of characters that had none. A buffer with a single *é*, shaped by any of the four shapers that use the mode, gets *e* and an acute; add a combining mark anywhere else in the buffer, and the same *é* comes out precomposed. With real Devanagari:
+Recomposing is skipped when `all_simple` is true, which starts out meaning that the *input* had no marks. In this mode the first round can make marks out of characters that had none, so if it changed the length of the buffer, `all_simple` is cleared (`:368`), and the third round runs. With real Devanagari:
 
 ```shape
 norm.ttf  ऩ  --no-positions
 norm.ttf  ऩ\u093E  --no-positions
 ```
 
-NNNA, which the font has, comes out as NA and NUKTA when it is alone, and as NNNA when a vowel sign (a mark, category Mc) follows it. The difference is seldom visible, because Indic fonts usually compose the nukta forms themselves, with `nukt`, and because Indic text rarely goes long without a mark. It still looks unintended (inferred: the source gives no reason for it), since the mode’s own comment promises “Always fully decomposes and then recompose back” (`hb-ot-shape-normalize.hh:43`).
-
-> Since {{hb}}: fixed on HarfBuzz main by [#6705](https://github.com/harfbuzz/harfbuzz/pull/6705) (17 November 2026), so main recomposes what the first round decomposed: the second line gives *Å*, and NNNA alone stays NNNA.
+NNNA, which the font has, comes out as NNNA alone and before a vowel sign alike, as the mode’s own comment promises: “Always fully decomposes and then recompose back” (`hb-ot-shape-normalize.hh:43`). Before 15.2.0, text with no marks was decomposed and never recomposed: the second line of the angstrom example and NNNA alone came out decomposed ([HHW-10](bugs-this-book-found.html#hhw-10)).
 
 The `NONE` mode, in contrast, does short-circuit everywhere and never composes. Zawgyi, shaped as script `Qaag`, uses it ([Choosing a script shaper](choosing-a-script-shaper.html#myanmar-and-zawgyi)):
 
@@ -424,7 +420,7 @@ norm.ttf  ǘ  --script=Qaag  --no-positions
 
 * **Compatibility decompositions.** Only canonical ones are used. A font with no glyph for *ﬁ* (U+FB01) gets `.notdef`, not *f i*. The Unicode funcs once had a `decompose_compatibility` callback; HarfBuzz stopped using it in 1.1.0 and deprecated it in 2.0.0 (`NEWS`).
 * **Composition for its own sake.** Nothing is composed unless the font has the result, and lone characters the font has are left alone even when NFC would change them.
-* **Closure.** `hb_ot_shape_glyphs_closure`, which works out the glyphs a piece of text can use, maps each character with `nominal_glyph` and its mirror and doesn’t decompose. A comment above it says so: “TODO Move this to hb-ot-shape-normalize, make it do decompose, and make it public” (`hb-ot-shape.cc:1268`). So for *ǘ* in the test font, it would find no glyph at all, where shaping uses *ü* and the acute (inferred from the code; not run here).
+* **Closure.** `hb_ot_shape_glyphs_closure`, which works out the glyphs a piece of text can use, maps each character with `nominal_glyph` and its mirror and doesn’t decompose. A comment above it says so: “TODO Move this to hb-ot-shape-normalize, make it do decompose, and make it public” (`hb-ot-shape.cc:1270`). So for *ǘ* in the test font, it would find no glyph at all, where shaping uses *ü* and the acute (inferred from the code; not run here).
 
 Fonts shaped with `morx` are normalized like any other, by the `dumber` shaper, in `AUTO` mode, before `morx` runs.
 
