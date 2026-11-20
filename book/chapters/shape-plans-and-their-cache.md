@@ -1,6 +1,6 @@
 # Shape plans and their cache
 
-Before HarfBuzz can shape a run of text, it has to decide a great deal about it: which script shaper handles it, which of the font’s scripts and language systems to use, which features are on, which lookups those features use and in what order, and which bits of each glyph’s mask belong to which feature. None of that depends on the text itself. It depends on the face, the run’s segment properties, the features the application asked for and, for a variable font, where in the design space the font is. So HarfBuzz works it out once, keeps the result as a **shape plan**, and reuses the plan for every run that would come to the same answers.
+Before HarfBuzz can shape a run of text, it has to decide a great deal about it: which script shaper handles it, which of the font’s scripts and language systems to use, which features are on, which lookups those features use and in what order, and which bits of each glyph’s mask belong to which feature. None of that depends on the text itself. It depends on the face, the run’s segment properties, the features the application asked for, and, for a variable font, where in the design space the font is. So HarfBuzz works it out once, keeps the result as a **shape plan**, and reuses the plan for every run that would come to the same answers.
 
 This chapter is about the plan as an object and about its cache: what a plan holds, what the cache compares to decide that two runs can share one, and what it deliberately leaves out. The two things it leaves out that matter most are the variation coordinates and the ranges of features. How the features become lookups is the subject of the [next chapter](from-features-to-lookups.html), and how the script shaper is chosen is the one after that, [Choosing a script shaper](choosing-a-script-shaper.html).
 
@@ -25,7 +25,7 @@ struct hb_shape_plan_t
 };
 ```
 
-A plan belongs to a face, not to a font. Every font made from the face can use it, whatever its size, its font functions or its synthetic emboldening. The plan points at its face but doesn’t hold a reference to it, as the comment says. The face holds the plans in its cache, and a reference each way would keep both alive for ever (inferred).
+A plan belongs to a face, not to a font. Every font made from the face can use it, whatever its size, its font functions, or its synthetic emboldening. The plan points at its face but doesn’t hold a reference to it, as the comment says. The face holds the plans in its cache, and a reference each way would keep both alive for ever (inferred).
 
 The **key** is what the plan was made for, and what the cache compares. The rest is what was made. The `ot` part is the compiled result for the `ot` backend, and it is built for every plan, whichever backend the key names ([hb_shape and its backends](hb_shape-and-its-backends.html#ot) explains why that matters for Graphite). `harfrust_data` exists only in builds with the HarfRust backend, which keeps HarfRust’s own plan there. Other backends can attach data with `hb_shape_plan_set_user_data`, as `kbts` does (`hb-kbts.cc:107`).
 
@@ -36,14 +36,14 @@ The **key** is what the plan was made for, and what the cache compares. The rest
 | Field | What it holds | Explained in |
 |---|---|---|
 | `props` | the segment properties the plan was made for | [Buffers](buffers.html) |
-| `shaper` | the script shaper: default, Arabic, Indic, USE and the rest | [Choosing a script shaper](choosing-a-script-shaper.html) |
+| `shaper` | the script shaper: default, Arabic, Indic, USE, and the rest | [Choosing a script shaper](choosing-a-script-shaper.html) |
 | `map` | the chosen script and language tags; each feature’s mask bits and shift; the GSUB and GPOS lookups, in stages, with the mask and flags each runs with | [From features to lookups](from-features-to-lookups.html) |
 | `aat_map` | the same for `morx`, when it is used instead of GSUB | [AAT inside HarfBuzz](aat-inside-harfbuzz.html) |
 | `data` | the script shaper’s own plan data, if it has any | the chapters on scripts |
 | `frac_mask`, `numr_mask`, `dnom_mask`, `rtlm_mask`, `kern_mask` | the masks of features the pipeline treats specially | [The pipeline, step by step](pipeline-step-by-step.html) |
-| `apply_gpos`, `apply_kern`, `apply_morx`, `zero_marks`, `fallback_mark_positioning` and other flags | decisions about which tables and fallbacks to use | [Fallbacks](fallbacks.html), [Legacy kern](legacy-kern.html) |
+| `apply_gpos`, `apply_kern`, `apply_morx`, `zero_marks`, `fallback_mark_positioning`, and other flags | decisions about which tables and fallbacks to use | [Fallbacks](fallbacks.html), [Legacy kern](legacy-kern.html) |
 
-Five script shapers keep `data`: Arabic, Hangul, Indic, Khmer and USE (their `data_create` functions). The Indic shaper, for instance, records there whether the font uses the old or the new Indic script tags, and prepares the tests it uses to ask whether `rphf`, `pref`, `blwf`, `pstf` and `vatu` would apply to a glyph (`hb-ot-shaper-indic.cc:315`), once per plan rather than once per run.
+Five script shapers keep `data`: Arabic, Hangul, Indic, Khmer, and USE (their `data_create` functions). The Indic shaper, for instance, records there whether the font uses the old or the new Indic script tags, and prepares the tests it uses to ask whether `rphf`, `pref`, `blwf`, `pstf`, and `vatu` would apply to a glyph (`hb-ot-shaper-indic.cc:315`), once per plan rather than once per run.
 
 All of this is worked out from the face and the key alone, except for two things that need a font, which the plan doesn’t have. The Indic shaper looks up its script’s virama glyph the first time it needs it, and keeps it in the plan (`hb-ot-shaper-indic.cc:281`). And Arabic fallback shaping, for Arabic text in fonts whose GSUB lacks the joining features, synthesizes lookups from the font’s glyphs for the Arabic presentation forms. It waits until the plan is first run, builds them with whichever font that is, and keeps them in the plan’s data with a compare-and-swap. The comment there is frank: “This sucks. We need a font to build the fallback plan...” (`hb-ot-shaper-arabic.cc:434`). In both cases every later font on the same face gets what the first one found. For fonts that share a face, and so a `cmap`, that’s only wrong if one of them has font functions that map characters to glyphs differently (inferred). [Joining scripts](joining-scripts.html) covers fallback shaping itself.
 
@@ -79,9 +79,9 @@ return hb_segment_properties_equal (&this->props, &other->props) &&
 
 ### Segment properties
 
-The properties are compared field by field by `hb_segment_properties_equal` (`hb-buffer.cc:64`): direction, script, language, and two private fields that are always null. The language is an `hb_language_t`, which is a pointer to an interned string, so languages are compared as pointers. `hb_language_from_string` lowercases its input before interning it, so `en-US` and `en-us` are one language and share a plan. But `en`, `en-US` and `en-GB` are three languages, and get three plans, even though all three map to the same OpenType language tag, `ENG`. The key is compared before the tags are chosen, so it can’t know that.
+The properties are compared field by field by `hb_segment_properties_equal` (`hb-buffer.cc:64`): direction, script, language, and two private fields that are always null. The language is an `hb_language_t`, which is a pointer to an interned string, so languages are compared as pointers. `hb_language_from_string` lowercases its input before interning it, so `en-US` and `en-us` are one language and share a plan. But `en`, `en-US`, and `en-GB` are three languages, and get three plans, even though all three map to the same OpenType language tag, `ENG`. The key is compared before the tags are chosen, so it can’t know that.
 
-Everything else about the buffer is left out: its text and context, its flags and its cluster level. They change what happens during shaping, not what the plan holds.
+Everything else about the buffer is left out: its text and context, its flags, and its cluster level. They change what happens during shaping, not what the plan holds.
 
 ### User features
 
@@ -207,7 +207,7 @@ from: start table GSUB
 to: end table GSUB
 ```
 
-<span class="screen-only">Here the slider moves across all of them.</span><span class="print-only">Here are four of them, at weights 400, 600, 700 and 900.</span> Under each frame, the glyph name says which plan made it:
+<span class="screen-only">Here the slider moves across all of them.</span><span class="print-only">Here are four of them, at weights 400, 600, 700, and 900.</span> Under each frame, the glyph name says which plan made it:
 
 ```draw
 font: shape-plans-and-their-cache/featvar.ttf
@@ -225,7 +225,7 @@ So the key records which conditions are true. `collect_lookup_conditions` (`hb-o
 
 None of the book’s test fonts uses lookup variations: the fontTools that builds them, 4.38, can’t write them.
 
-> For type designers: every distinct outcome of FeatureVariations is a separate plan, and a plan is the whole compiled map, not just the feature that varied. A font with one `rvrn` record can have two plans for each script, language and feature set: one inside the record and one outside it. A font that steps a substitution through twenty ranges of an axis has twenty-one, and an application that animates the axis builds each of them once, at the moment the position first crosses into its range. That’s fine for a handful of records. A font that needs many, perhaps generated by a tool that splits the design space into small boxes, makes many plans and makes every shaping call test more conditions, as the next section explains.
+> For type designers: every distinct outcome of FeatureVariations is a separate plan, and a plan is the whole compiled map, not just the feature that varied. A font with one `rvrn` record can have two plans for each script, language, and feature set: one inside the record and one outside it. A font that steps a substitution through twenty ranges of an axis has twenty-one, and an application that animates the axis builds each of them once, at the moment the position first crosses into its range. That’s fine for a handful of records. A font that needs many, perhaps generated by a tool that splits the design space into small boxes, makes many plans and makes every shaping call test more conditions, as the next section explains.
 
 ### The shaper
 
@@ -319,7 +319,7 @@ A key is built on every call, cached or not. With `copy` false, it points at the
 
 The lookup itself is two steps. First the last plan, then the list from its head. Each comparison is `key.equal`, which compares properties first, and so fails fast for a different script or direction.
 
-On a miss, the new plan is built, and then a node is put at the head of the list with one compare-and-swap: “if the head is still the one I started from, make it my node”. If another thread has added a plan since this one read the head, the swap fails, and the thread throws away the plan it built and starts again from `retry`. That second time round it walks the new list, and if the other thread’s plan was the one it wanted, it finds it there. So two threads that need the same plan at the same moment both build it, but only one copy ends up in the list. It is the same trade as the lazy table loaders’ in [Blobs, faces and lazy tables](blobs-faces-and-lazy-tables.html#loading-without-a-lock): occasional duplicate work, in exchange for no lock on the path every shaping call takes. A thread that loses the race to a *different* plan throws its own away too, and builds it again.
+On a miss, the new plan is built, and then a node is put at the head of the list with one compare-and-swap: “if the head is still the one I started from, make it my node”. If another thread has added a plan since this one read the head, the swap fails, and the thread throws away the plan it built and starts again from `retry`. That second time round it walks the new list, and if the other thread’s plan was the one it wanted, it finds it there. So two threads that need the same plan at the same moment both build it, but only one copy ends up in the list. It is the same trade as the lazy table loaders’ in [Blobs, faces, and lazy tables](blobs-faces-and-lazy-tables.html#loading-without-a-lock): occasional duplicate work, in exchange for no lock on the path every shaping call takes. A thread that loses the race to a *different* plan throws its own away too, and builds it again.
 
 Only the head is ever written, and nodes are never removed, so a thread walking the list can never meet a node that is being changed or freed. That is why the walk needs no lock either.
 
@@ -350,7 +350,7 @@ The public API has four functions that make plans:
 | `hb_shape_plan_create_cached` | 0.9.7 | none | yes |
 | `hb_shape_plan_create_cached2` | 1.4.0 | yes | yes |
 
-The versions without coordinates pass none, so they make the plan for the default position. The uncached ones make a new plan on every call, with its own copy of the features, and put it nowhere: two calls with the same arguments give two plans. `hb_shape_plan_create2` (`hb-shape-plan.cc:240`) is the function that actually builds one, cached or not. It makes the face immutable (`:267`, see [Blobs, faces and lazy tables](blobs-faces-and-lazy-tables.html#immutability)), makes the key with a copy of the features, and calls `ot.init0` (`:280`), which runs the planner and compiles the map (`hb-ot-shape.cc:227`).
+The versions without coordinates pass none, so they make the plan for the default position. The uncached ones make a new plan on every call, with its own copy of the features, and put it nowhere: two calls with the same arguments give two plans. `hb_shape_plan_create2` (`hb-shape-plan.cc:240`) is the function that actually builds one, cached or not. It makes the face immutable (`:267`, see [Blobs, faces, and lazy tables](blobs-faces-and-lazy-tables.html#immutability)), makes the key with a copy of the features, and calls `ot.init0` (`:280`), which runs the planner and compiles the map (`hb-ot-shape.cc:227`).
 
 A plan is run with `hb_shape_plan_execute`, and it can be looked at: `hb_shape_plan_get_shaper` gives the backend’s name, `hb_ot_shape_plan_collect_lookups` the lookups in its map, and `hb_ot_shape_plan_get_feature_tags` (since 10.3.0) the features it turned on. `hb_ot_shape_glyphs_closure` uses the cache too, to find the lookups a text could use (`hb-ot-shape.cc:1310`).
 
@@ -360,7 +360,7 @@ A plan is run with `hb_shape_plan_execute`, and it can be looked at: `hb_shape_p
 
 ### For applications
 
-Plans are shared by every run that shapes the same face with the same direction, script and language object, the same list of features in the same order with the same values and the same global-ness, the same FeatureVariations outcome, and the same backend. In ordinary text that is a handful of plans per face: one per script and language in use, times the feature settings in use.
+Plans are shared by every run that shapes the same face with the same direction, script, and language object, the same list of features in the same order with the same values and the same global-ness, the same FeatureVariations outcome, and the same backend. In ordinary text that is a handful of plans per face: one per script and language in use, times the feature settings in use.
 
 The cache grows when those multiply. Each distinct language tag is a distinct plan, so an application that passes BCP 47 tags with regions and variants through to HarfBuzz gets a plan per tag, not per language system. Each distinct feature list is a plan, so an application that builds its list in different orders for the same settings, or adds `liga` and `kern` explicitly in some places and not others, gets more plans than it needs. And each FeatureVariations outcome is a plan per everything else. Since plans live as long as the face, a long-lived face, such as one kept in a font cache for a whole session, keeps every plan it ever made (inferred).
 
@@ -372,7 +372,7 @@ Feature ranges cost nothing here: an editor that turns features on and off over 
 
 What the cache sees of a font is its FeatureVariations. A plan is built the first time each record, or each set of true lookup conditions, is reached, and kept. A few records along an axis are cheap. Many records make many plans, each a full compile of every feature’s lookups, and make every shaping call evaluate the conditions before it can find its plan. Records whose substitutions are identical still count separately, since the key holds the index, not the substitutions.
 
-Nothing else about a variable font reaches the plan: deltas, metrics and outlines are read from the font while the plan runs.
+Nothing else about a variable font reaches the plan: deltas, metrics, and outlines are read from the font while the plan runs.
 
 ## Where to read the source
 
@@ -387,13 +387,13 @@ Nothing else about a variable font reaches the plan: deltas, metrics and outline
 | `src/hb-ot-layout.cc` | `_hb_ot_layout_table_get_feature_variations_state`, which the key calls |
 | `src/hb-buffer.cc` | `hb_segment_properties_equal` |
 
-Building HarfBuzz with `HB_DEBUG_SHAPE_PLAN` defined prints a message from the cache on every lookup: “fulfilled from last-plan cache”, “fulfilled from cache” or “inserted into cache”. The book’s build doesn’t, so those messages can’t be shown here.
+Building HarfBuzz with `HB_DEBUG_SHAPE_PLAN` defined prints a message from the cache on every lookup: “fulfilled from last-plan cache”, “fulfilled from cache”, or “inserted into cache”. The book’s build doesn’t, so those messages can’t be shown here.
 
 ## In short
 
 * A shape plan is made for a face, not a font, and holds everything that can be decided before the text is seen: the script shaper, the feature masks, and the lookups in stages.
 * The key is the segment properties, the user features, the FeatureVariations outcome, and the backend.
-* Features match on tag, value and whether they are global, in order. Their ranges aren’t in the key: they are applied as masks every time the plan runs.
+* Features match on tag, value, and whether they are global, in order. Their ranges aren’t in the key: they are applied as masks every time the plan runs.
 * The coordinates aren’t in the key either: only the index of the FeatureVariations record that applies and, for version 1.1 lookup variations, which conditions are true.
 * The cache is a list on the face, grown with a compare-and-swap and read without a lock, with a one-entry fast path for the last plan. Nothing is ever removed until the face is destroyed.
 * The empty plan stands for every failure, and running it returns false. The empty face can’t be shaped at all.

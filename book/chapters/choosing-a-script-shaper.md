@@ -1,6 +1,6 @@
 # Choosing a script shaper
 
-A shape plan holds a script shaper: default, Arabic, Indic, the Universal Shaping Engine or one of the others. [Shape plans and their cache](shape-plans-and-their-cache.html) showed where it is kept. This chapter is about how it is picked, and the answer is less obvious than “by the script of the text”. HarfBuzz first turns the run’s script and language into OpenType tags, then looks for those tags in the font, and only then chooses a shaper, from the text’s script *and* the script tag it found. The same Devanagari text gets the Indic shaper in one font, the Universal Shaping Engine in another, and no script shaping at all in a third.
+A shape plan holds a script shaper: default, Arabic, Indic, the Universal Shaping Engine, or one of the others. [Shape plans and their cache](shape-plans-and-their-cache.html) showed where it is kept. This chapter is about how it is picked, and the answer is less obvious than “by the script of the text”. HarfBuzz first turns the run’s script and language into OpenType tags, then looks for those tags in the font, and only then chooses a shaper, from the text’s script *and* the script tag it found. The same Devanagari text gets the Indic shaper in one font, the Universal Shaping Engine in another, and no script shaping at all in a third.
 
 This chapter follows that order. What the chosen tags lead to, the features and their lookups, is the subject of the [previous chapter](from-features-to-lookups.html).
 
@@ -28,7 +28,7 @@ The old tags are made by lowercasing, with a switch for the exceptions (`hb_ot_o
 
 ## From a language to language system tags
 
-The language is turned into OpenType **language system tags**, [registered in the specification](https://learn.microsoft.com/en-us/typography/opentype/spec/languagetags), also up to three (`HB_OT_MAX_TAGS_PER_LANGUAGE`, `hb-ot-layout.h:107`). The language comes from the application, which usually takes it from the document, such as an HTML `lang` attribute ([Why shaping exists](why-shaping-exists.html#runs-and-the-three-things-harfbuzz-must-be-told)). It arrives as an `hb_language_t`, a BCP 47 string that `hb_language_from_string` has already lowercased, with `_` read as `-` (`hb-common.cc:167`; [Shape plans and their cache](shape-plans-and-their-cache.html) has more), so `TR`, `tr` and `tr_TR` are handled like `tr` and `tr-tr`. `hb_ot_tags_from_language` (`hb-ot-tag.cc:322`) reads it in this order:
+The language is turned into OpenType **language system tags**, [registered in the specification](https://learn.microsoft.com/en-us/typography/opentype/spec/languagetags), also up to three (`HB_OT_MAX_TAGS_PER_LANGUAGE`, `hb-ot-layout.h:107`). The language comes from the application, which usually takes it from the document, such as an HTML `lang` attribute ([Why shaping exists](why-shaping-exists.html#runs-and-the-three-things-harfbuzz-must-be-told)). It arrives as an `hb_language_t`, a BCP 47 string that `hb_language_from_string` has already lowercased, with `_` read as `-` (`hb-common.cc:167`; [Shape plans and their cache](shape-plans-and-their-cache.html) has more), so `TR`, `tr`, and `tr_TR` are handled like `tr` and `tr-tr`. `hb_ot_tags_from_language` (`hb-ot-tag.cc:322`) reads it in this order:
 
 1. Some tags of several subtags have mappings of their own, tested first by `hb_ot_tags_from_complex_language`: `zh-Hant`, `zh-HK`, `el-polyton`, and variants such as `-fonipa` (`IPPH`) and `-syre` (`SYRE`).
 2. If the second subtag is a three-letter extended language subtag, as in `zh-yue`, it is used instead of the first.
@@ -50,7 +50,7 @@ indic-dev2.ttf  र  --language=mar
 indic-dev2.ttf  र  --language=xyz
 ```
 
-`hi` gives `HIN`, which this font doesn’t have, so the default language system is used. `mr`, `mr-IN` and the ISO 639-3 code `mar` all give `MAR`. `xyz` gives the tag `XYZ `, which the font doesn’t have either.
+`hi` gives `HIN`, which this font doesn’t have, so the default language system is used. `mr`, `mr-IN`, and the ISO 639-3 code `mar` all give `MAR`. `xyz` gives the tag `XYZ `, which the font doesn’t have either.
 
 ## Naming the tags directly
 
@@ -145,10 +145,10 @@ hb_ot_shape_planner_t::hb_ot_shape_planner_t (hb_face_t *face,
 | Hebrew | Hebrew |
 | Khmer | Khmer |
 | the nine Indic scripts | default if the chosen script is `DFLT` or `latn`; the USE if it ends in `3`; otherwise Indic |
-| Myanmar | default if the chosen script is `DFLT`, `latn` or `mymr`; otherwise Myanmar |
+| Myanmar | default if the chosen script is `DFLT`, `latn`, or `mymr`; otherwise Myanmar |
 | `Qaag` (Zawgyi) | Myanmar Zawgyi |
 | a list of 91 more scripts, from Tibetan to the Unicode 18.0 additions | default if the chosen script is `DFLT` or `latn`; otherwise the USE |
-| everything else, Latin, Cyrillic, Greek and Han among them | default |
+| everything else, Latin, Cyrillic, Greek, and Han among them | default |
 
 The Indic case is short enough to quote (`:234`):
 
@@ -214,7 +214,7 @@ text: क्र
 options: --language=hi
 ```
 
-Under `DFLT`, there is no `preprocess-text`, no reordering and no lookups, but there is a fallback step after GSUB:
+Under `DFLT`, there is no `preprocess-text`, no reordering, and no lookups, but there is a fallback step after GSUB:
 
 ```trace
 font: indic-DFLT.ttf
@@ -255,7 +255,7 @@ The test is “doesn’t end in `2`”, not “is the old tag”. So `dflt`, whi
 
 ### Arabic and Syriac
 
-Arabic gets its shaper whatever the font has, if the text is horizontal, because “we do fallback shaping for Arabic script (and not others)”: from the presentation forms in the `cmap`, as [Joining scripts](joining-scripts.html) describes. Syriac gets the Arabic shaper only if GSUB’s chosen script isn’t `DFLT`. The test fonts `join-*.ttf` have `init`, `medi` and `fina` for Arabic BEH and Syriac BETH under `arab` and `syrc`, under `DFLT` only, or under `latn` only:
+Arabic gets its shaper whatever the font has, if the text is horizontal, because “we do fallback shaping for Arabic script (and not others)”: from the presentation forms in the `cmap`, as [Joining scripts](joining-scripts.html) describes. Syriac gets the Arabic shaper only if GSUB’s chosen script isn’t `DFLT`. The test fonts `join-*.ttf` have `init`, `medi`, and `fina` for Arabic BEH and Syriac BETH under `arab` and `syrc`, under `DFLT` only, or under `latn` only:
 
 ```shape
 join-arab.ttf  ببب  --language=ar
@@ -301,7 +301,7 @@ to: end table GPOS
 
 ### Thai and Lao
 
-Thai and Lao always get the Thai shaper, but if GSUB didn’t find `thai` itself (`found_script[0]` false, so `DFLT` and `latn` don’t count), Thai is shaped with the private-use glyphs of old Thai fonts’ `cmap`s (`hb-ot-shaper-thai.cc:368`), as [Hebrew, Thai, Lao and Hangul](hebrew-thai-lao-and-hangul.html) explains. `HB_NO_OT_SHAPER_THAI_FALLBACK` leaves that out.
+Thai and Lao always get the Thai shaper, but if GSUB didn’t find `thai` itself (`found_script[0]` false, so `DFLT` and `latn` don’t count), Thai is shaped with the private-use glyphs of old Thai fonts’ `cmap`s (`hb-ot-shaper-thai.cc:368`), as [Hebrew, Thai, Lao, and Hangul](hebrew-thai-lao-and-hangul.html) explains. `HB_NO_OT_SHAPER_THAI_FALLBACK` leaves that out.
 
 ### AAT fonts
 
@@ -346,13 +346,13 @@ The language should be set too, or the locale’s is used. It is given as BCP 47
 
 To shape with tags HarfBuzz wouldn’t choose, the `-x-hbsc` and `-x-hbot` subtags are the only way through `hb_shape`. To ask what a font supports before choosing it for a run, `hb_ot_tags_from_script_and_language` gives the tags HarfBuzz will try, and the return value of `hb_ot_layout_table_select_script` says whether the font has one of them or only a fallback.
 
-> For programmers: nothing in the public API reports which script shaper a plan chose. A trace shows it indirectly: “reordering indic initial”, “reordering USE”, “reordering myanmar”, “preprocess-text” and “postprocess-glyphs” come from shapers’ hooks.
+> For programmers: nothing in the public API reports which script shaper a plan chose. A trace shows it indirectly: “reordering indic initial”, “reordering USE”, “reordering myanmar”, “preprocess-text”, and “postprocess-glyphs” come from shapers’ hooks.
 
 ### For type designers
 
 The script tag in a font is not a label. It decides which shaper runs, and so which features are applied at all.
 
-* A font for an Indic or USE script needs its lookups under that script’s own tag. Under `DFLT` or `latn` alone, the shaper is the default one, and features such as `akhn`, `blwf`, `half` and `pref` are never applied, however they are registered.
+* A font for an Indic or USE script needs its lookups under that script’s own tag. Under `DFLT` or `latn` alone, the shaper is the default one, and features such as `akhn`, `blwf`, `half`, and `pref` are never applied, however they are registered.
 * For the nine Indic scripts, the `2` tag and the old tag mean different glyph orders in some lookups. A font with both is shaped with the `2` tag. A font with only the old tag gets the old mode, and so does a font whose only tag is the misspelling `dflt`.
 * A `3` tag, such as `dev3`, sends the text to the Universal Shaping Engine, which has its own feature order and categories, and HarfBuzz looks for it before the `2` tag. The `3` tags aren’t in the OpenType registry, and DirectWrite doesn’t support them.
 * A Myanmar font needs `mym2`: `mymr` gets the default shaper.
@@ -373,14 +373,14 @@ turkish.ttf  i  --language=tr  --features=smcp
 
 `tr` gives `TRK`. In Turkish, `locl` has made `i.TRK` before `liga` and `smcp` run, so no ligature forms, since an *fi* ligature would hide the dot, and the small capital is the dotted one. Nothing in `liga` or `smcp` needs to know about Turkish: a different glyph is enough.
 
-That depends on the order of the lookups. Under the default shaper, `locl`, `liga` and `smcp` are in one stage ([Feature order](feature-order.html)), so `locl` comes first only if its lookup does. `turkish-late.ttf` is the same font with the `locl` block moved to the end of the feature file:
+That depends on the order of the lookups. Under the default shaper, `locl`, `liga`, and `smcp` are in one stage ([Feature order](feature-order.html)), so `locl` comes first only if its lookup does. `turkish-late.ttf` is the same font with the `locl` block moved to the end of the feature file:
 
 ```shape
 turkish-late.ttf  fi  --language=tr
 turkish-late.ttf  i  --language=tr  --features=smcp
 ```
 
-Now `liga` and `smcp` reach the *i* first, and `locl` finds nothing to change. Under the Indic, Myanmar and USE shapers, `locl` runs in an early stage, before any reordering, but under the default shaper its place in the LookupList is all it has.
+Now `liga` and `smcp` reach the *i* first, and `locl` finds nothing to change. Under the Indic, Myanmar, and USE shapers, `locl` runs in an early stage, before any reordering, but under the default shaper its place in the LookupList is all it has.
 
 For the font file’s side, see Simon Cozens’ *Fonts and Layout for Global Scripts*. [“Scripts and languages”](https://simoncozens.github.io/fonts-and-layout/features.html#scripts-and-languages) explains `languagesystem` and `exclude_dflt`, and [“Language-specific substitutes”](https://simoncozens.github.io/fonts-and-layout/localisation.html#language-specific-substitutes) and [“The letter ‘i’”](https://simoncozens.github.io/fonts-and-layout/localisation.html#the-letter-i) work through language-specific forms with `locl`, including Turkish i with small capitals and ligatures.
 
@@ -391,7 +391,7 @@ For the font file’s side, see Simon Cozens’ *Fonts and Layout for Global Scr
 | `src/hb-ot-tag.cc` | script to tags (`hb_ot_all_tags_from_script`, the new and old tags), language to tags, the private-use subtags, and the reverse mappings |
 | `src/hb-ot-tag-table.hh` | the generated language tables and `hb_ot_tags_from_complex_language` |
 | `src/gen-tag-table.py` | the generator, which reads the OpenType language tag page and the IANA subtag registry |
-| `src/hb-ot-layout.cc` | `hb_ot_layout_table_select_script` and `hb_ot_layout_script_select_language2`, with the `DFLT`, `dflt` and `latn` fallbacks |
+| `src/hb-ot-layout.cc` | `hb_ot_layout_table_select_script` and `hb_ot_layout_script_select_language2`, with the `DFLT`, `dflt`, and `latn` fallbacks |
 | `src/hb-ot-map.cc` | the map builder’s constructor, which searches GSUB and GPOS for the tags |
 | `src/hb-ot-shaper.hh` | `hb_ot_shaper_t`, the list of shapers, and `hb_ot_shaper_categorize` |
 | `src/hb-ot-shape.cc` | the planner’s constructor, `_hb_apply_morx` and the swap to `dumber`, and the `gpos_tag` test |
@@ -402,7 +402,7 @@ For the font file’s side, see Simon Cozens’ *Fonts and Layout for Global Scr
 
 * A run’s script becomes up to three OpenType script tags, newest first (`dev3`, `dev2`, `deva`), and its BCP 47 language becomes up to three language system tags, from tables generated from the OpenType and IANA registries.
 * `-x-hbsc` and `-x-hbot` private-use subtags force the tags.
-* Each of GSUB and GPOS chooses a script: the first tag the font has, else `DFLT`, `dflt` or `latn`, else none. Then a language system: the first tag found, else the default.
-* The shaper is chosen from the text’s script and the script GSUB chose. For Indic, Myanmar and USE scripts, `DFLT` and `latn` mean the default shaper; for Indic, a `3` tag means the USE, and any tag not ending in `2` means the old mode.
+* Each of GSUB and GPOS chooses a script: the first tag the font has, else `DFLT`, `dflt`, or `latn`, else none. Then a language system: the first tag found, else the default.
+* The shaper is chosen from the text’s script and the script GSUB chose. For Indic, Myanmar, and USE scripts, `DFLT` and `latn` mean the default shaper; for Indic, a `3` tag means the USE, and any tag not ending in `2` means the old mode.
 * Arabic always gets its shaper in horizontal text; Syriac unless GSUB chose `DFLT`. Hebrew uses GPOS only under `hebr`. Fonts shaped with `morx` get `dumber`.
 * The choice decides which features are applied, how the text is normalized and reordered, and how marks are positioned.

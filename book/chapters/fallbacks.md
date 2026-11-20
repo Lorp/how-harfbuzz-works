@@ -1,10 +1,10 @@
 # Fallbacks
 
-A font doesn’t have to have GPOS. Plenty of fonts in use have no layout tables at all, or a GSUB and no GPOS, or a `kern` table from the 1990s and nothing else. HarfBuzz still has to put the accent somewhere, give an em space its width and, where it can, kern. It does each of these itself, from Unicode properties and the font’s metrics, when the font doesn’t.
+A font doesn’t have to have GPOS. Plenty of fonts in use have no layout tables at all, or a GSUB and no GPOS, or a `kern` table from the 1990s and nothing else. HarfBuzz still has to put the accent somewhere, give an em space its width, and, where it can, kern. It does each of these itself, from Unicode properties and the font’s metrics, when the font doesn’t.
 
-This chapter is about those **fallbacks** inside the `ot` backend: what HarfBuzz does in place of a table the font lacks. There are four. Marks are placed over and under their bases from glyph extents (steps 10 and 20 in [The pipeline, step by step](pipeline-step-by-step.html)). Marks lose their advance, and are moved back to make up for it (step 18). Space characters the font has no glyph for get suitable widths (step 15). And kerning can come from the font funcs (step 17). They are not the `fallback` *backend*, which maps characters to glyphs and does nothing else ([hb_shape and its backends](hb_shape-and-its-backends.html#fallback)). Two other fallbacks belong to script shapers: Arabic shaped from the presentation forms in the `cmap` when GSUB lacks the joining features is in [Joining scripts](joining-scripts.html), and Thai shaped with the private-use glyphs of old Thai fonts is in [Hebrew, Thai, Lao and Hangul](hebrew-thai-lao-and-hangul.html).
+This chapter is about those **fallbacks** inside the `ot` backend: what HarfBuzz does in place of a table the font lacks. There are four. Marks are placed over and under their bases from glyph extents (steps 10 and 20 in [The pipeline, step by step](pipeline-step-by-step.html)). Marks lose their advance, and are moved back to make up for it (step 18). Space characters the font has no glyph for get suitable widths (step 15). And kerning can come from the font funcs (step 17). They are not the `fallback` *backend*, which maps characters to glyphs and does nothing else ([hb_shape and its backends](hb_shape-and-its-backends.html#fallback)). Two other fallbacks belong to script shapers: Arabic shaped from the presentation forms in the `cmap` when GSUB lacks the joining features is in [Joining scripts](joining-scripts.html), and Thai shaped with the private-use glyphs of old Thai fonts is in [Hebrew, Thai, Lao, and Hangul](hebrew-thai-lao-and-hangul.html).
 
-The examples use a test font, `fonts/fallbacks/fallback.ttf`, with no GDEF, no GPOS and no `kern`, and variants of it with one table added. Unlike the other chapters’ fonts, its marks have outlines, drawn where a designer might draw them, because fallback positioning works from the boxes around glyphs’ ink. Its bases are boxes of different heights: `o` is 500 units tall, `l` and `f` 750. Every result on this page was produced by HarfBuzz {{hb}} when the page was built.
+The examples use a test font, `fonts/fallbacks/fallback.ttf`, with no GDEF, no GPOS, and no `kern`, and variants of it with one table added. Unlike the other chapters’ fonts, its marks have outlines, drawn where a designer might draw them, because fallback positioning works from the boxes around glyphs’ ink. Its bases are boxes of different heights: `o` is 500 units tall, `l` and `f` 750. Every result on this page was produced by HarfBuzz {{hb}} when the page was built.
 
 ## Who decides
 
@@ -48,7 +48,7 @@ Four plan flags come out of it, besides the choice of table:
 | `zero_marks` | marks lose their advance (step 18, or before GPOS) | the shaper zeroes marks, and there is no `kerx` and no state-machine `kern` |
 | `adjust_mark_positioning_when_zeroing` | a zeroed mark is moved back by its old advance | no GPOS, no `kerx`, no cross-stream `kern`, no `morx` |
 | `fallback_mark_positioning` | marks are recategorized (step 10) and placed from extents (step 20) | the same, `morx` aside, and the shaper allows it |
-| `apply_fallback_kern` | the font funcs are asked for kerning (step 17) | the shaper allows it, and there is no GPOS, `kerx` or `kern` to apply |
+| `apply_fallback_kern` | the font funcs are asked for kerning (step 17) | the shaper allows it, and there is no GPOS, `kerx`, or `kern` to apply |
 
 Two settings of the script shaper feed these: `zero_width_marks` and `fallback_position` ([Choosing a script shaper](choosing-a-script-shaper.html#what-the-choice-decides)). They are copied into `script_zero_marks` and `script_fallback_position` when the planner is made (`hb-ot-shape.cc:95`), before an AAT font’s shaper is swapped for `dumber`. Read from the shapers’ source:
 
@@ -150,7 +150,7 @@ Unicode’s canonical combining classes from 200 to 240 are named after position
 | Tibetan | 129, 132 | sign aa, sign u | Below |
 | | 130 | sign i | Above |
 
-Any class of 200 or more is kept, and so is any other class, such as 1 (overlays), 7 (nuktas) and 9 (viramas, apart from Thai’s). Only marks with general category Mn are touched (`:180`).
+Any class of 200 or more is kept, and so is any other class, such as 1 (overlays), 7 (nuktas), and 9 (viramas, apart from Thai’s). Only marks with general category Mn are touched (`:180`).
 
 It runs in step 10 (`hb-ot-shape.cc:895`), in an odd place, as its own comment admits: “This is unfortunate to go here, but necessary...”. It has to come after normalization, which sorts marks by their classes and decides from them which marks may compose with a base. Positional classes would sort differently, and two marks given the same class would block each other’s composition ([Normalization](normalization.html#round-two-reorder)). And it has to come before step 11, which replaces each character in the buffer with its glyph, because the Thai and Lao cases look at the character itself.
 
@@ -169,7 +169,7 @@ The positioner itself is `_hb_ot_shape_fallback_mark_position` (`hb-ot-shape-fal
 
 ### Bases and their marks
 
-It divides the buffer into runs. A run starts at each glyph that is not a mark (by general category, Mn, Mc or Me), not hidden and not a default ignorable (`:487`). The buffer’s cluster numbers aren’t looked at. Within a run, the first glyph that isn’t a mark is the base, and the marks after it are its marks, passing over any hidden or ignorable glyphs on the way (`:442`). A ZWJ or a CGJ between a letter and its accent doesn’t separate them:
+It divides the buffer into runs. A run starts at each glyph that is not a mark (by general category, Mn, Mc, or Me), not hidden, and not a default ignorable (`:487`). The buffer’s cluster numbers aren’t looked at. Within a run, the first glyph that isn’t a mark is the base, and the marks after it are its marks, passing over any hidden or ignorable glyphs on the way (`:442`). A ZWJ or a CGJ between a letter and its accent doesn’t separate them:
 
 ```shape
 fallback.ttf  o\u0301  --language=en
@@ -303,7 +303,7 @@ with-gpos.ttf  o\u{1D16D}  --language=en
 
 Without GPOS the dot is centered on the `o` and loses its 200-unit advance; with GPOS it keeps both. That too looks like a bug, or at least a comment that no longer matches the code.
 
-**Synthetic slant.** Fallback positioning runs after `position_finish_offsets`, which is where a synthetically slanted font has its vertically offset glyphs moved sideways to follow the slant ([Fonts and font functions](fonts-and-font-functions.html#slant)). So a fallback-placed mark doesn’t follow the slant. Its extents are measured from the slanted outline, as [Fonts and font functions](fonts-and-font-functions.html#extents-of-a-synthetic-font) shows, and centring them on the upright advance puts the mark over the middle of the upright letter, not over its slanted top. Synthetic bold, which changes the extents, is taken into account:
+**Synthetic slant.** Fallback positioning runs after `position_finish_offsets`, which is where a synthetically slanted font has its vertically offset glyphs moved sideways to follow the slant ([Fonts and font functions](fonts-and-font-functions.html#slant)). So a fallback-placed mark doesn’t follow the slant. Its extents are measured from the slanted outline, as [Fonts and font functions](fonts-and-font-functions.html#extents-of-a-synthetic-font) shows, and centering them on the upright advance puts the mark over the middle of the upright letter, not over its slanted top. Synthetic bold, which changes the extents, is taken into account:
 
 ```shape
 fallback.ttf  o\u0301  --language=en  --show-extents
@@ -319,7 +319,7 @@ fallback.ttf  o\u0301  --language=en  --show-extents  --font-bold=0.1
 | `SPACE` | U+0020 SPACE, U+00A0 NO-BREAK SPACE | the space glyph’s own |
 | `SPACE_EM` | U+2001 EM QUAD, U+2003 EM SPACE, U+3000 IDEOGRAPHIC SPACE | an em |
 | `SPACE_EM_2` | U+2000 EN QUAD, U+2002 EN SPACE | half an em |
-| `SPACE_EM_3`, `_4`, `_6` | U+2004, U+2005, U+2006, the three-, four- and six-per-em spaces | a third, a quarter, a sixth |
+| `SPACE_EM_3`, `_4`, `_6` | U+2004, U+2005, U+2006, the three-, four-, and six-per-em spaces | a third, a quarter, a sixth |
 | `SPACE_EM_5` | U+2009 THIN SPACE | a fifth |
 | `SPACE_EM_16` | U+200A HAIR SPACE | a sixteenth |
 | `SPACE_4_EM_18` | U+205F MEDIUM MATHEMATICAL SPACE | four eighteenths |
@@ -358,7 +358,7 @@ The narrow space is half of the quarter em it was given first. A space that GSUB
 
 ## Kerning through the font funcs
 
-The last fallback asks the font funcs for kerning. `_hb_ot_shape_fallback_kern` (`hb-ot-shape-fallback.cc:523`) runs in step 17 when the plan has `apply_fallback_kern`: the shaper allows fallback positioning, and the font has no GPOS, `kerx` or `kern` that HarfBuzz will apply itself. Then it checks that the font funcs implement `glyph_h_kerning` (`glyph_v_kerning` in vertical text), in this font or any of its parents (`hb-font.cc:1090`), and does nothing if they don’t. If they do, it sends “start fallback kern” to the trace, and runs the same kerning machine as the `kern` table, `hb_kern_machine_t` (`hb-kern.hh:39`), with a driver that asks the funcs for each pair:
+The last fallback asks the font funcs for kerning. `_hb_ot_shape_fallback_kern` (`hb-ot-shape-fallback.cc:523`) runs in step 17 when the plan has `apply_fallback_kern`: the shaper allows fallback positioning, and the font has no GPOS, `kerx`, or `kern` that HarfBuzz will apply itself. Then it checks that the font funcs implement `glyph_h_kerning` (`glyph_v_kerning` in vertical text), in this font or any of its parents (`hb-font.cc:1090`), and does nothing if they don’t. If they do, it sends “start fallback kern” to the trace, and runs the same kerning machine as the `kern` table, `hb_kern_machine_t` (`hb-kern.hh:39`), with a driver that asks the funcs for each pair:
 
 ```c++
 hb_position_t get_kerning (hb_codepoint_t first, hb_codepoint_t second) const
@@ -375,20 +375,20 @@ Only one font funcs implementation in HarfBuzz sets `glyph_h_kerning`: hb-ft, wh
 
 Our build has no FreeType, so `hb-shape` has only the `ot` funcs, and this fallback can’t be shown here. The trace above has no “start fallback kern”: the plan asked for it, and it returned at once, since the `ot` funcs have no kerning callback.
 
-> For programmers: to give HarfBuzz kerning from your own source, for a font format it can’t read, implement `glyph_h_kerning` in your font funcs (`hb_font_funcs_set_glyph_h_kerning_func`). It is used only when the face has no GPOS, `kerx` or `kern` and the script’s shaper allows fallback positioning, which the Indic, Khmer, Myanmar, Thai and USE shapers don’t. In a build with `HB_DISABLE_DEPRECATED`, which `HB_LEAN` implies, `get_glyph_h_kerning` returns 0 and the fallback is compiled out, though the horizontal callback is no longer deprecated.
+> For programmers: to give HarfBuzz kerning from your own source, for a font format it can’t read, implement `glyph_h_kerning` in your font funcs (`hb_font_funcs_set_glyph_h_kerning_func`). It is used only when the face has no GPOS, `kerx`, or `kern` and the script’s shaper allows fallback positioning, which the Indic, Khmer, Myanmar, Thai, and USE shapers don’t. In a build with `HB_DISABLE_DEPRECATED`, which `HB_LEAN` implies, `get_glyph_h_kerning` returns 0 and the fallback is compiled out, though the horizontal callback is no longer deprecated.
 
 > For type designers: a font with no GPOS still gets its marks placed, but only roughly: centered on the advance, a sixteenth of an em from the ink, all ligature components equal. Any GPOS at all, even a lone `kern` feature, switches that off, and marks then sit exactly where their outlines put them. If a font has GPOS, it needs mark attachment too. And draw zero-width marks to the left of the origin, over the glyph before, because that is where they stay when nothing moves them.
 
 ## Configuration
 
-`HB_NO_OT_SHAPE_FALLBACK` empties the recategorizing, mark positioning and kerning functions (`hb-ot-shape-fallback.cc:173`, `:475`, `:527`), and removes hb-ft’s kerning callback. The plan’s flags are still computed, so marks are still zeroed and adjusted. The space fallback has no macro of its own. `HB_NO_OT_SHAPE_FALLBACK` also turns off the Arabic, Hebrew and Thai shapers’ fallbacks, vowel constraints and the Zawgyi shaper (`hb-config.hh:174`), and `HB_NO_LEGACY` implies it (`:156`). `HB_NO_OT_KERN` leaves out the `kern` table, so a font with one gets fallback kerning instead.
+`HB_NO_OT_SHAPE_FALLBACK` empties the recategorizing, mark positioning, and kerning functions (`hb-ot-shape-fallback.cc:173`, `:475`, `:527`), and removes hb-ft’s kerning callback. The plan’s flags are still computed, so marks are still zeroed and adjusted. The space fallback has no macro of its own. `HB_NO_OT_SHAPE_FALLBACK` also turns off the Arabic, Hebrew, and Thai shapers’ fallbacks, vowel constraints, and the Zawgyi shaper (`hb-config.hh:174`), and `HB_NO_LEGACY` implies it (`:156`). `HB_NO_OT_KERN` leaves out the `kern` table, so a font with one gets fallback kerning instead.
 
 ## Where to read the source
 
 | File | What’s there |
 |---|---|
 | `src/hb-ot-shape-fallback.cc` | recategorizing, fallback mark positioning, fallback kerning, space widths |
-| `src/hb-ot-shape.cc` | the plan’s decisions (`compile`), step 10’s call, `zero_mark_widths_by_gdef`, `hb_ot_position_default` and `hb_ot_position_plan` |
+| `src/hb-ot-shape.cc` | the plan’s decisions (`compile`), step 10’s call, `zero_mark_widths_by_gdef`, `hb_ot_position_default`, and `hb_ot_position_plan` |
 | `src/hb-ot-shape.hh` | the plan’s flags |
 | `src/hb-ot-shaper-*.cc` | each shaper’s `zero_width_marks` and `fallback_position` |
 | `src/hb-kern.hh` | `hb_kern_machine_t`, shared with the `kern` table |
@@ -398,10 +398,10 @@ Our build has no FreeType, so `hb-shape` has only the `ot` funcs, and this fallb
 
 ## In short
 
-* The plan decides which fallbacks run, once: fallback mark positioning only with no GPOS and no `kerx` (and no cross-stream `kern`), and only if the script’s shaper allows it; fallback kerning only with no GPOS, `kerx` or `kern`.
+* The plan decides which fallbacks run, once: fallback mark positioning only with no GPOS and no `kerx` (and no cross-stream `kern`), and only if the script’s shaper allows it; fallback kerning only with no GPOS, `kerx`, or `kern`.
 * A GPOS with only kerning turns fallback mark positioning off. Hebrew’s GPOS is ignored unless its script is `hebr`. A `morx` font keeps the original shaper’s permission.
 * Shapers zero marks by GDEF class, or by classes made up from Mn. Without GPOS, a zeroed mark in a forward run is moved back by its old advance.
-* Recategorizing turns script-specific combining classes into positional ones, after normalization and before glyph mapping. Its Thai, Lao and Tibetan rows are rarely reached.
+* Recategorizing turns script-specific combining classes into positional ones, after normalization and before glyph mapping. Its Thai, Lao, and Tibetan rows are rarely reached.
 * The positioner places each mark from extents: against the base’s ink vertically and its advance horizontally, by class, a sixteenth of an em away, stacking marks of the same class, dividing ligatures equally.
 * It ignores the base’s horizontal offset, centers Left and Right marks, and doesn’t follow synthetic slant.
 * Missing space characters get widths from their kind: fractions of an em, a digit’s or full stop’s advance, or half a space.

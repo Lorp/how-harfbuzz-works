@@ -1,6 +1,6 @@
 # hb_shape and its backends
 
-An application that wants glyphs calls `hb_shape`. It hands over a font, a buffer of Unicode text whose script, direction and language are set, and perhaps some features, and it gets the buffer back full of positioned glyphs. All of the shaping this book describes happens inside that call, but `hb_shape` itself does very little. It finds a shape plan, and the plan names a **backend**: a complete shaping engine with one entry point, which does the actual work. HarfBuzz can be built with up to nine of them.
+An application that wants glyphs calls `hb_shape`. It hands over a font, a buffer of Unicode text whose script, direction, and language are set, and perhaps some features, and it gets the buffer back full of positioned glyphs. All of the shaping this book describes happens inside that call, but `hb_shape` itself does very little. It finds a shape plan, and the plan names a **backend**: a complete shaping engine with one entry point, which does the actual work. HarfBuzz can be built with up to nine of them.
 
 In practice one backend, `ot`, does nearly all the shaping in the world. It is HarfBuzz’s own engine for OpenType and AAT fonts, the one that Parts III to VI take apart. The others are there for particular fonts (Graphite fonts, and fonts that carry their own WebAssembly shaper), for comparison with other engines (HarfRust, Core Text, DirectWrite, Uniscribe, kb_text_shape), and as a last resort (`fallback`). This chapter is about how the choice between them is made, why it almost always comes out as `ot`, what each of the others is and gives up, and the small piece of machinery that lets every backend keep data of its own on faces and fonts.
 
@@ -10,7 +10,7 @@ The examples use one small test font, `backends.ttf`, built from `fonts/hb_shape
 
 HarfBuzz uses the word “shaper” for two different things, and it helps to separate them first.
 
-A **backend shaper** is one of the entries in `hb-shaper-list.hh`: `ot`, `fallback`, `graphite2` and the rest. Each is a function with the same signature, `hb_shape_func_t` (`hb-shaper.hh:33`), which takes a plan, a font, a buffer and the user’s features and does all the shaping. This chapter is about these.
+A **backend shaper** is one of the entries in `hb-shaper-list.hh`: `ot`, `fallback`, `graphite2`, and the rest. Each is a function with the same signature, `hb_shape_func_t` (`hb-shaper.hh:33`), which takes a plan, a font, a buffer, and the user’s features and does all the shaping. This chapter is about these.
 
 A **script shaper** is one of the parts of the `ot` backend that knows a family of scripts: the Arabic shaper, the Indic shaper, the Universal Shaping Engine. They are `hb_ot_shaper_t` structs (`hb-ot-shaper.hh`), and they only exist inside `ot`. [Why shaping exists](why-shaping-exists.html#runs-and-the-three-things-harfbuzz-must-be-told) introduced them, and [Choosing a script shaper](choosing-a-script-shaper.html) explains how one is picked. None of the other backends uses them.
 
@@ -62,7 +62,7 @@ hb_shape_full (hb_font_t *font, hb_buffer_t *buffer,
 
 That is the whole of it. There are two steps: get a plan, and run it.
 
-The plan comes from a cache on the face, keyed by the buffer’s segment properties, the user’s features, the font’s variation coordinates (only when some are non-zero, so a variable font at its default shares plans with a static one) and the shaper list. What a plan holds, and how the cache compares keys, is the subject of [Shape plans and their cache](shape-plans-and-their-cache.html). What matters here is one field of the plan’s key: `shaper_func`, the backend that will run it (`hb-shape-plan.hh`). The backend is chosen when the plan is made, and every later call that finds the same plan in the cache uses the same backend without choosing again.
+The plan comes from a cache on the face, keyed by the buffer’s segment properties, the user’s features, the font’s variation coordinates (only when some are non-zero, so a variable font at its default shares plans with a static one), and the shaper list. What a plan holds, and how the cache compares keys, is the subject of [Shape plans and their cache](shape-plans-and-their-cache.html). What matters here is one field of the plan’s key: `shaper_func`, the backend that will run it (`hb-shape-plan.hh`). The backend is chosen when the plan is made, and every later call that finds the same plan in the cache uses the same backend without choosing again.
 
 Running the plan, `hb_shape_plan_execute`, calls that one backend. If it succeeds and the buffer still says it holds Unicode, its content type is set to glyphs (`hb-shape-plan.cc:478`).
 
@@ -132,7 +132,7 @@ The file has no header guard of its own (its guard lines are marked “Dummy hea
 
 So adding a backend means adding one line here, writing its shape function and its four data functions, and nothing else. The order of the lines is the order of preference, which is why the comment says “in the right place”.
 
-Each line is guarded by a build option, and only two are on by default. HarfBuzz is built with [Meson](building-harfbuzz.html#meson-and-ninja), which reads its options from `meson_options.txt`. There the options `wasm`, `graphite2`, `harfrust`, `kbts`, `coretext`, `directwrite` and `gdi` (which brings Uniscribe) are all `disabled` unless asked for, while `ot` and `fallback` are left out only by the compile-time macros `HB_NO_OT_SHAPE` (implied by `HB_NO_SHAPER` and `HB_NO_OT`) and `HB_NO_FALLBACK_SHAPE` (implied by `HB_NO_LEGACY`), in `hb-config.hh:125–175`. A build with every backend compiled out fails to compile, on purpose: “No shaper enabled.” (`hb-shaper.cc:38`).
+Each line is guarded by a build option, and only two are on by default. HarfBuzz is built with [Meson](building-harfbuzz.html#meson-and-ninja), which reads its options from `meson_options.txt`. There the options `wasm`, `graphite2`, `harfrust`, `kbts`, `coretext`, `directwrite`, and `gdi` (which brings Uniscribe) are all `disabled` unless asked for, while `ot` and `fallback` are left out only by the compile-time macros `HB_NO_OT_SHAPE` (implied by `HB_NO_SHAPER` and `HB_NO_OT`) and `HB_NO_FALLBACK_SHAPE` (implied by `HB_NO_LEGACY`), in `hb-config.hh:125–175`. A build with every backend compiled out fails to compile, on purpose: “No shaper enabled.” (`hb-shaper.cc:38`).
 
 `hb_shape_list_shapers` returns the names in order (`hb-shape.cc:101`), and `hb-shape --list-shapers` prints them. The book’s build has the default two:
 
@@ -144,7 +144,7 @@ backends.ttf  fi  --list-shapers
 
 ## How the backend is chosen
 
-The choice is made in `hb_shape_plan_key_t::init` (`hb-shape-plan.cc:75`), which fills in the key of a new plan. After the segment properties, features and variation state are copied into the key, this runs (trimmed slightly):
+The choice is made in `hb_shape_plan_key_t::init` (`hb-shape-plan.cc:75`), which fills in the key of a new plan. After the segment properties, features, and variation state are copied into the key, this runs (trimmed slightly):
 
 ```c++
 #define HB_SHAPER_PLAN(shaper) \
@@ -178,7 +178,7 @@ The choice is made in `hb_shape_plan_key_t::init` (`hb-shape-plan.cc:75`), which
 
 Both loops do the same thing. They go through a list of backends in order, and for each one they test `face->data.shaper`: does this backend have data for this face? The first that does is chosen. The only difference is where the list comes from: the caller’s list of names, or HarfBuzz’s own list.
 
-`face->data.shaper` looks like a field, but it is a lazy loader, of the same kind as the table loaders in [Blobs, faces and lazy tables](blobs-faces-and-lazy-tables.html#lazy-tables). Testing it as a boolean creates the data if it hasn’t been created yet, by calling the backend’s `_hb_<name>_shaper_face_data_create`. So the question “will you shape this face?” is put to each backend in the form “make your data for this face”, and a backend says no by returning `NULL`. The answer is remembered, so each backend is asked once per face, not once per plan.
+`face->data.shaper` looks like a field, but it is a lazy loader, of the same kind as the table loaders in [Blobs, faces, and lazy tables](blobs-faces-and-lazy-tables.html#lazy-tables). Testing it as a boolean creates the data if it hasn’t been created yet, by calling the backend’s `_hb_<name>_shaper_face_data_create`. So the question “will you shape this face?” is put to each backend in the form “make your data for this face”, and a backend says no by returning `NULL`. The answer is remembered, so each backend is asked once per face, not once per plan.
 
 Only *face* data is asked for here. The backend’s *font* data, which depends on size and variation coordinates, isn’t created until the plan is run.
 
@@ -215,7 +215,7 @@ _hb_ot_shaper_face_data_create (hb_face_t *face)
 So, with no shaper list:
 
 * Only the two backends *before* `ot` can ever be chosen instead of it, and both decline every font that lacks their own table. A font is shaped by `graphite2` only if HarfBuzz was built with Graphite *and* the font has `Silf`, and by `wasm` only if HarfBuzz was built with WebAssembly *and* the font has `Wasm`.
-* No backend *after* `ot` is ever reached. Uniscribe, DirectWrite, Core Text, HarfBuzz’s Rust twin and kb_text_shape run only when they are asked for by name.
+* No backend *after* `ot` is ever reached. Uniscribe, DirectWrite, Core Text, HarfBuzz’s Rust twin, and kb_text_shape run only when they are asked for by name.
 * `fallback` is reached only in a build without `ot`. Its comment says it “should be last”, and since its face data, like `ot`’s, always succeeds, anything after it could never be reached even by name.
 
 That is the whole of “why `ot` always wins”. It isn’t a rule written anywhere: it is the position of one line in a list, and a create function that can’t fail.
@@ -232,7 +232,7 @@ Its Graphite rule replaces every `a` with 41 glyphs (`test/api/fonts/README`), a
 hb:test/api/fonts/graphite2-expansion.ttf  aa  --language=en
 ```
 
-> For type designers: a Graphite font, or a font with a WebAssembly shaper in it, will meet many builds of HarfBuzz that lack the backend for it. None of the optional backends is on in a default build. Such a font should carry OpenType tables as well, so that `ot` has something to work with. SIL’s fonts do: Harmattan, in HarfBuzz’s subsetter tests, has `Silf`, `Glat` and `Gloc` beside a full `GSUB` and `GPOS`, which is why the `ot` backend can join its Arabic here.
+> For type designers: a Graphite font, or a font with a WebAssembly shaper in it, will meet many builds of HarfBuzz that lack the backend for it. None of the optional backends is on in a default build. Such a font should carry OpenType tables as well, so that `ot` has something to work with. SIL’s fonts do: Harmattan, in HarfBuzz’s subsetter tests, has `Silf`, `Glat`, and `Gloc` beside a full `GSUB` and `GPOS`, which is why the `ot` backend can join its Arabic here.
 
 ```shape
 hb:test/subset/data/fonts/Harmattan-Regular.ttf  ببب  --language=ar
@@ -244,7 +244,7 @@ There are two ways to ask.
 
 ### The shaper list
 
-`hb_shape_full`’s last argument, and the same argument of `hb_shape_plan_create`, `hb_shape_plan_create2` and the cached versions, is a `NULL`-terminated list of backend names. The first loop above walks it in the caller’s order. Names that aren’t compiled into this build match nothing and are passed over without complaint. The first named backend whose face data can be created is chosen.
+`hb_shape_full`’s last argument, and the same argument of `hb_shape_plan_create`, `hb_shape_plan_create2`, and the cached versions, is a `NULL`-terminated list of backend names. The first loop above walks it in the caller’s order. Names that aren’t compiled into this build match nothing and are passed over without complaint. The first named backend whose face data can be created is chosen.
 
 If none can, the key isn’t made, `hb_shape_plan_create_cached2` returns the empty plan (`hb-shape-plan.cc:566`), and `hb_shape_full` returns false with the buffer untouched: still Unicode, still unshaped. HarfBuzz doesn’t add `ot` to the end of a list on its own. A caller who wants “Core Text if possible, otherwise HarfBuzz” writes `{"coretext", "ot", NULL}`.
 
@@ -320,7 +320,7 @@ Two details make this cheap.
 
 A loader has to know which face or font it belongs to, in order to pass it to the create function. Storing a pointer back in each loader would cost one pointer per backend per object. Instead, the one pointer `parent_data` comes first, and each loader finds it by counting back from its own address. Its position in the list is its `HB_SHAPER_ORDER`, numbered from 1, so the *n*th loader is *n* pointers after `parent_data`, and `hb_data_wrapper_t::get_data` reads `*(((Data **) this) - WheresData)` (`hb-machinery.hh:160`). That is why the comment insists the pointer be “JUST before the lazy loaders”.
 
-A failed create has to be remembered, or the `graphite2` loader would look for `Silf` again on every plan for every non-Graphite font. But a loader’s empty value is `NULL`, so `NULL` can’t also mean “tried and failed”. The loaders therefore set `tag_null` (`hb-shaper.hh:104`): a failure is stored as the null value with its lowest bit set, which isn’t null, and is read back as null. [Blobs, faces and lazy tables](blobs-faces-and-lazy-tables.html#failure-is-cached-as-null) describes the same trick for table accelerators. It is also why `HB_SHAPER_DATA_SUCCEEDED` is 2 and not 1: “Low bit is taken by the lazy-loader’s tag_null” (`hb-shaper.hh:71`).
+A failed create has to be remembered, or the `graphite2` loader would look for `Silf` again on every plan for every non-Graphite font. But a loader’s empty value is `NULL`, so `NULL` can’t also mean “tried and failed”. The loaders therefore set `tag_null` (`hb-shaper.hh:104`): a failure is stored as the null value with its lowest bit set, which isn’t null, and is read back as null. [Blobs, faces, and lazy tables](blobs-faces-and-lazy-tables.html#failure-is-cached-as-null) describes the same trick for table accelerators. It is also why `HB_SHAPER_DATA_SUCCEEDED` is 2 and not 1: “Low bit is taken by the lazy-loader’s tag_null” (`hb-shaper.hh:71`).
 
 Creation uses the same lock-free compare-and-swap as the table loaders ([Loading without a lock](blobs-faces-and-lazy-tables.html#loading-without-a-lock)): two threads may both create the data, and the one that loses the race destroys its copy. A face’s shaper data lives as long as the face. A font’s is thrown away whenever the font changes: `hb_font_t::changed()` ends with `data.fini ()` (`hb-font.hh:1159`), so a new size or new variation coordinates mean every backend makes its font data again on the next shape. [Fonts and font functions](fonts-and-font-functions.html#serial-numbers) lists the setters that call it.
 
@@ -330,7 +330,7 @@ The data has one more user besides the backends. HarfBuzz’s Core Text and Dire
 
 ### `ot`
 
-HarfBuzz’s own engine. It shapes OpenType fonts with `GSUB` and `GPOS`, and AAT fonts with `morx`, `kerx` and `trak` in their place: there is no separate AAT backend, and the choice between the two kinds of table is made inside `ot`, as [AAT inside HarfBuzz](aat-inside-harfbuzz.html) explains. Its font data is a cache for the variation store in `GDEF`, which holds the deltas that a variable font’s `GPOS` values and `GDEF` carets refer to (`hb-ot-shape.cc:433`). A font whose `GDEF` has no variation store gets the shared Null cache, which is still not `NULL`, so this can’t fail either. Its entry point, `_hb_ot_shape` (`hb-ot-shape.cc:1205`), wraps everything in a context and calls `hb_ot_shape_internal`, which [The pipeline, step by step](pipeline-step-by-step.html) follows from start to end.
+HarfBuzz’s own engine. It shapes OpenType fonts with `GSUB` and `GPOS`, and AAT fonts with `morx`, `kerx`, and `trak` in their place: there is no separate AAT backend, and the choice between the two kinds of table is made inside `ot`, as [AAT inside HarfBuzz](aat-inside-harfbuzz.html) explains. Its font data is a cache for the variation store in `GDEF`, which holds the deltas that a variable font’s `GPOS` values and `GDEF` carets refer to (`hb-ot-shape.cc:433`). A font whose `GDEF` has no variation store gets the shared Null cache, which is still not `NULL`, so this can’t fail either. Its entry point, `_hb_ot_shape` (`hb-ot-shape.cc:1205`), wraps everything in a context and calls `hb_ot_shape_internal`, which [The pipeline, step by step](pipeline-step-by-step.html) follows from start to end.
 
 It also builds every plan’s `ot` half, whichever backend is chosen. `hb_shape_plan_create2` calls `shape_plan->ot.init0` unconditionally once the key is made (`hb-shape-plan.cc:280`), so even a plan that `graphite2` will run has its OpenType features compiled into lookups.
 
@@ -365,7 +365,7 @@ The simplest backend there could be. Here it is, nearly whole (`hb-fallback-shap
   buffer->clear_glyph_flags ();
 ```
 
-Each character becomes the glyph `cmap` gives it, or glyph 0. Each glyph gets its advance from the font funcs. Default ignorables become a zero-width space, if the font has a space. Right-to-left text is reversed into visual order. That is all. There is no normalization, no ligature, no kerning, no mark positioning, no joining and no reordering, and each character stays in a cluster of its own. Side by side with `ot` on the test font:
+Each character becomes the glyph `cmap` gives it, or glyph 0. Each glyph gets its advance from the font funcs. Default ignorables become a zero-width space, if the font has a space. Right-to-left text is reversed into visual order. That is all. There is no normalization, no ligature, no kerning, no mark positioning, no joining, and no reordering, and each character stays in a cluster of its own. Side by side with `ot` on the test font:
 
 ```shape
 backends.ttf  fi  --shapers=ot  --language=en
@@ -400,7 +400,7 @@ The WebAssembly backend lets a font carry its own shaping engine, compiled to We
 
 Its face data loads the table as a WebAssembly module (`hb-wasm-shape.cc:168`). To shape, it needs an *instance* of the module, with its own memory: 32 KiB of stack and 2 MiB of heap (`:217`). Instances are made as needed, and one is kept in the face data for reuse. When an instance is made, HarfBuzz calls the module’s `shape_plan_create(face)` if it exports one, so the module can prepare per-face state. Then for each run it calls the module’s `shape(plan, font, buffer, features, num_features)`, which returns zero for failure. If it fails while the buffer still holds Unicode, HarfBuzz throws the instance away and tries once more with a fresh one (`:436`).
 
-The module works through an API that HarfBuzz exports to it (`hb-wasm-api-*.hh`): copying the buffer’s contents in and out, asking the font for glyphs, advances, extents, outlines and coordinates, reading tables. And one more function, `shape_with`, which runs another backend on the same font and buffer (`hb-wasm-api-shape.hh:36`). It calls `hb_shape_full` with a one-name shaper list, and refuses the name `wasm`, so a module can’t start itself again. The documentation’s examples use it to let `ot` do the ordinary work and then change the result. HarfBuzz’s own source has a larger example: `src/wasm/graphite/` builds Graphite itself into a module and adds it to fonts such as Charis SIL, so that they shape with Graphite in a HarfBuzz that has WebAssembly but no `graphite2`.
+The module works through an API that HarfBuzz exports to it (`hb-wasm-api-*.hh`): copying the buffer’s contents in and out, asking the font for glyphs, advances, extents, outlines, and coordinates, reading tables. And one more function, `shape_with`, which runs another backend on the same font and buffer (`hb-wasm-api-shape.hh:36`). It calls `hb_shape_full` with a one-name shaper list, and refuses the name `wasm`, so a module can’t start itself again. The documentation’s examples use it to let `ot` do the ordinary work and then change the result. HarfBuzz’s own source has a larger example: `src/wasm/graphite/` builds Graphite itself into a module and adds it to fonts such as Charis SIL, so that they shape with Graphite in a HarfBuzz that has WebAssembly but no `graphite2`.
 
 The backend trusts the module with the buffer. A comment after the call says “TODO Regularize clusters according to direction & cluster level, such that client doesn’t crash with unmet expectations” (`:439`), and the documentation asks modules to keep clusters monotonic. Glyph flags are cleared and the whole buffer is marked unsafe to break (`:452`). Another comment admits that initializing the runtime isn’t thread-safe (`:122`). `NEWS` for 15.0.0 records hardening “against malicious fonts”, which is what a font that runs code invites.
 
@@ -410,9 +410,9 @@ The backend trusts the module with the buffer. A comment after the call says “
 
 HarfRust is a port of HarfBuzz’s shaping to Rust, from the HarfBuzz project itself. `NEWS` for 11.2.1 introduced the backend as “harfruzz”, “an ongoing Rust port of HarfBuzz shaping… mainly used for testing the output of the Rust implementation”, and 11.3.0 renamed it after the upstream rename. It is built with `-Dharfrust=enabled`, and this release uses HarfRust 0.15 (`src/rust/Cargo.toml`). [HarfRust](harfrust.html) is about HarfRust itself.
 
-The glue is in `hb-harfrust.cc` and `rust/shape.rs`. Face data is a HarfRust `Font` that fetches tables from the HarfBuzz face (`shape.rs:74`). Font data is an instance of it at the font’s normalized coordinates, with its scale and point size (`:220`). HarfRust’s own plan is cached in the HarfBuzz plan, in a field that exists only for it (`hb_shape_plan_t::harfrust_data`, `hb-shape-plan.hh`). For each run, the buffer’s code points, clusters, flags, cluster level and pre- and post-context are copied into a HarfRust buffer, shaped, and the glyphs and positions copied back (`shape.rs:336`).
+The glue is in `hb-harfrust.cc` and `rust/shape.rs`. Face data is a HarfRust `Font` that fetches tables from the HarfBuzz face (`shape.rs:74`). Font data is an instance of it at the font’s normalized coordinates, with its scale and point size (`:220`). HarfRust’s own plan is cached in the HarfBuzz plan, in a field that exists only for it (`hb_shape_plan_t::harfrust_data`, `hb-shape-plan.hh`). For each run, the buffer’s code points, clusters, flags, cluster level, and pre- and post-context are copied into a HarfRust buffer, shaped, and the glyphs and positions copied back (`shape.rs:336`).
 
-Unlike the other backends, it uses the HarfBuzz font. `HBHarfBuzzFontFuncs` (`shape.rs:116`) answers HarfRust’s questions about nominal and variation glyphs, advances, vertical origins and extents by calling `hb_font_get_*`, so custom font funcs and synthetic bold reach it just as they reach `ot`. That is what makes it useful for testing: with the same font answers going in, any difference in the output is a difference between the two shaping implementations.
+Unlike the other backends, it uses the HarfBuzz font. `HBHarfBuzzFontFuncs` (`shape.rs:116`) answers HarfRust’s questions about nominal and variation glyphs, advances, vertical origins, and extents by calling `hb_font_get_*`, so custom font funcs and synthetic bold reach it just as they reach `ot`. That is what makes it useful for testing: with the same font answers going in, any difference in the output is a difference between the two shaping implementations.
 
 ### `kbts`
 
@@ -458,7 +458,7 @@ The “glyph flags” column matters to applications that break lines by reshapi
 | `src/hb-ot-shape.cc` | the `ot` backend’s data and entry point |
 | `src/hb-fallback-shape.cc` | the `fallback` backend |
 | `src/hb-graphite2.cc` | the `graphite2` backend |
-| `src/hb-wasm-shape.cc`, `src/hb-wasm-api*.hh`, `docs/wasm-shaper.md`, `src/wasm/` | the `wasm` backend, the API it gives modules, its documentation and examples |
+| `src/hb-wasm-shape.cc`, `src/hb-wasm-api*.hh`, `docs/wasm-shaper.md`, `src/wasm/` | the `wasm` backend, the API it gives modules, its documentation, and examples |
 | `src/hb-harfrust.cc`, `src/rust/shape.rs` | the `harfrust` backend and its Rust glue |
 | `src/hb-kbts.cc` | the `kbts` backend |
 | `src/hb-coretext-shape.cc`, `src/hb-directwrite-shape.cc`, `src/hb-uniscribe.cc` | the platform backends |
@@ -470,7 +470,7 @@ To see which backends a build has, run `hb-shape --list-shapers`. To shape with 
 
 * `hb_shape` gets a plan from the face’s cache and runs it. The plan names one backend, chosen when the plan is made.
 * With no shaper list, the first backend in `hb-shaper-list.hh` that can make data for the face wins. Only `wasm` and `graphite2` come before `ot`, and they accept only fonts with a `Wasm` or `Silf` table, in builds that include them. `ot` accepts every face, so nothing after it is chosen by default.
-* Uniscribe, DirectWrite, Core Text, HarfRust and kb_text_shape run only when named, in a shaper list or in `HB_SHAPER_LIST`, which reorders the default list for the whole process.
+* Uniscribe, DirectWrite, Core Text, HarfRust, and kb_text_shape run only when named, in a shaper list or in `HB_SHAPER_LIST`, which reorders the default list for the whole process.
 * There is no falling through: if the chosen backend fails, shaping fails. `ot` reports failure through the buffer, not its return value, so check `hb_buffer_allocation_successful`.
 * Each backend keeps lazily made data on faces and fonts. Font data is rebuilt whenever the font changes, and failures are remembered.
 * The `fallback` backend maps characters to glyphs and does nothing else. It is not the `ot` backend’s fallback shaping.

@@ -12,9 +12,9 @@
 
 **Attachment chain.** HarfBuzz’s record, on each attached glyph, of the glyph it hangs from (`attach_chain`, `attach_type`), resolved into offsets after all GPOS lookups have run.
 
-**Backend.** A complete shaping engine that `hb_shape` can hand a run to: `ot`, HarfBuzz’s own, or `graphite2`, `wasm`, `harfrust`, a platform engine or `fallback`. Not the same as a script shaper.
+**Backend.** A complete shaping engine that `hb_shape` can hand a run to: `ot`, HarfBuzz’s own, or `graphite2`, `wasm`, `harfrust`, a platform engine, or `fallback`. Not the same as a script shaper.
 
-**Base consonant.** The consonant an Indic syllable is built around, which HarfBuzz finds by asking the font’s own `blwf`, `pstf`, `pref` and `vatu` lookups which consonants they would change.
+**Base consonant.** The consonant an Indic syllable is built around, which HarfBuzz finds by asking the font’s own `blwf`, `pstf`, `pref`, and `vatu` lookups which consonants they would change.
 
 **Bidi closure.** Adding the mirrored partners of requested characters, such as ( for ), so right-to-left text still works in a subset.
 
@@ -106,7 +106,7 @@
 
 **Font.** A face at a particular scale, with variation coordinates and synthetic settings, and the font functions that answer questions about its glyphs.
 
-**Font extents.** The ascender, descender and line gap of a font as a whole.
+**Font extents.** The ascender, descender, and line gap of a font as a whole.
 
 **Font functions.** The table of callbacks a font uses to answer questions about glyphs: which glyph a character maps to, advances, origins, extents, outlines. HarfBuzz’s own are hb-ot.
 
@@ -114,7 +114,7 @@
 
 **Foreground color.** The color of the surrounding text, which a color glyph asks for with palette entry 0xFFFF.
 
-**Fuzzer.** A program that feeds a library endless mutated inputs, looking for crashes, hangs and runaway memory. HarfBuzz’s run continuously on OSS-Fuzz.
+**Fuzzer.** A program that feeds a library endless mutated inputs, looking for crashes, hangs, and runaway memory. HarfBuzz’s run continuously on OSS-Fuzz.
 
 **Global bit.** Bit 31 of each glyph’s mask, shared by every feature that is on for the whole run with value 1.
 
@@ -122,7 +122,7 @@
 
 **Glyph assembly.** In MATH, a recipe for building a very large glyph, such as a tall bracket, from pieces and extenders.
 
-**Glyph closure.** The set of glyphs a font can reach from given characters, through cmap, layout, composites, COLR, MATH and VARC. The subsetter computes it in a fixed order of stages.
+**Glyph closure.** The set of glyphs a font can reach from given characters, through cmap, layout, composites, COLR, MATH, and VARC. The subsetter computes it in a fixed order of stages.
 
 **Glyph dependency graph.** A graph of which glyphs a font can turn into or pull in, each edge labeled with the table that causes it: GSUB lookups, composites, COLR, MATH, VARC. HarfBuzz builds it with hb-depend.
 
@@ -164,9 +164,9 @@
 
 **Italics correction.** In MATH, the extra space to add after a slanted glyph before an upright one, so a superscript or the next symbol doesn’t collide with it.
 
-**Jamo.** The letters a Korean syllable is built from: a leading consonant, a vowel and an optional trailing consonant. Unicode encodes them separately and also as 11,172 precomposed syllables.
+**Jamo.** The letters a Korean syllable is built from: a leading consonant, a vowel, and an optional trailing consonant. Unicode encodes them separately and also as 11,172 precomposed syllables.
 
-**Joining type.** A character’s Unicode property saying which sides it joins on: dual-joining, right-joining, left-joining, join-causing, non-joining or transparent.
+**Joining type.** A character’s Unicode property saying which sides it joins on: dual-joining, right-joining, left-joining, join-causing, non-joining, or transparent.
 
 **Kern machine.** HarfBuzz’s loop that applies pair kerning from the `kern` and `kerx` tables and from fallback kerning (`hb_kern_machine_t`).
 
@@ -174,13 +174,13 @@
 
 **Kinzi.** In Myanmar, a NGA with ASAT and virama written above the next consonant; HarfBuzz moves it after the base, like a reph.
 
-**Language.** What a run of text is written in, given to HarfBuzz as a BCP 47 tag such as `tr`, `ur` or `zh-Hant`, built from the subtags in [IANA’s registry](https://www.iana.org/assignments/language-subtag-registry). HarfBuzz ignores case and reads `_` as `-` (`hb-common.cc:167`), and maps the tag to OpenType language system tags: `tr` becomes `'TRK '`.
+**Language.** What a run of text is written in, given to HarfBuzz as a BCP 47 tag such as `tr`, `ur`, or `zh-Hant`, built from the subtags in [IANA’s registry](https://www.iana.org/assignments/language-subtag-registry). HarfBuzz ignores case and reads `_` as `-` (`hb-common.cc:167`), and maps the tag to OpenType language system tags: `tr` becomes `'TRK '`.
 
 **Language system tag.** OpenType’s name for a language under a script, such as `MAR` or `TRK`, with its own features. Like every OpenType tag it is four bytes: most language system tags are three letters padded with a space (`'TRK '`), and a few use all four (`'ZHTM'`, `'HYE0'`). The tags are [listed in the OpenType specification](https://learn.microsoft.com/en-us/typography/opentype/spec/languagetags).
 
 **Lazy loader.** A one-pointer slot on a face that is filled the first time a table or accelerator is asked for, without a lock.
 
-**Leaf.** In VARC, a component drawn from an ordinary outline, in `glyf`, CFF2 or CFF, rather than from more components.
+**Leaf.** In VARC, a component drawn from an ordinary outline, in `glyf`, CFF2, or CFF, rather than from more components.
 
 **Legacy kern table.** `kern`, the kerning table that came before GPOS, in Microsoft’s and Apple’s incompatible versions. HarfBuzz applies it only where GPOS has no `kern` feature, and only under some shapers.
 
@@ -206,15 +206,15 @@
 
 **Min/max extents.** In BASE, the highest and lowest a script’s glyphs reach, for a given language, used to set line spacing.
 
-**Modified combining class.** HarfBuzz’s version of Unicode’s combining class, used to sort marks into the order fonts expect for Hebrew, Arabic, Telugu, Thai and Tibetan.
+**Modified combining class.** HarfBuzz’s version of Unicode’s combining class, used to sort marks into the order fonts expect for Hebrew, Arabic, Telugu, Thai, and Tibetan.
 
 **Modifier combining mark.** One of the Arabic marks, such as hamza above, that Unicode’s Arabic mark rendering (UTR #53) moves to the front of a run of marks.
 
-**morx.** Apple’s extended glyph metamorphosis table: chains of state-machine subtables that substitute, ligate, insert and rearrange glyphs. HarfBuzz runs it in place of GSUB.
+**morx.** Apple’s extended glyph metamorphosis table: chains of state-machine subtables that substitute, ligate, insert, and rearrange glyphs. HarfBuzz runs it in place of GSUB.
 
 **Multiple item variation store.** The variation store VARC uses, whose items are lists of numbers that vary together (all of one component’s values), and whose regions name only the axes they use.
 
-**Name record.** One entry in the `name` table: a string for a name ID in one platform, encoding and language.
+**Name record.** One entry in the `name` table: a string for a name ID in one platform, encoding, and language.
 
 **Native order.** The order a script is read in. HarfBuzz reverses a run into it at the start of shaping if it was given in the other direction, so that lookups see text the way fonts are written for.
 
@@ -224,13 +224,13 @@
 
 **Nominal glyph.** The glyph a font’s `cmap` gives for a character: where shaping starts.
 
-**Normalization.** HarfBuzz’s decomposing, reordering and recomposing of characters before shaping, done against the font: a character is decomposed only if the font has the pieces, and composed only if it has the result.
+**Normalization.** HarfBuzz’s decomposing, reordering, and recomposing of characters before shaping, done against the font: a character is decomposed only if the font has the pieces, and composed only if it has the result.
 
 **Normalization mode.** How far a script shaper wants HarfBuzz to compose: never, or diacritics onto their bases, with or without first decomposing characters the font already has.
 
 **Not-found glyph.** The glyph used for a character the font doesn’t have: `.notdef`, glyph 0, unless the application sets another.
 
-**Null object.** A read-only, empty instance of a table type, usually all zeros. A zero offset, an out-of-range index or a missing table reads as one.
+**Null object.** A read-only, empty instance of a table type, usually all zeros. A zero offset, an out-of-range index, or a missing table reads as one.
 
 **Object graph.** A table being written, seen as objects (subtables) joined by links (offsets). The serializer builds it; the repacker rearranges it.
 
@@ -238,7 +238,7 @@
 
 **Old and new Indic tags.** The two generations of OpenType tag for the nine Indic scripts (`deva`, `dev2`), which expect some glyphs in different orders. `dev3` and the other `3` tags, which HarfBuzz and Core Text support but the OpenType registry doesn’t list, send text to the Universal Shaping Engine.
 
-**Old Hangul.** Korean as written before the twentieth century, whose syllables have no precomposed characters and are drawn from jamo glyphs with `ljmo`, `vjmo` and `tjmo`.
+**Old Hangul.** Korean as written before the twentieth century, whose syllables have no precomposed characters and are drawn from jamo glyphs with `ljmo`, `vjmo`, and `tjmo`.
 
 **Output buffer.** The second sequence a buffer writes to while a step reads the first. It shares memory with the input until it would overtake it, then moves into the positions array.
 
@@ -268,17 +268,17 @@
 
 **PUA fallback.** HarfBuzz’s shaping of Thai for old fonts without a `thai` script, by swapping marks and consonants for the private-use glyphs Windows and Mac fonts once drew them with.
 
-**Ragel.** The state-machine compiler HarfBuzz uses for the grammars that find syllables in Indic, Khmer, Myanmar and USE text.
+**Ragel.** The state-machine compiler HarfBuzz uses for the grammars that find syllables in Indic, Khmer, Myanmar, and USE text.
 
 **Recategorizing.** Replacing marks’ combining classes with the few positional classes fallback mark positioning understands, just before glyphs are mapped.
 
-**Repacker.** The code that reorders, splits and duplicates a table’s objects when its 16-bit offsets overflow, so the table can still be written.
+**Repacker.** The code that reorders, splits, and duplicates a table’s objects when its 16-bit offsets overflow, so the table can still be written.
 
 **Reph.** The form of RA written above the syllable when RA and a virama begin it, moved by the Indic shaper to where the script puts it.
 
 **Required feature.** A feature a language system names by index, whose lookups always run, whatever the application asks for.
 
-**Run.** Text in one font, script, direction and language: what HarfBuzz shapes in one call.
+**Run.** Text in one font, script, direction, and language: what HarfBuzz shapes in one call.
 
 **rustybuzz.** An earlier Rust port of HarfBuzz shaping, built on ttf-parser, now archived; HarfRust started from it.
 
@@ -294,7 +294,7 @@
 
 **Script tag.** OpenType’s four-letter name for a script in a font’s ScriptList, such as `latn` or `dev2`; a few shorter ones are padded with spaces (`'nko '`, <code>'yi&nbsp;&nbsp;'</code>). One Unicode script can have several. The tags are [listed in the OpenType specification](https://learn.microsoft.com/en-us/typography/opentype/spec/scripttags).
 
-**Segment properties.** A buffer’s direction, script and language.
+**Segment properties.** A buffer’s direction, script, and language.
 
 **Serializer.** HarfBuzz’s writer of font tables, `hb_serialize_context_t`: it builds each table as a graph of objects joined by links, shares identical objects, and resolves the offsets at the end.
 
@@ -302,7 +302,7 @@
 
 **sfnt.** The container format of TrueType and OpenType fonts: a header, a directory of tables, and the tables.
 
-**Shape plan.** Everything HarfBuzz decides about a run before seeing its text: the script shaper, the feature masks and the lookups in stages. Made per face, and cached on it.
+**Shape plan.** Everything HarfBuzz decides about a run before seeing its text: the script shaper, the feature masks, and the lookups in stages. Made per face, and cached on it.
 
 **Shaper list.** The ordered list of backends a build has. The first that accepts a face shapes it. `HB_SHAPER_LIST` reorders it.
 
@@ -310,13 +310,13 @@
 
 **Short-circuit.** In normalization, keeping a character the font has without looking at its decomposition.
 
-**Sink.** The last step of a pipe, which stores each item somewhere: a set, a vector or a serializer.
+**Sink.** The last step of a pipe, which stores each item somewhere: a set, a vector, or a serializer.
 
 **Slug.** Eric Lengyel’s method of drawing glyphs directly from their quadratic curves on the GPU, which hb-gpu implements.
 
 **Stage.** A group of lookups run together, between pauses where a script shaper can work on the buffer.
 
-**Standard cluster.** USE’s name for an ordinary syllable: a base with its marks, medials and finals, matched by its grammar.
+**Standard cluster.** USE’s name for an ordinary syllable: a base with its marks, medials, and finals, matched by its grammar.
 
 **Starter.** In normalization, the last character with combining class zero: the one a following mark may compose with.
 
@@ -330,9 +330,9 @@
 
 **Sub-font.** A font whose parent is another font. Questions its own font functions don’t answer go to the parent, rescaled.
 
-**Subset plan.** What the subsetter computes before writing anything: which glyphs, characters, lookups and features survive, and the map from old glyph IDs to new.
+**Subset plan.** What the subsetter computes before writing anything: which glyphs, characters, lookups, and features survive, and the map from old glyph IDs to new.
 
-**Subsetter.** HarfBuzz’s library for cutting a font down to the characters, glyphs and features a document needs, `hb_subset_or_fail`.
+**Subsetter.** HarfBuzz’s library for cutting a font down to the characters, glyphs, and features a document needs, `hb_subset_or_fail`.
 
 **Synthetic bold and slant.** Emboldening and shearing applied by the font object to whatever its font functions report, for families without a real bold or italic.
 
@@ -348,9 +348,9 @@
 
 **TrueType Collection (TTC).** A file holding several fonts, each with its own table directory, which can share tables.
 
-**Unicode funcs.** The table of callbacks a buffer uses to ask about characters: general category, combining class, mirroring, script, composition and decomposition.
+**Unicode funcs.** The table of callbacks a buffer uses to ask about characters: general category, combining class, mirroring, script, composition, and decomposition.
 
-**Unicode properties.** Sixteen bits HarfBuzz keeps on each glyph for the whole of shaping: its general category, ignorable, hidden and continuation bits, and a byte whose meaning depends on the category.
+**Unicode properties.** Sixteen bits HarfBuzz keeps on each glyph for the whole of shaping: its general category, ignorable, hidden, and continuation bits, and a byte whose meaning depends on the category.
 
 **Universal Shaping Engine (USE).** Microsoft’s shaping model for scripts that have no shaper of their own, driven by Unicode character properties: in effect the Indic model with most of its script-specific rules taken out.
 
@@ -376,7 +376,7 @@
 
 **Vowel constraints.** Microsoft’s list of sequences, such as an independent vowel followed by a vowel sign, that would look like another letter. HarfBuzz breaks them with a dotted circle, against spoofing.
 
-**Whence.** Where a serializer link’s offset is counted from: the start of the parent object (head), its end (tail) or the start of the table (absolute).
+**Whence.** Where a serializer link’s offset is counted from: the start of the parent object (head), its end (tail), or the start of the table (absolute).
 
 **Work budget.** The number of operations HarfBuzz will spend drawing or painting, 2²⁴ per glyph, so that no font can make it draw for ever.
 

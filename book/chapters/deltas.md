@@ -4,7 +4,7 @@ A position in the design space, as [the previous chapter](design-space.html) sho
 
 ## Regions and scalars
 
-A delta belongs to a **region**: for each axis, a start, a peak and an end, in normalized coordinates. At the peak, the delta counts in full. Between the start and the peak, and between the peak and the end, it counts in proportion. Outside the start and end, it doesn’t count at all. On one axis, that weight, the **scalar**, is a tent. On several, it’s the product of the tents, so a region that peaks at (+1, +1) counts in full only at that corner.
+A delta belongs to a **region**: for each axis, a start, a peak, and an end, in normalized coordinates. At the peak, the delta counts in full. Between the start and the peak, and between the peak and the end, it counts in proportion. Outside the start and end, it doesn’t count at all. On one axis, that weight, the **scalar**, is a tent. On several, it’s the product of the tents, so a region that peaks at (+1, +1) counts in full only at that corner.
 
 Here is the tent, `VarRegionAxis::evaluate` (`hb-ot-layout-common.hh:2549`):
 
@@ -36,16 +36,16 @@ float evaluate (int coord) const
 }
 ```
 
-The comparisons are on 2.14 integers, and there is one division, in floating point. A peak of 0 means the region doesn’t depend on this axis, so the factor is 1. The checks for a region whose start, peak and end are out of order, or that crosses 0, look like robustness code, but they are exactly what the specification says to do: such an axis is ignored, which means a factor of 1, not 0. The `TODO` is still there: those checks are made every time a region is evaluated, not once when the table is loaded.
+The comparisons are on 2.14 integers, and there is one division, in floating point. A peak of 0 means the region doesn’t depend on this axis, so the factor is 1. The checks for a region whose start, peak, and end are out of order, or that crosses 0, look like robustness code, but they are exactly what the specification says to do: such an axis is ignored, which means a factor of 1, not 0. The `TODO` is still there: those checks are made every time a region is evaluated, not once when the table is loaded.
 
-The test font `var.ttf` has masters at weights 100, 400, 650 and 900, and at width 75. Its HVAR table, which holds the deltas for advances, has four regions: one for the light master, peaking at −1; one for each of the two heavier masters; and one for the narrow master.
+The test font `var.ttf` has masters at weights 100, 400, 650, and 900, and at width 75. Its HVAR table, which holds the deltas for advances, has four regions: one for the light master, peaking at −1; one for each of the two heavier masters; and one for the narrow master.
 
 ```table
 font: variations/var.ttf
 table: HVAR
 ```
 
-The 650 master is an **intermediate** one: its region on the weight axis starts at 0, peaks at 0.5 and ends at 1, rather than running all the way from 0 to the end. Without it, the advances would change in one straight line from 400 to 900. With it, there are two:
+The 650 master is an **intermediate** one: its region on the weight axis starts at 0, peaks at 0.5, and ends at 1, rather than running all the way from 0 to the end. Without it, the advances would change in one straight line from 400 to 900. With it, there are two:
 
 ```shape
 variations/var.ttf  I  --variations=wght=400
@@ -61,7 +61,7 @@ variations/var.ttf  I  --variations=wght=900
 
 Regions and deltas are kept in an **item variation store**, a structure shared by every variation table except gvar. It has a list of regions, and one or more `VarData` tables of rows. Each row is one **item**, such as one glyph’s advance or one metric, with a delta for each region the `VarData` uses. To save space, the first columns of a row can be 16-bit and the rest 8-bit, or, with the `LONG_WORDS` bit, 32-bit and 16-bit. An item is addressed by two numbers, *outer* (which `VarData`) and *inner* (which row).
 
-`VarData::_get_delta` (`hb-ot-layout-common.hh:3073`) walks a row in its runs of long, short and byte values, multiplying each by its region’s scalar and skipping regions whose scalar is 0. A `VarData` with no regions returns at once, with a comment that “This is quite common.”
+`VarData::_get_delta` (`hb-ot-layout-common.hh:3073`) walks a row in its runs of long, short, and byte values, multiplying each by its region’s scalar and skipping regions whose scalar is 0. A `VarData` with no regions returns at once, with a comment that “This is quite common.”
 
 ### No rounding in the store
 
@@ -149,7 +149,7 @@ variations/var.ttf  --get-metric=xhgt  --variations=wght=400
 variations/var.ttf  --get-metric=xhgt  --variations=wght=900
 ```
 
-The tags of `hb_ot_metrics_tag_t`, the public API for these values, *are* the MVAR tags, so `hb-ot-metrics.cc` can look the variation up directly. There is one difference from the specification. MVAR’s `hasc`, `hdsc` and `hlgp` tags vary the typographic ascender, descender and line gap in the OS/2 table. HarfBuzz reports the `hhea` values instead when the font doesn’t set OS/2’s `USE_TYPO_METRICS` flag, and it applies the same MVAR deltas to them (`hb-ot-metrics.cc:85`). The research for this chapter checked it on a patched test font: an `hhea` ascender of 1000 with a `hasc` delta of 765 gave 1765.
+The tags of `hb_ot_metrics_tag_t`, the public API for these values, *are* the MVAR tags, so `hb-ot-metrics.cc` can look the variation up directly. There is one difference from the specification. MVAR’s `hasc`, `hdsc`, and `hlgp` tags vary the typographic ascender, descender, and line gap in the OS/2 table. HarfBuzz reports the `hhea` values instead when the font doesn’t set OS/2’s `USE_TYPO_METRICS` flag, and it applies the same MVAR deltas to them (`hb-ot-metrics.cc:85`). The research for this chapter checked it on a patched test font: an `hhea` ascender of 1000 with a `hasc` delta of 765 gave 1765.
 
 ## Everyone else
 
@@ -181,5 +181,5 @@ VARC uses a variant, the **multiple item variation store**, whose items are list
 * A delta’s weight is the product of a tent on each axis. Regions that are malformed count as 1, which is what the specification asks for.
 * The store returns unrounded floats. Advances are rounded in font units, before scaling; metrics and device deltas after.
 * Advances come from HVAR when there is one, and from gvar’s phantom points otherwise. HarfBuzz trusts HVAR even when it disagrees with the outlines.
-* MVAR’s ascender, descender and line gap deltas are also applied to `hhea`’s values.
+* MVAR’s ascender, descender, and line gap deltas are also applied to `hhea`’s values.
 * Region scalars are cached per font and position, in atomics, so shaping calls can share them without locks.

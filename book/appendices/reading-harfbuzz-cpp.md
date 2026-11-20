@@ -1,6 +1,6 @@
 # Reading HarfBuzz’s C++
 
-HarfBuzz has a C API, but it is written in C++, and in a dialect of its own. It doesn’t use the standard library’s containers. It has its own vector, set and hash map, a small library of iterators that are chained together with `|`, and a set of macros and function objects that turn up on almost every page of the source. A programmer who knows C++ well can still stall on a line like `+ hb_iter (intersection) | hb_filter (glyphset, hb_second)`.
+HarfBuzz has a C API, but it is written in C++, and in a dialect of its own. It doesn’t use the standard library’s containers. It has its own vector, set, and hash map, a small library of iterators that are chained together with `|`, and a set of macros and function objects that turn up on almost every page of the source. A programmer who knows C++ well can still stall on a line like `+ hb_iter (intersection) | hb_filter (glyphset, hb_second)`.
 
 This appendix is the key to that dialect, so that chapters quoting the source can link here instead of explaining. Idioms that belong to one subject, such as the structs laid over a font’s bytes, are explained in that subject’s chapter, and [listed](#covered-elsewhere) at the end. Everything here lives in headers that `hb.hh` includes for every file (`hb.hh:572`).
 
@@ -8,11 +8,11 @@ This appendix is the key to that dialect, so that chapters quoting the source ca
 
 Three rules explain most of what is unusual.
 
-**No STL containers.** HarfBuzz’s own `AGENTS.md` says so: “Do not introduce STL containers in library code.” The code still uses type traits, `std::forward`, `std::move` and `std::initializer_list`, but not `std::vector`, `std::map` and the rest.
+**No STL containers.** HarfBuzz’s own `AGENTS.md` says so: “Do not introduce STL containers in library code.” The code still uses type traits, `std::forward`, `std::move`, and `std::initializer_list`, but not `std::vector`, `std::map`, and the rest.
 
 **No exceptions.** The library is compiled with `-fno-exceptions` and `-fno-rtti` (in the top-level Meson build file). Nothing throws. Instead a container that fails to allocate remembers it, and `in_error ()` becomes true. Objects that own several containers, such as buffers, keep a flag called **`successful`** that goes false on the first failure and stays false.
 
-**All memory through `hb_malloc`.** Every allocation goes through `hb_malloc`, `hb_calloc`, `hb_realloc` and `hb_free`. They are the C library’s functions unless HarfBuzz is built with `HB_CUSTOM_MALLOC` and the four `hb_*_impl` functions are supplied (`hb.hh:547`). The fuzzers use exactly that: `failing-alloc.c` fails one allocation in sixteen at random, so the out-of-memory paths are run all the time. (The four are public API since 11.0.0, “Not of much use to clients”, says `hb-common.h`.)
+**All memory through `hb_malloc`.** Every allocation goes through `hb_malloc`, `hb_calloc`, `hb_realloc`, and `hb_free`. They are the C library’s functions unless HarfBuzz is built with `HB_CUSTOM_MALLOC` and the four `hb_*_impl` functions are supplied (`hb.hh:547`). The fuzzers use exactly that: `failing-alloc.c` fails one allocation in sixteen at random, so the out-of-memory paths are run all the time. (The four are public API since 11.0.0, “Not of much use to clients”, says `hb-common.h`.)
 
 Together these give the pattern that most container code follows: **carry on, check once**. Operations on a container that has failed do nothing and return quietly, so a long run of them needs only one check at the end. Here is the subsetter building the map from old glyph IDs to new ones, trimmed (`hb-subset-plan.cc:548`):
 
@@ -102,11 +102,11 @@ The arrays in a font’s tables, `ArrayOf` and `SortedArrayOf`, are a different 
 
 ## hb_set_t
 
-**`hb_set_t`** is a set of 32-bit unsigned integers (`hb-set.hh:176`). It is the same type as the public `hb_set_t` that `hb_set_create` returns, which is why it carries an object header, but inside the library it is mostly made on the stack. Its values are glyph IDs more than anything else, but also code points, lookup and feature indices, name IDs and table tags.
+**`hb_set_t`** is a set of 32-bit unsigned integers (`hb-set.hh:176`). It is the same type as the public `hb_set_t` that `hb_set_create` returns, which is why it carries an object header, but inside the library it is mostly made on the stack. Its values are glyph IDs more than anything else, but also code points, lookup and feature indices, name IDs, and table tags.
 
 It is built in layers. `hb_set_t` wraps `hb_sparseset_t`, which wraps `hb_bit_set_invertible_t`, which wraps **`hb_bit_set_t`**, the real data structure (`hb-bit-set.hh:34`). That is a list of **pages**. A page (`hb_bit_page_t`, `hb-bit-page.hh:115`) is 512 bits, eight 64-bit words, holding 512 consecutive values, with a cached count of how many are set. The set keeps its pages in the order it made them, and beside them a `page_map`: a sorted vector of (major, index) pairs, where a value’s **major** is the value divided by 512 (`hb-bit-set.hh:80`). Finding a value’s page is a binary search of the page map, after a check of the page found last time (`page_for`, `:1171`).
 
-This suits glyph IDs well. The glyphs a lookup or a subset touches tend to come in runs, so a few pages hold them: every glyph of a 1,000-glyph font fits in two. Once the page is found, membership is a shift and a mask, and union, intersection and the rest work 64 bits at a time. Code points are much the same, since text in one script uses a few blocks.
+This suits glyph IDs well. The glyphs a lookup or a subset touches tend to come in runs, so a few pages hold them: every glyph of a 1,000-glyph font fits in two. Once the page is found, membership is a shift and a mask, and union, intersection, and the rest work 64 bits at a time. Code points are much the same, since text in one script uses a few blocks.
 
 Sets are everywhere because much of what HarfBuzz computes is a set of glyphs: the glyphs a lookup’s coverage holds, the glyphs a substitution can reach (the **closure**), the lookups a set of features uses. The subsetter is built on them. Of the 69 members of a subset plan, 30 are sets or maps (`hb-subset-plan-member-list.hh`). The shaping loop itself doesn’t use them: when it needs to ask “might this lookup touch this glyph?” fast, it uses the much smaller set digest, which is not a set (see [GSUB](gsub.html#three-filters-before-any-real-work)).
 
@@ -121,7 +121,7 @@ What to watch for:
 
 ## hb_map_t and hb_hashmap_t
 
-**`hb_hashmap_t<K, V>`** is a hash table with open addressing (`hb-map.hh:43`). The items live in one array whose size is a power of two. A search starts at the key’s hash modulo a prime just below that size, and steps on by 1, 2, 3 slots and so on (`fetch_item`, `:390`). A deleted item stays behind, marked as no longer live, so that searches still pass over it. The table grows when two-thirds of its slots have been used.
+**`hb_hashmap_t<K, V>`** is a hash table with open addressing (`hb-map.hh:43`). The items live in one array whose size is a power of two. A search starts at the key’s hash modulo a prime just below that size, and steps on by 1, 2, 3 slots, and so on (`fetch_item`, `:390`). A deleted item stays behind, marked as no longer live, so that searches still pass over it. The table grows when two-thirds of its slots have been used.
 
 **`hb_map_t`** is `hb_hashmap_t<hb_codepoint_t, hb_codepoint_t, true>` (`:605`), and, like the set, it is also the public type that `hb_map_create` returns. The subsetter’s glyph map, from old glyph IDs to new ones, is one; so are its maps of lookup and feature indices. Larger values use `hb_hashmap_t` directly: the subset plan maps each script’s index to a set of language systems with `hb_hashmap_t<unsigned, hb::unique_ptr<hb_set_t>>`.
 
@@ -131,7 +131,7 @@ What to watch for:
 | `get (k)`, `m[k]`, `m (k)` | the value, or a default if there is none |
 | `has (k)`, `has (k, &vp)` | whether the key is there, and a pointer to its value |
 | `del (k)` | removes |
-| `iter ()`, `keys ()`, `values ()` | iterators over pairs, keys or values |
+| `iter ()`, `keys ()`, `values ()` | iterators over pairs, keys, or values |
 
 What to watch for:
 
@@ -177,10 +177,10 @@ The vocabulary:
 | `hb_range (end)`, `hb_range (start, end, step)` | source | numbers, as an iterator |
 | `hb_iota (start, step)` | source | numbers without end |
 | `hb_take (n)`, `hb_concat (a, b)` | stage, source | the first n items; one iterator after another |
-| `hb_sink (s)` | end | writes each item with `s << item`, into a vector, set, map or array |
+| `hb_sink (s)` | end | writes each item with `s << item`, into a vector, set, map, or array |
 | `hb_apply (f)` | end | calls `f (item)` for each item |
 | `hb_reduce (f, init)` | end | folds the items into one value |
-| `hb_all`, `hb_any`, `hb_none` | function | whether every, some or no item matches |
+| `hb_all`, `hb_any`, `hb_none` | function | whether every, some, or no item matches |
 
 `hb_pair_t` is the pair the zips make, with `.first` and `.second`; `hb_codepoint_pair_t` is a pair of `hb_codepoint_t`s. `hb_first` and `hb_second` take the halves of a pair, and `hb_identity` returns what it is given.
 
@@ -192,7 +192,7 @@ The pipe stages call what they are given through three helpers, which accept mor
 
 * `hb_has (p, v)` calls `p.has (v)` if `p` has one, and `p (v)` otherwise. So a set or a map can be a filter.
 * `hb_get (f, v)` calls `f.get (v)` if there is one, then `f (v)`, then `f[v]`. So a map can be a mapping.
-* `hb_invoke` calls lambdas, function objects, pointers to member functions (`&FeatureName::get_feature_type`) and pointers to data members alike.
+* `hb_invoke` calls lambdas, function objects, pointers to member functions (`&FeatureName::get_feature_type`), and pointers to data members alike.
 
 Some function objects can also be given only their last argument, to make a function of the rest. `hb_add (this)` is “add `this` to whatever comes”, and `hb_zip (b)` on the right of a pipe zips what comes from the left with `b`. Here is the closure of an alternate substitution, finding the glyphs it can produce (`OT/Layout/GSUB/AlternateSubstFormat1.hh:50`):
 
@@ -275,9 +275,9 @@ A good pipe to read next is in [the Universal Shaping Engine](universal-shaping-
 
 **`HB_INTERNAL`** (`hb.hh:296`) gives a declaration hidden visibility, so it isn’t exported from the shared library. It marks functions and data that cross files inside HarfBuzz but are not API.
 
-**`hb_min`, `hb_max` and `hb_clamp`** (`hb-algs.hh:877`) are function objects, like the pipe stages. They take arguments of two different types on purpose, so that the compiler can warn when signed and unsigned integers are compared, as the comment above them explains. `hb_clamp (x, lo, hi)` is `hb_min (hb_max (x, lo), hi)`.
+**`hb_min`, `hb_max`, and `hb_clamp`** (`hb-algs.hh:877`) are function objects, like the pipe stages. They take arguments of two different types on purpose, so that the compiler can warn when signed and unsigned integers are compared, as the comment above them explains. `hb_clamp (x, lo, hi)` is `hb_min (hb_max (x, lo), hi)`.
 
-**`hb_memcpy`, `hb_memset` and `hb_memcmp`** wrap the C functions and return at once for a length of zero, because the C functions mustn’t be given a null pointer even then (“It’s illegal to pass NULL to memset(), even if n is zero”, `hb-algs.hh:1255`). HarfBuzz’s `AGENTS.md` asks for them in place of the C functions. `hb_swap` swaps.
+**`hb_memcpy`, `hb_memset`, and `hb_memcmp`** wrap the C functions and return at once for a length of zero, because the C functions mustn’t be given a null pointer even then (“It’s illegal to pass NULL to memset(), even if n is zero”, `hb-algs.hh:1255`). HarfBuzz’s `AGENTS.md` asks for them in place of the C functions. `hb_swap` swaps.
 
 **`hb_codepoint_t`** is a `uint32_t` (`hb-common.h:123`). It holds a Unicode code point or a glyph ID, depending on where it is: in a buffer, the [content type](buffers.html#content-types) says which. **`HB_CODEPOINT_INVALID`** is `(hb_codepoint_t) -1` (`hb-common.h:132`), and `HB_SET_VALUE_INVALID` and `HB_MAP_VALUE_INVALID` are other names for it.
 
@@ -287,7 +287,7 @@ A good pipe to read next is in [the Universal Shaping Engine](universal-shaping-
 
 **`ARRAY_LENGTH (a)`** is the number of elements in a C array. **`HB_SCOPE_GUARD (stmt)`** runs `stmt` when the scope ends, however it ends: `HB_SCOPE_GUARD (fclose (fp));` (`hb-blob.cc:741`). **`hb::unique_ptr`** and **`hb::shared_ptr`** (`hb-cplusplus.hh`) hold a HarfBuzz object and destroy it, or release a reference, when they go out of scope.
 
-**`_or_fail`** at the end of a name means the function says when it fails. In the API, `hb_blob_create` returns the empty blob when it can’t make one, but `hb_blob_create_or_fail` returns `NULL`; `hb_font_draw_glyph_or_fail` returns `false` when there is nothing to draw. [Blobs, faces and lazy tables](blobs-faces-and-lazy-tables.html) covers the empty objects that the plain versions return. Inside the library, `push_or_fail` is the same idea.
+**`_or_fail`** at the end of a name means the function says when it fails. In the API, `hb_blob_create` returns the empty blob when it can’t make one, but `hb_blob_create_or_fail` returns `NULL`; `hb_font_draw_glyph_or_fail` returns `false` when there is nothing to draw. [Blobs, faces, and lazy tables](blobs-faces-and-lazy-tables.html) covers the empty objects that the plain versions return. Inside the library, `push_or_fail` is the same idea.
 
 `#ifndef HB_NO_…` blocks are compile-time switches. A build that defines `HB_NO_BEYOND_64K`, for instance, leaves out the wider subtable formats, and with them the code in `SingleSubst::serialize` that chooses them. The [Compile-time configuration](compile-time-configuration.html) appendix lists the switches. `HB_EXPERIMENTAL_API` guards API that isn’t stable yet.
 
@@ -301,7 +301,7 @@ A good pipe to read next is in [the Universal Shaping Engine](universal-shaping-
 | `Null`, `Crap` | [Fonts as bytes](fonts-as-bytes.html#null-objects) |
 | dispatch and contexts | [Fonts as bytes](fonts-as-bytes.html#dispatch-contexts) |
 | `hb_barrier`, `TRACE_SANITIZE`, `return_trace`, the `HB_DEBUG_*` macros | [Trust nothing: the sanitizer](trust-nothing-the-sanitizer.html) |
-| lazy loaders, `hb_atomic_t`, `hb_object_header_t`, reference counting | [Blobs, faces and lazy tables](blobs-faces-and-lazy-tables.html) |
+| lazy loaders, `hb_atomic_t`, `hb_object_header_t`, reference counting | [Blobs, faces, and lazy tables](blobs-faces-and-lazy-tables.html) |
 | the X-macro lists (`HB_FONT_FUNC_IMPLEMENT`, `HB_SHAPER_IMPLEMENT`) | [Fonts and font functions](fonts-and-font-functions.html#one-list-of-callbacks), [hb_shape and its backends](hb_shape-and-its-backends.html#the-shaper-list) |
 | `HB_BUFFER_ALLOCATE_VAR` and the buffer’s scratch bytes | [Buffers](buffers.html#eight-bytes-of-scratch-space) |
 | the set digest | [GSUB](gsub.html#three-filters-before-any-real-work) |
@@ -330,4 +330,4 @@ A good pipe to read next is in [the Universal Shaping Engine](universal-shaping-
 * `hb_array_t` is a view and an iterator; `sub_array` with a count pointer matches the shape of HarfBuzz’s array-filling API.
 * `hb_set_t` is a bit set in 512-bit pages, made for runs of glyph IDs, and it can be inverted to mean “everything except”.
 * `hb_map_t` returns `-1` for a missing key; iteration is in hash order.
-* A pipe is a chain of lazy iterators: `a | f` is `f (a)`, and nothing runs until a sink, an `apply` or a loop pulls. Sets and maps can stand in for functions.
+* A pipe is a chain of lazy iterators: `a | f` is `f (a)`, and nothing runs until a sink, an `apply`, or a loop pulls. Sets and maps can stand in for functions.

@@ -2,9 +2,9 @@
 
 Text is stored as characters, and it is drawn as glyphs. If every character had exactly one glyph, drawing text would be a table lookup: find each character in the font’s `cmap`, draw the glyph it names, move along by the glyph’s width, repeat. For a large part of the world’s writing that model fails at once, and even in English it fails as soon as a font has an *fi* ligature. Shaping is the work that replaces that table lookup.
 
-This chapter sets up the words the rest of the book uses for the two sides of that work, and for what connects them: characters and code points, glyphs and glyph IDs, clusters, runs, advances and offsets, script, direction, language and features. Then it shows, one by one, the ways in which characters and glyphs fail to line up. It ends with where the rules for shaping live, and with the history of the engines that run them, from Uniscribe and Apple’s ATSUI to the program this book is about.
+This chapter sets up the words the rest of the book uses for the two sides of that work, and for what connects them: characters and code points, glyphs and glyph IDs, clusters, runs, advances and offsets, script, direction, language, and features. Then it shows, one by one, the ways in which characters and glyphs fail to line up. It ends with where the rules for shaping live, and with the history of the engines that run them, from Uniscribe and Apple’s ATSUI to the program this book is about.
 
-The examples come from one small test font, `shaping.ttf`, built from `fonts/why-shaping-exists/shaping.fea`. It has a few Latin glyphs (with an *fi* ligature and a combining acute), the Arabic letters beh, lam and alef in their joining forms, and the Devanagari consonants KA and SSA with the vowel sign I and a conjunct. Its glyphs are boxes: what matters is their names, their widths, the `cmap` and the layout tables. Every shaping result on this page was produced by running HarfBuzz {{hb}} on that font when the page was built.
+The examples come from one small test font, `shaping.ttf`, built from `fonts/why-shaping-exists/shaping.fea`. It has a few Latin glyphs (with an *fi* ligature and a combining acute), the Arabic letters beh, lam, and alef in their joining forms, and the Devanagari consonants KA and SSA with the vowel sign I and a conjunct. Its glyphs are boxes: what matters is their names, their widths, the `cmap`, and the layout tables. Every shaping result on this page was produced by running HarfBuzz {{hb}} on that font when the page was built.
 
 ## Characters and code points
 
@@ -71,7 +71,7 @@ The *e* is 500 units wide. The acute has an advance of 0, and an offset of −25
 
 ## Runs, and the three things HarfBuzz must be told
 
-As the [introduction](introduction.html) says, HarfBuzz shapes a **run**: text in one font, with one script, one direction and one language. Those three are the buffer’s **segment properties** (`hb-buffer.h:211`):
+As the [introduction](introduction.html) says, HarfBuzz shapes a **run**: text in one font, with one script, one direction, and one language. Those three are the buffer’s **segment properties** (`hb-buffer.h:211`):
 
 ```c++
 typedef struct hb_segment_properties_t {
@@ -84,9 +84,9 @@ typedef struct hb_segment_properties_t {
 
 The **script** is the writing system: Latin, Arabic, Devanagari. HarfBuzz’s `hb_script_t` values are the four-letter ISO 15924 codes (`Latn`, `Arab`, `Deva`) packed into an integer. OpenType names scripts with tags of its own, which are not always the same: the newer Devanagari tag is `dev2`, for example, and HarfBuzz translates between the two in `hb-ot-tag.cc`. The script decides which **script shaper** HarfBuzz uses, the part of HarfBuzz that knows the script’s rules, and which part of the font’s tables apply.
 
-The **direction** is left to right, right to left, top to bottom or bottom to top. It is the direction the glyphs go on the page, and HarfBuzz returns glyphs in that order: for a right-to-left run, the first glyph in the output is the rightmost, which comes from the *last* character.
+The **direction** is left to right, right to left, top to bottom, or bottom to top. It is the direction the glyphs go on the page, and HarfBuzz returns glyphs in that order: for a right-to-left run, the first glyph in the output is the rightmost, which comes from the *last* character.
 
-The **language** is a BCP 47 tag, such as `en`, `tr` or `ur`, built from the codes in [IANA’s language subtag registry](https://www.iana.org/assignments/language-subtag-registry). HarfBuzz maps it to an OpenType language system tag, from [OpenType’s own list](https://learn.microsoft.com/en-us/typography/opentype/spec/languagetags) (`tr` becomes `TRK`), and the font can then use different rules for it.
+The **language** is a BCP 47 tag, such as `en`, `tr`, or `ur`, built from the codes in [IANA’s language subtag registry](https://www.iana.org/assignments/language-subtag-registry). HarfBuzz maps it to an OpenType language system tag, from [OpenType’s own list](https://learn.microsoft.com/en-us/typography/opentype/spec/languagetags) (`tr` becomes `TRK`), and the font can then use different rules for it.
 
 HarfBuzz can’t tell the language from the text: Turkish and English are written with the same letters. The application has to say, and it usually knows from the document. In HTML, the [`lang` attribute](https://html.spec.whatwg.org/multipage/dom.html#the-lang-and-xml:lang-attributes) says what language an element’s text is in, and everything inside the element inherits it, so `<html lang="tr">` covers a whole page and `<span lang="en">` one phrase in it. Word processors and layout programs keep a language with each run of text, which they need for spelling and hyphenation as well. Failing those, there are the user’s own language settings. CSS can also name the OpenType language system itself, with [`font-language-override`](https://www.w3.org/TR/css-fonts-4/#font-language-override-prop), for when the font’s tag isn’t the one the language would map to; HarfBuzz has its own way of doing the same ([Choosing a script shaper](choosing-a-script-shaper.html#naming-the-tags-directly)).
 
@@ -98,7 +98,7 @@ shaping.ttf  ببب  --script=latn
 shaping.ttf  ببب  --script=latn  --direction=rtl
 ```
 
-As Arabic, the three behs take their initial, medial and final forms, and come out right to left. Called Latin, they get the default shaper, which knows nothing about joining, and are drawn left to right as three isolated letters. Setting the direction puts them in the right order, but they still don’t join: that needs the Arabic shaper, and only the script chooses it.
+As Arabic, the three behs take their initial, medial, and final forms, and come out right to left. Called Latin, they get the default shaper, which knows nothing about joining, and are drawn left to right as three isolated letters. Setting the direction puts them in the right order, but they still don’t join: that needs the Arabic shaper, and only the script chooses it.
 
 The language works on a smaller scale. In Turkish, the dot on the *i* tells it apart from the dotless *ı*, and an *fi* ligature that swallows the dot would turn one letter into the other. So the test font, as many real fonts do, has no *fi* ligature for Turkish:
 
@@ -113,7 +113,7 @@ Finding the runs is not HarfBuzz’s job. An application splits a paragraph wher
 
 A font’s layout tables are organized into **features**, each named by a four-letter tag: `liga` for standard ligatures, `kern` for kerning, `init` for initial forms, `smcp` for small capitals. A feature is a list of lookups, the actual rules. The font decides what each feature does. The shaping engine decides which features to apply, to which glyphs, and in what order.
 
-Some features are on by default for every script, like `liga`, `kern` and `mark`. Some are part of a script’s shaping and are applied by its shaper to particular glyphs only, like Arabic’s `init`, `medi` and `fina`. Others are off unless an application asks for them, like `smcp`, or the stylistic alternates the GSUB chapter showed. An application asks with an `hb_feature_t` (`hb-common.h:437`):
+Some features are on by default for every script, like `liga`, `kern`, and `mark`. Some are part of a script’s shaping and are applied by its shaper to particular glyphs only, like Arabic’s `init`, `medi`, and `fina`. Others are off unless an application asks for them, like `smcp`, or the stylistic alternates the GSUB chapter showed. An application asks with an `hb_feature_t` (`hb-common.h:437`):
 
 ```c++
 typedef struct hb_feature_t {
@@ -153,7 +153,7 @@ shaping.ttf  لا
 
 ### One character, many shapes: joining and contextual forms
 
-The shape of an Arabic letter depends on whether it joins the letter before it, the letter after it, both or neither. Beh joins on both sides, and has four forms:
+The shape of an Arabic letter depends on whether it joins the letter before it, the letter after it, both, or neither. Beh joins on both sides, and has four forms:
 
 ```shape
 shaping.ttf  ب
@@ -174,7 +174,7 @@ to: end table GSUB
 
 The buffer is still in logical order during GSUB. HarfBuzz reverses it into visual order only near the end of shaping, which is why the trace and the result above run in opposite directions.
 
-Arabic is the clearest case, but not the only one. Syriac, N’Ko, Mongolian and many other scripts join, and a Latin font can use contextual alternates (`calt`) for the same kind of effect, as the [GSUB chapter](gsub.html#an-input-buffer-and-an-output-buffer) showed.
+Arabic is the clearest case, but not the only one. Syriac, N’Ko, Mongolian, and many other scripts join, and a Latin font can use contextual alternates (`calt`) for the same kind of effect, as the [GSUB chapter](gsub.html#an-input-buffer-and-an-output-buffer) showed.
 
 ### Order on the page, order in the text: reordering
 
@@ -185,7 +185,7 @@ shaping.ttf  कि
 shaping.ttf  क्षि
 ```
 
-In the first line, KA then I becomes the glyph for I then the glyph for KA. In the second, KA, virama and SSA form the conjunct K.SSA, and the I goes before the whole conjunct. Both glyphs in each line have cluster 0: once glyphs have been reordered, the only honest thing to say is that they all came from the whole syllable.
+In the first line, KA then I becomes the glyph for I then the glyph for KA. In the second, KA, virama, and SSA form the conjunct K.SSA, and the I goes before the whole conjunct. Both glyphs in each line have cluster 0: once glyphs have been reordered, the only honest thing to say is that they all came from the whole syllable.
 
 Again the font doesn’t do the moving. The Indic shaper finds the syllables, works out which consonant is the base, and moves the vowel sign before it, all before the font’s lookups run, then adjusts its position again after the basic features have formed conjuncts and half forms (`initial_reordering_consonant_syllable`, `hb-ot-shaper-indic.cc:463`, and `final_reordering_syllable_indic`, `:999`):
 
@@ -260,9 +260,9 @@ Everything above needed two kinds of knowledge. Some of it is about the font: wh
 
 There have been three answers to the question of where the second kind should live.
 
-**In the engine.** OpenType keeps the font’s knowledge in the font and leaves the script’s knowledge to the shaping engine. A font says what `init` does to a beh. The engine decides which behs get `init`. Microsoft documents what its engine does for each script, in its specifications for developing OpenType fonts for Arabic, Devanagari and the rest, and font developers write their fonts to match. The cost is that every engine has to know every script, and has to know it the same way.
+**In the engine.** OpenType keeps the font’s knowledge in the font and leaves the script’s knowledge to the shaping engine. A font says what `init` does to a beh. The engine decides which behs get `init`. Microsoft documents what its engine does for each script, in its specifications for developing OpenType fonts for Arabic, Devanagari, and the rest, and font developers write their fonts to match. The cost is that every engine has to know every script, and has to know it the same way.
 
-**In the font.** Apple’s layout tables, now called AAT, put everything in the font. The `morx` table holds state machines that walk along the glyphs and change, insert, ligate or rearrange them. A font for Devanagari carries its own reordering rules. The engine needs no knowledge of any script, but every font has to contain all of it.
+**In the font.** Apple’s layout tables, now called AAT, put everything in the font. The `morx` table holds state machines that walk along the glyphs and change, insert, ligate, or rearrange them. A font for Devanagari carries its own reordering rules. The engine needs no knowledge of any script, but every font has to contain all of it.
 
 **In the font, as a program.** SIL’s Graphite also puts the rules in the font, written in a language of its own and compiled into tables that the Graphite engine runs.
 
@@ -272,13 +272,13 @@ HarfBuzz implements all three. Its OpenType shaping has a script shaper for each
 
 HarfBuzz comes out of a particular history, and it still shows in the code. What follows is only an outline, kept to what the HarfBuzz source and its documents bear out, or what is well known.
 
-### Apple: GX, AAT and ATSUI
+### Apple: GX, AAT, and ATSUI
 
 TrueType began at Apple. Apple’s QuickDraw GX added layout tables to it, in which the font carries its own rules as state machines: the `mort` table, later extended as `morx`, with `kern` and later `kerx` for positioning. When GX was retired, its font technology lived on as Apple Advanced Typography. On Mac OS the system API for laying out Unicode text with those fonts was ATSUI, Apple Type Services for Unicode Imaging, later replaced by Core Text. AAT fonts are still found mostly on Apple’s systems, as the HarfBuzz user manual notes.
 
 ### Microsoft and Adobe: OpenType and Uniscribe
 
-Microsoft took the other road. Its TrueType Open, developed further with Adobe as OpenType, added the `GSUB`, `GPOS` and `GDEF` tables, which describe *what* a font can do but leave *when* to the engine. On Windows, that engine was Uniscribe, the system’s script processor, with a shaping engine for each family of complex scripts, and later DirectWrite.
+Microsoft took the other road. Its TrueType Open, developed further with Adobe as OpenType, added the `GSUB`, `GPOS`, and `GDEF` tables, which describe *what* a font can do but leave *when* to the engine. On Windows, that engine was Uniscribe, the system’s script processor, with a shaping engine for each family of complex scripts, and later DirectWrite.
 
 Because the script knowledge lived in Uniscribe, Uniscribe’s behavior became, in practice, part of the specification. Fonts were made and tested on Windows, so they worked with what Uniscribe did, including where it differed from what the documents said. Any other engine that wanted those fonts to work had to find out what Uniscribe did, often by testing it. HarfBuzz’s source is full of the results. The Indic shaper corrects a sentence of Microsoft’s Devanagari specification with “Testing, with Windows 7 Uniscribe and Devanagari shows that the behavior is best described as…” (`hb-ot-shaper-indic.cc:1111`). The Khmer shaper applies its basic features without pauses because “testing suggests that Uniscribe does NOT pause between basic features” (`hb-ot-shaper-khmer.cc:110`). The Hangul shaper leaves `calt` off for jamo because Uniscribe does (`hb-ot-shaper-hangul.cc:69`). The [GSUB chapter](gsub.html#multiple-substitution) showed another: a multiple substitution may delete a glyph, though the specification says it can’t, because Uniscribe allows it.
 
@@ -288,7 +288,7 @@ Microsoft later added a single engine for many of the scripts its other engines 
 
 IBM’s International Components for Unicode (ICU), the portable library of Unicode algorithms, had an OpenType layout engine of its own, the LayoutEngine. It offered shaping outside Windows and the Mac in a library anyone could use, and OpenJDK, among others, used it. ICU later deprecated it and pointed its users to HarfBuzz. HarfBuzz still connects to ICU in another way: `libharfbuzz-icu` lets it take Unicode properties from ICU instead of from its own tables.
 
-### FreeType, Pango and Qt: the first HarfBuzz
+### FreeType, Pango, and Qt: the first HarfBuzz
 
 The free software desktop needed shaping too. FreeType, the free font rasterizer, had code for reading OpenType layout tables, written by David Turner and Werner Lemberg. Their copyright, 1998 to 2004, is still at the top of `hb-buffer.cc` and `hb-ot-layout.cc`, and the user manual says that HarfBuzz “began its life as text-shaping code within the FreeType project”. Pango, GNOME’s text layout library, used that code for its OpenType support, with shaping modules of its own for each script. The Red Hat authors named in `hb-buffer.cc` are Owen Taylor and Behdad Esfahbod. Qt, the toolkit then developed by Trolltech and later Nokia, used the same code; two of its developers, Lars Knoll and Simon Hausmann, are in HarfBuzz’s `AUTHORS` file, and Nokia’s copyright is in `COPYING`.
 
@@ -300,7 +300,7 @@ That first HarfBuzz is now called “old HarfBuzz”. Behdad Esfahbod then rewro
 
 Some things were kept for compatibility with what came before. The default cluster level, 0, is one of them. The README promises that the API and ABI are compatible back to the 0.9 series, and that if they ever have to break, “that would be called a new library”.
 
-From there, HarfBuzz grew in both directions. Version 2.0.0, in October 2018, added shaping with Apple’s `morx`, `kerx` and `trak` tables, so the engine that started as an implementation of OpenType now runs Apple’s model too. Since then it has added variable fonts, subsetting, drawing and painting glyphs, and rasterizing them, which is why the README now calls it “a full font platform”. Its list of users includes Android, Chrome, Firefox, GNOME, KDE, Qt, LibreOffice, OpenJDK and Adobe’s applications, among many others, and in its own words, “HarfBuzz shapes the majority of text on modern screens”.
+From there, HarfBuzz grew in both directions. Version 2.0.0, in October 2018, added shaping with Apple’s `morx`, `kerx`, and `trak` tables, so the engine that started as an implementation of OpenType now runs Apple’s model too. Since then it has added variable fonts, subsetting, drawing and painting glyphs, and rasterizing them, which is why the README now calls it “a full font platform”. Its list of users includes Android, Chrome, Firefox, GNOME, KDE, Qt, LibreOffice, OpenJDK, and Adobe’s applications, among many others, and in its own words, “HarfBuzz shapes the majority of text on modern screens”.
 
 ## What happens to a run
 
@@ -310,7 +310,7 @@ This chapter has looked at HarfBuzz from outside: text in, glyphs out, and the w
 
 | File | What’s there |
 |---|---|
-| `src/hb-buffer.h` | `hb_glyph_info_t`, `hb_glyph_position_t`, `hb_segment_properties_t`, the cluster levels and glyph flags |
+| `src/hb-buffer.h` | `hb_glyph_info_t`, `hb_glyph_position_t`, `hb_segment_properties_t`, the cluster levels, and glyph flags |
 | `src/hb-buffer.cc` | adding text (`hb_buffer_add_utf8` and the others), guessing segment properties, merging clusters |
 | `src/hb-common.h` | `hb_feature_t`, `hb_script_t`, `hb_direction_t`, `hb_language_t` |
 | `src/hb-ot-tag.cc` | translating scripts and languages into OpenType tags |
@@ -324,7 +324,7 @@ This chapter has looked at HarfBuzz from outside: text in, glyphs out, and the w
 ## In short
 
 * Text is characters in logical order. A font draws glyphs, known by glyph ID. The `cmap` gives each character a nominal glyph, and shaping starts there.
-* HarfBuzz shapes a run with one script, one direction and one language, and returns, for each glyph, its ID, its cluster, an advance and an offset.
+* HarfBuzz shapes a run with one script, one direction, and one language, and returns, for each glyph, its ID, its cluster, an advance, and an offset.
 * Characters and glyphs fail to correspond because of ligatures, joining and contextual forms, reordering, marks, and decomposition and composition. Much of the knowledge needed is about the script, not the font, and in OpenType it lives in the engine.
 * A cluster groups characters with the glyphs made from them. Merged clusters take the smallest value. The cluster level sets how much is merged.
-* HarfBuzz grew out of FreeType’s OpenType code as shared by Pango and Qt, was rewritten as harfbuzz-ng, and had to match Uniscribe’s behavior to work with the fonts made for it. It now runs OpenType, AAT and Graphite.
+* HarfBuzz grew out of FreeType’s OpenType code as shared by Pango and Qt, was rewritten as harfbuzz-ng, and had to match Uniscribe’s behavior to work with the fonts made for it. It now runs OpenType, AAT, and Graphite.

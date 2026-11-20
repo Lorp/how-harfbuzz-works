@@ -1,10 +1,10 @@
 # Reading feature files
 
-HarfBuzz never reads a feature file, but this book’s examples are written in them: the GSUB and GPOS chapters show feature-file source beside every compiled lookup, and most of the book’s test fonts get their layout tables, GSUB, GPOS and their GDEF glyph classes, from feature files. This appendix is enough to read that source, and to know what a rule becomes in the font HarfBuzz sees. To make a test font of your own and see what HarfBuzz does with a rule, see [Testing with a font of your own](testing-harfbuzz.html#testing-with-a-font-of-your-own). It isn’t a guide to writing feature files, but its last section says where to find one.
+HarfBuzz never reads a feature file, but this book’s examples are written in them: the GSUB and GPOS chapters show feature-file source beside every compiled lookup, and most of the book’s test fonts get their layout tables, GSUB, GPOS, and their GDEF glyph classes, from feature files. This appendix is enough to read that source, and to know what a rule becomes in the font HarfBuzz sees. To make a test font of your own and see what HarfBuzz does with a rule, see [Testing with a font of your own](testing-harfbuzz.html#testing-with-a-font-of-your-own). It isn’t a guide to writing feature files, but its last section says where to find one.
 
 ## The language
 
-The feature file format is Adobe’s, defined for its font tools (AFDKO) in the [*OpenType Feature File Specification*](https://adobe-type-tools.github.io/afdko/OpenTypeFeatureFileSpecification.html), now at document version 1.27. It is mainly for writing GSUB and GPOS rules. It can also give GDEF its glyph classes, and set values in BASE, `head`, `hhea`, `name`, `OS/2`, `vhea`, `vmtx` and STAT (its section 9), several of which HarfBuzz reads ([Where metrics come from](where-metrics-come-from.html), [Other tables](other-tables.html#base)). Font editors take feature code in the same language.
+The feature file format is Adobe’s, defined for its font tools (AFDKO) in the [*OpenType Feature File Specification*](https://adobe-type-tools.github.io/afdko/OpenTypeFeatureFileSpecification.html), now at document version 1.27. It is mainly for writing GSUB and GPOS rules. It can also give GDEF its glyph classes, and set values in BASE, `head`, `hhea`, `name`, `OS/2`, `vhea`, `vmtx`, and STAT (its section 9), several of which HarfBuzz reads ([Where metrics come from](where-metrics-come-from.html), [Other tables](other-tables.html#base)). Font editors take feature code in the same language.
 
 A rule says what a lookup should do, such as `sub f i by f_i;`. A compiler turns the rules into lookups, groups them into features, and registers the features under language systems. HarfBuzz never reads a feature file. It sees only the tables a compiler made.
 
@@ -43,7 +43,7 @@ One row for each construct the book’s examples use. The middle column is what 
 | `lookupflag IgnoreMarks;` | the flags of the lookups made from the rules after it | [GSUB](gsub.html#which-glyphs-a-lookup-sees) |
 | `script latn; language TRK exclude_dflt;` | which language systems the following rules’ lookups are registered under | [GSUB](gsub.html#rules-before-the-first-script), [Turkish i](choosing-a-script-shaper.html#turkish-i) |
 | `language TRK required;` | the language system’s required feature | [From features to lookups](from-features-to-lookups.html#the-required-feature) |
-| `table GDEF { GlyphClassDef … ; } GDEF;` | GDEF’s glyph classes: bases, ligatures, marks and components | [GSUB](gsub.html#which-glyphs-a-lookup-sees) |
+| `table GDEF { GlyphClassDef … ; } GDEF;` | GDEF’s glyph classes: bases, ligatures, marks, and components | [GSUB](gsub.html#which-glyphs-a-lookup-sees) |
 
 Three things the key can’t show:
 
@@ -53,7 +53,7 @@ Three things the key can’t show:
 
 ## Writing feature files
 
-Much of a font’s layout isn’t written by hand. Font editors and build tools make many features themselves: `kern`, `mark` and `mkmk` from the kerning and the glyphs’ anchors, and often `ccmp`, `locl`, `liga` or the joining features from glyph names. Some show what they made as feature code; others build the lookups without it. Either way, HarfBuzz sees only the result. For what you do write by hand:
+Much of a font’s layout isn’t written by hand. Font editors and build tools make many features themselves: `kern`, `mark`, and `mkmk` from the kerning and the glyphs’ anchors, and often `ccmp`, `locl`, `liga`, or the joining features from glyph names. Some show what they made as feature code; others build the lookups without it. Either way, HarfBuzz sees only the result. For what you do write by hand:
 
 * Adobe’s [*OpenType Feature File Specification*](https://adobe-type-tools.github.io/afdko/OpenTypeFeatureFileSpecification.html): the reference, for the exact syntax of every statement.
 * Tal Leming’s [*OpenType Cookbook*](https://opentypecookbook.com/): “a designer friendly introduction to understanding and developing” OpenType features, teaching the language and its common techniques.
@@ -63,5 +63,5 @@ Much of a font’s layout isn’t written by hand. Font editors and build tools 
 ## In short
 
 * A feature file is source for the layout tables, mainly GSUB and GPOS. HarfBuzz sees only what a compiler made of it.
-* makeotf, feaLib and fea-rs compile the same language, but need not make the same tables. This book’s fonts are compiled by feaLib.
+* makeotf, feaLib, and fea-rs compile the same language, but need not make the same tables. This book’s fonts are compiled by feaLib.
 * Most rules compile to the lookup type they look like. Contextual rules make extra, unnamed lookups, and `ignore` rules make rules that call none.

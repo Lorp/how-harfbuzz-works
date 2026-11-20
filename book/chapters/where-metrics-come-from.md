@@ -1,6 +1,6 @@
 # Where metrics come from
 
-A shaper moves glyphs about, but it doesn’t know how big they are. When HarfBuzz needs to know how far a glyph advances, where its origin is in vertical text, or how far its ink reaches, it asks the font object, and the font object passes the question to its font functions. The [previous chapter](fonts-and-font-functions.html) is about that arrangement: the vtable, its tiers, and the choice of implementation. This chapter is about the answers. It follows the functions HarfBuzz installs by default, the **hb-ot** font functions in `hb-ot-font.cc`, as they read `hmtx`, `HVAR`, `gvar`, `VORG`, `glyf`, `CFF`, the color and bitmap tables, `hhea`, `OS/2` and `MVAR`.
+A shaper moves glyphs about, but it doesn’t know how big they are. When HarfBuzz needs to know how far a glyph advances, where its origin is in vertical text, or how far its ink reaches, it asks the font object, and the font object passes the question to its font functions. The [previous chapter](fonts-and-font-functions.html) is about that arrangement: the vtable, its tiers, and the choice of implementation. This chapter is about the answers. It follows the functions HarfBuzz installs by default, the **hb-ot** font functions in `hb-ot-font.cc`, as they read `hmtx`, `HVAR`, `gvar`, `VORG`, `glyf`, `CFF`, the color and bitmap tables, `hhea`, `OS/2`, and `MVAR`.
 
 Most of what follows is a chain of fallbacks. For each question there is a table that should answer it, then something that can stand in for that table, then a guess. Which link of the chain answers decides the numbers an application sees, so it’s worth knowing where each chain starts and what it falls back to. Type designers will find here which of the font’s numbers HarfBuzz actually reads, and which it ignores.
 
@@ -165,7 +165,7 @@ return hb_clamp_to<unsigned> (advance + roundf (var_table->get_advance_delta_uns
 
 The delta comes from an item variation store: HVAR maps the glyph to a delta-set index, through its `advMap` if it has one or straight from the glyph ID if it doesn’t, and the store adds up that row’s deltas, each weighted by how much of its region the current location is in. How that weighting works is the subject of [Deltas](deltas.html). HVAR can also hold deltas for the side bearings, in `lsbMap` and `rsbMap`. HarfBuzz’s font functions never read them, though the subsetter keeps them.
 
-If there is no HVAR but there is a **gvar** table, the advance comes from the outlines’ **phantom points**. Every TrueType glyph has four points that aren’t part of any contour: one at the left edge of its advance, one at the right, one at the top and one at the bottom of its vertical advance. HarfBuzz builds them from `hmtx`, `vmtx` and the glyph’s header (`OT/glyf/Glyph.hh:391`, trimmed):
+If there is no HVAR but there is a **gvar** table, the advance comes from the outlines’ **phantom points**. Every TrueType glyph has four points that aren’t part of any contour: one at the left edge of its advance, one at the right, one at the top, and one at the bottom of its vertical advance. HarfBuzz builds them from `hmtx`, `vmtx`, and the glyph’s header (`OT/glyf/Glyph.hh:391`, trimmed):
 
 ```c++
 int h_delta = (int) header->xMin - lsb;
@@ -281,9 +281,9 @@ One thing happens before any of this. When a font has synthetic bold or slant, `
 
 ## Font extents
 
-**Font extents** are three numbers for the whole font: the ascender, the descender and the line gap, as `hb_font_extents_t`. Applications use them to space lines. HarfBuzz itself uses them only in the vertical fallbacks above.
+**Font extents** are three numbers for the whole font: the ascender, the descender, and the line gap, as `hb_font_extents_t`. Applications use them to space lines. HarfBuzz itself uses them only in the vertical fallbacks above.
 
-OpenType gives three sets of candidates. `hhea` has `ascender`, `descender` and `lineGap`. `OS/2` has the “typographic” `sTypoAscender`, `sTypoDescender` and `sTypoLineGap`, and the Windows `usWinAscent` and `usWinDescent`. Which a program uses has always varied, and bit 7 of `OS/2.fsSelection`, `USE_TYPO_METRICS`, added in version 4 of the `OS/2` table, lets a font ask for the typographic ones. HarfBuzz follows the bit, and otherwise uses `hhea` (`hb-ot-metrics.cc:85`):
+OpenType gives three sets of candidates. `hhea` has `ascender`, `descender`, and `lineGap`. `OS/2` has the “typographic” `sTypoAscender`, `sTypoDescender`, and `sTypoLineGap`, and the Windows `usWinAscent` and `usWinDescent`. Which a program uses has always varied, and bit 7 of `OS/2.fsSelection`, `USE_TYPO_METRICS`, added in version 4 of the `OS/2` table, lets a font ask for the typographic ones. HarfBuzz follows the bit, and otherwise uses `hhea` (`hb-ot-metrics.cc:85`):
 
 ```c++
 case HB_OT_METRICS_TAG_HORIZONTAL_ASCENDER:
@@ -293,7 +293,7 @@ case HB_OT_METRICS_TAG_HORIZONTAL_ASCENDER:
 
 The descender and line gap are chosen the same way. The Windows metrics are never used for font extents. They can be asked for separately, as the “clipping” ascent and descent, by `hb_ot_metrics_get_position` with the tags `hcla` and `hcld`. HarfBuzz also forces the signs: the ascender is made positive and the descender negative, whatever the font says (`hb-ot-metrics.cc:46`).
 
-`metrics.ttf` has an `hhea` ascender and descender of 900 and −300, typographic metrics of 800, −200 and a line gap of 100, and Windows metrics of 950 and 350. `metrics-typo.ttf` is the same font with `USE_TYPO_METRICS` set:
+`metrics.ttf` has an `hhea` ascender and descender of 900 and −300, typographic metrics of 800, −200, and a line gap of 100, and Windows metrics of 950 and 350. `metrics-typo.ttf` is the same font with `USE_TYPO_METRICS` set:
 
 ```info
 metrics.ttf  --show-extents  --get-metric=hcla
@@ -304,7 +304,7 @@ If the font has no `hhea` and doesn’t ask for typographic metrics, hb-ot has n
 
 ### MVAR
 
-In a variable font, MVAR can vary any of these numbers. It holds a list of records, each a four-letter tag (`hasc` for the horizontal ascender, `xhgt` for the x-height and so on) and an index into an item variation store. HarfBuzz finds the record by binary search and adds its delta to the value from `hhea` or `OS/2` before scaling (`hb-ot-var-mvar-table.hh:132`). The same goes for the other metrics `hb_ot_metrics_get_position` can fetch: x-height, cap height, sub- and superscript sizes, strikeout and underline. The variable test fonts vary their x-height:
+In a variable font, MVAR can vary any of these numbers. It holds a list of records, each a four-letter tag (`hasc` for the horizontal ascender, `xhgt` for the x-height, and so on) and an index into an item variation store. HarfBuzz finds the record by binary search and adds its delta to the value from `hhea` or `OS/2` before scaling (`hb-ot-var-mvar-table.hh:132`). The same goes for the other metrics `hb_ot_metrics_get_position` can fetch: x-height, cap height, sub- and superscript sizes, strikeout, and underline. The variable test fonts vary their x-height:
 
 ```info
 variations/var.ttf  --get-metric=xhgt  --variations=wght=100
@@ -317,7 +317,7 @@ When a metric isn’t in the font, `hb_ot_metrics_get_position_with_fallback` gu
 
 Everything above is in font units. The font object has a **scale**, usually set by the application to the size it wants multiplied by some power of two for subpixel precision, and everything hb-ot returns is converted to it at the last moment. HarfBuzz doesn’t hint, so the font’s ppem plays no part in this. In these functions it is read only to choose a bitmap strike.
 
-Integer values are scaled with a 16.16 fixed-point multiplier, and values that can have fractions, such as metrics with MVAR deltas, VORG origins and origins from phantom points, in floating point. [Fonts and font functions](fonts-and-font-functions.html#the-mults-and-rounding) shows both, and the half that can round down.
+Integer values are scaled with a 16.16 fixed-point multiplier, and values that can have fractions, such as metrics with MVAR deltas, VORG origins, and origins from phantom points, in floating point. [Fonts and font functions](fonts-and-font-functions.html#the-mults-and-rounding) shows both, and the half that can round down.
 
 Variable advances are different. HVAR’s delta, and the phantom points’ distance, are rounded to a whole font unit *before* they are scaled, because the advance cache stores whole font units. At a large scale, the fraction is lost. The MVAR x-height isn’t rounded first, and keeps it:
 
@@ -348,8 +348,8 @@ Bitmap extents are converted from the strike’s pixels in two steps, each round
 | File | What’s there |
 |---|---|
 | `src/hb-ot-font.cc` | the hb-ot font functions: advances, origins, extents, font extents, and the caches in `hb_ot_font_t` |
-| `src/hb-ot-hmtx-table.hh` | `hmtx`, `vmtx` and their wide versions; the accelerator that fits the counts to the table |
-| `src/hb-ot-hhea-table.hh` | `hhea`, `vhea` and their wide versions |
+| `src/hb-ot-hmtx-table.hh` | `hmtx`, `vmtx`, and their wide versions; the accelerator that fits the counts to the table |
+| `src/hb-ot-hhea-table.hh` | `hhea`, `vhea`, and their wide versions |
 | `src/hb-ot-var-hvar-table.hh` | HVAR and VVAR, including VVAR’s vertical origin deltas |
 | `src/OT/glyf/Glyph.hh`, `src/OT/glyf/glyf.hh` | phantom points, advances and origins from `gvar`, and `glyf` extents |
 | `src/OT/glyf/GlyphHeader.hh` | extents from the glyph’s header, with `xMin` replaced by the left side bearing |
@@ -368,8 +368,8 @@ To see these numbers for any font, run `hb-shape` with `--show-extents`, with `-
 * Advances come from `hmtx`. Glyphs past the last long metric share its advance, but a glyph with no entry at all gets zero, and a font with no `hmtx` gets half an em for every glyph.
 * In a `glyf` font, the left side bearing in `hmtx` wins over the outline’s `xMin`: the outline is moved to match.
 * At a non-default location, advances come from HVAR if it’s there and from `gvar`’s phantom points if not. HVAR is believed without being checked, and the phantom points are much slower. Variable advances are cached in whole font units.
-* Vertical origins come from VORG, else from `vmtx` with `glyf`, else from centring the glyph’s extents in the line. A CFF font needs VORG.
-* Glyph extents are tried from `sbix`, `CBDT`, `COLR`, `VARC`, `glyf`, `CFF2` and `CFF`, in that order. Outline extents include control points.
+* Vertical origins come from VORG, else from `vmtx` with `glyf`, else from centering the glyph’s extents in the line. A CFF font needs VORG.
+* Glyph extents are tried from `sbix`, `CBDT`, `COLR`, `VARC`, `glyf`, `CFF2`, and `CFF`, in that order. Outline extents include control points.
 * Font extents are `OS/2`’s typographic metrics if `USE_TYPO_METRICS` is set, and `hhea`’s otherwise. The Windows metrics are never used for them. MVAR varies them.
 * Scaled extents are rounded outwards across, but inwards up and down.
 

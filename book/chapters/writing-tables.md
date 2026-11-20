@@ -35,7 +35,7 @@ Most tables have offsets, and for those the serializer uses the other end of the
 
 An **object** is a contiguous run of bytes holding zero or more offsets. `push` starts one at `head`, on top of whatever object was being written before. When the object is complete, `pop_pack` (`hb-serialize.hh:370`) moves its bytes from the head side to the tail side, rewinds `head` to where the object began, and returns the object’s **object index**, its place in the stack of packed objects, counting from 1 (object 0 is the nil object, meaning “nothing”). `pop_discard` drops an object instead, as if it had never been started.
 
-An offset to an object can only be written after the object is packed, since only then does it have an index. The parent doesn’t write a number into its offset field: it calls `add_link (field, objidx)` (`:533`), which records a **link** on the parent: where in the parent the field is, how wide it is (the size of the field’s type: 2, 3 or 4 bytes), whether it is signed, and which object it points to. The field itself stays zero. Only `end_serialize` (`:300`), once the root object is packed, works out every offset, in `resolve_links` (`:577`).
+An offset to an object can only be written after the object is packed, since only then does it have an index. The parent doesn’t write a number into its offset field: it calls `add_link (field, objidx)` (`:533`), which records a **link** on the parent: where in the parent the field is, how wide it is (the size of the field’s type: 2, 3, or 4 bytes), whether it is signed, and which object it points to. The field itself stays zero. Only `end_serialize` (`:300`), once the root object is packed, works out every offset, in `resolve_links` (`:577`).
 
 What an offset counts from varies between tables, as [Fonts as bytes](fonts-as-bytes.html#offsets-that-know-their-targets) explains, so a link also has a **whence**: what its offset is relative to.
 
@@ -72,7 +72,7 @@ Called on an offset field in the new table, it follows the same offset in the ol
 
 ### A small graph, packed
 
-Here is the smallest graph that shows everything: a root A with two 16-bit offsets, to B and to C, which each have a 16-bit offset to a one-byte object D. The code that writes it, in `fonts/writing-tables/serialize-example.cc`, uses three structs of 5, 3 and 1 bytes and a 32-byte buffer. It writes A, then B; then D, which it packs; it links B to D and packs B; then C, and D again; then it links A’s two offsets and calls `end_serialize`. After each step it printed where `head` and `tail` were:
+Here is the smallest graph that shows everything: a root A with two 16-bit offsets, to B and to C, which each have a 16-bit offset to a one-byte object D. The code that writes it, in `fonts/writing-tables/serialize-example.cc`, uses three structs of 5, 3, and 1 bytes and a 32-byte buffer. It writes A, then B; then D, which it packs; it links B to D and packs B; then C, and D again; then it links A’s two offsets and calls `end_serialize`. After each step it printed where `head` and `tail` were:
 
 ```
 A written              head= 5  tail=32
@@ -127,17 +127,17 @@ The serializer has no exceptions to throw. It keeps a set of error flags (`hb-se
 | `HB_SERIALIZE_ERROR_INT_OVERFLOW` | a value doesn’t fit its field (`check_assign`, used for counts, glyph IDs, coordinates) |
 | `HB_SERIALIZE_ERROR_ARRAY_OVERFLOW` | an array has more items than its count field can hold |
 
-`err` sets a flag and returns false. Once any flag is set, nearly every method does nothing: `allocate_size` returns `nullptr`, `add_link` and `resolve_links` return at once. Table code checks results where it must and otherwise carries on, and the caller looks at the flags at the end. After a pure overflow (`only_overflow()`, `:231`), though, `push`, `pop_pack` and `pop_discard` keep working, so every push is still matched by its pop.
+`err` sets a flag and returns false. Once any flag is set, nearly every method does nothing: `allocate_size` returns `nullptr`, `add_link` and `resolve_links` return at once. Table code checks results where it must and otherwise carries on, and the caller looks at the flags at the end. After a pure overflow (`only_overflow()`, `:231`), though, `push`, `pop_pack`, and `pop_discard` keep working, so every push is still matched by its pop.
 
 `snapshot()` and `revert (snap)` (`:437`) roll the serializer back, errors and all. The cmap subsetter uses them when a format 4 subtable overflows, and writes the table again without one (`hb-ot-cmap-table.hh:1965`).
 
-The subsetter starts each table in a buffer of a guessed size (`hb-subset-table.hh:73`): the source table’s size, scaled by the square root of the fraction of glyphs kept (or unscaled, for GSUB, GPOS, GDEF and `name`), plus 8 KB. When a table runs out of room, it doubles the buffer and starts the table again, up to 256 times the size of the source table (`:61`). That is usually generous, but not always. A font tried while making this chapter had a 72-byte GSUB, one SingleSubst format 1 over 20,000 glyphs; subset like the fonts below, it outgrew its first buffer of 8 KB, the next would have passed 256 × 72 = 18,432 bytes, and `hb-subset` failed.
+The subsetter starts each table in a buffer of a guessed size (`hb-subset-table.hh:73`): the source table’s size, scaled by the square root of the fraction of glyphs kept (or unscaled, for GSUB, GPOS, GDEF, and `name`), plus 8 KB. When a table runs out of room, it doubles the buffer and starts the table again, up to 256 times the size of the source table (`:61`). That is usually generous, but not always. A font tried while making this chapter had a 72-byte GSUB, one SingleSubst format 1 over 20,000 glyphs; subset like the fonts below, it outgrew its first buffer of 8 KB, the next would have passed 256 × 72 = 18,432 bytes, and `hb-subset` failed.
 
 The flag that leads to the rest of this chapter is `OFFSET_OVERFLOW`. `resolve_links` sets it when a link’s offset doesn’t fit, through `check_assign`. The subsetter sends a table to the repacker only when that flag is the only one set (`hb-subset-table.hh:172`, `:116`). An overflow found before the links are resolved, as in the font-file writer above, is beyond the repacker’s help: `end_serialize` turns it into `OTHER` (`hb-serialize.hh:313`).
 
 ## Offsets that don’t fit
 
-A GSUB table points from its LookupList to each Lookup, from each Lookup to its subtables and from each subtable to its Coverage and other tables, nearly all with 16-bit offsets. Large fonts have GSUB and GPOS tables far bigger than 64 KB, and the [Extension](gsub.html#extension) lookup type exists only so that some offsets can be 32 bits. Whether a table fits is a matter of layout: the same objects in one order can have every offset under 65,536, and in another not.
+A GSUB table points from its LookupList to each Lookup, from each Lookup to its subtables, and from each subtable to its Coverage and other tables, nearly all with 16-bit offsets. Large fonts have GSUB and GPOS tables far bigger than 64 KB, and the [Extension](gsub.html#extension) lookup type exists only so that some offsets can be 32 bits. Whether a table fits is a matter of layout: the same objects in one order can have every offset under 65,536, and in another not.
 
 The serializer’s layout is the order the table’s code wrote things in, reversed. A LookupList is written lookup by lookup, each with its whole subtree, so lookup 0 and everything under it are packed first and end up at the end of the table. The LookupList’s offset to lookup 0 then spans nearly the whole table. (That is read from the code; the last listing on this page shows it in a table small enough to keep the serializer’s layout.) So, by our reading, any GSUB much over 64 KB overflows in the serializer’s own order, whether or not a better order exists.
 
@@ -185,7 +185,7 @@ The repacked table is in layers: the LookupList, then all 40 Lookups, then all 4
 
 The layout is a **topological order** of the graph: an order in which every object comes after all the objects that point to it, so that every offset is positive. There are many, and `sort_shortest_distance` (`graph/graph.hh:740`) picks one by distance from the root.
 
-First it gives each object a **distance**, with Dijkstra’s algorithm (`update_distances`, `:1865`). Following a link costs the size of the object it points to plus 2<sup>16</sup> for a 16-bit link, 2<sup>24</sup> for a 24-bit one and 2<sup>32</sup> for a 32-bit one (`:1911`). The power of two dominates, so distance mostly counts how many offsets deep an object is, and how wide those offsets are; size breaks the ties. Then it lays the objects out with Kahn’s algorithm, using a priority queue: an object becomes ready once every object that points to it has been placed, and of the ready objects, the nearest goes next. Objects at the same distance go in the order their parents’ links name them (`:787`).
+First it gives each object a **distance**, with Dijkstra’s algorithm (`update_distances`, `:1865`). Following a link costs the size of the object it points to plus 2<sup>16</sup> for a 16-bit link, 2<sup>24</sup> for a 24-bit one, and 2<sup>32</sup> for a 32-bit one (`:1911`). The power of two dominates, so distance mostly counts how many offsets deep an object is, and how wide those offsets are; size breaks the ties. Then it lays the objects out with Kahn’s algorithm, using a priority queue: an object becomes ready once every object that points to it has been placed, and of the ready objects, the nearest goes next. Objects at the same distance go in the order their parents’ links name them (`:787`).
 
 That is the layering in `forty-subset.ttf`: every Lookup is one 16-bit offset from the LookupList, every subtable two, every Coverage table three.
 
@@ -269,7 +269,7 @@ sixty-subset.ttf: GSUB, 152,548 bytes, 60 lookups
 
 (Printed by `layout.py`, not by HarfBuzz.)
 
-fontTools wrote the source with each lookup, its subtable and its Coverage table side by side. In the subset, the 28 lookups left alone have their subtables and Coverage tables in the first 65 KB, each Coverage table right after its subtable (put there by the first pass’s raised priorities, by our reading). The 32 Extension subtables are near the front too, and the promoted lookups’ subtables fill the rest, reached by 32-bit offsets. Lookup 4 (`ss05`) is a promoted one, and works the same through its Extension subtable:
+fontTools wrote the source with each lookup, its subtable, and its Coverage table side by side. In the subset, the 28 lookups left alone have their subtables and Coverage tables in the first 65 KB, each Coverage table right after its subtable (put there by the first pass’s raised priorities, by our reading). The 32 Extension subtables are near the front too, and the promoted lookups’ subtables fill the rest, reached by 32-bit offsets. Lookup 4 (`ss05`) is a promoted one, and works the same through its Extension subtable:
 
 ```shape
 sixty.ttf  \u4E01\u4E02\u4E03  --features=ss05
@@ -299,7 +299,7 @@ Its 32 Extension lookups each point eight bytes ahead, to a subtable that is now
 
 ### Writing the result
 
-When the graph has no overflows, `graph::serialize` (`graph/serialize.hh:234`) writes it with a new serializer: each object, in reverse of the sorted order, is pushed, copied, given its real links again and packed with sharing off, since the graph already says what is shared. If an offset still overflows, `hb_resolve_overflows` returns nothing, and `_hb_subset_repack` (`hb-subset-table.hh:114`) fails the table.
+When the graph has no overflows, `graph::serialize` (`graph/serialize.hh:234`) writes it with a new serializer: each object, in reverse of the sorted order, is pushed, copied, given its real links again, and packed with sharing off, since the graph already says what is shared. If an offset still overflows, `hb_resolve_overflows` returns nothing, and `_hb_subset_repack` (`hb-subset-table.hh:114`) fails the table.
 
 ## For other writers: `hb_subset_serialize_or_fail`
 
@@ -342,9 +342,9 @@ The fonts and scripts are in `fonts/writing-tables/`: `build-fonts.py` makes `fo
 ## In short
 
 * Everything in HarfBuzz that writes font data writes it through `hb_serialize_context_t`, into a fixed buffer: simple data at the head, finished objects stacked at the tail.
-* `push` starts an object, `pop_pack` packs it and returns its index, and `add_link` records an offset to it, with a width, a `whence` and a bias; `end_serialize` fills the offsets in.
+* `push` starts an object, `pop_pack` packs it and returns its index, and `add_link` records an offset to it, with a width, a `whence`, and a bias; `end_serialize` fills the offsets in.
 * `pop_pack` shares an object with an identical one already packed. The layout is the writing order reversed; virtual links ask the repacker to keep an order.
 * Errors are flags, and once one is set writing stops quietly. The subsetter doubles the buffer when it runs out of room, up to 256 times the source table, and repacks when the only error is an offset overflow.
-* The repacker sorts the object graph by distance from the root, then, round by round, isolates 32-bit spaces, duplicates shared children and raises priorities.
-* For GSUB and GPOS, if that fails, it runs again, splitting PairPos, MarkBasePos and LigatureSubst subtables and promoting lookups to Extension.
+* The repacker sorts the object graph by distance from the root, then, round by round, isolates 32-bit spaces, duplicates shared children, and raises priorities.
+* For GSUB and GPOS, if that fails, it runs again, splitting PairPos, MarkBasePos, and LigatureSubst subtables and promoting lookups to Extension.
 * `hb_subset_serialize_or_fail` offers the repacker to other font compilers, such as fontTools.

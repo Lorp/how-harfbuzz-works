@@ -1,8 +1,8 @@
 # AAT inside HarfBuzz
 
-Apple’s fonts don’t carry GSUB. Their substitutions are in `morx`, the extended glyph metamorphosis table, and its older form `mort`: a list of state machines that walk along the glyphs and change, join, insert or reorder them as they go. OpenType asks the shaping engine to know how a script behaves; `morx` puts that knowledge in the font ([Where the rules live](why-shaping-exists.html#where-the-rules-live) has the history).
+Apple’s fonts don’t carry GSUB. Their substitutions are in `morx`, the extended glyph metamorphosis table, and its older form `mort`: a list of state machines that walk along the glyphs and change, join, insert, or reorder them as they go. OpenType asks the shaping engine to know how a script behaves; `morx` puts that knowledge in the font ([Where the rules live](why-shaping-exists.html#where-the-rules-live) has the history).
 
-HarfBuzz has no separate AAT shaper and no AAT backend. A font with `morx` is shaped by the same `ot` pipeline as any other, and at one step, where GSUB would run, `morx` runs instead. When it does, GSUB doesn’t run at all. This chapter is about that step: when HarfBuzz takes it, how a `morx` table is laid out, how OpenType feature tags reach it, the loop that drives every state machine, and the five kinds of subtable that loop runs. Positioning with `kerx`, `ankr` and `trak` is the next chapter’s subject, [AAT positioning](aat-positioning.html).
+HarfBuzz has no separate AAT shaper and no AAT backend. A font with `morx` is shaped by the same `ot` pipeline as any other, and at one step, where GSUB would run, `morx` runs instead. When it does, GSUB doesn’t run at all. This chapter is about that step: when HarfBuzz takes it, how a `morx` table is laid out, how OpenType feature tags reach it, the loop that drives every state machine, and the five kinds of subtable that loop runs. Positioning with `kerx`, `ankr`, and `trak` is the next chapter’s subject, [AAT positioning](aat-positioning.html).
 
 The examples come from small test fonts built by `fonts/aat-inside-harfbuzz/build-fonts.py`, whose `morx` tables are written as TTX and compiled by fontTools, and from a few of HarfBuzz’s own test fonts. Every shaping result and trace on this page was produced by running HarfBuzz {{hb}} on those fonts when the page was built.
 
@@ -36,9 +36,9 @@ When the plan uses `morx`, step 13 of [the pipeline](pipeline-step-by-step.html#
 * **Glyph classes.** If the font has no GDEF classes, they are made from Unicode before `morx` runs, as they would be for GSUB. If it has GDEF, every glyph `morx` writes gets its class from GDEF (`hb-aat-layout-common.hh:202–281`).
 * **Deleted glyphs.** Glyphs that `morx` deletes stay in the buffer, marked, until GPOS is about to run, or until after positioning if it isn’t ([step 22](pipeline-step-by-step.html#after-positioning)).
 
-Whether GPOS, `kerx` or `kern` then positions the glyphs is decided separately: see [AAT positioning](aat-positioning.html), and [Fallbacks](fallbacks.html) for marks.
+Whether GPOS, `kerx`, or `kern` then positions the glyphs is decided separately: see [AAT positioning](aat-positioning.html), and [Fallbacks](fallbacks.html) for marks.
 
-## Chains, flags and features
+## Chains, flags, and features
 
 A `morx` table is a version (2 or 3; `mort` is version 1) and a list of **chains**. Each chain holds:
 
@@ -46,7 +46,7 @@ A `morx` table is a version (2 or 3; `mort` is version 1) and a list of **chains
 * **feature entries**, each a feature type and setting, with an enable mask and a disable mask;
 * subtables, each with a coverage field, its type, and its own 32-bit **sub-feature flags**.
 
-The chains are independent. For each, HarfBuzz works out a set of flags, and each subtable in the chain runs if its sub-feature flags share a bit with them. The flags start as the default flags, and each feature entry whose type and setting were asked for changes them: `flags = (flags & disable) | enable` (`Chain::compile_flags`, `hb-aat-layout-morx-table.hh:1138`). The chain of `latin.ttf` has three subtables, with flags 0x1 (a ligature), 0x4 (word-final e) and 0x2 (small capitals), and these default flags and feature entries:
+The chains are independent. For each, HarfBuzz works out a set of flags, and each subtable in the chain runs if its sub-feature flags share a bit with them. The flags start as the default flags, and each feature entry whose type and setting were asked for changes them: `flags = (flags & disable) | enable` (`Chain::compile_flags`, `hb-aat-layout-morx-table.hh:1138`). The chain of `latin.ttf` has three subtables, with flags 0x1 (a ligature), 0x4 (word-final e), and 0x2 (small capitals), and these default flags and feature entries:
 
 ```table
 font: latin.ttf
@@ -106,7 +106,7 @@ Some features are exclusive: one of their selectors is always in force, and ther
 
 ### Only what the application asks for
 
-The OpenType features HarfBuzz turns on by itself, `liga`, `calt`, `ccmp` and the rest, never reach `morx`. The plan’s own AAT map, `plan->aat_map`, is compiled with no features at all (`hb-ot-shape.cc:114`), so it holds the chains’ default flags and nothing else. Only when the application passes features does `hb_aat_layout_substitute` build a map of its own, for that call (`hb-aat-layout.cc:291–298`). A feature turned on selects the mapping’s enabling selector, and one with value 0 its disabling one.
+The OpenType features HarfBuzz turns on by itself, `liga`, `calt`, `ccmp`, and the rest, never reach `morx`. The plan’s own AAT map, `plan->aat_map`, is compiled with no features at all (`hb-ot-shape.cc:114`), so it holds the chains’ default flags and nothing else. Only when the application passes features does `hb_aat_layout_substitute` build a map of its own, for that call (`hb-aat-layout.cc:291–298`). A feature turned on selects the mapping’s enabling selector, and one with value 0 its disabling one.
 
 ### Only with a feat table
 
@@ -176,7 +176,7 @@ Two states are reserved too: 0, start of text, and 1, start of line. HarfBuzz al
 
 ### The loop
 
-`StateTableDriver::drive` (`:1282`) is that loop. Trimmed of the range check, a fast path and the safe-to-break bookkeeping, with two of its variables written out, it is:
+`StateTableDriver::drive` (`:1282`) is that loop. Trimmed of the range check, a fast path, and the safe-to-break bookkeeping, with two of its variables written out, it is:
 
 ```c++
 int state = STATE_START_OF_TEXT;
@@ -328,7 +328,7 @@ After an insertion at the current glyph, HarfBuzz moves past the inserted glyphs
 
 ## mort
 
-`mort` is the older form, from QuickDraw GX ([Apple: GX, AAT and ATSUI](why-shaping-exists.html#apple-gx-aat-and-atsui)). HarfBuzz reads it with the same templates, `mortmorx<…, ObsoleteTypes>` instead of `ExtendedTypes` (`hb-aat-layout-common.hh:1195–1269`). The differences are in the sizes and in how things are found:
+`mort` is the older form, from QuickDraw GX ([Apple: GX, AAT, and ATSUI](why-shaping-exists.html#apple-gx-aat-and-atsui)). HarfBuzz reads it with the same templates, `mortmorx<…, ObsoleteTypes>` instead of `ExtendedTypes` (`hb-aat-layout-common.hh:1195–1269`). The differences are in the sizes and in how things are found:
 
 | | `morx` (`ExtendedTypes`) | `mort` (`ObsoleteTypes`) |
 |---|---|---|
@@ -354,7 +354,7 @@ A B is rearranged into B A, C is replaced by D, E F become `one` and a deleted g
 
 Two small tables complete the picture.
 
-**feat**, the feature name table, lists a font’s feature types, their selectors, whether they are exclusive and which is the default, and `name` IDs for a menu (`hb-aat-layout-feat-table.hh`). Besides being the gate described above, it is what three functions read for applications, since 2.2.0: `hb_aat_layout_get_feature_types`, `hb_aat_layout_feature_type_get_name_id` and `hb_aat_layout_feature_type_get_selector_infos` (`hb-aat-layout.cc:423–482`). The last gives each selector’s name ID and the selectors that enable and disable it: for an exclusive feature, the disabling one is the default; otherwise it is the selector plus one, by Apple’s convention that “on” selectors are even and “off” ones odd. The AAT map relies on that convention when it treats two selectors that differ only in the lowest bit as one feature (`hb-aat-map.cc:149–152`).
+**feat**, the feature name table, lists a font’s feature types, their selectors, whether they are exclusive and which is the default, and `name` IDs for a menu (`hb-aat-layout-feat-table.hh`). Besides being the gate described above, it is what three functions read for applications, since 2.2.0: `hb_aat_layout_get_feature_types`, `hb_aat_layout_feature_type_get_name_id`, and `hb_aat_layout_feature_type_get_selector_infos` (`hb-aat-layout.cc:423–482`). The last gives each selector’s name ID and the selectors that enable and disable it: for an exclusive feature, the disabling one is the default; otherwise it is the selector plus one, by Apple’s convention that “on” selectors are even and “off” ones odd. The AAT map relies on that convention when it treats two selectors that differ only in the lowest bit as one feature (`hb-aat-map.cc:149–152`).
 
 **ltag**, the language tag table, is a list of language-tag strings such as `sr` or `zh-Hant` (`hb-aat-ltag-table.hh`). HarfBuzz uses it twice. A `name` record on platform 0 (Unicode) has its language ID looked up in it (`OT/name/name.hh:109`). And in `morx`, a feature entry of type 39, Language Tag, with setting *n*, applies when the buffer’s language matches tag *n* − 1, with or without any feature request, and with or without `feat` (`hb-aat-layout-morx-table.hh:1168`). The match is “rudimentary”, as the source says: the font’s tag, lower-cased, must be the buffer’s language or a prefix of it ending at a hyphen (`ltag::matches_language`, `hb-aat-ltag-table.hh:79`). This test font from HarfBuzz has tags `sr` and `Zh_Hant`, and a Noncontextual subtable for each:
 
@@ -393,7 +393,7 @@ The second `e` of `fee` is flagged: breaking before it would leave the first `e`
 
 | File | What’s there |
 |---|---|
-| `src/hb-ot-shape.cc` | `_hb_apply_morx` (`:60`), the swap to `dumber` (`:100`), the plan’s AAT map (`:114`), the call to `hb_aat_layout_substitute` (`:916`) and the removal of deleted glyphs (`:945`, `:954`) |
+| `src/hb-ot-shape.cc` | `_hb_apply_morx` (`:60`), the swap to `dumber` (`:100`), the plan’s AAT map (`:114`), the call to `hb_aat_layout_substitute` (`:916`), and the removal of deleted glyphs (`:945`, `:954`) |
 | `src/hb-aat-layout.cc` | the feature mapping table (`:106`), the `morx` blocklist, `hb_aat_layout_substitute`, the `feat` API, and the apply context’s sanitizer |
 | `src/hb-aat-map.cc`, `src/hb-aat-map.hh` | the AAT map builder: features to type and selector, `feat` as a gate, ranges, and the budget |
 | `src/hb-aat-layout-morx-table.hh` | the five subtable types and their `transition`s, `ChainSubtable` and its coverage, `Chain::compile_flags` and `Chain::apply`, `mortmorx` and its accelerator |
@@ -401,7 +401,7 @@ The second `e` of `fee` is flagged: breaking before it would leave the first `e`
 | `src/hb-aat-layout-feat-table.hh`, `src/hb-aat-ltag-table.hh` | `feat` and `ltag` |
 | `test/shape/data/in-house/tests/aat-morx.tests`, `test/shape/data/text-rendering-tests/tests/MORX-*.tests`, `test/shape/data/text-rendering-tests/tests/MORT-1.tests` | HarfBuzz’s `morx` and `mort` tests |
 
-`HB_NO_AAT_SHAPE` leaves `morx`, `mort`, `kerx` and `trak` shaping out of the build; `HB_NO_AAT` does that and also leaves out the `feat` and `ltag` API and `ltag`’s use in `name` (`HB_NO_OT_NAME_LANGUAGE_AAT`). `HB_MINI` sets `HB_NO_AAT`, and `HB_NO_SHAPER` and `HB_NO_OT_SHAPE` set `HB_NO_AAT_SHAPE` (`hb-config.hh:94–171`). `HB_NO_AAT_LAYOUT_BLOCKLIST`, set by `HB_NO_LEGACY`, keeps AALMAGHRIBI.ttf’s `morx`. The feature mapping table is compiled whenever AAT is in, or Core Text is, since the `coretext` backend uses it to pass features to Core Text (`hb-coretext-shape.cc:220`).
+`HB_NO_AAT_SHAPE` leaves `morx`, `mort`, `kerx`, and `trak` shaping out of the build; `HB_NO_AAT` does that and also leaves out the `feat` and `ltag` API and `ltag`’s use in `name` (`HB_NO_OT_NAME_LANGUAGE_AAT`). `HB_MINI` sets `HB_NO_AAT`, and `HB_NO_SHAPER` and `HB_NO_OT_SHAPE` set `HB_NO_AAT_SHAPE` (`hb-config.hh:94–171`). `HB_NO_AAT_LAYOUT_BLOCKLIST`, set by `HB_NO_LEGACY`, keeps AALMAGHRIBI.ttf’s `morx`. The feature mapping table is compiled whenever AAT is in, or Core Text is, since the `coretext` backend uses it to pass features to Core Text (`hb-coretext-shape.cc:220`).
 
 ## In short
 

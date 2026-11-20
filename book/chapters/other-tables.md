@@ -1,6 +1,6 @@
 # Other tables
 
-Shaping reads `cmap`, GSUB, GPOS, GDEF and the metrics tables. A font has others that matter to the software around the shaper: how to build a fraction or stretch a parenthesis, where the hanging baseline is, what weight the font is, what it is called in German, which languages it was made for. HarfBuzz reads five of these for applications: `MATH`, `BASE`, `STAT`, `name` and `meta`. None of them changes what `hb_shape` returns. Each has a small API that answers questions about the font, and leaves the layout to the caller.
+Shaping reads `cmap`, GSUB, GPOS, GDEF, and the metrics tables. A font has others that matter to the software around the shaper: how to build a fraction or stretch a parenthesis, where the hanging baseline is, what weight the font is, what it is called in German, which languages it was made for. HarfBuzz reads five of these for applications: `MATH`, `BASE`, `STAT`, `name`, and `meta`. None of them changes what `hb_shape` returns. Each has a small API that answers questions about the font, and leaves the layout to the caller.
 
 This chapter is about those APIs: what each offers, how it reads its table, and what it does when the table is missing or says less than asked.
 
@@ -8,9 +8,9 @@ The examples use eight small fonts built with fontTools by `fonts/other-tables/b
 
 ## MATH
 
-The `MATH` table holds what a formula typesetter needs from a font: 56 constants (how far to raise a superscript, how thick to draw a fraction bar), per-glyph corrections, and larger versions of glyphs that grow, such as parentheses, radicals and integrals. HarfBuzz doesn’t typeset formulas. The section comment in `hb-ot-math.cc` says so: “HarfBuzz itself does not implement a math layout solution. The functions and types provided can be used by client programs to access the font data necessary for typesetting OpenType Math layout.” The API came from Frédéric Wang of Igalia, whose name is on the file, and appeared in 1.3.3.
+The `MATH` table holds what a formula typesetter needs from a font: 56 constants (how far to raise a superscript, how thick to draw a fraction bar), per-glyph corrections, and larger versions of glyphs that grow, such as parentheses, radicals, and integrals. HarfBuzz doesn’t typeset formulas. The section comment in `hb-ot-math.cc` says so: “HarfBuzz itself does not implement a math layout solution. The functions and types provided can be used by client programs to access the font data necessary for typesetting OpenType Math layout.” The API came from Frédéric Wang of Igalia, whose name is on the file, and appeared in 1.3.3.
 
-Two browsers use it for MathML: Chromium’s `third_party/blink/renderer/platform/fonts/opentype/open_type_math_support.cc` and Firefox’s `gfx/thebes/gfxMathTable.cpp` both call `hb_ot_math_get_constant`, `hb_ot_math_get_glyph_italics_correction`, `hb_ot_math_get_glyph_variants` and `hb_ot_math_get_glyph_assembly`. The layout itself is theirs.
+Two browsers use it for MathML: Chromium’s `third_party/blink/renderer/platform/fonts/opentype/open_type_math_support.cc` and Firefox’s `gfx/thebes/gfxMathTable.cpp` both call `hb_ot_math_get_constant`, `hb_ot_math_get_glyph_italics_correction`, `hb_ot_math_get_glyph_variants`, and `hb_ot_math_get_glyph_assembly`. The layout itself is theirs.
 
 The functions follow the table’s three parts:
 
@@ -29,7 +29,7 @@ The functions follow the table’s three parts:
 
 ### Constants
 
-Every constant is read through one switch, `MathConstants::get_value`. Most are `MathValueRecord`s, a value with an optional Device table (a delta for the variation coordinates or the ppem), scaled by the font’s y scale; four horizontal ones, the radical kerns, the skewed fraction gap and `spaceAfterScript`, take the x scale. The two script scale-downs and `radicalDegreeBottomRaisePercent` are percentages, returned as they are. The two minimum heights are plain integers, scaled with no Device table.
+Every constant is read through one switch, `MathConstants::get_value`. Most are `MathValueRecord`s, a value with an optional Device table (a delta for the variation coordinates or the ppem), scaled by the font’s y scale; four horizontal ones, the radical kerns, the skewed fraction gap, and `spaceAfterScript`, take the x scale. The two script scale-downs and `radicalDegreeBottomRaisePercent` are percentages, returned as they are. The two minimum heights are plain integers, scaled with no Device table.
 
 In `math.ttf` the axis height is 250 and the script scale-down 70. At the default scale, 1,000 units per em, HarfBuzz returns 250 and 70; at a scale of 2,000, it returns 500 for the axis height and still 70 for the percentage (from `query.c`).
 
@@ -41,7 +41,7 @@ An **italics correction** is the extra space a slanted glyph needs after it befo
 
 The **top accent attachment** is the horizontal position over which an accent is centered. It is the one value in the table that HarfBuzz makes up when the font doesn’t give it: a glyph not in the coverage gets half its advance (`hb-ot-math-table.hh:331`). In `math.ttf`, `a` has 300 and `x`, not covered, gets 250, half of its 500.
 
-A **math kern** is a cut-in at one corner of a glyph: how far a superscript or subscript may tuck under or over it, as a step function of height. Each corner has *n* heights and *n* + 1 kern values. `MathKern::get_value` (`:391`) chooses the value whose range contains the height asked for, by binary search, as `std::upper_bound` would: “the index chosen for kern value should be i such that correctionHeight[i-1] <= correction_height < correctionHeight[i]”. A height exactly on a boundary takes the value above it. The top-right corner of `f` has heights 300 and 600 and values −50, 0 and 40; at heights 0, 150, 300, 600 and 900 HarfBuzz returns −50, −50, 0, 40 and 40. The heights are compared after scaling. HarfBuzz 8.3.1’s `NEWS` says it changed this function “to match updated ‘MATH’ table spec”.
+A **math kern** is a cut-in at one corner of a glyph: how far a superscript or subscript may tuck under or over it, as a step function of height. Each corner has *n* heights and *n* + 1 kern values. `MathKern::get_value` (`:391`) chooses the value whose range contains the height asked for, by binary search, as `std::upper_bound` would: “the index chosen for kern value should be i such that correctionHeight[i-1] <= correction_height < correctionHeight[i]”. A height exactly on a boundary takes the value above it. The top-right corner of `f` has heights 300 and 600 and values −50, 0, and 40; at heights 0, 150, 300, 600, and 900 HarfBuzz returns −50, −50, 0, 40, and 40. The heights are compared after scaling. HarfBuzz 8.3.1’s `NEWS` says it changed this function “to match updated ‘MATH’ table spec”.
 
 `hb_ot_math_get_glyph_kernings` (3.4.0) returns the whole step function as `hb_ot_math_kern_entry_t` pairs. There is one more value than height, so the last entry’s `max_correction_height` is `INT32_MAX`: for `f`, (300, −50), (600, 0), (2147483647, 40).
 
@@ -49,9 +49,9 @@ A **math kern** is a cut-in at one corner of a glyph: how far a superscript or s
 
 ### Glyph variants and assemblies
 
-A glyph that can grow has a `MathGlyphConstruction` in each direction it grows in: a list of larger variants, each with its size, and optionally a **glyph assembly**, a list of parts from which any larger size is built. `math.ttf` has a vertical construction for `parenleft`: variants of 900, 1,300 and 1,700 units (the first is the glyph itself), and an assembly of a bottom, an extender and a top, each 600 units with 200-unit connectors at the ends that join.
+A glyph that can grow has a `MathGlyphConstruction` in each direction it grows in: a list of larger variants, each with its size, and optionally a **glyph assembly**, a list of parts from which any larger size is built. `math.ttf` has a vertical construction for `parenleft`: variants of 900, 1,300, and 1,700 units (the first is the glyph itself), and an assembly of a bottom, an extender, and a top, each 600 units with 200-unit connectors at the ends that join.
 
-`get_glyph_construction` (`:1156`) chooses the vertical or horizontal coverage by `HB_DIRECTION_IS_VERTICAL`, and the sizes are scaled by that direction’s scale. Asked for the vertical variants of `parenleft`, HarfBuzz returns the three glyphs with 900, 1,300 and 1,700; asked for horizontal ones, none. The parts come back in the table’s order, “from left to right and bottom to top”, with their connector lengths, full advances and one flag, `HB_OT_MATH_GLYPH_PART_FLAG_EXTENDER`, which marks a part that may be repeated or left out. The assembly’s own italics correction comes back beside them. Choosing a variant, or working out how many extenders to use and how far to overlap them, at least `hb_ot_math_get_min_connector_overlap` (20 in `math.ttf`), is the client’s job.
+`get_glyph_construction` (`:1156`) chooses the vertical or horizontal coverage by `HB_DIRECTION_IS_VERTICAL`, and the sizes are scaled by that direction’s scale. Asked for the vertical variants of `parenleft`, HarfBuzz returns the three glyphs with 900, 1,300, and 1,700; asked for horizontal ones, none. The parts come back in the table’s order, “from left to right and bottom to top”, with their connector lengths, full advances, and one flag, `HB_OT_MATH_GLYPH_PART_FLAG_EXTENDER`, which marks a part that may be repeated or left out. The assembly’s own italics correction comes back beside them. Choosing a variant, or working out how many extenders to use and how far to overlap them, at least `hb_ot_math_get_min_connector_overlap` (20 in `math.ttf`), is the client’s job.
 
 All of these take a `start_offset` and an in/out count, as HarfBuzz’s list functions do, and return the total, so a client can ask for the count first and then fill an array.
 
@@ -61,7 +61,7 @@ All of these take a `start_offset` and an in/out count, as HarfBuzz’s list fun
 
 A line of text can mix scripts that sit on different baselines: Latin on the alphabetic baseline, Devanagari hanging from its headline, Chinese on the bottom of the ideographic em box. The `BASE` table says where each baseline is, for each script, so that an application can line them up. It can also give each script, and each language system, its own **min/max extents**: how far the glyphs reach above and below the baseline, in place of the font’s ascender and descender.
 
-`hb_ot_layout_get_baseline` (2.6.0) reads one baseline, and `hb_ot_layout_get_baseline_with_fallback` (4.0.0) makes one up when the font doesn’t have it. Both take a baseline tag, a direction, and OpenType script and language tags; the versions ending in `2` (8.0.0) take an `hb_script_t` and an `hb_language_t` instead. `hb-info --list-baselines` prints every baseline both ways, with an asterisk on the ones that were made up. `base.ttf` has a horizontal axis, with the baselines `hang`, `ideo` and `romn` for the scripts `DFLT`, `dev2` and `hani`, and `latn` with extents but no baselines:
+`hb_ot_layout_get_baseline` (2.6.0) reads one baseline, and `hb_ot_layout_get_baseline_with_fallback` (4.0.0) makes one up when the font doesn’t have it. Both take a baseline tag, a direction, and OpenType script and language tags; the versions ending in `2` (8.0.0) take an `hb_script_t` and an `hb_language_t` instead. `hb-info --list-baselines` prints every baseline both ways, with an asterisk on the ones that were made up. `base.ttf` has a horizontal axis, with the baselines `hang`, `ideo`, and `romn` for the scripts `DFLT`, `dev2`, and `hani`, and `latn` with extents but no baselines:
 
 ```table
 font: base.ttf
@@ -84,7 +84,7 @@ There are three coordinate formats. Format 1 is a number. Format 3 adds a Device
 
 ### Which script tag
 
-The functions that take an `hb_script_t` turn it into tags with `choose_base_tags` (`hb-ot-layout.cc:2168`), and keep the *last* of them. For Devanagari, HarfBuzz’s tags are `dev3`, `dev2` and `deva`, in that order of preference, and the last is the oldest, `deva`. So a `BASE` table that lists its Devanagari values under `dev2` isn’t found from `HB_SCRIPT_DEVANAGARI`, and the `DFLT` values are used. `hb-info` chooses the same way:
+The functions that take an `hb_script_t` turn it into tags with `choose_base_tags` (`hb-ot-layout.cc:2168`), and keep the *last* of them. For Devanagari, HarfBuzz’s tags are `dev3`, `dev2`, and `deva`, in that order of preference, and the last is the oldest, `deva`. So a `BASE` table that lists its Devanagari values under `dev2` isn’t found from `HB_SCRIPT_DEVANAGARI`, and the `DFLT` values are used. `hb-info` chooses the same way:
 
 ```info
 base.ttf  --get-baseline=hang  --script=Deva
@@ -117,7 +117,7 @@ nobase.ttf  --list-baselines  --direction=ttb
 
 Every value is made up. The `math` baseline is 260, the middle of the minus sign’s box, from 230 to 290. The hanging baseline is 600 for no script and 640, the top of क’s headline, for Devanagari. The ideographic em box is the font’s descender and ascender, −200 and 800, and the face is a tenth inside it. In `base.ttf` above, `ideo` came from the font, so `idtp` was `ideo` plus the em: 880. Vertical text, as in the third row, takes its em box from the vertical font extents, −500 and 500 for this font, which has no `vhea` ([Where metrics come from](where-metrics-come-from.html#font-extents)), its `math` baseline from half the x-height, and its hanging baseline from 60% of the em across the column. {{hb}}’s `NEWS` lists a fix to the fallback for “the hanging baseline for some scripts”.
 
-`hb_ot_layout_get_horizontal_baseline_tag_for_script` (4.0.0) gives the baseline a script usually sits on: `hang` for the 21 hanging scripts, `icfb` for Han, Hangul, kana, Bopomofo, Tangut, Nushu, Khitan, Jurchen and Seal, and `romn` for the rest. Its list is the same as the fallback’s, and a comment in each says to keep them in step.
+`hb_ot_layout_get_horizontal_baseline_tag_for_script` (4.0.0) gives the baseline a script usually sits on: `hang` for the 21 hanging scripts, `icfb` for Han, Hangul, kana, Bopomofo, Tangut, Nushu, Khitan, Jurchen, and Seal, and `romn` for the rest. Its list is the same as the fallback’s, and a comment in each says to keep them in step.
 
 ### Extents for a script
 
@@ -145,7 +145,7 @@ Nothing in shaping reads `BASE`; [Vertical text](vertical-text.html) covers what
 1. A variation axis with that tag in `fvar`: the font’s design coordinate on it, or the axis default if no coordinates are set. For a variable font, as the code says, “fvar’s default_value is better than STAT records”.
 2. For `opsz` only, the font’s point size, `ptem`, if it is set ([Three kinds of size](fonts-and-font-functions.html#three-kinds-of-size)).
 3. The `STAT` table: the value of the first axis value record for that axis.
-4. Older tables: OS/2’s `usWeightClass`, its `usWidthClass` turned into a percentage, its italic bit or `head`’s, and `post`’s italic angle. Without OS/2, `head`’s bold, condensed and expanded bits give 700 or 400, 75, 125 or 100. For `opsz`, the middle of OS/2’s optical size range (version 5), or the design size of GPOS’s `size` feature, or else 12.
+4. Older tables: OS/2’s `usWeightClass`, its `usWidthClass` turned into a percentage, its italic bit or `head`’s, and `post`’s italic angle. Without OS/2, `head`’s bold, condensed, and expanded bits give 700 or 400, 75, 125, or 100. For `opsz`, the middle of OS/2’s optical size range (version 5), or the design size of GPOS’s `size` feature, or else 12.
 
 `variations/var.ttf` has `wght` and `wdth` axes, so those come from the coordinates; the rest from its other tables:
 
@@ -157,7 +157,7 @@ variations/var.ttf  --list-style  --variations=wght=650,wdth=80  --font-ptem=9  
 
 `STAT` names the positions in a family ([Design space](design-space.html)); `hb_style_get_value` uses it as a record of where a *static* font sits. `STAT::get_value` (`hb-ot-stat-table.hh:480`) finds the axis tag among the design axes, then returns the value of the first axis value table that refers to that axis. Formats 1 and 3 give their value, format 2 its nominal value. Format 4, which gives a combination of values on several axes, is never matched: “Makes more sense for variable fonts which are handled by fvar in hb-style” (`:371`).
 
-Choosing the first is right for a font whose `STAT` lists only its own values. A `STAT` table can list more: a static font made as one of a family may describe the family’s whole weight range, with flags that mark which values are elidable, and nothing in the table marks the font’s own. `style-stat.ttf` has OS/2 weight 700 and a `STAT` with weight values 300, 400 and 700, in that order:
+Choosing the first is right for a font whose `STAT` lists only its own values. A `STAT` table can list more: a static font made as one of a family may describe the family’s whole weight range, with flags that mark which values are elidable, and nothing in the table marks the font’s own. `style-stat.ttf` has OS/2 weight 700 and a `STAT` with weight values 300, 400, and 700, in that order:
 
 ```table
 font: style-stat.ttf
@@ -190,9 +190,9 @@ The answer is 320 points, not 16. That looks like a HarfBuzz bug. The `size` fea
 
 ## name
 
-The `name` table holds the font’s strings: family and style names, copyright, version, designer, and any string another table refers to by name ID, such as a `STAT` axis name, a named instance, a stylistic set’s label or a palette name. Each **name record** has a platform, an encoding, a language and a name ID, and points to its bytes in a pool. The API (2.1.0, `hb-ot-name.h`) has two parts. `hb_ot_name_list_names` returns the name IDs and languages the face has, as `hb_ot_name_entry_t`s. `hb_ot_name_get_utf8`, `hb_ot_name_get_utf16` and `hb_ot_name_get_utf32` return one name, in one language, converted to that encoding.
+The `name` table holds the font’s strings: family and style names, copyright, version, designer, and any string another table refers to by name ID, such as a `STAT` axis name, a named instance, a stylistic set’s label, or a palette name. Each **name record** has a platform, an encoding, a language, and a name ID, and points to its bytes in a pool. The API (2.1.0, `hb-ot-name.h`) has two parts. `hb_ot_name_list_names` returns the name IDs and languages the face has, as `hb_ot_name_entry_t`s. `hb_ot_name_get_utf8`, `hb_ot_name_get_utf16`, and `hb_ot_name_get_utf32` return one name, in one language, converted to that encoding.
 
-`names.ttf` has the family name, ID 1, for Windows in US English, UK English, German and Japanese, and for the Macintosh in English; a name 256 for the Macintosh only, with an é; and a name 257 on the Unicode platform, in two languages given by an `ltag` table:
+`names.ttf` has the family name, ID 1, for Windows in US English, UK English, German, and Japanese, and for the Macintosh in English; a name 256 for the Macintosh only, with an é; and a name 257 on the Unicode platform, in two languages given by an `ltag` table:
 
 ```table
 font: names.ttf
@@ -211,7 +211,7 @@ The accelerator (`OT/name/name.hh:477`) turns the records into a sorted list whe
 | 10 | Macintosh Roman (1, 0) | ASCII |
 | — | anything else | dropped |
 
-It sorts by name ID, language, score and position, and keeps the first record of each name ID and language, dropping unsupported encodings and records whose language it doesn’t know. So for each name and language there is one string, and the platform with the best encoding provides it. A Windows name hides a Macintosh one in the same language.
+It sorts by name ID, language, score, and position, and keeps the first record of each name ID and language, dropping unsupported encodings and records whose language it doesn’t know. So for each name and language there is one string, and the platform with the best encoding provides it. A Windows name hides a Macintosh one in the same language.
 
 The language comes from the platform. A Windows record’s language ID is looked up in a table of 240 Windows language codes (`hb-ot-name-language-static.hh`), and a Macintosh record’s in a table of 117 of Apple’s. A Unicode-platform record’s language ID is an index into the font’s `ltag` table, Apple’s list of language tags, which is otherwise read for `morx` ([feat and ltag](aat-inside-harfbuzz.html#feat-and-ltag)). Without an `ltag` table, a Unicode-platform record has no language and is dropped. The name table’s own language tags, format 1’s `langTagRecord`s, aren’t read at all: the sanitizer accepts format 1, but “We only implement format 0 for now” (`:568`), and a language ID of 0x8000 or more isn’t in the Windows table.
 
@@ -220,7 +220,7 @@ names.ttf  --get-name=257  --language=ga
 names-noltag.ttf  --get-name=257  --language=ga
 ```
 
-The Windows table maps codes to tags without regions, mostly: 0x0409, US English, and 0x0809, UK English, are both `en` (`:61`, `:186`), as are the other English variants, and so with French, German, Spanish and Portuguese. Chinese keeps its regions (`zh-cn`, `zh-tw`, `zh-hk`, `zh-sg`). Since one record is kept for each name and language, the UK English family name in `names.ttf` can’t be reached at all: it and the US one are both `en`, and the US one comes first. `hb_ot_name_list_names` lists ID 1 three times, for `de`, `en` and `ja` (from `query.c`).
+The Windows table maps codes to tags without regions, mostly: 0x0409, US English, and 0x0809, UK English, are both `en` (`:61`, `:186`), as are the other English variants, and so with French, German, Spanish, and Portuguese. Chinese keeps its regions (`zh-cn`, `zh-tw`, `zh-hk`, `zh-sg`). Since one record is kept for each name and language, the UK English family name in `names.ttf` can’t be reached at all: it and the US one are both `en`, and the US one comes first. `hb_ot_name_list_names` lists ID 1 three times, for `de`, `en`, and `ja` (from `query.c`).
 
 ### Matching a language
 
@@ -264,14 +264,14 @@ HarfBuzz doesn’t parse the lists. `dlng` and `slng` are text for the client to
 
 ## Other readers for applications
 
-Two more functions read GPOS and GSUB for applications. `hb_ot_layout_get_size_params` reads the `size` feature: a design size in decipoints, a subfamily ID and name ID, and a range of sizes. `hb_ot_layout_feature_get_name_ids` reads a stylistic set’s UI label, or a character variant’s label, tooltip, sample text and parameter names; `hb-info --list-features` shows the labels. Like `STAT`, `fvar` and `CPAL`, these give name IDs, whose strings come from `hb_ot_name_get_utf8`. The other readers are in their own chapters: `hb_ot_color_*` in [Color](color.html), `hb_ot_var_*` in [Design space](design-space.html), and `hb_ot_metrics_get_position` in [Where metrics come from](where-metrics-come-from.html).
+Two more functions read GPOS and GSUB for applications. `hb_ot_layout_get_size_params` reads the `size` feature: a design size in decipoints, a subfamily ID and name ID, and a range of sizes. `hb_ot_layout_feature_get_name_ids` reads a stylistic set’s UI label, or a character variant’s label, tooltip, sample text, and parameter names; `hb-info --list-features` shows the labels. Like `STAT`, `fvar`, and `CPAL`, these give name IDs, whose strings come from `hb_ot_name_get_utf8`. The other readers are in their own chapters: `hb_ot_color_*` in [Color](color.html), `hb_ot_var_*` in [Design space](design-space.html), and `hb_ot_metrics_get_position` in [Where metrics come from](where-metrics-come-from.html).
 
 ## Where to read the source
 
 | File | What’s there |
 |---|---|
 | `src/hb-ot-math.h`, `src/hb-ot-math.cc` | the MATH API, its constants and part flags, and the Cambria swap |
-| `src/hb-ot-math-table.hh` | `MathConstants`, `MathGlyphInfo` with italics corrections, accent attachments and `MathKern`, `MathVariants` with constructions and assemblies, `is_bad_cambria` |
+| `src/hb-ot-math-table.hh` | `MathConstants`, `MathGlyphInfo` with italics corrections, accent attachments, and `MathKern`, `MathVariants` with constructions and assemblies, `is_bad_cambria` |
 | `src/hb-ot-layout-base-table.hh` | `BASE`: the axes, script and language records, `MinMax`, and the coordinate formats |
 | `src/hb-ot-layout.cc` | `hb_ot_layout_get_baseline` and its fallbacks (`:2362`–`2640`), `hb_ot_layout_get_font_extents`, `hb_ot_layout_get_horizontal_baseline_tag_for_script`, `hb_ot_layout_get_size_params`, `hb_ot_layout_feature_get_name_ids` |
 | `src/hb-style.h`, `src/hb-style.cc` | `hb_style_get_value` and its order of sources |
@@ -282,17 +282,17 @@ Two more functions read GPOS and GSUB for applications. `hb_ot_layout_get_size_p
 | `src/hb-ot-name-language-static.hh` | the Windows and Macintosh language code tables |
 | `src/hb-aat-ltag-table.hh` | `ltag` |
 | `src/hb-ot-meta.h`, `src/hb-ot-meta.cc`, `src/hb-ot-meta-table.hh` | `meta` |
-| `util/hb-info.cc` | the `--list-baselines`, `--list-style`, `--list-names` and `--list-meta` options |
+| `util/hb-info.cc` | the `--list-baselines`, `--list-style`, `--list-names`, and `--list-meta` options |
 
-Each API can be compiled out: `HB_NO_MATH`, `HB_NO_BASE`, `HB_NO_STYLE`, `HB_NO_NAME` and `HB_NO_META`. `HB_NO_NAME` sets `HB_NO_OT_NAME_LANGUAGE`, which leaves out the language tables, and `HB_NO_AAT` sets `HB_NO_OT_NAME_LANGUAGE_AAT`, which leaves out `ltag`’s use in `name`. `HB_LEAN` sets all of them except `HB_NO_BASE`, along with `HB_NO_LAYOUT_FEATURE_PARAMS`, which removes the feature name IDs and the `size` parameters (`hb-config.hh:55–80`). `HB_NO_STYLE` also turns off `trak`, whose test for `STAT` it removes.
+Each API can be compiled out: `HB_NO_MATH`, `HB_NO_BASE`, `HB_NO_STYLE`, `HB_NO_NAME`, and `HB_NO_META`. `HB_NO_NAME` sets `HB_NO_OT_NAME_LANGUAGE`, which leaves out the language tables, and `HB_NO_AAT` sets `HB_NO_OT_NAME_LANGUAGE_AAT`, which leaves out `ltag`’s use in `name`. `HB_LEAN` sets all of them except `HB_NO_BASE`, along with `HB_NO_LAYOUT_FEATURE_PARAMS`, which removes the feature name IDs and the `size` parameters (`hb-config.hh:55–80`). `HB_NO_STYLE` also turns off `trak`, whose test for `STAT` it removes.
 
 ## In short
 
-* `MATH`, `BASE`, `STAT`, `name` and `meta` don’t affect shaping (apart from `STAT` as the test for `trak`). HarfBuzz reads them for applications.
+* `MATH`, `BASE`, `STAT`, `name`, and `meta` don’t affect shaping (apart from `STAT` as the test for `trak`). HarfBuzz reads them for applications.
 * The MATH API returns constants, italics corrections, accent positions (half the advance when missing), math kerns as step functions of height, and size variants and assemblies by direction. It swaps two constants for Cambria Math.
-* `BASE` baselines are per script, found by tag with `DFLT` as fallback; a script with a record but no values gets no baselines from `DFLT`. With an `hb_script_t`, HarfBuzz looks up the oldest tag, `deva` not `dev2`. Missing baselines are synthesized from the minus sign, a hanging letter, the font extents and the em. Min/max extents can be per language.
-* `hb_style_get_value` takes the value from `fvar` coordinates, then `ptem` for `opsz`, then the first `STAT` value for the axis, then OS/2, `head` and `post`. The first `STAT` value may not be the font’s own, `STAT` hides synthetic slant, and OS/2’s optical sizes are read as points when they are TWIPs.
-* `name` keeps one record per name ID and language, from the platform with the best encoding. Windows English variants are all `en`; Unicode-platform names need `ltag`; format 1 language tags aren’t read; Macintosh Roman is read as ASCII. Names come out as UTF-8, UTF-16 or UTF-32, in the language asked for or a less specific one, else not at all.
+* `BASE` baselines are per script, found by tag with `DFLT` as fallback; a script with a record but no values gets no baselines from `DFLT`. With an `hb_script_t`, HarfBuzz looks up the oldest tag, `deva` not `dev2`. Missing baselines are synthesized from the minus sign, a hanging letter, the font extents, and the em. Min/max extents can be per language.
+* `hb_style_get_value` takes the value from `fvar` coordinates, then `ptem` for `opsz`, then the first `STAT` value for the axis, then OS/2, `head`, and `post`. The first `STAT` value may not be the font’s own, `STAT` hides synthetic slant, and OS/2’s optical sizes are read as points when they are TWIPs.
+* `name` keeps one record per name ID and language, from the platform with the best encoding. Windows English variants are all `en`; Unicode-platform names need `ltag`; format 1 language tags aren’t read; Macintosh Roman is read as ASCII. Names come out as UTF-8, UTF-16, or UTF-32, in the language asked for or a less specific one, else not at all.
 * `meta` entries come back as raw blobs; HarfBuzz doesn’t parse `dlng` or `slng`.
 
 > Since {{hb}}: fixed on HarfBuzz main by [`b14a94e`](https://github.com/harfbuzz/harfbuzz/commit/b14a94e52fed2ebb39744a4596ec2c840beffef3) (17 November 2026), so main reads OS/2’s optical sizes as TWIPs (the item on `hb_style_get_value`; the other two issues there remain).

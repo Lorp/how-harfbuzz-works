@@ -4,11 +4,11 @@ When GPOS starts, the glyphs are settled. GSUB has chosen them, and the position
 
 GPOS has the same structure as GSUB, and HarfBuzz runs it with the same machinery, so this chapter covers only what is different: the nine lookup types as HarfBuzz runs them, then the last step, in which a tree of attachments becomes offsets an application can draw with. For how to write each type in a feature file, with Nastaliq cursive attachment and Thai mark-to-ligature among the examples, see “Types of Positioning Rule” in Simon Cozens’ [*Fonts and Layout for Global Scripts*](https://simoncozens.github.io/fonts-and-layout/features-2.html#types-of-positioning-rule).
 
-The examples come from one test font, `gpos.ttf`, built from `fonts/gpos/gpos.fea`, and three variants of it. It has the GSUB chapter’s `f`, `i` and their ligatures, a few letters to kern, two combining marks, and letters that join in a cursive chain. Its glyphs are boxes. Every shaping result and trace on this page was produced by running HarfBuzz {{hb}} on those fonts when the page was built.
+The examples come from one test font, `gpos.ttf`, built from `fonts/gpos/gpos.fea`, and three variants of it. It has the GSUB chapter’s `f`, `i`, and their ligatures, a few letters to kern, two combining marks, and letters that join in a cursive chain. Its glyphs are boxes. Every shaping result and trace on this page was produced by running HarfBuzz {{hb}} on those fonts when the page was built.
 
 ## What changes from GSUB
 
-A GPOS table has a ScriptList, a FeatureList, a LookupList and optional FeatureVariations, exactly as GSUB does ([The shape of the table](gsub.html#the-shape-of-the-table)). Its lookups have nine types:
+A GPOS table has a ScriptList, a FeatureList, a LookupList, and optional FeatureVariations, exactly as GSUB does ([The shape of the table](gsub.html#the-shape-of-the-table)). Its lookups have nine types:
 
 | Type | Name | What it does |
 |---|---|---|
@@ -24,7 +24,7 @@ A GPOS table has a ScriptList, a FeatureList, a LookupList and optional FeatureV
 
 Types 1 to 6 have beyond-64k formats too: SinglePos and PairPos formats 3 and 4, and format 2 of the others.
 
-Each lookup runs through GSUB’s `apply_forward` loop, with its digests, mask test and glyph-property test ([Running one lookup](gsub.html#running-one-lookup)). The second-glyph digest holds a pair subtable’s second glyphs and a mark subtable’s bases, so a mark lookup is skipped for a buffer with none of its bases. Planning puts all of GPOS in **one stage**: no script shaper pauses between GPOS lookups, so they all run in LookupList order ([From features to lookups](from-features-to-lookups.html#stages-and-pauses)).
+Each lookup runs through GSUB’s `apply_forward` loop, with its digests, mask test, and glyph-property test ([Running one lookup](gsub.html#running-one-lookup)). The second-glyph digest holds a pair subtable’s second glyphs and a mark subtable’s bases, so a mark lookup is skipped for a buffer with none of its bases. Planning puts all of GPOS in **one stage**: no script shaper pauses between GPOS lookups, so they all run in LookupList order ([From features to lookups](from-features-to-lookups.html#stages-and-pauses)).
 
 ### One array, in place
 
@@ -165,7 +165,7 @@ Pair adjustment is also cached. Each of a lookup’s first eight subtables gets 
 The other four positioning types work with **anchors**: points on a glyph, in font units, where something attaches. There are three formats:
 
 * **Format 1**: x and y.
-* **Format 2**: x, y and the index of a point in the glyph’s outline. If the font has a ppem and the font funcs can find the point, its position is used instead (`AnchorFormat2.hh:41`). The point differs from x and y only in a hinted outline, and HarfBuzz’s own `hb-ot` funcs don’t implement `get_glyph_contour_point` (`hb-ot-font.cc:991` is commented out), so in practice it is used only with FreeType’s funcs. `HB_NO_HINTING` makes format 2 read as format 1.
+* **Format 2**: x, y, and the index of a point in the glyph’s outline. If the font has a ppem and the font funcs can find the point, its position is used instead (`AnchorFormat2.hh:41`). The point differs from x and y only in a hinted outline, and HarfBuzz’s own `hb-ot` funcs don’t implement `get_glyph_contour_point` (`hb-ot-font.cc:991` is commented out), so in practice it is used only with FreeType’s funcs. `HB_NO_HINTING` makes format 2 read as format 1.
 * **Format 3**: x and y, with a Device table for each, followed under the same conditions as a value record’s.
 
 Anchors are scaled to floats, and kept as floats until two of them are subtracted: the difference is rounded, not each anchor (`hb-ot-layout-common.hh:6374`). An anchor offset that is null, in a cursive record or in a mark lookup’s matrix, means there is no anchor, and the subtable declines, so the next subtable gets a chance at the glyph (`MarkArray.hh:144`).
@@ -312,7 +312,7 @@ from: start lookup 5
 to: end lookup 5
 ```
 
-If the chosen component has no anchor for the mark’s class, the subtable declines. The base search, the cache and the multiple-substitution rule are the same as for mark-to-base.
+If the chosen component has no anchor for the mark’s class, the subtable declines. The base search, the cache, and the multiple-substitution rule are the same as for mark-to-base.
 
 ## Mark to mark
 
@@ -335,7 +335,7 @@ gpos.ttf  f\u0301i\u0301
 
 The first two stack the second acute on the first, 150 units up. In the third, the two acutes end up next to each other after `f_i`, the first belonging to component 1 and the second to component 2. They have the same ligature ID and different component numbers, so `mkmk` leaves them alone, and the acute typed over the `i` stays where mark-to-ligature put it.
 
-## Context, chained context and extension
+## Context, chained context, and extension
 
 Types 7 to 9 are the same code as GSUB’s types 5 to 7 ([Context and chained context](gsub.html#context-and-chained-context)). Nested positioning lookups never change the buffer’s length, so the guessing that `apply_lookup` does after a nested GSUB lookup never comes up.
 
@@ -408,11 +408,11 @@ Each glyph should be 100 units below the next. Glyphs 64 and 65 are both at −1
 | `src/hb-ot-layout-gsubgpos.hh` | what GSUB and GPOS share: the matcher’s GPOS rules, the skipping iterator, the subtable caches, `last_base` |
 | `src/hb-ot-layout.cc` | `GPOSProxy`, `apply_string`, `hb_ot_map_t::position` |
 | `src/hb-ot-layout-common.hh` | `Device`, `HintingDevice`, `VariationDevice` |
-| `src/hb-ot-shape.cc` | where GPOS runs in the pipeline; the `mark`, `mkmk`, `curs` and `kern` features |
+| `src/hb-ot-shape.cc` | where GPOS runs in the pipeline; the `mark`, `mkmk`, `curs`, and `kern` features |
 
 ## In short
 
-* GPOS works in place, in one stage, with GSUB’s loop, digests and flags.
+* GPOS works in place, in one stage, with GSUB’s loop, digests, and flags.
 * In GPOS, ZWNJ and hidden characters are always passed over; ZWJ is too, except by `mark` and `mkmk`.
 * Value records are scaled and added; Device tables are read only with a ppem or variation coordinates.
 * A class-pair subtable applies to every pair whose first glyph it covers, so kerning exceptions must come before it. A pair with a value for its second glyph moves past it.

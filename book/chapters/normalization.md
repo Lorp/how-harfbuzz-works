@@ -11,7 +11,7 @@ This chapter follows the three rounds in `hb-ot-shape-normalize.cc`, and the cho
 | *a e o u A*, *á â é ü ǜ ȫ Å*, Ω, the angstrom sign Å (U+212B) | *à ê ö ǘ ạ ụ ñ x* |
 | combining grave, acute, macron, dieresis, ring above, dot below | combining circumflex (U+0302) |
 | U+2010 HYPHEN, the space | U+2011 NON-BREAKING HYPHEN, every other space |
-| Devanagari NA, NNNA, NUKTA and the vowel sign AA | |
+| Devanagari NA, NNNA, NUKTA, and the vowel sign AA | |
 
 ## Why normalize, and why against the font
 
@@ -75,7 +75,7 @@ Normalization is the second thing `hb_ot_substitute_default` does (`hb-ot-shape.
 
 Throughout normalization the buffer holds Unicode: each `codepoint` is a character. Whenever the normalizer asks the font whether it has a character, it keeps the answer in the glyph’s scratch variable **`normalizer_glyph_index`**, the whole of `var1` (`hb-ot-shape-normalize.hh:35`; [Buffers](buffers.html#who-has-which-byte-and-when) has the table of who uses which byte when). After the masks are set, `hb_ot_map_glyphs_fast` copies it into `codepoint` for every glyph and changes the buffer’s content type to glyphs (`hb-ot-shape.cc:844`). There is no second `cmap` lookup: the “mapping” step is a copy.
 
-The questions go to the font funcs `nominal_glyph`, `nominal_glyphs` and `variation_glyph` ([Fonts and font functions](fonts-and-font-functions.html)), which for hb-ot read `cmap`.
+The questions go to the font funcs `nominal_glyph`, `nominal_glyphs`, and `variation_glyph` ([Fonts and font functions](fonts-and-font-functions.html)), which for hb-ot read `cmap`.
 
 The trace shows the three rounds by name. Each “start” message is a chance for a message callback to skip the round ([Buffers](buffers.html#messages)):
 
@@ -225,7 +225,7 @@ The second line shows a gap, described next.
 
 ### Clusters with marks
 
-After the run of single characters comes a character with marks after it: one base and every mark up to the next non-mark (`:359`). “Mark” here means a general category of Mn, Mc or Me. The cluster goes to `decompose_multi_char_cluster` (`:255`), which hands each character in turn to `decompose_current_character`, now with `shortest` false except in `NONE` mode. A precomposed character followed by marks is therefore decomposed as far as the font allows, and the third round builds it back up. That is what makes *é* followed by a dot below come out the same as *e*, dot below, acute.
+After the run of single characters comes a character with marks after it: one base and every mark up to the next non-mark (`:359`). “Mark” here means a general category of Mn, Mc, or Me. The cluster goes to `decompose_multi_char_cluster` (`:255`), which hands each character in turn to `decompose_current_character`, now with `shortest` false except in `NONE` mode. A precomposed character followed by marks is therefore decomposed as far as the font allows, and the third round builds it back up. That is what makes *é* followed by a dot below come out the same as *e*, dot below, acute.
 
 If the cluster contains a variation selector, none of this happens. “Currently if there’s a variation-selector we give-up on normalization, it’s just too hard” (`:208`). `handle_variation_selector_cluster` asks the font’s `variation_glyph` func for each base and selector pair, and replaces the two with one glyph if there is one. Otherwise each character gets its nominal glyph, with no decomposition. [Unicode inside HarfBuzz](unicode-inside-harfbuzz.html#variation-selectors) covers what then happens to the selector. Here is the cost, with *ö*, which the font has only as *o* and a dieresis:
 
@@ -285,7 +285,7 @@ norm.ttf  a\u0301\u0323  --cluster-level=2  --no-positions  --show-flags
 
 The two orders give the same glyphs. (The acute ends up inside *á* in the next round.)
 
-After sorting a run, the shaper’s `reorder_marks` hook may move marks again. Two shapers have one. The Arabic shaper moves the “modifier combining marks”, such as hamza above, to the front of their run, and renumbers them to keep the run sorted (`hb-ot-shaper-arabic.cc:721`; [Joining scripts](joining-scripts.html)). The Hebrew shaper swaps a sheva or hiriq with a following meteg or below mark when they come after a patah or qamats (`hb-ot-shaper-hebrew.cc:166`; [Hebrew, Thai, Lao and Hangul](hebrew-thai-lao-and-hangul.html)).
+After sorting a run, the shaper’s `reorder_marks` hook may move marks again. Two shapers have one. The Arabic shaper moves the “modifier combining marks”, such as hamza above, to the front of their run, and renumbers them to keep the run sorted (`hb-ot-shaper-arabic.cc:721`; [Joining scripts](joining-scripts.html)). The Hebrew shaper swaps a sheva or hiriq with a following meteg or below mark when they come after a patah or qamats (`hb-ot-shaper-hebrew.cc:166`; [Hebrew, Thai, Lao, and Hangul](hebrew-thai-lao-and-hangul.html)).
 
 A mark of class zero ends a run. The combining grapheme joiner, U+034F, is such a mark, and is how a writer stops two marks being reordered. Straight after this round, HarfBuzz looks at each CGJ to see whether it kept anything apart, and lets later lookups pass over the ones that didn’t (`hb-ot-shape-normalize.cc:403`). That check, and an example, are in [Unicode inside HarfBuzz](unicode-inside-harfbuzz.html#cgj-sometimes).
 
@@ -329,7 +329,7 @@ The last round runs only in the two `COMPOSED_DIACRITICS` modes, and only if the
 
 So a character is composed into the starter only if all of these hold:
 
-* **It is a mark.** Two base characters are never composed, “both an optimization to avoid trying to compose every two neighboring glyphs in most scripts AND a desired feature for Hangul”, whose fonts “are not designed to mix-and-match pre-composed syllables and Jamo” (`:438`). The Hangul shaper does its own composing, before normalization ([Hebrew, Thai, Lao and Hangul](hebrew-thai-lao-and-hangul.html)).
+* **It is a mark.** Two base characters are never composed, “both an optimization to avoid trying to compose every two neighboring glyphs in most scripts AND a desired feature for Hangul”, whose fonts “are not designed to mix-and-match pre-composed syllables and Jamo” (`:438`). The Hangul shaper does its own composing, before normalization ([Hebrew, Thai, Lao, and Hangul](hebrew-thai-lao-and-hangul.html)).
 * **It isn’t blocked.** Either it comes straight after the starter, or the mark before it has a lower class. A mark with the same class or a higher one in between is **blocked**: Unicode’s rule, applied with the modified classes.
 * **The pair composes.** By Unicode’s composition data, or by the shaper’s `compose` hook.
 * **The font has the result.**
@@ -386,7 +386,7 @@ A shaper can replace both of the Unicode funcs’ functions used here, with its 
 * **USE.** Its `compose` (`hb-ot-shaper-use.cc:482`) has the same rule about marks.
 * **Hebrew.** The shaper composes the presentation forms that Unicode’s composition excludes, such as YOD + HIRIQ into U+FB1D, for “old fonts”: only when Unicode composition fails, and only if the plan has no `mark` feature (`hb-ot-shaper-hebrew.cc:81`). That is the one use of `has_gpos_mark` left in normalization. `HB_NO_OT_SHAPER_HEBREW_FALLBACK` leaves it out.
 
-The script chapters, [The Indic model](indic-model.html), [Khmer and Myanmar](khmer-and-myanmar.html) and [The Universal Shaping Engine](universal-shaping-engine.html), say why each script needs them.
+The script chapters, [The Indic model](indic-model.html), [Khmer and Myanmar](khmer-and-myanmar.html), and [The Universal Shaping Engine](universal-shaping-engine.html), say why each script needs them.
 
 ## The short circuit, and its price
 
@@ -436,7 +436,7 @@ Fonts shaped with `morx` are normalized like any other, by the `dumber` shaper, 
 | `src/hb-ot-shape-normalize.hh` | the modes, `normalizer_glyph_index`, the context with the `compose` and `decompose` hooks |
 | `src/hb-ot-shape.cc` | `hb_ot_substitute_default`, which calls normalization; `hb_ot_map_glyphs_fast`; `has_gpos_mark` |
 | `src/hb-ot-shaper.hh` | the shaper hooks and `normalization_preference`; `HB_OT_SHAPE_MAX_COMBINING_MARKS` |
-| `src/hb-ot-shaper-{indic,khmer,use,hebrew,arabic}.cc` | the shapers’ `compose`, `decompose` and `reorder_marks` |
+| `src/hb-ot-shaper-{indic,khmer,use,hebrew,arabic}.cc` | the shapers’ `compose`, `decompose`, and `reorder_marks` |
 | `src/hb-unicode.hh` | `space_fallback_type`, `is_variation_selector`, the modified combining classes |
 | `src/hb-ot-shape-fallback.cc` | `_hb_ot_shape_fallback_spaces`, which gives fallback spaces their widths |
 | `src/hb-buffer.cc` | `sort`, the stable sort that reorders marks |

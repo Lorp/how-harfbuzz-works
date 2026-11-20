@@ -41,7 +41,7 @@ The program does three things, and every HarfBuzz program does them.
 
 **Load the font.** A [blob](blobs-faces-and-lazy-tables.html) holds the file’s bytes, a face reads the font in it, and a font is the face at a size. Nothing here sets a size, so the font works in font units, and so does everything after it.
 
-**Shape.** The text goes into a [buffer](buffers.html) as UTF-8. `hb_buffer_guess_segment_properties` works out the script, language and direction from the text and the locale. A real application should set them, as [Why shaping exists](why-shaping-exists.html#runs-and-the-three-things-harfbuzz-must-be-told) explains. `hb_shape` turns the characters into glyphs: after it, each `hb_glyph_info_t`’s `codepoint` is a glyph ID, not a character.
+**Shape.** The text goes into a [buffer](buffers.html) as UTF-8. `hb_buffer_guess_segment_properties` works out the script, language, and direction from the text and the locale. A real application should set them, as [Why shaping exists](why-shaping-exists.html#runs-and-the-three-things-harfbuzz-must-be-told) explains. `hb_shape` turns the characters into glyphs: after it, each `hb_glyph_info_t`’s `codepoint` is a glyph ID, not a character.
 
 **Read the result.** After shaping, the buffer holds two arrays of the same length. Each `hb_glyph_info_t` has the glyph’s ID and its **cluster**, which says where in the text the glyph came from. Each `hb_glyph_position_t` has the glyph’s advance and its offset. The loop prints them in `hb-shape`’s format, which [Reading this book](notation.html#shaping-results) explains: the glyph’s name, `=` and its cluster, `@` and its offset if it has one, `+` and its advance. `hb_font_glyph_to_string` gives the glyph’s name, or `gid` and its number in a font without names. The *ffi* of “office” has become one glyph, `f_f_i`, and the next glyph’s cluster jumps from 1 to 4, because three characters went into it.
 
@@ -72,7 +72,7 @@ cc text-to-glyphs.c $(pkg-config --cflags --libs harfbuzz) -o text-to-glyphs
 ./text-to-glyphs LibreBaskerville.ttf "office coffee"
 ```
 
-If it prints an older version, or says the package wasn’t found, build HarfBuzz {{hb}} yourself. It takes a minute or two, and doesn’t touch any HarfBuzz you have installed. You need a C++ compiler, `pkg-config`, Meson and Ninja (`brew install meson ninja pkg-config` on a Mac, `apt install meson ninja-build pkg-config` on Debian and Ubuntu), and for the PNG program below, libpng (`brew install libpng`, or `apt install libpng-dev`). Then, in the folder with the programs:
+If it prints an older version, or says the package wasn’t found, build HarfBuzz {{hb}} yourself. It takes a minute or two, and doesn’t touch any HarfBuzz you have installed. You need a C++ compiler, `pkg-config`, Meson, and Ninja (`brew install meson ninja pkg-config` on a Mac, `apt install meson ninja-build pkg-config` on Debian and Ubuntu), and for the PNG program below, libpng (`brew install libpng`, or `apt install libpng-dev`). Then, in the folder with the programs:
 
 ```
 git clone --depth 1 --branch {{hb}} https://github.com/harfbuzz/harfbuzz.git
@@ -166,7 +166,7 @@ output: text
 same-as: hb-shape
 ```
 
-It is the C program’s three steps under other names: `Blob`, `Face`, `Font`, `Buffer` and `shape`, then `getGlyphInfos` and `getGlyphPositions` for the result, and `glyphName` for each glyph’s name. JavaScript strings are UTF-16, and `addText` gives the text to HarfBuzz that way, so clusters here count UTF-16 code units: a character outside the Basic Multilingual Plane, such as an emoji, counts as two.
+It is the C program’s three steps under other names: `Blob`, `Face`, `Font`, `Buffer`, and `shape`, then `getGlyphInfos` and `getGlyphPositions` for the result, and `glyphName` for each glyph’s name. JavaScript strings are UTF-16, and `addText` gives the text to HarfBuzz that way, so clusters here count UTF-16 code units: a character outside the Basic Multilingual Plane, such as an emoji, counts as two.
 
 ```
 npm install harfbuzzjs
@@ -207,7 +207,7 @@ args: LibreBaskerville.ttf
 show: source
 ```
 
-The page, `text-to-canvas.mjs` and the font go in one folder. The **import map** tells the browser where to find a module imported by a bare name: when `text-to-canvas.mjs` imports `"harfbuzzjs"`, the browser loads harfbuzzjs 1.6.4 from jsDelivr, a CDN that serves npm packages, so nothing has to be installed. To serve harfbuzzjs yourself, copy `index.mjs`, `harfbuzz.js` and `harfbuzz.wasm` from `node_modules/harfbuzzjs/dist/` into a folder named `harfbuzzjs` beside the page, and change the import map to `"./harfbuzzjs/index.mjs"`. harfbuzzjs loads `harfbuzz.wasm` from beside its own module, wherever that is.
+The page, `text-to-canvas.mjs`, and the font go in one folder. The **import map** tells the browser where to find a module imported by a bare name: when `text-to-canvas.mjs` imports `"harfbuzzjs"`, the browser loads harfbuzzjs 1.6.4 from jsDelivr, a CDN that serves npm packages, so nothing has to be installed. To serve harfbuzzjs yourself, copy `index.mjs`, `harfbuzz.js`, and `harfbuzz.wasm` from `node_modules/harfbuzzjs/dist/` into a folder named `harfbuzzjs` beside the page, and change the import map to `"./harfbuzzjs/index.mjs"`. harfbuzzjs loads `harfbuzz.wasm` from beside its own module, wherever that is.
 
 On a high-resolution screen, the canvas should have more pixels than it takes up on the page, `devicePixelRatio` times as many, or the text comes out blurred. The page asks `drawText` for that many pixels, and then sets the canvas’s width in CSS pixels.
 
@@ -244,7 +244,7 @@ output: text
 same-as: hb-shape
 ```
 
-The same steps under Python names: `Blob`, `Face`, `Font`, `Buffer` and `shape`, then `glyph_infos` and `glyph_positions` for the result, and `glyph_to_string` for each glyph’s name. `add_str` gives the text to HarfBuzz as UTF-32, so clusters here count characters, as `hb-shape`’s do.
+The same steps under Python names: `Blob`, `Face`, `Font`, `Buffer`, and `shape`, then `glyph_infos` and `glyph_positions` for the result, and `glyph_to_string` for each glyph’s name. `add_str` gives the text to HarfBuzz as UTF-32, so clusters here count characters, as `hb-shape`’s do.
 
 ```
 pip install uharfbuzz
@@ -261,7 +261,7 @@ args: LibreBaskerville.ttf  office coffee
 output: svg
 ```
 
-The first half is the same. `draw_glyph_with_pen` sends a glyph’s outline to a **pen**, an object whose `moveTo`, `lineTo`, `qCurveTo`, `curveTo` and `closePath` methods are called with each point, in font units and y up. It is the same kind of pen fontTools uses, so a fontTools pen works here too. This one collects the outline as SVG path data, and the rest is as in JavaScript.
+The first half is the same. `draw_glyph_with_pen` sends a glyph’s outline to a **pen**, an object whose `moveTo`, `lineTo`, `qCurveTo`, `curveTo`, and `closePath` methods are called with each point, in font units and y up. It is the same kind of pen fontTools uses, so a fontTools pen works here too. This one collects the outline as SVG path data, and the rest is as in JavaScript.
 
 ```
 python text-to-svg.py LibreBaskerville.ttf "office coffee" > office.svg
@@ -277,7 +277,7 @@ args: LibreBaskerville.ttf  office coffee  32
 output: png
 ```
 
-The pixels are blue, green, red and alpha, premultiplied, with the rows from the bottom up ([hb-raster](hb-raster.html)); Pillow’s `BGRa` mode and a negative stride, the `-1`, take them as they are.
+The pixels are blue, green, red, and alpha, premultiplied, with the rows from the bottom up ([hb-raster](hb-raster.html)); Pillow’s `BGRa` mode and a negative stride, the `-1`, take them as they are.
 
 ```
 pip install uharfbuzz pillow
@@ -301,7 +301,7 @@ output: text
 same-as: hb-shape
 ```
 
-The same steps again, with one fewer name: HarfRust’s `Font` reads the file’s bytes itself, with no blob or face, and a `ShaperFont` is what shapes with it. HarfRust has no font size at all: it always shapes in font units, and a program scales the result. `glyph_name` gives a glyph’s name if the font has one. `push_str` sets each cluster to its character’s byte offset in the UTF-8 string, so clusters count bytes, as the C program’s do. Here the build’s check says something more than in the other languages: a different shaper has produced the same glyphs, clusters and advances as HarfBuzz.
+The same steps again, with one fewer name: HarfRust’s `Font` reads the file’s bytes itself, with no blob or face, and a `ShaperFont` is what shapes with it. HarfRust has no font size at all: it always shapes in font units, and a program scales the result. `glyph_name` gives a glyph’s name if the font has one. `push_str` sets each cluster to its character’s byte offset in the UTF-8 string, so clusters count bytes, as the C program’s do. Here the build’s check says something more than in the other languages: a different shaper has produced the same glyphs, clusters, and advances as HarfBuzz.
 
 ```
 cargo run --release --bin text-to-glyphs -- LibreBaskerville.ttf "office coffee"
@@ -331,13 +331,13 @@ args: LibreBaskerville.ttf  office coffee  32
 output: png
 ```
 
-The pen is the only new part. Skrifa calls a pen’s `move_to`, `line_to`, `quad_to`, `curve_to` and `close` with each point of the outline, y up and already scaled to pixels; this one adds the glyph’s position and turns y down, and builds one path for the whole line. It sizes its image as the C program does, and the two PNGs come out the same size.
+The pen is the only new part. Skrifa calls a pen’s `move_to`, `line_to`, `quad_to`, `curve_to`, and `close` with each point of the outline, y up and already scaled to pixels; this one adds the glyph’s position and turns y down, and builds one path for the whole line. It sizes its image as the C program does, and the two PNGs come out the same size.
 
 ## What these programs leave out
 
 They are as short as they can be, and a real program needs more. In rough order of how soon it matters:
 
-* **Script, language and direction**, set from what the application knows, not guessed. A string that mixes scripts or directions has to be split into runs first, each shaped on its own ([Why shaping exists](why-shaping-exists.html)).
+* **Script, language, and direction**, set from what the application knows, not guessed. A string that mixes scripts or directions has to be split into runs first, each shaped on its own ([Why shaping exists](why-shaping-exists.html)).
 * **Features**, such as small caps or old-style figures, passed to `hb_shape` ([From features to lookups](from-features-to-lookups.html)).
 * **Fallback fonts.** A glyph ID of 0 means the font has no glyph for a character, and the application should find a font that does.
 * **Line breaking.** HarfBuzz shapes a line; deciding where lines end is the application’s job, helped by the safe-to-break flags ([For applications](for-applications.html)).
@@ -354,16 +354,16 @@ Each library’s own reference is where to go next:
 
 | Language | Library | Reference |
 |---|---|---|
-| C | HarfBuzz | the [API reference](https://harfbuzz.github.io/reference-manual.html), including [buffers](https://harfbuzz.github.io/harfbuzz-hb-buffer.html), [hb-vector](https://harfbuzz.github.io/harfbuzz-hb-vector.html) and [hb-raster](https://harfbuzz.github.io/harfbuzz-hb-raster.html) |
+| C | HarfBuzz | the [API reference](https://harfbuzz.github.io/reference-manual.html), including [buffers](https://harfbuzz.github.io/harfbuzz-hb-buffer.html), [hb-vector](https://harfbuzz.github.io/harfbuzz-hb-vector.html), and [hb-raster](https://harfbuzz.github.io/harfbuzz-hb-raster.html) |
 | JavaScript | harfbuzzjs | its [README](https://github.com/harfbuzz/harfbuzzjs#readme), and the type declarations in `dist/index.d.mts` |
 | Python | uharfbuzz, Pillow | [uharfbuzz’s documentation](https://uharfbuzz.readthedocs.io/), and [Pillow’s](https://pillow.readthedocs.io/en/stable/) |
-| Rust | HarfRust, Skrifa, tiny-skia | [HarfRust](https://docs.rs/harfrust/0.16.0/harfrust/), [Skrifa](https://docs.rs/skrifa/0.50.0/skrifa/) and [tiny-skia](https://docs.rs/tiny-skia/0.11.4/tiny_skia/) on docs.rs |
+| Rust | HarfRust, Skrifa, tiny-skia | [HarfRust](https://docs.rs/harfrust/0.16.0/harfrust/), [Skrifa](https://docs.rs/skrifa/0.50.0/skrifa/), and [tiny-skia](https://docs.rs/tiny-skia/0.11.4/tiny_skia/) on docs.rs |
 
 ## Where to read the source
 
 | File | What it shows |
 |---|---|
-| [`examples/quick-start/`](https://github.com/Lorp/how-harfbuzz-works/tree/main/examples/quick-start) (in the book’s repository) | the programs on this page, with the JavaScript `package.json`, the Python `requirements.txt` and the Rust `Cargo.toml` |
+| [`examples/quick-start/`](https://github.com/Lorp/how-harfbuzz-works/tree/main/examples/quick-start) (in the book’s repository) | the programs on this page, with the JavaScript `package.json`, the Python `requirements.txt`, and the Rust `Cargo.toml` |
 | `util/hb-shape.cc`, `util/shape-format.hh` | how `hb-shape` prints: the C glyphs program, with options |
 | `util/vector-output.hh` | how `hb-vector` draws: the C SVG program, with options |
 | `util/raster-output.hh` | how `hb-raster` draws, including its image sizes and margins |
@@ -372,7 +372,7 @@ Each library’s own reference is where to go next:
 
 ## In short
 
-* Every program does the same three things first: load the font (blob, face, font), shape the text in a buffer, and read the glyphs, with their clusters, advances and offsets.
+* Every program does the same three things first: load the font (blob, face, font), shape the text in a buffer, and read the glyphs, with their clusters, advances, and offsets.
 * The smallest program stops there and prints them, as `hb-shape` does. It needs only HarfBuzz itself, in any recent version.
 * Clusters count in the units the text was given in: bytes in C and Rust, UTF-16 code units in JavaScript, characters in Python.
 * A drawing program walks the glyphs, adding up advances and offsets, and draws each at its pen position.
@@ -380,4 +380,4 @@ Each library’s own reference is where to go next:
 * In JavaScript, harfbuzzjs shapes, and gives outlines as SVG path data, for an SVG file or a canvas.
 * In Python, uharfbuzz shapes, draws outlines through a pen, and paints with hb-raster; Pillow writes the PNG.
 * In Rust, HarfRust shapes, Skrifa gives the outlines, and a rasterizer such as tiny-skia makes pixels. HarfRust is a port, not HarfBuzz.
-* Real programs also set script, language and direction, split mixed text into runs, choose fallback fonts and break lines.
+* Real programs also set script, language, and direction, split mixed text into runs, choose fallback fonts, and break lines.

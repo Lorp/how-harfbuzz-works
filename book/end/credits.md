@@ -6,7 +6,7 @@ HarfBuzz is the work of many people. The lists below are HarfBuzz’s own, from 
 
 HarfBuzz’s [`AUTHORS`](https://github.com/harfbuzz/harfbuzz/blob/15.1.0/AUTHORS) file names fourteen people:
 
-Behdad Esfahbod, David Corbett, David Turner, Ebrahim Byagowi, Garret Rieger, Jonathan Kew, Khaled Hosny, Lars Knoll, Martin Hosken, Owen Taylor, Roderick Sheeter, Roozbeh Pournader, Simon Hausmann and Werner Lemberg.
+Behdad Esfahbod, David Corbett, David Turner, Ebrahim Byagowi, Garret Rieger, Jonathan Kew, Khaled Hosny, Lars Knoll, Martin Hosken, Owen Taylor, Roderick Sheeter, Roozbeh Pournader, Simon Hausmann, and Werner Lemberg.
 
 ## Most commits
 
@@ -30,8 +30,8 @@ Everyone with fifty or more commits to [harfbuzz/harfbuzz](https://github.com/ha
 | Jonathan Kew | [jfkthame](https://github.com/jfkthame) | 64 |
 | Skef Iterum | [skef](https://github.com/skef) | 62 |
 
-Hundreds more have contributed fixes, tests and reports; GitHub lists them all at [github.com/harfbuzz/harfbuzz/graphs/contributors](https://github.com/harfbuzz/harfbuzz/graphs/contributors).
+Hundreds more have contributed fixes, tests, and reports; GitHub lists them all at [github.com/harfbuzz/harfbuzz/graphs/contributors](https://github.com/harfbuzz/harfbuzz/graphs/contributors).
 
 ## Thanks
 
-HarfBuzz’s [`THANKS`](https://github.com/harfbuzz/harfbuzz/blob/15.1.0/THANKS) file thanks Bradley Grainger, Kenichi Ishibashi, Ivan Kuckir, Ryan Lortie, Jeff Muizelaar, suzuki toshiya and Philip Withnall.
+HarfBuzz’s [`THANKS`](https://github.com/harfbuzz/harfbuzz/blob/15.1.0/THANKS) file thanks Bradley Grainger, Kenichi Ishibashi, Ivan Kuckir, Ryan Lortie, Jeff Muizelaar, suzuki toshiya, and Philip Withnall.

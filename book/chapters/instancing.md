@@ -2,9 +2,9 @@
 
 A variable font holds a whole design space. An application that only ever uses the bold weight carries every other weight with it, and a renderer that can’t read variations can’t use the font at all. An **instance** is a font cut from a variable font at one position, or over a smaller part of its design space. Fixing an axis at one value is **pinning** it: the axis disappears, and its effect is baked into the outlines and metrics. Narrowing an axis’s range, and perhaps moving its default, is **limiting** it: the axis stays, with new limits, and every delta that refers to it has to be rewritten. A **full instance** pins every axis and is an ordinary static font; anything else is a **partial instance**, still variable.
 
-HarfBuzz instances inside its subsetter. Axis settings are part of the subset input, and each table’s `subset` method both drops the glyphs the [plan](subsetting.html#the-plan) leaves out and rewrites the table’s variation data, in one pass. Pinning arrived in 6.0.0, for TrueType fonts with every axis pinned; partial instancing, CFF2, COLR v1 and the other tables followed, and the API was declared stable in 8.5.0 (NEWS). The algorithms are ports of fontTools’ instancer, `fontTools.varLib.instancer`, and the source says so file by file.
+HarfBuzz instances inside its subsetter. Axis settings are part of the subset input, and each table’s `subset` method both drops the glyphs the [plan](subsetting.html#the-plan) leaves out and rewrites the table’s variation data, in one pass. Pinning arrived in 6.0.0, for TrueType fonts with every axis pinned; partial instancing, CFF2, COLR v1, and the other tables followed, and the API was declared stable in 8.5.0 (NEWS). The algorithms are ports of fontTools’ instancer, `fontTools.varLib.instancer`, and the source says so file by file.
 
-The examples are cut from the test fonts of [Design space](design-space.html), and from one more built on them, by HarfBuzz’s `hb-subset` in `fonts/instancing/build.sh`. Every block on this page reads those fonts with `hb-shape`, `hb-info` and `hb-vector` from HarfBuzz {{hb}}; the TTX views are fontTools’ dumps of the same files.
+The examples are cut from the test fonts of [Design space](design-space.html), and from one more built on them, by HarfBuzz’s `hb-subset` in `fonts/instancing/build.sh`. Every block on this page reads those fonts with `hb-shape`, `hb-info`, and `hb-vector` from HarfBuzz {{hb}}; the TTX views are fontTools’ dumps of the same files.
 
 ## Asking for an instance
 
@@ -15,7 +15,7 @@ Five functions in `hb-subset.h` set axes on an `hb_subset_input_t`. Each looks t
 | `hb_subset_input_pin_axis_location` | the value, clamped to the axis, three times | 6.0.0 |
 | `hb_subset_input_pin_axis_to_default` | the axis default, three times | 6.0.0 |
 | `hb_subset_input_pin_all_axes_to_default` | the same, for every axis | 8.3.1 |
-| `hb_subset_input_set_axis_range` | a new minimum, default and maximum; NaN keeps the old value | 8.5.0 |
+| `hb_subset_input_set_axis_range` | a new minimum, default, and maximum; NaN keeps the old value | 8.5.0 |
 | `hb_subset_input_get_axis_range` | reads back what was set | 8.5.0 |
 
 `set_axis_range` clamps the new minimum and maximum to the old ones, and then the default to the new range, so a range that leaves out the old default moves the default to whichever end is nearer. A range that is exactly the axis’s own is forgotten before anything else happens (`hb-subset-plan-var.cc:471`).
@@ -60,7 +60,7 @@ var-static700.ttf  IHV  --show-extents
 
 They agree up to rounding. `hb-vector` draws the original’s `V` at weight 700 with points at fractional positions, such as x = 1386.41, because the [inferred](varying-outlines.html#points-that-arent-there-iup) and interpolated deltas are fractional; `glyf` stores integers, so the instance has 1386. A pinned instance is the original at that position rounded to the font’s grid, and drawings at any ordinary size can’t tell them apart.
 
-When every axis is pinned, `_should_drop_table` (`hb-subset.cc:219`) drops `fvar`, `avar`, `gvar`, `HVAR`, `VVAR`, `MVAR` and `cvar` outright. Any other table loses its variation data as it is subset. A table that still has deltas after a partial pin, but none that vary, is dropped too: `var-wght700.ttf` has no `MVAR`, because only weight moved the x-height. In `OS/2`, `usWeightClass` and `usWidthClass` are set from the new default (`hb-ot-os2-table.hh:273`).
+When every axis is pinned, `_should_drop_table` (`hb-subset.cc:219`) drops `fvar`, `avar`, `gvar`, `HVAR`, `VVAR`, `MVAR`, and `cvar` outright. Any other table loses its variation data as it is subset. A table that still has deltas after a partial pin, but none that vary, is dropped too: `var-wght700.ttf` has no `MVAR`, because only weight moved the x-height. In `OS/2`, `usWeightClass` and `usWidthClass` are set from the new default (`hb-ot-os2-table.hh:273`).
 
 ## Limiting an axis
 
@@ -88,7 +88,7 @@ Outside it, the instance clamps, as any variable font does: asked for weight 900
 
 The plan ([Subsetting](subsetting.html#the-plan)) turns the user’s triples into everything the tables will need before any table is written. `normalize_axes_location` (`hb-subset-plan-var.cc:465`) runs first, and fills these members of the plan:
 
-* `user_axes_location`: the user’s triples, in user coordinates. `fvar`, `STAT` and `OS/2` read these.
+* `user_axes_location`: the user’s triples, in user coordinates. `fvar`, `STAT`, and `OS/2` read these.
 * `axes_location`: the same triples normalized, through `fvar` and then `avar`. Every table that rebases deltas reads these.
 * `normalized_coords`: the new default, as a full set of old normalized coordinates. The deltas that are folded into the default values are evaluated here.
 * `axes_index_map` and `axis_tags`: which axes survive, and their new order.
@@ -104,13 +104,13 @@ The normalization isn’t quite the one shaping uses. Shaping normalizes in 16.1
 // happy. We might need to adjust fonttools as well.
 ```
 
-The tests are comparisons with fontTools’ output, and fontTools rounds the same way. The outlines don’t use this path: `glyf` makes its new default outlines with an `hb_font_t` given the user’s values through `hb_font_set_variations`, the same call `hb-shape --variations` makes, so a pinned outline is computed exactly as shaping would compute it (`OT/glyf/glyf.hh:722`). The research for this chapter pinned `var.ttf` and `var-avar.ttf` at sixty-two weights and compared advances, extents and x-heights with the originals’, and found no case where the two normalizations gave different results; with a steep `avar` segment and an unlucky value, a difference of one 2.14 unit is possible (inferred).
+The tests are comparisons with fontTools’ output, and fontTools rounds the same way. The outlines don’t use this path: `glyf` makes its new default outlines with an `hb_font_t` given the user’s values through `hb_font_set_variations`, the same call `hb-shape --variations` makes, so a pinned outline is computed exactly as shaping would compute it (`OT/glyf/glyf.hh:722`). The research for this chapter pinned `var.ttf` and `var-avar.ttf` at sixty-two weights and compared advances, extents, and x-heights with the originals’, and found no case where the two normalizations gave different results; with a steep `avar` segment and an unlucky value, a difference of one 2.14 unit is possible (inferred).
 
-Some work is done per glyph in the plan as well. For a partial instance, `get_instance_glyphs_contour_points` (`:802`) reads every kept glyph’s default points, which `gvar` will need; for CFF2, `update_instance_metrics_map_from_cff2` (`:699`) works out each glyph’s new advance and side bearing from its instanced outline. The rest happens table by table, in the loop that [Subsetting](subsetting.html#writing-the-tables) describes, where `hmtx`, `vmtx`, `maxp` and `OS/2` wait for `glyf`, whose outlines give their numbers.
+Some work is done per glyph in the plan as well. For a partial instance, `get_instance_glyphs_contour_points` (`:802`) reads every kept glyph’s default points, which `gvar` will need; for CFF2, `update_instance_metrics_map_from_cff2` (`:699`) works out each glyph’s new advance and side bearing from its instanced outline. The rest happens table by table, in the loop that [Subsetting](subsetting.html#writing-the-tables) describes, where `hmtx`, `vmtx`, `maxp`, and `OS/2` wait for `glyf`, whose outlines give their numbers.
 
 ## How the solver rewrites a region
 
-A delta applies over a **tent** on each axis: a start, a peak and an end, in normalized coordinates ([Deltas](deltas.html#regions-and-scalars)). When the axis range shrinks or the default moves, each tent must be re-expressed in the new coordinates so that, at every position the new font can reach, the deltas add up to what they did before. `rebase_tent` (`hb-subset-instancer-solver.cc:419`) does this for one tent on one axis. Its file begins:
+A delta applies over a **tent** on each axis: a start, a peak, and an end, in normalized coordinates ([Deltas](deltas.html#regions-and-scalars)). When the axis range shrinks or the default moves, each tent must be re-expressed in the new coordinates so that, at every position the new font can reach, the deltas add up to what they did before. `rebase_tent` (`hb-subset-instancer-solver.cc:419`) does this for one tent on one axis. Its file begins:
 
 ```c++
 /* This file is a straight port of the following:
@@ -195,8 +195,8 @@ The flag is off by default, where fontTools’ instancer has it on. It costs tim
 Most other variation data lives in [item variation stores](deltas.html#item-variation-stores), and `item_variations_t::instantiate` (`hb-ot-var-common.hh:1851`) handles them all the same way: each `VarData` row becomes a set of tuples, one per region, which are rebased and merged like `gvar`’s, and then packed back into rows, with a port of fontTools’ row-encoding optimizer choosing how. Unused regions are pruned. What becomes of the gain depends on the table:
 
 * **HVAR and VVAR.** The new advances are already in `hmtx` and `vmtx`, from the outlines, so the gain is dropped.
-* **MVAR.** `OS/2`, `hhea`, `vhea` and `post` add each metric’s delta at the new default to the stored value.
-* **GDEF, GPOS and BASE.** The plan evaluates every variation index used by a kept value record or anchor, and makes a map from old index to (new index, delta) (`remap_variation_indices`, `hb-subset-plan-var.cc:384`). Each value is serialized with its delta added, and its device table pointed at the new index, or dropped when nothing varies anymore.
+* **MVAR.** `OS/2`, `hhea`, `vhea`, and `post` add each metric’s delta at the new default to the stored value.
+* **GDEF, GPOS, and BASE.** The plan evaluates every variation index used by a kept value record or anchor, and makes a map from old index to (new index, delta) (`remap_variation_indices`, `hb-subset-plan-var.cc:384`). Each value is serialized with its delta added, and its device table pointed at the new index, or dropped when nothing varies anymore.
 * **COLR.** COLR v1’s variable paints get the same treatment through a map of their own.
 * **cvar.** `cvar` is rebased like `gvar`, and its gain is added to `cvt ` whenever the default moves (`hb-subset.cc:347`), for partial instances as well as full ones.
 
@@ -224,7 +224,7 @@ fontTools’ instance of the same font gives 369 there: it stores the mapping as
 
 [avar 2](design-space.html#avar-version-2) is supported, not refused. Full instancing has worked since 12.3.0 and partial instancing since 14.3.0 (NEWS), with fixes in 14.4.0. It is the hardest case, because an `avar` 2 table can make one axis’s final coordinate depend on others: in `var-avar2.ttf`, the weight that is drawn depends on the width. Pinning weight can’t simply bake its contribution in, since what weight 700 means still changes with width.
 
-So for a partial instance of an `avar` 2 font, HarfBuzz follows a fontTools design called offset compensation (described in `AVAR2-INSTANCING.md` at the top of the source tree). The plan normalizes through the `avar` 1 maps only (`hb-subset-plan-var.cc:572`) and rebases the `avar` 2 variation store, adding deltas so that the final coordinates stay in the *old* coordinate space. A pinned axis stays in `fvar`, hidden, with minimum, default and maximum all at the pinned value, and an identity segment map; the other tables keep their variations unchanged, apart from regions the instance can never reach, which are dropped. Only a **self-contained** pinned axis, one whose final coordinate the plan can prove is constant, is removed and baked in like an ordinary pin (`:322`). Weight in `var-avar2.ttf` isn’t one:
+So for a partial instance of an `avar` 2 font, HarfBuzz follows a fontTools design called offset compensation (described in `AVAR2-INSTANCING.md` at the top of the source tree). The plan normalizes through the `avar` 1 maps only (`hb-subset-plan-var.cc:572`) and rebases the `avar` 2 variation store, adding deltas so that the final coordinates stay in the *old* coordinate space. A pinned axis stays in `fvar`, hidden, with minimum, default, and maximum all at the pinned value, and an identity segment map; the other tables keep their variations unchanged, apart from regions the instance can never reach, which are dropped. Only a **self-contained** pinned axis, one whose final coordinate the plan can prove is constant, is removed and baked in like an ordinary pin (`:322`). Weight in `var-avar2.ttf` isn’t one:
 
 ```info
 var-avar2-wght700.ttf  --list-variations
@@ -318,7 +318,7 @@ The research for this chapter instanced the same fonts with `hb-subset` and with
 * Instancing is part of subsetting: axis settings go in the subset input, and each table instances itself as it is subset.
 * Pinning removes an axis and bakes its position into the default; limiting keeps it with a new range, and perhaps a new default, so every coordinate that refers to it is renormalized.
 * The solver, ported from fontTools, rewrites each tent for the new limits: a gain folded into the default, plus new tents. A tent cut off by the new range becomes two.
-* New default outlines are drawn with shaping’s own normalization, so a pinned outline matches the original up to rounding to integers, and `hmtx`, `head` and `maxp` follow from them. Other tables normalize in 2.14 first, as fontTools does.
+* New default outlines are drawn with shaping’s own normalization, so a pinned outline matches the original up to rounding to integers, and `hmtx`, `head`, and `maxp` follow from them. Other tables normalize in 2.14 first, as fontTools does.
 * Rebuilt `gvar` deltas are written out in full unless `OPTIMIZE_IUP_DELTAS` is set.
 * avar 2 is supported, fully and partially; a pinned axis usually stays as a hidden axis.
 * Feature variations are rewritten, with the default’s substitutions copied into the feature list and a catch-all record to undo them elsewhere.

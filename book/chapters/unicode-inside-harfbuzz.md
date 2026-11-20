@@ -27,16 +27,16 @@ Two of the eight are deprecated, since 2.0.0, and the shaper never calls them. T
 
 | Callback | Unicode property | Where HarfBuzz uses it |
 |---|---|---|
-| `general_category` | General_Category (Lu, Mn, Cf…) | for every character, when its properties are set up (`hb-ot-layout.hh:228`); by the Arabic shaper for the characters of pre- and post-context; by the Indic, Khmer and USE shapers’ `compose` |
+| `general_category` | General_Category (Lu, Mn, Cf…) | for every character, when its properties are set up (`hb-ot-layout.hh:228`); by the Arabic shaper for the characters of pre- and post-context; by the Indic, Khmer, and USE shapers’ `compose` |
 | `combining_class` | Canonical_Combining_Class | for every mark, through `modified_combining_class` (`hb-ot-layout.hh:263`) |
 | `mirroring` | Bidi_Mirroring_Glyph | in right-to-left text, before normalization (`hb_ot_rotate_chars`, `hb-ot-shape.cc:667`) |
 | `script` | Script | only when guessing the buffer’s script (`hb-buffer.cc:753`) |
-| `decompose` | canonical Decomposition_Mapping, one step | in normalization, and in the Indic, Khmer and USE shapers’ own versions of it |
+| `decompose` | canonical Decomposition_Mapping, one step | in normalization, and in the Indic, Khmer, and USE shapers’ own versions of it |
 | `compose` | the canonical composition of a pair | the same, and in the Hebrew shaper |
 
 Each answers for one code point, or for a pair in the case of `compose`. `decompose` splits a character into at most two: a character whose canonical decomposition is longer is decomposed again, recursively, by the normalizer. That process is the subject of [Normalization](normalization.html).
 
-`script` is asked less than you might expect. Only `hb_buffer_guess_segment_properties` uses it, to take the first character whose script isn’t Common, Inherited or Unknown as the script of the whole buffer. Nothing in the pipeline asks for a character’s script after that: splitting text into runs of one script is the application’s job, as [Buffers](buffers.html) explains.
+`script` is asked less than you might expect. Only `hb_buffer_guess_segment_properties` uses it, to take the first character whose script isn’t Common, Inherited, or Unknown as the script of the whole buffer. Nothing in the pipeline asks for a character’s script after that: splitting text into runs of one script is the application’s job, as [Buffers](buffers.html) explains.
 
 `mirroring` shows how little HarfBuzz needs. In right-to-left text, each character with a mirror image is replaced by it, if the font has a glyph for it. If the font doesn’t, the character keeps its own glyph and gets the mask bit of the `rtlm` feature instead, so that the font can mirror it itself:
 
@@ -51,7 +51,7 @@ The Hebrew letter makes the second run right-to-left. The output is in visual or
 
 The callbacks are a small part of the Unicode data HarfBuzz uses. The rest is compiled in, and doesn’t change whichever callbacks are installed:
 
-* Arabic joining types, Indic syllabic and positional categories, the Universal Shaping Engine’s categories and the vowel constraints come from tables generated from the Unicode data files by their own scripts (`gen-arabic-table.py`, `gen-indic-table.py`, `gen-use-table.py`, `gen-vowel-constraints.py`). Those are covered with the shapers that use them, and the scripts in [Regenerating the Unicode and shaping tables](regenerating-the-unicode-and-shaping-tables.html).
+* Arabic joining types, Indic syllabic and positional categories, the Universal Shaping Engine’s categories, and the vowel constraints come from tables generated from the Unicode data files by their own scripts (`gen-arabic-table.py`, `gen-indic-table.py`, `gen-use-table.py`, `gen-vowel-constraints.py`). Those are covered with the shapers that use them, and the scripts in [Regenerating the Unicode and shaping tables](regenerating-the-unicode-and-shaping-tables.html).
 * Extended_Pictographic, for emoji sequences, comes from `hb-unicode-emoji-table.hh`, generated from `emoji-data.txt`.
 * Four properties are hand-written functions in `hb-unicode.hh` itself: `is_default_ignorable` (`:167`), `is_variation_selector` (`:119`), `space_fallback_type` (`:219`), which says how wide each space character should be when the font has no glyph for it, and `vertical_char_for` (`:245`), which maps punctuation to its vertical presentation form when a font has no `vert` feature.
 
@@ -59,7 +59,7 @@ So an application that installs ICU’s Unicode functions changes where general 
 
 ## Unicode funcs objects
 
-An `hb_unicode_funcs_t` holds one function pointer, one user-data pointer and one destroy callback per callback in the list. Every buffer has one. A new buffer gets the default (`hb-buffer.cc:289`), and `hb_buffer_set_unicode_funcs` replaces it.
+An `hb_unicode_funcs_t` holds one function pointer, one user-data pointer, and one destroy callback per callback in the list. Every buffer has one. A new buffer gets the default (`hb-buffer.cc:289`), and `hb_buffer_set_unicode_funcs` replaces it.
 
 The *nil* functions in `hb-unicode.cc:60` say what a buffer gets when nothing answers. They are worth knowing, because they are what any callback left unset falls back on:
 
@@ -94,10 +94,10 @@ Which implementation is the default is decided when HarfBuzz is compiled (`hb_un
 That is: HarfBuzz’s own tables, unless the build leaves them out with `HB_NO_UCD`, then GLib’s, then ICU’s. A build with none of them stops with an `#error` (`:166`), unless `HB_NO_UNICODE_FUNCS` is defined. Each is a static, immutable object, created lazily and freed at exit (`hb-ucd.cc:224`, `hb-glib.cc:146`, `hb-icu.cc:242`):
 
 * **hb-ucd** (`hb-ucd.cc`) reads the tables in `hb-ucd-table.hh`, described in the next section.
-* **GLib** (`hb-glib.cc`) calls `g_unichar_type`, `g_unichar_combining_class` and the rest, converting GLib’s script codes to HarfBuzz’s.
+* **GLib** (`hb-glib.cc`) calls `g_unichar_type`, `g_unichar_combining_class`, and the rest, converting GLib’s script codes to HarfBuzz’s.
 * **ICU** (`hb-icu.cc`) maps ICU’s categories onto HarfBuzz’s enum, and composes and decomposes with ICU’s NFC normalizer: `unorm2_composePair`, and `unorm2_getRawDecomposition`, which gives the one-step mapping HarfBuzz wants. It is a separate library, `libharfbuzz-icu`, unless HarfBuzz is configured with `icu_builtin`, the only way ICU can become the default.
 
-> For programmers: the three needn’t agree. Each knows the version of Unicode its library knows, and a system’s ICU or GLib may be older than HarfBuzz’s tables, so that a character one calls unassigned another calls a mark. HarfBuzz’s own tables make shaping depend on nothing but the HarfBuzz version. Installing ICU’s funcs makes HarfBuzz agree with an ICU-based text stack about categories and combining classes, but changes nothing about default ignorables, joining or the script shapers’ categories.
+> For programmers: the three needn’t agree. Each knows the version of Unicode its library knows, and a system’s ICU or GLib may be older than HarfBuzz’s tables, so that a character one calls unassigned another calls a mark. HarfBuzz’s own tables make shaping depend on nothing but the HarfBuzz version. Installing ICU’s funcs makes HarfBuzz agree with an ICU-based text stack about categories and combining classes, but changes nothing about default ignorables, joining, or the script shapers’ categories.
 
 ## The built-in tables
 
@@ -153,7 +153,7 @@ The sizes are worked out from the array lengths. The compact set holds the same 
 
 Only canonical decompositions are stored (`gen-ucd-table.py:63`), each to one character or two. Compatibility decompositions, such as *ﬁ* to *f i*, aren’t, which is why `hb-ucd` doesn’t implement the deprecated `decompose_compatibility`. Hangul syllables are left out too: `hb-ucd.cc:56` composes and decomposes them by arithmetic, as Unicode defines it.
 
-The `dm` index points into four lists: one-character mappings into plane 0, then into plane 2, then pairs packed into 32 bits, then pairs packed into 64. A pair fits in 32 bits when its first character is below U+0800, its second is in U+0300 to U+037F, and the composite is small enough. That covers most accented Latin, Greek and Cyrillic. The same pair lists, sorted by pair, serve composition, by binary search (`hb_ucd_compose`, `hb-ucd.cc:128`). A composite that mustn’t be recomposed, because it is a composition exclusion or has a non-zero combining class, is stored as 0, and composing its pair fails. `gen-ucd-table.py --rust` writes the same tables as Rust.
+The `dm` index points into four lists: one-character mappings into plane 0, then into plane 2, then pairs packed into 32 bits, then pairs packed into 64. A pair fits in 32 bits when its first character is below U+0800, its second is in U+0300 to U+037F, and the composite is small enough. That covers most accented Latin, Greek, and Cyrillic. The same pair lists, sorted by pair, serve composition, by binary search (`hb_ucd_compose`, `hb-ucd.cc:128`). A composite that mustn’t be recomposed, because it is a composition exclusion or has a non-zero combining class, is stored as 0, and composing its pair fails. `gen-ucd-table.py --rust` writes the same tables as Rust.
 
 ## The properties each glyph carries
 
@@ -171,7 +171,7 @@ The design comment at `hb-ot-layout.hh:187` explains how the bits are shared out
 | 8–15, for Cf | `UPROPS_MASK_Cf_ZWJ`, `_ZWNJ`, `_VS`, `_AAT_DELETED` | a zero-width joiner, a zero-width non-joiner, a variation selector, or a glyph deleted by `morx` |
 | 8–15, for Zs | | which kind of space, if it needs the space fallback |
 
-Worked out by hand, as an illustration: U+0301 COMBINING ACUTE ACCENT is Mn (12), a continuation, with combining class 230, which makes 0xE68C. U+200D ZERO WIDTH JOINER is Cf (1), ignorable, a ZWJ and a continuation: 0x01A1. The getters check the category before they trust the high byte, so `_hb_glyph_info_is_zwj` is false for anything that isn’t Cf, and a non-mark’s combining class is 0.
+Worked out by hand, as an illustration: U+0301 COMBINING ACUTE ACCENT is Mn (12), a continuation, with combining class 230, which makes 0xE68C. U+200D ZERO WIDTH JOINER is Cf (1), ignorable, a ZWJ, and a continuation: 0x01A1. The getters check the category before they trust the high byte, so `_hb_glyph_info_is_zwj` is false for anything that isn’t Cf, and a non-mark’s combining class is 0.
 
 ### Setting them
 
@@ -226,7 +226,7 @@ The continuation bit says that a character belongs with the one before it, in on
 
 Unicode defines graphemes in UAX #29. HarfBuzz implements only “enough of Unicode Graphemes here that shaping in reverse-direction wouldn’t break graphemes” (`hb_set_unicode_props`, `hb-ot-shape.cc:474`). It marks as continuations:
 
-* every mark, Mn, Mc or Me (done in `_hb_glyph_info_set_unicode_props`, above);
+* every mark, Mn, Mc, or Me (done in `_hb_glyph_info_set_unicode_props`, above);
 * the emoji skin-tone modifiers, U+1F3FB to U+1F3FF;
 * the second of a pair of regional indicators, which together make a flag (HarfBuzz issue #2265);
 * a zero-width joiner, and an Extended_Pictographic character straight after it, which is how emoji ZWJ sequences hold together;
@@ -319,7 +319,7 @@ unicode.ttf  a\u00ADb
 
 Through GSUB and GPOS, the soft hyphen is the glyph `softhyphen`, 300 units wide. The kerning lookup passes over it to kern the *a* against the *b*. Only then is it zeroed and replaced. Doing it this late lets invisible characters take part in lookups that ask for them.
 
-### Hidden, preserved or removed
+### Hidden, preserved, or removed
 
 Step 3 puts in the buffer’s **invisible glyph**, set with `hb_buffer_set_invisible_glyph` (since 2.0.0), or if there is none, the font’s glyph for the space character: hence the zero-width `space` glyphs in this chapter. If the font has no space glyph either, the ignorables are deleted.
 
@@ -448,7 +448,7 @@ With VS1 the pair becomes one glyph. With VS2 the base keeps its usual glyph and
 | File | What’s there |
 |---|---|
 | `src/hb-unicode.h` | the public API: the callbacks’ types, the general category and combining class enums |
-| `src/hb-unicode.hh` | `hb_unicode_funcs_t`; the hard-coded `is_default_ignorable`, `is_variation_selector`, `space_fallback_type` and `vertical_char_for`; `modified_combining_class` and the definitions of the modified classes |
+| `src/hb-unicode.hh` | `hb_unicode_funcs_t`; the hard-coded `is_default_ignorable`, `is_variation_selector`, `space_fallback_type`, and `vertical_char_for`; `modified_combining_class` and the definitions of the modified classes |
 | `src/hb-unicode.cc` | the nil funcs, choosing the default, creating funcs from a parent, the modified combining class table |
 | `src/hb-ucd.cc`, `src/hb-ucd-table.hh` | the built-in implementation, and its generated tables in three sizes |
 | `src/gen-ucd-table.py` | the generator, with the encoding of each property |
@@ -461,10 +461,10 @@ With VS1 the pair becomes one glyph. With VS2 the base keeps its usual glyph and
 
 ## In short
 
-* HarfBuzz asks Unicode six questions: general category, combining class, mirroring, script, decomposition and composition. They are answered by an `hb_unicode_funcs_t`, normally HarfBuzz’s own, with GLib and ICU as alternatives.
+* HarfBuzz asks Unicode six questions: general category, combining class, mirroring, script, decomposition, and composition. They are answered by an `hb_unicode_funcs_t`, normally HarfBuzz’s own, with GLib and ICU as alternatives.
 * The built-in tables are generated from the UCD (here Unicode 18.0.0) by `gen-ucd-table.py` and packed into multi-level tables of about 35 to 51 KB, depending on the build.
-* Default ignorables, variation selectors, space widths, vertical forms, emoji, joining and the script shapers’ categories don’t come from the funcs. They are compiled in, and the same whatever funcs are installed.
-* Each glyph carries 16 bits of Unicode properties for the whole of shaping: a general category, ignorable, hidden and continuation bits, and a byte whose meaning depends on the category.
-* Marks are reordered by HarfBuzz’s modified combining classes, which suit fonts better than Unicode’s for Hebrew, Arabic, Telugu, Thai and Tibetan.
+* Default ignorables, variation selectors, space widths, vertical forms, emoji, joining, and the script shapers’ categories don’t come from the funcs. They are compiled in, and the same whatever funcs are installed.
+* Each glyph carries 16 bits of Unicode properties for the whole of shaping: a general category, ignorable, hidden, and continuation bits, and a byte whose meaning depends on the category.
+* Marks are reordered by HarfBuzz’s modified combining classes, which suit fonts better than Unicode’s for Hebrew, Arabic, Telugu, Thai, and Tibetan.
 * Default ignorables take part in GSUB and GPOS, then lose their advance, then are replaced by an invisible glyph, unless the buffer says to preserve or remove them. One that GSUB has substituted is no longer ignorable.
 * Hidden characters, the Mongolian FVSes, TAG characters, and a CGJ that kept marks apart, are never passed over in GSUB. Since 10.0.0 they are passed over in GPOS.

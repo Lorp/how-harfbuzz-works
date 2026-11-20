@@ -1,6 +1,6 @@
 # The command-line tools
 
-HarfBuzz comes with a handful of small programs, in its `util/` folder. `hb-shape` shapes a piece of text with a font and prints the glyphs and positions that come back. `hb-info` says what is in a font. `hb-subset` cuts a font down. `hb-vector`, `hb-raster` and `hb-view` draw shaped text. They are thin: each parses its options, makes the same HarfBuzz objects an application would, calls the library, and prints what it gets. That makes them the quickest way to ask HarfBuzz a question about a font, and the answer comes from the library itself.
+HarfBuzz comes with a handful of small programs, in its `util/` folder. `hb-shape` shapes a piece of text with a font and prints the glyphs and positions that come back. `hb-info` says what is in a font. `hb-subset` cuts a font down. `hb-vector`, `hb-raster`, and `hb-view` draw shaped text. They are thin: each parses its options, makes the same HarfBuzz objects an application would, calls the library, and prints what it gets. That makes them the quickest way to ask HarfBuzz a question about a font, and the answer comes from the library itself.
 
 Every shaping result in this book is `hb-shape` output. This chapter explains its options, then the other tools, then puts them to work on a few questions about fonts. The tools come with a package manager’s HarfBuzz: Homebrew’s `harfbuzz`, for example, or Debian’s `libharfbuzz-bin`. Check the version first, with `hb-shape --version`: this book describes HarfBuzz 15, and a packaged HarfBuzz can be much older. [Building HarfBuzz](building-harfbuzz.html) shows how to build HarfBuzz {{hb}} yourself, including the build with detailed traces. [Reading this book](notation.html) explains how the book shows their output.
 
@@ -12,9 +12,9 @@ As everywhere in the book, the results and pictures below were made by running t
 |---|---|---|---|
 | `hb-shape` | shapes text, prints glyphs and positions as text or JSON | `libharfbuzz` | always, installed |
 | `hb-info` | lists a font’s names, tables, characters, glyphs, scripts, features, axes, palettes | `libharfbuzz` | always, installed |
-| `hb-subset` | writes a smaller font: fewer characters, glyphs, tables or axes | `libharfbuzz-subset` | option `subset`, installed |
+| `hb-subset` | writes a smaller font: fewer characters, glyphs, tables, or axes | `libharfbuzz-subset` | option `subset`, installed |
 | `hb-vector` | draws shaped text as SVG or PDF | `libharfbuzz-vector` | option `vector`, installed |
-| `hb-raster` | draws shaped text as PNG, PPM or terminal art | `libharfbuzz-raster` | option `raster`, installed |
+| `hb-raster` | draws shaped text as PNG, PPM, or terminal art | `libharfbuzz-raster` | option `raster`, installed |
 | `hb-view` | draws shaped text through cairo ([hb-cairo](integrations.html#how-hb-view-uses-it)) | `libharfbuzz-cairo` | with cairo, installed |
 | `hb-gpu` | an interactive window that draws text on the GPU | `libharfbuzz-gpu` | with GLEW and GLFW, installed |
 | `hb-subset-depend` | prints a font’s glyph dependency graph | `libharfbuzz-subset` | option `experimental_api`, not installed |
@@ -33,21 +33,21 @@ The tools are put together from the same parts. Each group of options is a C++ s
 | `face` | `face-options.hh` | `--font-file`, `-y`/`--face-index`, `--face-loader` | all |
 | `font`, `variations` | `font-options.hh` | `--font-size`, `--font-ppem`, `--font-ptem`, `--font-bold`, `--font-grade`, `--font-slant`, `--font-funcs`, `--ft-load-flags`, `--variations`, `--named-instance` | all but `hb-subset` and `hb-subset-depend` |
 | `text`, `text-context` | `text-options.hh` | `--text`, `--text-file`, `-u`/`--unicodes`, `--single-par`, `--text-before`, `--text-after`, `--unicodes-before`, `--unicodes-after` | the shaping and drawing tools |
-| `shape`, `features` | `shape-options.hh` | `--direction`, `--script`, `--language`, `--features`, `--shapers`, `--cluster-level`, `--verify` and the buffer flags | the shaping and drawing tools |
+| `shape`, `features` | `shape-options.hh` | `--direction`, `--script`, `--language`, `--features`, `--shapers`, `--cluster-level`, `--verify`, and the buffer flags | the shaping and drawing tools |
 | `output` | `output-options.hh` | `-o`/`--output-file`, `-O`/`--output-format` | `hb-shape`, `hb-subset`, `hb-vector`, `hb-raster`, `hb-view`, `hb-ft-raster` |
-| `output-syntax` | `shape-format.hh` | `--no-glyph-names`, `--show-flags`, `--trace` and the rest | `hb-shape` |
-| `view` | `view-options.hh` | `--foreground`, `--background`, `--margin`, `--font-palette`, `--show-extents` and others | `hb-view`, `hb-vector`, `hb-raster` |
+| `output-syntax` | `shape-format.hh` | `--no-glyph-names`, `--show-flags`, `--trace`, and the rest | `hb-shape` |
+| `view` | `view-options.hh` | `--foreground`, `--background`, `--margin`, `--font-palette`, `--show-extents`, and others | `hb-view`, `hb-vector`, `hb-raster` |
 
-“The shaping and drawing tools” are `hb-shape`, `hb-view`, `hb-vector`, `hb-raster`, `hb-ft-raster` and `hb-gpu`. Every one of them shapes before it draws, with the same code (`shape-consumer.hh:65`), so the drawing tools take `--features`, `--language` and the rest, and draw exactly the glyphs `hb-shape` would print.
+“The shaping and drawing tools” are `hb-shape`, `hb-view`, `hb-vector`, `hb-raster`, `hb-ft-raster`, and `hb-gpu`. Every one of them shapes before it draws, with the same code (`shape-consumer.hh:65`), so the drawing tools take `--features`, `--language`, and the rest, and draw exactly the glyphs `hb-shape` would print.
 
 A few habits are common to all of them:
 
 * **The font and the text.** The first argument that isn’t an option is the font file and the second is the text (`main-font-text.hh:91`). `--font-file` and `--text` say the same thing as options. A font file named `-` is read from standard input (`face-options.hh:99`).
 * **Text from a file, line by line.** With no text, the tools read standard input; `--text-file` reads a file (`text-options.hh:53`). Either way, and for `--text` too, each line is shaped on its own, unless `--single-par` makes the whole input one paragraph (`text-options.hh:314`).
-* **Size.** The default `--font-size` is the font’s units per em for `hb-shape`, `hb-info` and `hb-vector`, so their numbers are in font units, and 256 for `hb-raster` and `hb-view`, whose output is pixels (`hb-shape.cc:35`, `hb-raster.cc:34`).
+* **Size.** The default `--font-size` is the font’s units per em for `hb-shape`, `hb-info`, and `hb-vector`, so their numbers are in font units, and 256 for `hb-raster` and `hb-view`, whose output is pixels (`hb-shape.cc:35`, `hb-raster.cc:34`).
 * **Output.** `-o` names a file. Without `-O`, the format comes from the file’s extension (`output-options.hh:77`), so `hb-vector -o text.pdf` writes PDF.
 * **Exit codes.** 0 for success, 1 if the options couldn’t be parsed, 2 if the font couldn’t be loaded, 3 if the operation failed, 4 if the font functions couldn’t be set (`options.hh:59`).
-* **Environment.** `HB_SHAPER_LIST`, `HB_FONT_FUNCS` and `HB_FACE_LOADER` change the library’s defaults, for these tools and for any other program ([hb_shape and its backends](hb_shape-and-its-backends.html), [Fonts and font functions](fonts-and-font-functions.html#choosing-funcs)).
+* **Environment.** `HB_SHAPER_LIST`, `HB_FONT_FUNCS`, and `HB_FACE_LOADER` change the library’s defaults, for these tools and for any other program ([hb_shape and its backends](hb_shape-and-its-backends.html), [Fonts and font functions](fonts-and-font-functions.html#choosing-funcs)).
 
 ## hb-shape
 
@@ -74,7 +74,7 @@ why-shaping-exists/shaping.ttf  \u0628\u0628\u0628  --show-flags
 why-shaping-exists/shaping.ttf  \u0628\u0628\u0628  --show-flags  --unsafe-to-concat
 ```
 
-`--output-format=json` (or `-O json`) writes the same data as JSON, with short keys: `g`, `cl`, `dx`, `dy`, `ax`, `ay`, and `xb`, `yb`, `w`, `h` for extents and `fl` for flags.:
+`--output-format=json` (or `-O json`) writes the same data as JSON, with short keys: `g`, `cl`, `dx`, `dy`, `ax`, `ay`, and `xb`, `yb`, `w`, `h` for extents and `fl` for flags:
 
 ```shape
 why-shaping-exists/shaping.ttf  fi\u00E1  --output-format=json  --show-extents
@@ -89,7 +89,7 @@ why-shaping-exists/shaping.ttf  fi  -v
 
 ### Text and code points
 
-The text can be given as characters or as code points. `-u` (`--unicodes`) takes a list of hexadecimal numbers, and is generous about what separates them: commas, spaces, `U+`, `0x`, `\u`, `&#x` and `;`, among others (`text-options.hh:150`). So `-u 628,644`, `-u "U+0628 U+0644"` and `-u "&#x628;&#x644;"` give the same text. For text that is hard to type, or invisible, code points are safer than characters.
+The text can be given as characters or as code points. `-u` (`--unicodes`) takes a list of hexadecimal numbers, and is generous about what separates them: commas, spaces, `U+`, `0x`, `\u`, `&#x`, and `;`, among others (`text-options.hh:150`). So `-u 628,644`, `-u "U+0628 U+0644"`, and `-u "&#x628;&#x644;"` give the same text. For text that is hard to type, or invisible, code points are safer than characters.
 
 `--text-before` and `--text-after` give the text around the run, as an application gives the text around a run it has cut out of a paragraph. `--unicodes-before` and `--unicodes-after` do the same with code points. They are added to the buffer as **context**: characters HarfBuzz can look at but doesn’t shape (`shape-options.hh:117`). Context matters wherever shaping looks at Unicode properties of the neighbors, as Arabic joining does:
 
@@ -109,16 +109,16 @@ gsub/ligatures.ttf  e  --unicodes-before=20
 
 [For applications](for-applications.html#context-at-the-edges-of-a-run) says what this means for an application. One oddity: in {{hb}}, `--text-before` also prints its argument to standard error (`text-options.hh:225`), a debugging line left in.
 
-### Direction, script and language
+### Direction, script, and language
 
-A run has a direction, a script and a language ([Why shaping exists](why-shaping-exists.html#runs-and-the-three-things-harfbuzz-must-be-told)). `hb-shape` guesses whatever isn’t given, with `hb_buffer_guess_segment_properties` (`shape-options.hh:64`): the script and direction from the text, the language from the locale, through the `LANG` and `LC_*` environment variables. The language changes results in fonts with language-specific rules, so a result that depends on it should say `--language` explicitly, or it will differ from one machine to the next:
+A run has a direction, a script, and a language ([Why shaping exists](why-shaping-exists.html#runs-and-the-three-things-harfbuzz-must-be-told)). `hb-shape` guesses whatever isn’t given, with `hb_buffer_guess_segment_properties` (`shape-options.hh:64`): the script and direction from the text, the language from the locale, through the `LANG` and `LC_*` environment variables. The language changes results in fonts with language-specific rules, so a result that depends on it should say `--language` explicitly, or it will differ from one machine to the next:
 
 ```shape
 why-shaping-exists/shaping.ttf  fi  --language=en
 why-shaping-exists/shaping.ttf  fi  --language=tr
 ```
 
-`--direction` takes `ltr`, `rtl`, `ttb` or `btt`; `--script` an ISO 15924 code such as `Latn` or `Arab` ([Choosing a script shaper](choosing-a-script-shaper.html)); `--language` a BCP 47 tag such as `tr` or `ur-PK`.
+`--direction` takes `ltr`, `rtl`, `ttb`, or `btt`; `--script` an ISO 15924 code such as `Latn` or `Arab` ([Choosing a script shaper](choosing-a-script-shaper.html)); `--language` a BCP 47 tag such as `tr` or `ur-PK`.
 
 ### Features
 
@@ -170,7 +170,7 @@ hb:test/subset/data/fonts/Roboto-Regular.ttf  Wave  --font-size=16
 hb:test/subset/data/fonts/Roboto-Regular.ttf  Wave  --font-size=1024
 ```
 
-An application that wants fractions of a pixel scales the font by more, often 64 times, and `hb-raster`, `hb-vector` and `hb-view` do that themselves: they multiply the size by 64 (`SUBPIXEL_BITS`, `hb-raster.cc:35`, `font-options.hh:99`). [Fonts and font functions](fonts-and-font-functions.html#three-kinds-of-size) explains scale, `--font-ppem` (pixels per em, which only Device tables, hinting and bitmap strikes read) and `--font-ptem` (the point size, which AAT’s `trak` reads). `--font-bold`, `--font-grade` and `--font-slant` make a font bold, heavier without wider advances, or slanted, synthetically ([Fonts and font functions](fonts-and-font-functions.html#synthetic-bold-and-slant)):
+An application that wants fractions of a pixel scales the font by more, often 64 times, and `hb-raster`, `hb-vector`, and `hb-view` do that themselves: they multiply the size by 64 (`SUBPIXEL_BITS`, `hb-raster.cc:35`, `font-options.hh:99`). [Fonts and font functions](fonts-and-font-functions.html#three-kinds-of-size) explains scale, `--font-ppem` (pixels per em, which only Device tables, hinting, and bitmap strikes read), and `--font-ptem` (the point size, which AAT’s `trak` reads). `--font-bold`, `--font-grade`, and `--font-slant` make a font bold, heavier without wider advances, or slanted, synthetically ([Fonts and font functions](fonts-and-font-functions.html#synthetic-bold-and-slant)):
 
 ```shape
 why-shaping-exists/shaping.ttf  fi  --font-bold=0.05
@@ -236,7 +236,7 @@ Each line runs as if it were a command of its own, and prints what it would. The
 hb:test/subset/data/fonts/Roboto-Regular.ttf
 ```
 
-Its queries come in three kinds. `--show-…` prints one line of the summary (`--show-upem`, `--show-glyph-count` and so on). `--get-…` fetches one thing by its tag or number: `--get-name=13`, `--get-metric=hasc`, `--get-style=wght`, `--get-baseline=romn`. `--get-table=GSUB` writes the table’s raw bytes to standard output (`hb-info.cc:617`), ready to pipe to another program. `--list-…` lists: names, tables (`-l`), characters (`--list-unicodes`), glyphs, scripts, features, variations, palettes, metrics, style values, baselines and `meta` entries. `-a` (`--all`) prints everything. `-q` drops the headings, for scripts.
+Its queries come in three kinds. `--show-…` prints one line of the summary (`--show-upem`, `--show-glyph-count`, and so on). `--get-…` fetches one thing by its tag or number: `--get-name=13`, `--get-metric=hasc`, `--get-style=wght`, `--get-baseline=romn`. `--get-table=GSUB` writes the table’s raw bytes to standard output (`hb-info.cc:617`), ready to pipe to another program. `--list-…` lists: names, tables (`-l`), characters (`--list-unicodes`), glyphs, scripts, features, variations, palettes, metrics, style values, baselines, and `meta` entries. `-a` (`--all`) prints everything. `-q` drops the headings, for scripts.
 
 Because `hb-info` has the font options, its answers are for the font as configured: `--get-style=wght`, for example, answers for the instance `--variations` asks for:
 
@@ -244,7 +244,7 @@ Because `hb-info` has the font options, its answers are for the font as configur
 variations/var.ttf  -q --get-style=wght --variations=wght=650
 ```
 
-`--list-features` alone lists every feature of GSUB and GPOS once. With `--script`, and optionally `--language`, it lists only those of that script and language, as HarfBuzz would choose them when shaping (`hb-info.cc:1047`); `--ot-script` and `--ot-language` give OpenType tags directly. [Other tables](other-tables.html) uses `hb-info`’s queries of `name`, `STAT`, `BASE` and `meta`.
+`--list-features` alone lists every feature of GSUB and GPOS once. With `--script`, and optionally `--language`, it lists only those of that script and language, as HarfBuzz would choose them when shaping (`hb-info.cc:1047`); `--ot-script` and `--ot-language` give OpenType tags directly. [Other tables](other-tables.html) uses `hb-info`’s queries of `name`, `STAT`, `BASE`, and `meta`.
 
 ## hb-subset
 
@@ -254,11 +254,11 @@ variations/var.ttf  -q --get-style=wght --variations=wght=650
 $ hb-subset Roboto-Regular.ttf --text="Hello" -o hello.ttf
 ```
 
-The text can also come as the second argument, as for `hb-shape` (`hb-subset.cc:868`). What to keep is given by `--text`, `--unicodes` (hex, with ranges and `*` for all), `--gids` and `--glyphs`, each with a `-file` form. Every set has a `+=` and a `-=` form that adds or takes away, so `--unicodes=* --unicodes-=41` keeps every character but `A`, and `--layout-features+=dlig` keeps one more feature than the default list. `--drop-tables`, `--name-IDs` and `--layout-scripts` work the same way.
+The text can also come as the second argument, as for `hb-shape` (`hb-subset.cc:868`). What to keep is given by `--text`, `--unicodes` (hex, with ranges and `*` for all), `--gids`, and `--glyphs`, each with a `-file` form. Every set has a `+=` and a `-=` form that adds or takes away, so `--unicodes=* --unicodes-=41` keeps every character but `A`, and `--layout-features+=dlig` keeps one more feature than the default list. `--drop-tables`, `--name-IDs`, and `--layout-scripts` work the same way.
 
 Among the flags, `--retain-gids` keeps glyph IDs unchanged, `--no-hinting` drops hinting, `--desubroutinize` flattens CFF, `--glyph-names` keeps the `post` table’s names (without it, a TrueType subset’s glyphs print as `gid0`, `gid1`), and `--no-layout-closure` drops the glyphs that only substitutions reach. `--variations` instances a variable font: `wght=700` pins an axis, `wght=300:700` limits it, `wght=drop` pins it at its default (`helper-subset.hh:37`). [Subsetting](subsetting.html) and [Instancing](instancing.html) explain what happens inside.
 
-## Drawing: hb-vector, hb-raster and hb-view
+## Drawing: hb-vector, hb-raster, and hb-view
 
 The three drawing tools shape the text, lay out its lines, and draw the glyphs. They share the view options (`view-options.hh:363`): `--foreground` and `--background` colors (`none` for a transparent background), `--margin`, `--line-space`, `--font-extents` to override ascent and descent, `--logical` and `--ink` to frame the picture by the line’s logical box or by the ink alone, `--font-palette` and `--custom-palette` for color fonts, `--rainbow` to color each glyph differently, and `--show-extents` to draw each glyph’s ink box and origin. `hb-vector` and `hb-raster` find out whether a font has color glyphs (COLR, or PNG bitmaps) and paint them in color; `--draw` forces plain outlines and `--paint` the color path (`raster-output.hh:79`, `vector-output.hh:225`).
 
@@ -296,7 +296,7 @@ $ hb-raster test/subset/data/fonts/Roboto-Regular.ttf Wave --font-size=32 -O ans
 
 `--show-extents` should add each glyph’s ink box and origin to the picture, but in {{hb}} it puts most of them in the wrong place ([below](#a-bug-in-show-extents)).
 
-`hb-view` came first: `hb-vector` and `hb-raster` arrived in 13.0.0 with their libraries, and “share many of the same options as `hb-view`” (`NEWS`). It draws through cairo, using `libharfbuzz-cairo`, and so writes whatever cairo can: PNG, SVG, PDF, PostScript, EPS, cairo script and `ansi`, depending on how cairo was built (`helper-cairo.hh:374`). Its default size is 256. `hb-vector` and `hb-raster` do the same work with HarfBuzz’s own renderers and no cairo, and are described with their libraries, in [hb-vector](hb-vector.html) and [hb-raster](hb-raster.html). `hb-view` takes the format from the output file’s name:
+`hb-view` came first: `hb-vector` and `hb-raster` arrived in 13.0.0 with their libraries, and “share many of the same options as `hb-view`” (`NEWS`). It draws through cairo, using `libharfbuzz-cairo`, and so writes whatever cairo can: PNG, SVG, PDF, PostScript, EPS, cairo script, and `ansi`, depending on how cairo was built (`helper-cairo.hh:374`). Its default size is 256. `hb-vector` and `hb-raster` do the same work with HarfBuzz’s own renderers and no cairo, and are described with their libraries, in [hb-vector](hb-vector.html) and [hb-raster](hb-raster.html). `hb-view` takes the format from the output file’s name:
 
 ```
 $ hb-view test/subset/data/fonts/Roboto-Regular.ttf Wave -o wave.png
@@ -310,7 +310,7 @@ $ hb-view test/subset/data/fonts/Roboto-Regular.ttf Wave -O svg -o wave.svg
 
 It is built only if both GLib and cairo are found (`util/meson.build:44`–`:45`, [Building HarfBuzz](building-harfbuzz.html#optional-dependencies-and-backends)); this book’s build leaves cairo out, so its pictures come from `hb-vector` and `hb-raster`.
 
-Written to a terminal without `-O`, `hb-raster` and `hb-view` show the picture there. In iTerm2, WezTerm and kitty, which can show images, they send a PNG in the terminal’s own protocol; elsewhere they print it as `ansi` (`helper-image-output.hh:76`), with the chafa library’s help if they were built with it.
+Written to a terminal without `-O`, `hb-raster` and `hb-view` show the picture there. In iTerm2, WezTerm, and kitty, which can show images, they send a PNG in the terminal’s own protocol; elsewhere they print it as `ansi` (`helper-image-output.hh:76`), with the chafa library’s help if they were built with it.
 
 ### A bug in `--show-extents`
 
@@ -325,15 +325,15 @@ Only the *W*’s box is where it should be. The box around the *v* and the *e* i
 
 ## hb-gpu
 
-`hb-gpu` opens a window and draws shaped text with the shaders of [hb-gpu](hb-gpu.html), through OpenGL, or Metal or Direct3D where those are offered (`gpu-output.hh:87`). It is a demonstration more than a tool: the text can be zoomed, rotated and moved (`util/gpu/demo-view.cc`), and keys toggle a dark background, stem darkening and a debug heat map. It takes the font and text options of `hb-shape`; with no text, it builds some from the scripts the font supports (`hb-gpu.cc:166`), and `--demo` uses a font and text built into it. `-o` renders one frame to a PPM file instead of opening a window.
+`hb-gpu` opens a window and draws shaped text with the shaders of [hb-gpu](hb-gpu.html), through OpenGL, or Metal or Direct3D where those are offered (`gpu-output.hh:87`). It is a demonstration more than a tool: the text can be zoomed, rotated, and moved (`util/gpu/demo-view.cc`), and keys toggle a dark background, stem darkening, and a debug heat map. It takes the font and text options of `hb-shape`; with no text, it builds some from the scripts the font supports (`hb-gpu.cc:166`), and `--demo` uses a font and text built into it. `-o` renders one frame to a PPM file instead of opening a window.
 
 ## The tools that aren’t installed
 
 The build makes a few more programs, for HarfBuzz’s own developers, and doesn’t install them (`util/meson.build:105`–`254`):
 
-* `hb-subset-depend` prints the glyph dependency graph of [hb-depend](hb-depend.html): for each glyph, the glyphs it can produce or depend on through GSUB, composites, COLR and MATH (`hb-subset-depend.cc:49`). `--gids` limits it to some glyphs, `--flagged` to the edges marked as approximate. It needs the experimental API (`util/meson.build:192`).
+* `hb-subset-depend` prints the glyph dependency graph of [hb-depend](hb-depend.html): for each glyph, the glyphs it can produce or depend on through GSUB, composites, COLR, and MATH (`hb-subset-depend.cc:49`). `--gids` limits it to some glyphs, `--flagged` to the edges marked as approximate. It needs the experimental API (`util/meson.build:192`).
 * `hb-ft-raster` draws like `hb-raster`, but with FreeType’s rasterizer, to compare the two pixel by pixel ([hb-raster](hb-raster.html#checking-against-freetype)). It writes PPM only, and has no view options.
-* `hb-draw-all`, `hb-paint-all`, `hb-vector-svg-all`, `hb-raster-all` and `hb-ft-raster-all` draw or paint every glyph of a font, as benchmarks; the two raster ones can also write each glyph as a PPM file. `hb-gpu-encode-all` encodes every glyph for hb-gpu and reports sizes and times.
+* `hb-draw-all`, `hb-paint-all`, `hb-vector-svg-all`, `hb-raster-all`, and `hb-ft-raster-all` draw or paint every glyph of a font, as benchmarks; the two raster ones can also write each glyph as a PPM file. `hb-gpu-encode-all` encodes every glyph for hb-gpu and reports sizes and times.
 * `hb-fc-list`, in `util/hb-fc-list.c`, lists the fontconfig fonts that can draw a piece of text. Nothing in the build compiles it.
 
 ## Recipes
@@ -381,7 +381,7 @@ font: quick-start/LibreBaskerville.ttf
 $ hb-vector LibreBaskerville.ttf "act first" --features=dlig -o act.svg
 ```
 
-Both tools arrived in HarfBuzz 13.0.0, and this book describes 15: if your package manager’s HarfBuzz is older, build 15.1.0 ([Building HarfBuzz](building-harfbuzz.html)). `hb-raster` writes PNG only if HarfBuzz was built with libpng. The [next chapter](quick-start.html) writes programs that do the same, in C, JavaScript and Rust.
+Both tools arrived in HarfBuzz 13.0.0, and this book describes 15: if your package manager’s HarfBuzz is older, build 15.1.0 ([Building HarfBuzz](building-harfbuzz.html)). `hb-raster` writes PNG only if HarfBuzz was built with libpng. The [next chapter](quick-start.html) shows how to write programs that do the same, in C, JavaScript, Python, and Rust.
 
 ### Does this font have these characters?
 
@@ -455,7 +455,7 @@ command-line-tools/fi-noliga.ttf  fi
 | `util/options.hh` | the option parser, exit codes, `--version`, the verbose help |
 | `util/batch.hh` | `--batch` |
 | `util/main-font-text.hh` | the `main` shared by the shaping and drawing tools; the font and text arguments |
-| `util/face-options.hh`, `util/font-options.hh` | the face, font and variations options |
+| `util/face-options.hh`, `util/font-options.hh` | the face, font, and variations options |
 | `util/text-options.hh` | `--text`, `--unicodes`, reading lines, the context options |
 | `util/shape-options.hh` | the shape options, `--features`, filling the buffer |
 | `util/shape-consumer.hh` | shaping each line, for every tool that shapes |
@@ -470,8 +470,8 @@ command-line-tools/fi-noliga.ttf  fi
 
 * The tools are thin layers over the library. Their options come from shared groups in `util/*.hh`, so an option works the same in every tool that has it, and the drawing tools shape exactly as `hb-shape` does.
 * `hb-shape` prints `name=cluster@x,y+advance`. Switches remove parts (`--no-glyph-names`, `--no-clusters`, `--no-advances`, `--ned`) or add them (`--show-extents`, `--show-flags`), and `-O json` writes JSON.
-* `--features` takes `tag`, `-tag`, `tag=N` and ranges in brackets; `--variations` takes `tag=value`. Both split at spaces as well as commas.
+* `--features` takes `tag`, `-tag`, `tag=N`, and ranges in brackets; `--variations` takes `tag=value`. Both split at spaces as well as commas.
 * Pass `--language` whenever a result could depend on it. `--text-before` and `--text-after` give context for Unicode properties such as joining, but not for GSUB rules.
 * `--trace` shows each step; `--verify` checks the glyph flags by reshaping; `--batch` runs many command lines in one process.
 * `hb-info` answers questions about a font as configured, variations included. `hb-subset` writes subsets and instances, and needs `-o`.
-* `hb-vector`, `hb-raster` and `hb-view` draw shaped text as SVG or PDF, as pixels, and through cairo; `hb-gpu` draws it in a window on the GPU.
+* `hb-vector`, `hb-raster`, and `hb-view` draw shaped text as SVG or PDF, as pixels, and through cairo; `hb-gpu` draws it in a window on the GPU.

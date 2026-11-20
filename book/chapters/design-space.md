@@ -2,7 +2,7 @@
 
 A variable font is one set of outlines together with instructions for changing them. Where a static font has one weight, a variable font has a **weight axis**, and any position along it, not only the weights the designer drew, is a font. With two axes, weight and width say, every point in a rectangle is a font. That rectangle, or box, or higher-dimensional block, is the font’s **design space**.
 
-Every other chapter in this part is about what happens at a position in the design space: how deltas are found and added to advances, metrics and outlines. This one is about the position itself: how the numbers an application asks for, like `wght=700`, become the coordinates that the rest of HarfBuzz reads. That takes three tables and three number formats, and it’s where HarfBuzz departs from the specification more often than almost anywhere else in its variation code.
+Every other chapter in this part is about what happens at a position in the design space: how deltas are found and added to advances, metrics, and outlines. This one is about the position itself: how the numbers an application asks for, like `wght=700`, become the coordinates that the rest of HarfBuzz reads. That takes three tables and three number formats, and it’s where HarfBuzz departs from the specification more often than almost anywhere else in its variation code.
 
 The examples use a small family of test fonts, built for this part of the book in `fonts/variations/` by `tools/build-var-test-fonts.py`. Like a real variable font, they’re made from static masters combined by fontTools’ varLib. They have a weight axis and a width axis, and three glyphs whose shapes make their coordinates easy to read: `I` is one stem, as wide as the weight says; `H` has two stems and a bar, and gets narrower along the width axis; `V` is a stem whose right edge leans as the weight grows.
 
@@ -13,11 +13,11 @@ slider: wght 100 900 25
 start: 400
 ```
 
-Under each drawing is what `hb-shape` says about the same text at the same position: glyph names, clusters and advances. The advances are the easiest place to watch a position take effect. `I`’s advance is its stem plus 160 units of side bearing.
+Under each drawing is what `hb-shape` says about the same text at the same position: glyph names, clusters, and advances. The advances are the easiest place to watch a position take effect. `I`’s advance is its stem plus 160 units of side bearing.
 
 ## Axes: fvar
 
-The axes are listed in the `fvar` table. Each has a tag, a minimum, a default and a maximum, in **user coordinates**: the numbers people use, like 400 for a regular weight, or 75 for a width that is 75% of normal.
+The axes are listed in the `fvar` table. Each has a tag, a minimum, a default, and a maximum, in **user coordinates**: the numbers people use, like 400 for a regular weight, or 75 for a width that is 75% of normal.
 
 ```table
 font: variations/var.ttf
@@ -34,7 +34,7 @@ An axis has a flag, too. `AXIS_FLAG_HIDDEN` (`hb-ot-var-fvar-table.hh:159`) says
 
 ## From user coordinates to normalized ones
 
-User coordinates are convenient for people and awkward for arithmetic, since every axis has its own range. So before any deltas are applied, each coordinate is **normalized**: mapped to −1 at the axis minimum, 0 at the default and +1 at the maximum, in a straight line on each side of the default. Weight 100 becomes −1, 400 becomes 0, 650 becomes 0.5, and 900 becomes 1. Everything else in a variable font, every region and every delta, is written in terms of normalized coordinates.
+User coordinates are convenient for people and awkward for arithmetic, since every axis has its own range. So before any deltas are applied, each coordinate is **normalized**: mapped to −1 at the axis minimum, 0 at the default, and +1 at the maximum, in a straight line on each side of the default. Weight 100 becomes −1, 400 becomes 0, 650 becomes 0.5, and 900 becomes 1. Everything else in a variable font, every region and every delta, is written in terms of normalized coordinates.
 
 The whole conversion is one short function, `hb_ot_var_normalize_coords` (`hb-ot-var.cc:323`):
 
@@ -99,7 +99,7 @@ print: 100 400 600 900
 
 ### A more forgiving avar than the specification’s
 
-The specification is strict about segment maps. Each must map −1 to −1, 0 to 0 and +1 to +1, and a map that doesn’t is to be ignored: “no modification” for that axis. Its from-coordinates must increase. And the result is clamped to the range −1 to +1.
+The specification is strict about segment maps. Each must map −1 to −1, 0 to 0, and +1 to +1, and a map that doesn’t is to be ignored: “no modification” for that axis. Its from-coordinates must increase. And the result is clamped to the range −1 to +1.
 
 HarfBuzz does something else, and says so. The comment in `SegmentMaps::map_float` (`hb-ot-var-avar-table.hh:152`) reads: “Core Text is wild... PingFangUI avar needs all this special-casing... So we implement an extended version of the spec here, which is more robust and more likely to be compatible with the wild.” What it implements:
 
@@ -176,7 +176,7 @@ There is also a second implementation in the same file, `map_coords_2_14` (`hb-o
 
 ## Named instances
 
-A named instance is a position in the design space with a name, like “Bold”, for menus. `fvar` stores a name ID and a full set of user coordinates for each, and, if its records are long enough, a PostScript name ID (`get_instance_postscript_name_id`, `hb-ot-var-fvar-table.hh`). The test font has four: Light, Regular, Bold and Narrow.
+A named instance is a position in the design space with a name, like “Bold”, for menus. `fvar` stores a name ID and a full set of user coordinates for each, and, if its records are long enough, a PostScript name ID (`get_instance_postscript_name_id`, `hb-ot-var-fvar-table.hh`). The test font has four: Light, Regular, Bold, and Narrow.
 
 ```shape
 variations/var.ttf  IHV  --named-instance=2
@@ -269,7 +269,7 @@ Last, the two serial numbers. Every change to a font bumps `serial`, and a chang
 
 ## In short
 
-* User coordinates are normalized per axis to −1, 0 and +1, bent by avar, and rounded to 2.14. Normalization is done in floating point, avar in 16.16.
+* User coordinates are normalized per axis to −1, 0, and +1, bent by avar, and rounded to 2.14. Normalization is done in floating point, avar in 16.16.
 * HarfBuzz clamps to the axis range, repairs axes whose minimum or maximum is on the wrong side of the default, and uses malformed avar maps the way Core Text does, without clamping.
 * avar version 2 adds deltas from an item variation store, evaluated once at the version 1 results, so any axis can depend on all of them. It’s in the 2026 ISO standard, not in Microsoft’s OpenType 1.9.1.
 * A chosen named instance becomes the base for later settings, whatever the documentation says.

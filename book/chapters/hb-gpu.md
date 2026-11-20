@@ -1,14 +1,14 @@
 # hb-gpu: rendering on the GPU
 
-The draw and paint APIs end at a callback. HarfBuzz walks the font’s data and calls the client: move here, curve to there, push this clip, fill with that gradient. Since 13.0.0 HarfBuzz has had renderers of its own, in three separate libraries: [hb-raster](hb-raster.html), which turns glyphs into pixel images on the CPU; [hb-vector](hb-vector.html), which writes them out as SVG or PDF; and hb-gpu, which arrived in 14.0.0. All three are clients of the APIs that [Drawing outlines](drawing-outlines.html) and [Color](color.html) describe, and nothing more. They see a glyph as an application would, with variations, synthetic bold and slant ([Fonts and font functions](fonts-and-font-functions.html#synthetic-bold-and-slant)) and the font’s scale already applied, and without hinting.
+The draw and paint APIs end at a callback. HarfBuzz walks the font’s data and calls the client: move here, curve to there, push this clip, fill with that gradient. Since 13.0.0 HarfBuzz has had renderers of its own, in three separate libraries: [hb-raster](hb-raster.html), which turns glyphs into pixel images on the CPU; [hb-vector](hb-vector.html), which writes them out as SVG or PDF; and hb-gpu, which arrived in 14.0.0. All three are clients of the APIs that [Drawing outlines](drawing-outlines.html) and [Color](color.html) describe, and nothing more. They see a glyph as an application would, with variations, synthetic bold and slant ([Fonts and font functions](fonts-and-font-functions.html#synthetic-bold-and-slant)), and the font’s scale already applied, and without hinting.
 
-**hb-gpu** draws text on the GPU without first making bitmaps of its glyphs. It encodes each glyph’s curves on the CPU into a small block of integers, and a fragment shader, run for every pixel the glyph covers, works out from those curves how much of the pixel is inside the glyph. The method is **Slug**, Eric Lengyel’s algorithm, which hb-gpu implements with credit in its shader source (`hb-gpu-fragment.glsl:3–6`). Since coverage is computed from the curves wherever the glyph lands on screen, one encoding serves every size, rotation and perspective. HarfBuzz supplies the encoder and the shader functions; the application supplies the rest.
+**hb-gpu** draws text on the GPU without first making bitmaps of its glyphs. It encodes each glyph’s curves on the CPU into a small block of integers, and a fragment shader, run for every pixel the glyph covers, works out from those curves how much of the pixel is inside the glyph. The method is **Slug**, Eric Lengyel’s algorithm, which hb-gpu implements with credit in its shader source (`hb-gpu-fragment.glsl:3–6`). Since coverage is computed from the curves wherever the glyph lands on screen, one encoding serves every size, rotation, and perspective. HarfBuzz supplies the encoder and the shader functions; the application supplies the rest.
 
 Nothing here can run in the book’s build, which has no GPU. The shader code is quoted from the source. The dumps of encoded glyphs were made by hand, with a short program, `fonts/hb-gpu/dump-gpu-blob.c`, run on the test fonts of earlier chapters.
 
 ## The library
 
-The library is `libharfbuzz-gpu`, with the header `hb-gpu.h`, built when the [Meson option](building-harfbuzz.html#optional-dependencies-and-backends) `gpu` is enabled, as it is by default (`meson_options.txt:40`). The option `gpu_demo`, `auto` by default (`:42`), adds `hb-gpu`, an interactive viewer for shaped text that needs GLEW, GLFW, OpenGL and GLib (`util/meson.build:231`). It isn’t built here, because GLEW isn’t installed. An uninstalled tool, `hb-gpu-encode-all`, encodes every glyph of a font and reports sizes and times. `hb-features.h` is meant to define `HB_HAS_GPU` when the library is built, but in {{hb}} Meson never sets it: the book’s build has `#undef HB_HAS_GPU` there (`build/src/hb-features.h:100`).
+The library is `libharfbuzz-gpu`, with the header `hb-gpu.h`, built when the [Meson option](building-harfbuzz.html#optional-dependencies-and-backends) `gpu` is enabled, as it is by default (`meson_options.txt:40`). The option `gpu_demo`, `auto` by default (`:42`), adds `hb-gpu`, an interactive viewer for shaped text that needs GLEW, GLFW, OpenGL, and GLib (`util/meson.build:231`). It isn’t built here, because GLEW isn’t installed. An uninstalled tool, `hb-gpu-encode-all`, encodes every glyph of a font and reports sizes and times. `hb-features.h` is meant to define `HB_HAS_GPU` when the library is built, but in {{hb}} Meson never sets it: the book’s build has `#undef HB_HAS_GPU` there (`build/src/hb-features.h:100`).
 
 Its history, from `NEWS`, is short:
 
@@ -96,7 +96,7 @@ Four lines take 376 bytes. Most of them go on the lists, where each texel uses o
 
 ### What the application supplies
 
-The shaders come with the library, in four languages: GLSL (OpenGL 3.3, OpenGL ES 3.0, WebGL 2), WGSL (WebGPU), MSL (Metal) and HLSL (Direct3D) (`hb-gpu.h:37`). They are compiled in as strings by `gen-gpu-shader-artifacts.py` (`src/meson.build:835`). `hb_gpu_shader_source (stage, lang)` returns the helpers both renderers share, and `hb_gpu_draw_shader_source` the draw renderer’s part, an empty string for the vertex stage. An application builds each of its shaders by joining a version line, those two, and a `main` of its own (`hb-gpu.cc:119`).
+The shaders come with the library, in four languages: GLSL (OpenGL 3.3, OpenGL ES 3.0, WebGL 2), WGSL (WebGPU), MSL (Metal), and HLSL (Direct3D) (`hb-gpu.h:37`). They are compiled in as strings by `gen-gpu-shader-artifacts.py` (`src/meson.build:835`). `hb_gpu_shader_source (stage, lang)` returns the helpers both renderers share, and `hb_gpu_draw_shader_source` the draw renderer’s part, an empty string for the vertex stage. An application builds each of its shaders by joining a version line, those two, and a `main` of its own (`hb-gpu.cc:119`).
 
 Everything outside the shader functions is the application’s. Following the documentation (`hb-gpu.cc:95`), that is:
 
@@ -189,11 +189,11 @@ The paint blob has the same texel format as the draw blob, so both kinds can sha
 | Operation | Texels | Contents |
 |---|---|---|
 | solid layer | 3 | flags; the offsets of up to three clip outlines; the color, as four 15-bit fractions |
-| gradient layer | 3 | the gradient’s kind and flags; up to three clip offsets; the offset of its parameters, its extend mode and number of stops |
+| gradient layer | 3 | the gradient’s kind and flags; up to three clip offsets; the offset of its parameters, its extend mode, and number of stops |
 | push group | 1 | nothing more |
 | pop group | 1 | the composite mode, numbered as in `hb_paint_composite_mode_t` |
 
-After the operations come the clip outlines, each a complete draw blob, and the gradients’ parameters. Offsets inside a paint blob are 32-bit, made of two 16-bit halves, so a paint blob can be longer than a draw blob. A gradient’s parameters hold its origin, already transformed, and its axis, radii or angles in the gradient’s own coordinates, with the inverse of the transform’s linear part as four fixed-point numbers with 10 fractional bits. Each stop takes two texels: its offset, a foreground flag, and its color (`:715`). Geometry is stored in whole font units (`:797`).
+After the operations come the clip outlines, each a complete draw blob, and the gradients’ parameters. Offsets inside a paint blob are 32-bit, made of two 16-bit halves, so a paint blob can be longer than a draw blob. A gradient’s parameters hold its origin, already transformed, and its axis, radii, or angles in the gradient’s own coordinates, with the inverse of the transform’s linear part as four fixed-point numbers with 10 fractional bits. Each stop takes two texels: its offset, a foreground flag, and its color (`:715`). Geometry is stored in whole font units (`:797`).
 
 The design notes in `hb-gpu-paint.hh` describe an earlier layout (one-texel operations, 16.16 transforms, palette indices in stops); the code is what {{hb}} writes.
 
@@ -223,13 +223,13 @@ vec4 hb_gpu_paint (vec2 renderCoord, uint glyphLoc, vec4 foreground,
                    out float coverage);
 ```
 
-and it walks the operations in order, for every pixel (`hb-gpu-paint-fragment.glsl:296`). A layer’s coverage is the product of its clips’ coverages, each computed as in the draw shader, and skipped for a clip whose box, plus two pixels, doesn’t contain the pixel (`:254`). Its color is the baked color, or the foreground argument, or a gradient evaluated at the pixel. The pixel’s position is taken back through the stored inverse into the gradient’s own coordinates, so a gradient under a shear or uneven scale is exact, not approximated (`:102–191`). The extend modes pad, repeat and reflect are all applied (`:49`), and stops are interpolated in premultiplied color, as the `COLR` specification requires (`:76`). The layer is then composited over what has accumulated, with ordinary source-over.
+and it walks the operations in order, for every pixel (`hb-gpu-paint-fragment.glsl:296`). A layer’s coverage is the product of its clips’ coverages, each computed as in the draw shader, and skipped for a clip whose box, plus two pixels, doesn’t contain the pixel (`:254`). Its color is the baked color, or the foreground argument, or a gradient evaluated at the pixel. The pixel’s position is taken back through the stored inverse into the gradient’s own coordinates, so a gradient under a shear or uneven scale is exact, not approximated (`:102–191`). The extend modes pad, repeat, and reflect are all applied (`:49`), and stops are interpolated in premultiplied color, as the `COLR` specification requires (`:76`). The layer is then composited over what has accumulated, with ordinary source-over.
 
 A push saves the accumulated color on a stack of four and starts afresh. A pop composites the group onto what was saved with its mode, in `_hb_gpu_composite` (`:196`):
 
 | Modes | In the shader |
 |---|---|
-| CLEAR, SRC, DEST, the OVER, IN, OUT and ATOP pairs, XOR, PLUS | exact |
+| CLEAR, SRC, DEST, the OVER, IN, OUT, and ATOP pairs, XOR, PLUS | exact |
 | SCREEN, DARKEN, LIGHTEN, MULTIPLY | exact |
 | OVERLAY, COLOR_BURN, HARD_LIGHT | drawn as MULTIPLY |
 | COLOR_DODGE, SOFT_LIGHT | drawn as SCREEN |
@@ -239,7 +239,7 @@ A push saves the accumulated color on a stack of four and starts afresh. A pop c
 
 ### What isn’t supported
 
-**Images.** The paint context’s `image` callback marks the glyph as unsupported, so a glyph from `sbix`, `CBDT` or `SVG ` encodes as `NULL` (`hb-gpu-paint.cc:1077`). The callback returns false, so HarfBuzz goes on to the next table and finally the outline, as [Color](color.html#which-picture-gets-painted) explains, but the mark stays, and the glyph still fails: the caller learns that “the glyph won’t render rather than getting a partial blob”. In `images.ttf` from [Color](color.html), `S`, `T` and `P` encode as `NULL`. An application can fall back to the draw context, as `hb-gpu-encode-all` does, or draw images some other way.
+**Images.** The paint context’s `image` callback marks the glyph as unsupported, so a glyph from `sbix`, `CBDT`, or `SVG ` encodes as `NULL` (`hb-gpu-paint.cc:1077`). The callback returns false, so HarfBuzz goes on to the next table and finally the outline, as [Color](color.html#which-picture-gets-painted) explains, but the mark stays, and the glyph still fails: the caller learns that “the glyph won’t render rather than getting a partial blob”. In `images.ttf` from [Color](color.html), `S`, `T`, and `P` encode as `NULL`. An application can fall back to the draw context, as `hb-gpu-encode-all` does, or draw images some other way.
 
 **Rectangle clips.** ClipBoxes and PaintClipBox reach the paint context as rectangle clips, and it ignores them: “output is bigger than it should be, but renders” (`:1074`). That holds when a glyph or path clip is also on the stack. A fill whose only clip is a rectangle is dropped, because a layer needs at least one outline to be painted through (`:673`). So `C` in [Color](color.html#clipboxes-and-unbounded-paint)’s `colr1.ttf`, a PaintSolid inside its ClipBox, encodes as the empty blob, where the other renderers paint a square.
 
@@ -265,7 +265,7 @@ Only the last two are in `hb-limits.hh`, where an application can change them; t
 | File | What’s there |
 |---|---|
 | `src/hb-gpu.h`, `src/hb-gpu.cc` | the API, and its long usage documentation: atlas, vertex attributes, dilation, fragment shaders, stem darkening |
-| `src/hb-gpu-draw.hh`, `src/hb-gpu-draw.cc` | the draw context; quantizing, banding and packing, `hb_gpu_draw_encode`, 451 |
+| `src/hb-gpu-draw.hh`, `src/hb-gpu-draw.cc` | the draw context; quantizing, banding, and packing, `hb_gpu_draw_encode`, 451 |
 | `src/hb-gpu-cu2qu.hh` | cubics to quadratics |
 | `src/hb-gpu-fragment.glsl` | the shared fragment helpers: atlas access, Slug, the extra samples, stem darkening |
 | `src/hb-gpu-draw-fragment.glsl`, `src/hb-gpu-vertex.glsl` | `hb_gpu_draw`; `hb_gpu_dilate` |
@@ -273,14 +273,14 @@ Only the last two are in `hb-limits.hh`, where an application can change them; t
 | `src/hb-gpu-paint-fragment.glsl` | the interpreter: gradients, composite modes, `hb_gpu_paint` |
 | `src/hb-gpu-*.wgsl`, `.msl`, `.hlsl` | the same shaders in the other three languages |
 | `src/gen-gpu-shader-artifacts.py` | turns each shader into a C string |
-| `util/gpu-output.hh`, `util/gpu/` | the `hb-gpu` viewer, and its renderers for OpenGL, Metal and Direct3D |
+| `util/gpu-output.hh`, `util/gpu/` | the `hb-gpu` viewer, and its renderers for OpenGL, Metal, and Direct3D |
 | `util/hb-gpu-encode-all.cc` | encodes every glyph of a font, for sizes and timing |
 
 ## In short
 
 * hb-gpu encodes glyphs on the CPU for a fragment shader to draw on the GPU, with Eric Lengyel’s Slug algorithm. One encoding serves every size and transform. It arrived in 14.0.0, gained color glyphs in 14.2.0, and has been stable since 15.0.0.
 * `hb_gpu_draw_t` turns an outline into quadratics, converting cubics with cu2qu to within half a unit, quantizes them to quarter units, and packs them into a blob of RGBA16I texels: a header, up to 16 bands each way with two sorted lists each, and curves that share their endpoints.
-* The application uploads the blobs into one atlas, draws one quad per glyph, and joins HarfBuzz’s shader source, in GLSL, WGSL, MSL or HLSL, with its own `main`. `hb_gpu_dilate` pads each quad by half a pixel; `hb_gpu_draw` returns coverage from a winding number blurred over one pixel, with four more samples below 16 pixels per em.
+* The application uploads the blobs into one atlas, draws one quad per glyph, and joins HarfBuzz’s shader source, in GLSL, WGSL, MSL, or HLSL, with its own `main`. `hb_gpu_dilate` pads each quad by half a pixel; `hb_gpu_draw` returns coverage from a winding number blurred over one pixel, with four more samples below 16 pixels per em.
 * `hb_gpu_paint_t` turns a color glyph into a stream of layers and groups for an interpreter in the shader. Palettes are baked in; the foreground color stays a shader argument. Gradients are exact under any transform, and most composite modes are.
 * Images make the encoder fail, rectangle clips are ignored, and five composite modes are approximated and six drawn as source-over. A color glyph may nest four groups and intersect three clips per layer.
 * Nothing in hb-gpu hints. Gamma correction, and the stem darkening the library offers, are the application’s choice.

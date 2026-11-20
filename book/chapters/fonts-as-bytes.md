@@ -48,7 +48,7 @@ typedef struct OpenTypeOffsetTable
 } OpenTypeFontFace;
 ```
 
-`TableRecord` is `Tag tag`, `CheckSum checkSum`, `Offset32 offset` and `HBUINT32 length`, 16 bytes (`hb-open-file.hh:54`). `BinSearchArrayOf` is an array whose count is followed by `searchRange`, `entrySelector` and `rangeShift`, values precomputed for a binary search. HarfBuzz never reads them. The header type, `BinSearchHeader`, converts itself to a number by returning only its `len` (`hb-open-type.hh:1111`), so the generic sorted array uses the whole 8-byte header as its count.
+`TableRecord` is `Tag tag`, `CheckSum checkSum`, `Offset32 offset`, and `HBUINT32 length`, 16 bytes (`hb-open-file.hh:54`). `BinSearchArrayOf` is an array whose count is followed by `searchRange`, `entrySelector`, and `rangeShift`, values precomputed for a binary search. HarfBuzz never reads them. The header type, `BinSearchHeader`, converts itself to a number by returning only its `len` (`hb-open-type.hh:1111`), so the generic sorted array uses the whole 8-byte header as its count.
 
 HarfBuzz can list the directory itself:
 
@@ -58,7 +58,7 @@ bytes.ttf  --list-tables
 
 ### Finding a table
 
-When something asks a face for a table, `_hb_face_for_data_reference_table` (`hb-face.cc:185`) finds the face in the file, finds the record by its tag, and returns a **sub-blob**: a view of just those bytes, sharing the file’s memory. Blobs are the subject of [blobs, faces and lazy tables](blobs-faces-and-lazy-tables.html).
+When something asks a face for a table, `_hb_face_for_data_reference_table` (`hb-face.cc:185`) finds the face in the file, finds the record by its tag, and returns a **sub-blob**: a view of just those bytes, sharing the file’s memory. Blobs are the subject of [blobs, faces, and lazy tables](blobs-faces-and-lazy-tables.html).
 
 The search makes one concession to real fonts (`hb-open-file.hh:100`). The specification says records are sorted by tag, but some fonts’ aren’t, and other software reads them anyway. So HarfBuzz searches a directory of fewer than 16 tables from the start, and uses binary search, which needs sorting, only for 16 or more.
 
@@ -85,7 +85,7 @@ A **TrueType Collection** holds several fonts that can share tables. Its header 
 collection.ttc  --show-face-count
 ```
 
-The **face index** chooses the face. HarfBuzz uses its low 16 bits for this (`hb-face.cc:170`); the upper bits ask `hb_font_create` for a named instance. [Blobs, faces and lazy tables](blobs-faces-and-lazy-tables.html#collections-and-the-face-index) shapes with both. A collection header with minor version 1 or more is an *extended* TTC, from the 5th edition of the ISO Open Font Format: a second list of directories follows the first, and HarfBuzz uses that one.
+The **face index** chooses the face. HarfBuzz uses its low 16 bits for this (`hb-face.cc:170`); the upper bits ask `hb_font_create` for a named instance. [Blobs, faces, and lazy tables](blobs-faces-and-lazy-tables.html#collections-and-the-face-index) shapes with both. A collection header with minor version 1 or more is an *extended* TTC, from the 5th edition of the ISO Open Font Format: a second list of directories follows the first, and HarfBuzz uses that one.
 
 A **resource fork** is how classic Mac OS stored fonts, and a “dfont” is a resource fork in a plain file. It doesn’t begin with a tag at all, but with the offset of its resource data, which is usually 256, and HarfBuzz takes those four bytes as the dfont’s “tag”. `ResourceForkHeader` and the structs after it (`hb-open-file.hh:323`–`479`) walk the resource map to the `sfnt` resources, each a complete OpenType font. The face index counts those, and since a face’s table offsets count from the start of its resource, the face lookup returns a base offset to add.
 
@@ -112,7 +112,7 @@ The number inside a `NumType` is a plain array of bytes (`HBInt`, `hb-algs.hh:13
 
 There is an unsigned 24-bit type but no signed one. A comment at `hb-open-type.hh:123` explains why: the conversion relies on the compiler to extend the sign, and C++ has no 24-bit type to extend it from.
 
-A few types add behavior to a plain number. `Tag` converts to a `const char *` pointing at its own four bytes, which are *not* followed by a NUL, so the code prints tags with `"%.4s"`. A tag is always four bytes; a shorter name is padded with spaces, as in the table `'cvt '`, the language system `'TRK '` or the script `'nko '`, and the spaces are part of the tag. `Index` (a 16-bit index into a list of scripts, features or languages) and `VarIdx` (a 32-bit index into an item variation store) each have a value that means “none”, `0xFFFF` and `0xFFFFFFFF`, which matters for Null objects below. The fixed-point types (`HBFixed`, `hb-open-type.hh:247`) refuse to convert to an integer, so an `F2DOT14` can’t be used as one by accident.
+A few types add behavior to a plain number. `Tag` converts to a `const char *` pointing at its own four bytes, which are *not* followed by a NUL, so the code prints tags with `"%.4s"`. A tag is always four bytes; a shorter name is padded with spaces, as in the table `'cvt '`, the language system `'TRK '`, or the script `'nko '`, and the spaces are part of the tag. `Index` (a 16-bit index into a list of scripts, features, or languages) and `VarIdx` (a 32-bit index into an item variation store) each have a value that means “none”, `0xFFFF` and `0xFFFFFFFF`, which matters for Null objects below. The fixed-point types (`HBFixed`, `hb-open-type.hh:247`) refuse to convert to an integer, so an `F2DOT14` can’t be used as one by accident.
 
 None of these structs can be made on its own. The array types declare `HB_DELETE_CREATE_COPY_ASSIGN` (`hb-meta.hh:221`), which deletes their default constructor and copying, and so does any struct that holds one. There is no way to make a Coverage table except by pointing at bytes that hold one.
 
@@ -194,7 +194,7 @@ The code always names the base, because OpenType counts offsets from different p
 
 An offset of zero would point at the base itself, which is never what a font means. So OpenType uses zero for “there is no table here”, and `OffsetTo` follows it. A zero offset doesn’t give a pointer to the base. It gives the target type’s **Null object**: a read-only, empty instance of the type, which every method can be called on. The code that follows the offset doesn’t check for zero. It just uses what it gets.
 
-Not every offset may be null. In a resource fork, for example, an offset of zero is a real offset to the first resource. For those, HarfBuzz has `NNOffsetTo`, `NNOffset16To` and the rest (“non-null”, `hb-open-type.hh:545`), where `has_null` is false and zero means zero.
+Not every offset may be null. In a resource fork, for example, an offset of zero is a real offset to the first resource. For those, HarfBuzz has `NNOffsetTo`, `NNOffset16To`, and the rest (“non-null”, `hb-open-type.hh:545`), where `has_null` is false and zero means zero.
 
 A nullable offset to a type that can’t be Null doesn’t compile. A `static_assert` in `OffsetTo` (`hb-open-type.hh:416`) refuses one to any type with a `min_size` but no `null_size`, such as `UnsizedArrayOf`, whose length the struct can’t know. Its Null object would have no safe size, so an offset that might produce one isn’t allowed.
 
@@ -205,14 +205,14 @@ There are several kinds of array, because OpenType stores lengths in several way
 | HarfBuzz type | How the length is stored | Used for, for example |
 |---|---|---|
 | `ArrayOf<Type, LenType>`, `Array16Of`, `Array24Of`, `Array32Of` | a count, then the elements | most arrays |
-| `SortedArrayOf`, `SortedArray16Of` and so on | the same, sorted, with `bsearch` and `bfind` | Coverage format 1 glyphs, range records |
+| `SortedArrayOf`, `SortedArray16Of`, and so on | the same, sorted, with `bsearch` and `bfind` | Coverage format 1 glyphs, range records |
 | `BinSearchArrayOf` | a count and the three search fields | the table directory, `kerx` format 0 pairs |
 | `HeadlessArrayOf`, `HeadlessArray16Of` | a count that includes a first element that isn’t stored | a ligature’s components |
 | `ArrayOfM1` | the count minus one | Mac resource maps |
 | `UnsizedArrayOf` | not stored: the caller supplies it | arrays sized by a field elsewhere, such as `hmtx` |
 | `SortedUnsizedArrayOf` | the same, sorted | |
 | `VarSizedBinSearchArrayOf` | a header giving the size and number of elements | AAT lookup tables |
-| `List16OfOffsetTo`, `Array16OfOffset16To` and so on | a count, then offsets to the elements | the LookupList, a lookup’s subtables |
+| `List16OfOffsetTo`, `Array16OfOffset16To`, and so on | a count, then offsets to the elements | the LookupList, a lookup’s subtables |
 
 They share one rule: indexing past the end doesn’t read past the end. `ArrayOf::operator []` checks the index against `len` and returns `Null (Type)` if it is too big (`hb-open-type.hh:719`), and so do the other sized arrays. `UnsizedArrayOf` doesn’t know its length, so it can’t check, and its users have to; reading `arrayZ` directly skips the check too.
 
@@ -270,7 +270,7 @@ With `SmallTypes` (explained at the end of this chapter), `LOffsetTo<Coverage>` 
 
 At no point did HarfBuzz make a list of the covered glyphs, or allocate anything. Every step was arithmetic on the address of the font’s bytes. (The set digests of the GSUB chapter are a cache in front of this code, not a replacement for it.)
 
-Format 2 stores ranges instead: `RangeRecord`s of a first glyph, a last glyph and the coverage index of the first. `CoverageFormat2_4::get_coverage` binary-searches them for the range that holds the glyph. If there is none, `bsearch` returns the Null `RangeRecord`, and the code goes on to check `range.first <= range.last` (`OT/Layout/Common/CoverageFormat2.hh:61`). That works only because the Null `RangeRecord` isn’t all zeros, which is the next subject.
+Format 2 stores ranges instead: `RangeRecord`s of a first glyph, a last glyph, and the coverage index of the first. `CoverageFormat2_4::get_coverage` binary-searches them for the range that holds the glyph. If there is none, `bsearch` returns the Null `RangeRecord`, and the code goes on to check `range.first <= range.last` (`OT/Layout/Common/CoverageFormat2.hh:61`). That works only because the Null `RangeRecord` isn’t all zeros, which is the next subject.
 
 ## Null objects
 
@@ -287,11 +287,11 @@ struct Null {
 };
 ```
 
-Types share the one pool: the Null `GSUB`, the Null `Coverage` and the Null `Lookup` are at the same address. The `static_assert` makes sure the pool is big enough for every type ever used as Null.
+Types share the one pool: the Null `GSUB`, the Null `Coverage`, and the Null `Lookup` are at the same address. The `static_assert` makes sure the pool is big enough for every type ever used as Null.
 
 ### Why zeros are an empty table
 
-In OpenType, zero bytes nearly always read as nothing. Every count is zero, so every array is empty. Every offset is zero, so following one gives another Null object. Every format and version field is zero, and most tables have no format 0 or version 0, so their switches take the `default` case. As long as each method’s `default` case does the empty thing, a Null table behaves like a table with nothing in it. A Null `Coverage` has format 0, for which `get_coverage` returns `NOT_COVERED` (`OT/Layout/Common/Coverage.hh:96`). A Null GSUB has version 0, so `has_data ()` is false, and it has no scripts, features or lookups. A Null `Lookup` has no subtables.
+In OpenType, zero bytes nearly always read as nothing. Every count is zero, so every array is empty. Every offset is zero, so following one gives another Null object. Every format and version field is zero, and most tables have no format 0 or version 0, so their switches take the `default` case. As long as each method’s `default` case does the empty thing, a Null table behaves like a table with nothing in it. A Null `Coverage` has format 0, for which `get_coverage` returns `NOT_COVERED` (`OT/Layout/Common/Coverage.hh:96`). A Null GSUB has version 0, so `has_data ()` is false, and it has no scripts, features, or lookups. A Null `Lookup` has no subtables.
 
 So a font with no GSUB, a GSUB with no lookups, and a lookup whose coverage offset is zero all go down the same code. The shaping code doesn’t check whether the font has a GSUB, and HarfBuzz’s table code has hardly an `if (table)` in it.
 
@@ -319,7 +319,7 @@ The “zero is nothing” rule has exceptions, where a field’s zero value mean
 
 | Type | Null bytes | Why zeros would be wrong |
 |---|---|---|
-| `OT::Index` | `FF FF` | Index 0 is a real feature, script or language. `0xFFFF` is `NOT_FOUND_INDEX`. |
+| `OT::Index` | `FF FF` | Index 0 is a real feature, script, or language. `0xFFFF` is `NOT_FOUND_INDEX`. |
 | `OT::VarIdx` | `FF FF FF FF` | Index 0 is a real delta set. `0xFFFFFFFF` is “no variation”. |
 | `OT::LangSys` | `00 00 FF FF 00 00` | Its second field is the required feature index; zero would make feature 0 required for every script with no default language system. |
 | `OT::RangeRecord` | `01 00 …` | A zero range is glyph 0 to glyph 0: the Null record would cover `.notdef`. With a first byte of 1, it runs from glyph 256 to glyph 0, which is nothing. |
@@ -413,14 +413,14 @@ The main contexts in {{hb}}:
 |---|---|---|---|
 | `hb_sanitize_context_t` (`hb-sanitize.hh:123`) | checks it | `bool`, true by default | a check fails |
 | `hb_ot_apply_context_t` (`hb-ot-layout-gsubgpos.hh:1127`) | applies it to the buffer | `bool`, false by default | a subtable applies |
-| `hb_accelerate_subtables_context_t` (`:1419`) | records it, its `apply` function and its coverage digest | nothing | never |
+| `hb_accelerate_subtables_context_t` (`:1419`) | records it, its `apply` function, and its coverage digest | nothing | never |
 | `hb_would_apply_context_t` (`:286`) | asks whether it would apply to a glyph sequence | `bool` | |
 | `hb_closure_context_t`, `hb_closure_lookups_context_t` (`:68`, `:207`) | adds the glyphs it can produce, or the lookups it reaches | nothing | |
-| `hb_collect_glyphs_context_t` (`:329`) | collects its input, context and output glyphs | nothing | |
+| `hb_collect_glyphs_context_t` (`:329`) | collects its input, context, and output glyphs | nothing | |
 | `hb_depend_context_t` (`:402`) | records glyph dependencies, for hb-depend | nothing | |
 | `hb_subset_context_t` (`hb-subset.hh:40`) | writes its subset copy | `bool` | |
 
-There are a dozen more: small questions about lookups in `hb-ot-layout-gsubgpos.hh` and `hb-ot-layout.cc`, subsetting helpers in `hb-ot-layout-common.hh`, the AAT apply context, and painting, closure and dependency contexts for COLRv1 paint graphs (`OT/Color/COLR/COLR.hh:65`). Writing a font is not among them. The serializer, `hb_serialize_context_t`, is not a dispatch context: tables have `serialize` methods that are called directly, and the subset context holds a serializer and walks the old table by dispatch, writing the new one as it goes.
+There are a dozen more: small questions about lookups in `hb-ot-layout-gsubgpos.hh` and `hb-ot-layout.cc`, subsetting helpers in `hb-ot-layout-common.hh`, the AAT apply context, and painting, closure, and dependency contexts for COLRv1 paint graphs (`OT/Color/COLR/COLR.hh:65`). Writing a font is not among them. The serializer, `hb_serialize_context_t`, is not a dispatch context: tables have `serialize` methods that are called directly, and the subset context holds a serializer and walks the old table by dispatch, writing the new one as it goes.
 
 ### Choosing the method to call
 
@@ -439,7 +439,7 @@ _dispatch (const T &obj, hb_priority<0>, Ts&&... ds) HB_AUTO_RETURN
 
 ### Dispatch once, not every glyph
 
-Following the chain of `dispatch` calls through Lookup, Extension, lookup type and format for every glyph would be slow. So HarfBuzz walks it once per lookup, when the lookup’s accelerator is made (`hb-ot-layout-gsubgpos.hh:6197`). At each leaf, `hb_accelerate_subtables_context_t` stores the subtable’s address, a pointer to a function that calls that format’s `apply`, and a digest of its coverage (`:1562`). From then on, `accel.apply` in the GSUB chapter’s loop runs through that flat array, and the switches on lookup type and format aren’t run again while shaping.
+Following the chain of `dispatch` calls through Lookup, Extension, lookup type, and format for every glyph would be slow. So HarfBuzz walks it once per lookup, when the lookup’s accelerator is made (`hb-ot-layout-gsubgpos.hh:6197`). At each leaf, `hb_accelerate_subtables_context_t` stores the subtable’s address, a pointer to a function that calls that format’s `apply`, and a digest of its coverage (`:1562`). From then on, `accel.apply` in the GSUB chapter’s loop runs through that flat array, and the switches on lookup type and format aren’t run again while shaping.
 
 > For programmers: a new operation over layout tables is a new context, derived from `hb_dispatch_context_t<YourContext, YourReturn>`, with a `default_return_value` and a `dispatch` that calls your method on each leaf. Every struct that already dispatches can then be walked by it; only the leaves need the new method.
 
@@ -496,10 +496,10 @@ The test fonts and the scripts that make them are in `fonts/fonts-as-bytes/`: `b
 ## In short
 
 * HarfBuzz doesn’t parse fonts. It describes their bytes with structs and reads fields in place, with no copying and no allocation.
-* A face is found from the file’s first four bytes (sfnt, TTC or dfont) and a table from the directory; a missing table is an empty blob.
+* A face is found from the file’s first four bytes (sfnt, TTC, or dfont) and a table from the directory; a missing table is an empty blob.
 * Numbers are byte arrays that convert themselves from big-endian when read, so structs can sit at any address.
 * `DEFINE_SIZE_*` gives each struct its real size and has the compiler check it against the declaration.
 * `this+offset` follows an offset to a typed target. The code always names the base, because OpenType counts offsets from different places.
-* A zero offset, an out-of-range index or a too-short table gives a Null object: zeros, or special bytes where zeros would mean something. A zeroed table is an empty one, so the code rarely checks for missing data.
-* Format unions `dispatch` to their formats, and contexts say what to do there: one description of a table serves sanitizing, applying, closure, subsetting and the rest.
+* A zero offset, an out-of-range index, or a too-short table gives a Null object: zeros, or special bytes where zeros would mean something. A zeroed table is an empty one, so the code rarely checks for missing data.
+* Format unions `dispatch` to their formats, and contexts say what to do there: one description of a table serves sanitizing, applying, closure, subsetting, and the rest.
 * `SmallTypes` and `MediumTypes` let one template describe both 16-bit OpenType and its 24-bit “beyond 64k” formats.

@@ -25,6 +25,7 @@ The HarfBuzz version the book describes (`book/book.json`) is checked out at `.c
 
 * Plain, direct, short sentences. Explain, don’t sell. Present tense. A short opening like the GSUB chapter’s, no throat-clearing.
 * American spelling (color, neighbor, behavior, center, gray, toward, spelled). Quotations keep their source’s spelling, and punctuation stays outside closing quotes unless it belongs to the quotation.
+* The serial comma, American style: “A, B, and C”, “A, B, or C”, since 20 November 2026. Quotations and the titles of other works keep their own punctuation.
 * Typographic quotes and apostrophes in prose (“ ” ‘ ’ ’); straight ones only in code, URLs and attributes.
 * Colons and periods rather than em dashes.
 * `{{hb}}` for the HarfBuzz version in prose about the build.

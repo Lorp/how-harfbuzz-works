@@ -8,6 +8,7 @@ Before writing or editing anything in `book/`, read `notes/writing-brief.md`: it
 
 * Typographic quotes and apostrophes (“ ” ‘ ’) in prose; straight ones only in code.
 * American spelling: color, behavior, center.
+* The serial comma: “A, B, and C”.
 * Plain headings that say what the section is about; no wordplay.
 * Bold only where a term is defined, since the index and glossary are made from bold terms.
 * `{{hb}}` for the HarfBuzz version the book describes.
@@ -15,6 +16,8 @@ Before writing or editing anything in `book/`, read `notes/writing-brief.md`: it
 * Anything shown as HarfBuzz’s output is a live block, made when the book is built (`README.md` explains the blocks).
 
 `notes/outline.md` has the plan of the book, and `notes/upstream-bug-reports.md` the bugs it has found.
+
+**Bug report numbers are permanent.** HarfBuzz pull requests cite the reports by number (“How HarfBuzz Works bug 75”). Never renumber, reorder, reuse or delete one: a new report takes the next unused number, and a withdrawn one keeps its number, marked as withdrawn. The rules are at the top of `notes/upstream-bug-reports.md`.
 
 ## Resources that can help us
 

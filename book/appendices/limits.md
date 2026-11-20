@@ -12,7 +12,7 @@ Two kinds of limit appear. A **structural limit** bounds one thing in one subsys
 |---|---|
 | A table is rejected by the sanitizer | Only indirectly: the face behaves as if it had no such table, so `hb_ot_layout_has_substitution` and the like return false. `hb_face_reference_table` still returns the raw bytes. |
 | The buffer is marked unsuccessful | `hb_buffer_allocation_successful` returns false. `hb_shape` returns nothing, and `hb_shape_full` still returns true for the `ot` backend ([hb_shape and its backends](hb_shape-and-its-backends.html#running-the-plan-and-failing)). |
-| A rule, action or step is skipped | It can’t: the output is a correct result for a font without that rule. |
+| A rule, action, or step is skipped | It can’t: the output is a correct result for a font without that rule. |
 | A glyph fails to draw or paint | `hb_font_draw_glyph_or_fail` and `hb_font_paint_glyph_or_fail` return false; the GPU encoders return `NULL`. |
 | A subset fails | `hb_subset_or_fail` returns `NULL`. |
 | A closure stops early | It can’t: the subset is missing glyphs, which shows only when the subset font is used. |
@@ -31,7 +31,7 @@ The buffer limits are set by `enter` when shaping starts and taken away by `leav
 | `HB_MAX_NESTING_LEVEL` | 64 | chains of GPOS attachments, cursive or mark, resolved after positioning | the offset stops propagating; later glyphs in the chain are misplaced | [GPOS](gpos.html#a-limit-on-the-depth) |
 | `HB_MAX_CONTEXT_LENGTH` | 64 | glyphs in a ligature, or in a context rule’s input | the rule never matches (`Ligature.hh:139`, `hb-ot-layout-gsubgpos.hh:1963`) | [GSUB](gsub.html#context-and-chained-context) |
 | `HB_MAX_CONTEXT_LENGTH` | 64 | a context match that nested lookups have lengthened | the rule’s remaining nested lookups are skipped (`hb-ot-layout-gsubgpos.hh:2843`) | |
-| `HB_MAX_SYLLABLE_LENGTH` | 64 | glyphs in one syllable, for the Indic, Khmer, Myanmar and USE shapers | the syllable is reordered in pieces of 64, each as if it were a syllable (`hb-ot-layout.hh:174`) | [The Indic model](indic-model.html#a-limit-on-syllable-length), [Khmer and Myanmar](khmer-and-myanmar.html#syllables) |
+| `HB_MAX_SYLLABLE_LENGTH` | 64 | glyphs in one syllable, for the Indic, Khmer, Myanmar, and USE shapers | the syllable is reordered in pieces of 64, each as if it were a syllable (`hb-ot-layout.hh:174`) | [The Indic model](indic-model.html#a-limit-on-syllable-length), [Khmer and Myanmar](khmer-and-myanmar.html#syllables) |
 | `HB_OT_SHAPE_MAX_COMBINING_MARKS` | 32 | a run of marks that normalization sorts by combining class | the run is left in the order typed (`hb-ot-shaper.hh:42`) | [Normalization](normalization.html#round-two-reorder) |
 | `HB_OT_MAP_MAX_BITS` | 8 | mask bits for one feature’s value | values above 255 lose their high bits (`hb-ot-map.hh:35`) | [From features to lookups](from-features-to-lookups.html#mask-bits) |
 | `HB_OT_MAX_TAGS_PER_SCRIPT`, `_PER_LANGUAGE` | 3, 3 | OpenType tags tried for one script or language | further tags are not tried (`hb-ot-layout.h:99`) | [Choosing a script shaper](choosing-a-script-shaper.html#from-a-script-to-script-tags) |
@@ -48,7 +48,7 @@ In the first, the dot below, of class 220, is sorted ahead of the acutes, of cla
 
 ### What `max_ops` is charged for
 
-The budget is charged by the work a font controls: merging clusters, moving the output, setting masks over ranges (`hb-buffer.cc`, `hb-buffer.hh:657`), each nested lookup a contextual rule calls (`hb-ot-layout-gsubgpos.hh:1151`), the Indic shaper’s “would substitute” questions to the font (`hb-ot-layout.cc:1595`), and in AAT, a pass over the buffer for every subtable, every DontAdvance transition and every insertion (next section). Once the buffer is unsuccessful, `apply_forward` stops at once (`hb-ot-layout.cc:1983`), and `sync`, which ends a lookup that writes its output separately, discards that output and keeps the glyphs from before the lookup (`hb-buffer.cc:432`). So the result is the text as far as shaping got, not a mixture.
+The budget is charged by the work a font controls: merging clusters, moving the output, setting masks over ranges (`hb-buffer.cc`, `hb-buffer.hh:657`), each nested lookup a contextual rule calls (`hb-ot-layout-gsubgpos.hh:1151`), the Indic shaper’s “would substitute” questions to the font (`hb-ot-layout.cc:1595`), and in AAT, a pass over the buffer for every subtable, every DontAdvance transition, and every insertion (next section). Once the buffer is unsuccessful, `apply_forward` stops at once (`hb-ot-layout.cc:1983`), and `sync`, which ends a lookup that writes its output separately, discards that output and keeps the glyphs from before the lookup (`hb-buffer.cc:432`). So the result is the text as far as shaping got, not a mixture.
 
 Nesting is the surprise in the table. A contextual lookup that calls itself at the same position recurses until it is 64 deep, and then the whole buffer fails, not just that rule. The closure in the subsetter, which has its own copy of the limit, just stops following (`hb-ot-layout-gsubgpos.hh:77`).
 
@@ -77,7 +77,7 @@ The sanitizer checks a table once, when it is first loaded, and a table that fai
 | `HB_SANITIZE_MAX_OPS_FACTOR`, `_MIN`, `_MAX` | 64, 16,384, 0x3FFFFFFF | bytes checked, as a multiple of the table’s length, with a floor and a ceiling | every later check fails, and the table is rejected | [Sanitizer](trust-nothing-the-sanitizer.html#max_ops) |
 | `HB_SANITIZE_MAX_SUBTABLES` | 16,384 | lookup subtables in a GSUB or GPOS table | the table is rejected | [Sanitizer](trust-nothing-the-sanitizer.html#max_ops) |
 | `HB_MAX_NESTING_LEVEL` | 64 | nesting of COLR `Paint`s and of FeatureVariations `Condition`s | the table is rejected | [Sanitizer](trust-nothing-the-sanitizer.html#recursion) |
-| `HB_AAT_MAX_SUBTABLES` | 1,024 | subtables in one `morx`, `mort`, `kerx` or AAT `kern` | the table is rejected (`hb-aat-layout-morx-table.hh:1501`, `hb-aat-layout-kerx-table.hh:1154`) | [AAT inside HarfBuzz](aat-inside-harfbuzz.html#before-the-loop), [Legacy kern](legacy-kern.html#two-tables-called-kern) |
+| `HB_AAT_MAX_SUBTABLES` | 1,024 | subtables in one `morx`, `mort`, `kerx`, or AAT `kern` | the table is rejected (`hb-aat-layout-morx-table.hh:1501`, `hb-aat-layout-kerx-table.hh:1154`) | [AAT inside HarfBuzz](aat-inside-harfbuzz.html#before-the-loop), [Legacy kern](legacy-kern.html#two-tables-called-kern) |
 | `HB_SANITIZE_MAX_EDITS` | 32 | nothing | never read | [Sanitizer](trust-nothing-the-sanitizer.html#whats-left-of-repairing) |
 
 > Since {{hb}}: fixed on HarfBuzz main by [`9172214`](https://github.com/harfbuzz/harfbuzz/commit/91722141bb48a8414284cb3b4001b0c98cce9a19) (17 November 2026), which removes `HB_SANITIZE_MAX_EDITS` (the table’s last row).
@@ -125,7 +125,7 @@ The DontAdvance case is the one to understand. The machine in `loop.ttf` never a
 
 ## Drawing and painting
 
-Drawing and painting have the most limits, because outlines, paint graphs and renderers drive each other. Each format has structural limits, and since 14.5.0 a session also has a work budget, `HB_BUDGET_GLYPH`, which a client can set with `hb_draw_set_budget` or `hb_paint_set_budget` to a number, to `HB_BUDGET_DEFAULT`, or to `HB_BUDGET_UNLIMITED`, which leaves only the structural limits ([Drawing outlines](drawing-outlines.html#the-budget)).
+Drawing and painting have the most limits, because outlines, paint graphs, and renderers drive each other. Each format has structural limits, and since 14.5.0 a session also has a work budget, `HB_BUDGET_GLYPH`, which a client can set with `hb_draw_set_budget` or `hb_paint_set_budget` to a number, to `HB_BUDGET_DEFAULT`, or to `HB_BUDGET_UNLIMITED`, which leaves only the structural limits ([Drawing outlines](drawing-outlines.html#the-budget)).
 
 ### Outlines
 
@@ -201,7 +201,7 @@ Two limits change nothing visible. `HB_CBDT_MAX_INDEX_ENTRIES`, 65,536, caps the
 
 ## Changing a limit
 
-Every limit in `hb-limits.hh`, and the sanitizer’s in `hb-sanitize.hh:107`, is wrapped in `#ifndef`, so a build can set its own value by defining the macro first, with `-DHB_MAX_NESTING_LEVEL=128` or in a configuration header ([Compile-time configuration](compile-time-configuration.html)). The exceptions are the fixed weights `HB_BUDGET_1` to `HB_BUDGET_8192`, which `hb-limits.hh:211` asks to be left alone (“tune the common session cap, not these values”), and everything defined outside these two headers: `HB_OT_SHAPE_MAX_COMBINING_MARKS`, `HB_OT_MAP_MAX_BITS`, the hb-gpu limits, `kMaxCallLimit`, the CFF argument stack, `STCH_MAX_GLYPHS`, the 256 × table buffer and the SVG depth are plain definitions or literals, and changing them means changing the source. `HB_OT_MAX_TAGS_PER_SCRIPT` and `_PER_LANGUAGE` are public API, sizes for arrays that callers allocate.
+Every limit in `hb-limits.hh`, and the sanitizer’s in `hb-sanitize.hh:107`, is wrapped in `#ifndef`, so a build can set its own value by defining the macro first, with `-DHB_MAX_NESTING_LEVEL=128` or in a configuration header ([Compile-time configuration](compile-time-configuration.html)). The exceptions are the fixed weights `HB_BUDGET_1` to `HB_BUDGET_8192`, which `hb-limits.hh:211` asks to be left alone (“tune the common session cap, not these values”), and everything defined outside these two headers: `HB_OT_SHAPE_MAX_COMBINING_MARKS`, `HB_OT_MAP_MAX_BITS`, the hb-gpu limits, `kMaxCallLimit`, the CFF argument stack, `STCH_MAX_GLYPHS`, the 256 × table buffer, and the SVG depth are plain definitions or literals, and changing them means changing the source. `HB_OT_MAX_TAGS_PER_SCRIPT` and `_PER_LANGUAGE` are public API, sizes for arrays that callers allocate.
 
 At run time, only the drawing and painting budget can be changed, through `hb_draw_set_budget` and `hb_paint_set_budget`. There is no API for the buffer’s limits.
 
@@ -221,7 +221,7 @@ Most limits have grown over the years as real fonts reached them. `NEWS` records
 | `src/hb-paint.cc`, `src/OT/Color/COLR/COLR.hh`, `src/OT/Color/svg/svg.hh` | the color limits |
 | `src/hb-raster-*.cc`, `src/hb-vector-*.cc`, `src/hb-gpu-*.cc` | the renderers’ limits |
 | `src/hb-subset-plan.cc`, `src/hb-subset-table.hh`, `src/graph/graph.hh` | the subsetter’s and repacker’s limits |
-| `src/hb-common.h`, `src/hb-draw.h`, `src/hb-paint.h` | `HB_BUDGET_DEFAULT`, `HB_BUDGET_UNLIMITED` and the budget API |
+| `src/hb-common.h`, `src/hb-draw.h`, `src/hb-paint.h` | `HB_BUDGET_DEFAULT`, `HB_BUDGET_UNLIMITED`, and the budget API |
 
 ## In short
 

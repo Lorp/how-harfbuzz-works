@@ -51,7 +51,7 @@ The edge runs from the glyph asked about to `dependent`. What “leads to” mea
 
 Only GSUB edges use the other fields. `layout_tag` is the feature whose lookup made the edge. A lookup that several features use gets one edge for each feature (`add_gsub_lookup`, `hb-depend-data.hh:559`), so a program can drop edges for features it doesn’t want. For the other tables `layout_tag` is `HB_CODEPOINT_INVALID`, 0xFFFFFFFF.
 
-The two set indices point into one array of glyph sets that the graph owns. A **ligature set** is every glyph a ligature’s components use, the first glyph included (`Ligature.hh:41`). Each component gets an edge to the ligature, and all those edges carry the same set: the ligature belongs in a closure only once every glyph in its set is there. A **context set** is what a contextual rule needs around the glyph: its backtrack, its lookahead and its other input positions. Its members are of two kinds, told apart by the top bit (`HB_DEPEND_CONTEXT_SET_FLAG`, `hb-depend-data.hh:55`). A plain glyph ID must itself be present. A value with the top bit set is the index of another set in the same array, of which any one glyph will do. The context is satisfied when every member is. Ignoring context sets is allowed, and gives a closure that is larger but never too small.
+The two set indices point into one array of glyph sets that the graph owns. A **ligature set** is every glyph a ligature’s components use, the first glyph included (`Ligature.hh:41`). Each component gets an edge to the ligature, and all those edges carry the same set: the ligature belongs in a closure only once every glyph in its set is there. A **context set** is what a contextual rule needs around the glyph: its backtrack, its lookahead, and its other input positions. Its members are of two kinds, told apart by the top bit (`HB_DEPEND_CONTEXT_SET_FLAG`, `hb-depend-data.hh:55`). A plain glyph ID must itself be present. A value with the top bit set is the index of another set in the same array, of which any one glyph will do. The context is satisfied when every member is. Ignoring context sets is allowed, and gives a closure that is larger but never too small.
 
 The flags mark edges that a static graph can’t get exactly right, which [below](#where-the-graph-is-approximate) explains.
 
@@ -121,7 +121,7 @@ This is the whole graph, as `depend-graph` prints it. It isn’t a live block: i
   glyf -> acutecomb
 ```
 
-Seven of the eighteen glyphs have edges. The others lead nowhere: `.notdef`, `space`, `acutecomb`, the ligatures and the alternates are ends of paths. Four things in this output are worth a closer look.
+Seven of the eighteen glyphs have edges. The others lead nowhere: `.notdef`, `space`, `acutecomb`, the ligatures, and the alternates are ends of paths. Four things in this output are worth a closer look.
 
 **The alternates.** An alternate substitution gives an edge to every alternate. A closure can’t know which one an application will choose.
 
@@ -168,7 +168,7 @@ GSUB is where the work is. It comes in two steps (`GSUB_accelerator_t::depend`, 
 
 Contextual rules need more care. When a Context or ChainContext rule calls a lookup at some position, the walk narrows the active glyphs to what can be at that position, as the closure does, and builds a context set from what must surround it (`context_depend_recurse_lookups`, `hb-ot-layout-gsubgpos.hh:2472`). The context set gathers the backtrack and lookahead, and the glyphs the rule’s other input positions require. A position that needs one particular glyph adds that glyph; a position that any of several glyphs can fill adds a set reference. Every edge recorded inside the called lookup carries that context set. Rules longer than `HB_MAX_CONTEXT_LENGTH` (64) are skipped, since they can never apply.
 
-The walk doesn’t do what HarfBuzz’s own closure does inside a rule. The closure feeds each lookup’s output to the lookups after it in the same rule; the depend walk records every lookup’s edges independently, from what the rule’s coverage allows at each position (`docs/depend-implementation.md`). Recursion is guarded against loops: a lookup already on the call stack isn’t entered again (`recurse`, `:517`). Finished walks are memoized by lookup, active glyphs, call path and context, so a shared lookup isn’t walked twice in the same state.
+The walk doesn’t do what HarfBuzz’s own closure does inside a rule. The closure feeds each lookup’s output to the lookups after it in the same rule; the depend walk records every lookup’s edges independently, from what the rule’s coverage allows at each position (`docs/depend-implementation.md`). Recursion is guarded against loops: a lookup already on the call stack isn’t entered again (`recurse`, `:517`). Finished walks are memoized by lookup, active glyphs, call path, and context, so a shared lookup isn’t walked twice in the same state.
 
 Every edge goes through a deduplicating hash table before it is stored, and sets are stored once by content (`add_edge`, `hb-depend-data.hh:508`). The hash table and the feature map are temporary: they belong to a builder that is freed when the graph is done, leaving only the edge lists and the sets.
 
@@ -179,7 +179,7 @@ Every edge goes through a deduplicating hash table before it is stored, and sets
 1. Map the characters to glyphs through `cmap`, add the glyphs of any variation sequences, and add `.notdef`.
 2. Follow GSUB edges until nothing changes. Skip an edge whose feature isn’t wanted; skip a ligature edge until all of its ligature set is present; skip an edge whose context set isn’t satisfied.
 3. Follow MATH edges once, from the glyphs present before this step only.
-4. Follow COLR, VARC, `glyf` and CFF edges to the end, with no conditions.
+4. Follow COLR, VARC, `glyf`, and CFF edges to the end, with no conditions.
 
 There is no going back to GSUB after the components: a component glyph is part of a drawing, not an input to shaping. `depend-graph --closure` does exactly this, with the subsetter’s default feature list, and prints the result beside the glyphs `hb_subset_plan_create_or_fail()` keeps for the same text. This is its output (`fonts/hb-depend/closures.txt`, made by `run.sh`; not live):
 
@@ -198,7 +198,7 @@ from the graph: .notdef e f i x f_i f_f f_f_i e.init
 the subsetter: .notdef e f i x f_i f_f f_f_i
 ```
 
-The two agree on every text. For “xe”, `x` brings `f` and `i`, and with both present the ligature sets let in `f_i`, `f_f` and `f_f_i`. `salt` isn’t among the subsetter’s default features, so no alternates come in. `e.init` stays out, because neither `space` nor `e.init` is present to satisfy the context. For “ e” the space is there, and `e.init` comes in. For “á”, the composite brings its components. The last run follows edges whatever their context, and `e.init` comes in where it isn’t needed: larger, but still safe.
+The two agree on every text. For “xe”, `x` brings `f` and `i`, and with both present the ligature sets let in `f_i`, `f_f`, and `f_f_i`. `salt` isn’t among the subsetter’s default features, so no alternates come in. `e.init` stays out, because neither `space` nor `e.init` is present to satisfy the context. For “ e” the space is there, and `e.init` comes in. For “á”, the composite brings its components. The last run follows edges whatever their context, and `e.init` comes in where it isn’t needed: larger, but still safe.
 
 ## Where the graph is approximate
 
@@ -242,7 +242,7 @@ What the graph leaves out:
 
 A few of HarfBuzz’s own descriptions don’t match the code, which this chapter follows. The header says that `layout_tag` is 0 for edges from tables other than GSUB, but it is `HB_CODEPOINT_INVALID`, as `depend-api.md` says and the program above confirms. `depend-implementation.md` shows each edge taking only the first feature that uses its lookup, where the code makes one edge for each such feature. It names the header `hb-depend.h`, which is now `hb-subset-depend.h`, and calls the utility “TODO”, though it exists. And `test/fuzzing/README.md` asks for a meson option `depend_api`, which doesn’t exist: the option is `experimental_api`.
 
-> Since {{hb}}: fixed on HarfBuzz main by [`88bb79a`](https://github.com/harfbuzz/harfbuzz/commit/88bb79a408620943fb475857777c2eceabb76ffb) and [`202b3e2`](https://github.com/harfbuzz/harfbuzz/commit/202b3e2c282a36f710834e61f460d8f48e6a10b9) (17 November 2026), so main’s header, `depend-implementation.md` and fuzzing README match the code.
+> Since {{hb}}: fixed on HarfBuzz main by [`88bb79a`](https://github.com/harfbuzz/harfbuzz/commit/88bb79a408620943fb475857777c2eceabb76ffb) and [`202b3e2`](https://github.com/harfbuzz/harfbuzz/commit/202b3e2c282a36f710834e61f460d8f48e6a10b9) (17 November 2026), so main’s header, `depend-implementation.md`, and fuzzing README match the code.
 
 ## Where to read the source
 
@@ -264,7 +264,7 @@ The program that made this chapter’s output is `fonts/hb-depend/depend-graph.c
 
 ## In short
 
-* hb-depend builds a font’s glyph dependency graph once. Its nodes are glyphs, and its edges come from GSUB, `glyf`, CFF `seac`, COLR, MATH and VARC. `cmap` and variation sequences are left to the caller.
+* hb-depend builds a font’s glyph dependency graph once. Its nodes are glyphs, and its edges come from GSUB, `glyf`, CFF `seac`, COLR, MATH, and VARC. `cmap` and variation sequences are left to the caller.
 * GSUB edges carry the feature that made them, the components a ligature needs, and the context a rule needs. A closure follows an edge only when those are met, or ignores the context and keeps a little more.
 * The graph is built by a depend context dispatched over every lookup that a feature uses, with every glyph active, recording each lookup’s edges independently.
 * A closure from the graph matches the subsetter’s on HarfBuzz’s tests. Flags mark the edges where it may come out larger.

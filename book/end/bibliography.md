@@ -4,9 +4,9 @@
 
 * Microsoft, *OpenType specification*, version 1.9.1: <https://learn.microsoft.com/en-us/typography/opentype/spec/>
 * ISO/IEC 14496-22, *Open Font Format*. The 5th edition adds the “beyond 64k” formats and extended collection headers.
-* Microsoft, *Developing OpenType fonts* for particular scripts (Arabic, Devanagari and the rest), and the *Universal Shaping Engine* introduction: <https://learn.microsoft.com/en-us/typography/script-development/standard>
+* Microsoft, *Developing OpenType fonts* for particular scripts (Arabic, Devanagari, and the rest), and the *Universal Shaping Engine* introduction: <https://learn.microsoft.com/en-us/typography/script-development/standard>
 * Microsoft, *Creating and supporting OpenType fonts for the Universal Shaping Engine*: <https://learn.microsoft.com/en-us/typography/script-development/use>, with its data files in Microsoft’s font-tools repository
-* Microsoft, *typography-issues*, the tracker for the OpenType and script development documents, where questions about the USE specification are titled “[USE]”: <https://github.com/MicrosoftDocs/typography-issues/issues?q=%5BUSE%5D>. [The Universal Shaping Engine](universal-shaping-engine.html) cites issues 216, 232, 270, 271, 279, 281, 289, 296, 336, 482, 484, 696, 750, 916, 928, 1078 and 1179.
+* Microsoft, *typography-issues*, the tracker for the OpenType and script development documents, where questions about the USE specification are titled “[USE]”: <https://github.com/MicrosoftDocs/typography-issues/issues?q=%5BUSE%5D>. [The Universal Shaping Engine](universal-shaping-engine.html) cites issues 216, 232, 270, 271, 279, 281, 289, 296, 336, 482, 484, 696, 750, 916, 928, 1078, and 1179.
 * Microsoft, *font-tools*, with USE’s data files (`IndicSyllabicCategory-Additional.txt`, `IndicPositionalCategory-Additional.txt`, `IndicShapingInvalidCluster.txt`) and the issues about them, such as #53: <https://github.com/microsoft/font-tools/tree/master/USE>
 * Microsoft, *Developing OpenType Fonts for Khmer Script* and *Creating and Supporting OpenType Fonts for Myanmar Script*: <https://learn.microsoft.com/en-us/typography/script-development/khmer>, <https://learn.microsoft.com/en-us/typography/script-development/myanmar>
 * Apple, *TrueType Reference Manual*, including the AAT tables (`morx`, `kerx`, `ankr`, `trak`, `feat`, `ltag`) and the TrueType rasterizer’s phantom points: <https://developer.apple.com/fonts/TrueType-Reference-Manual/>
@@ -16,7 +16,7 @@
 * The Unicode Consortium, *The Unicode Standard*, with UAX #9 (bidirectional text) and UAX #29 (text segmentation): <https://www.unicode.org/versions/latest/>
 * The Unicode Consortium, UTR #53, *Unicode Arabic Mark Rendering*: <https://www.unicode.org/reports/tr53/>
 * The Unicode Consortium, UAX #50 (vertical text layout): <https://www.unicode.org/reports/tr50/>
-* The Unicode Consortium, UAX #44 (the Unicode Character Database), UAX #15 (normalization forms: NFC, NFD, starters and blocking) and UTS #51 (emoji): <https://www.unicode.org/reports/>
+* The Unicode Consortium, UAX #44 (the Unicode Character Database), UAX #15 (normalization forms: NFC, NFD, starters, and blocking), and UTS #51 (emoji): <https://www.unicode.org/reports/>
 * Microsoft, OpenType *Script tags* and *Language system tags* registries: <https://learn.microsoft.com/en-us/typography/opentype/spec/scripttags>, <https://learn.microsoft.com/en-us/typography/opentype/spec/languagetags>
 * IANA, *Language Subtag Registry*: <https://www.iana.org/assignments/language-subtag-registry>
 * W3C, *Compositing and Blending Level 1*, which COLR version 1’s composite modes follow: <https://www.w3.org/TR/compositing-1/>
@@ -29,7 +29,7 @@
 * fontTools, `varLib.instancer` and its `solver.py`, which HarfBuzz’s instancer ports, and `varLib/iup.py`: <https://github.com/fonttools/fonttools/tree/main/Lib/fontTools/varLib/instancer>
 * HarfBuzz, `AVAR2-INSTANCING.md`: <https://github.com/harfbuzz/harfbuzz/blob/15.1.0/AVAR2-INSTANCING.md>
 * Unicode, UAX #14, *Unicode Line Breaking Algorithm*: <https://www.unicode.org/reports/tr14/>
-* Microsoft, OpenType specification, the MATH, BASE, STAT, `name`, `meta` and OS/2 chapters, and the baseline tag registry: <https://learn.microsoft.com/en-us/typography/opentype/spec/>
+* Microsoft, OpenType specification, the MATH, BASE, STAT, `name`, `meta`, and OS/2 chapters, and the baseline tag registry: <https://learn.microsoft.com/en-us/typography/opentype/spec/>
 * W3C, *CSS Inline Layout Module Level 3*, baseline synthesis: <https://www.w3.org/TR/css-inline-3/>
 * Chromium, `open_type_math_support.cc`, and Firefox, `gfxMathTable.cpp`: users of HarfBuzz’s MATH API
 * HarfBuzz issue #4653, the Cambria Math constants: <https://github.com/harfbuzz/harfbuzz/issues/4653>
@@ -47,9 +47,9 @@
 * HarfBuzz source code, version {{hb}}: <https://github.com/harfbuzz/harfbuzz/tree/{{hb}}>. Its `NEWS` file is the project’s own history, release by release.
 * HarfBuzz, *User manual*: <https://harfbuzz.github.io/>
 * Behdad Esfahbod, *HarfBust*, a puzzle font that shapes differently in each engine, 2025: <https://behdad.github.io/harfbust/>
-* Behdad Esfahbod, on how Core Text, DirectWrite and HarfBuzz handle invalid offsets, HarfBuzz issue #5535, 25 November 2025: <https://github.com/harfbuzz/harfbuzz/issues/5535#issuecomment-3573738217>
+* Behdad Esfahbod, on how Core Text, DirectWrite, and HarfBuzz handle invalid offsets, HarfBuzz issue #5535, 25 November 2025: <https://github.com/harfbuzz/harfbuzz/issues/5535#issuecomment-3573738217>
 * HarfBuzz, `docs/wasm-shaper.md`, the WebAssembly shaper, with examples at <https://github.com/harfbuzz/harfbuzz-wasm-examples>
-* HarfBuzz issues on the Universal Shaping Engine cited in [The Universal Shaping Engine](universal-shaping-engine.html): #170, #542, #1102, #1677, #1683, #1746, #1924 and #2061, and #539, which brought in the Indic `3` tags: <https://github.com/harfbuzz/harfbuzz/issues?q=label%3AUSE>
+* HarfBuzz issues on the Universal Shaping Engine cited in [The Universal Shaping Engine](universal-shaping-engine.html): #170, #542, #1102, #1677, #1683, #1746, #1924, #2061, and #539, which brought in the Indic `3` tags: <https://github.com/harfbuzz/harfbuzz/issues?q=label%3AUSE>
 * HarfRust: <https://github.com/harfbuzz/harfrust>
 * harfbuzzjs, HarfBuzz compiled to WebAssembly, version 1.6.4: <https://github.com/harfbuzz/harfbuzzjs>
 * uharfbuzz, HarfBuzz’s Python bindings, version 0.57.0: <https://github.com/harfbuzz/uharfbuzz>

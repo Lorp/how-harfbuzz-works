@@ -1,10 +1,10 @@
 # The pipeline, step by step
 
-When `hb_shape` reaches the `ot` backend, the expensive decisions have been made. The plan holds the map of features and lookups, the script shaper and a few dozen settings, all worked out once for this font, script, language and direction ([Shape plans and their cache](shape-plans-and-their-cache.html)). What is left is to run it: to take one buffer of characters and turn it into positioned glyphs.
+When `hb_shape` reaches the `ot` backend, the expensive decisions have been made. The plan holds the map of features and lookups, the script shaper, and a few dozen settings, all worked out once for this font, script, language, and direction ([Shape plans and their cache](shape-plans-and-their-cache.html)). What is left is to run it: to take one buffer of characters and turn it into positioned glyphs.
 
 That is the job of one short function, `hb_ot_shape_internal` (`hb-ot-shape.cc:1171`). Everything the `ot` shaper does to a buffer happens inside it, in a fixed order, and most of the rest of this part of the book is about one step or another of it. This chapter goes through the whole function once, in order: what each step does, why it comes where it does, which fields of the buffer it reads and writes, and where the step is explained in depth.
 
-It follows one run all the way, using `hb-shape --trace` ([The command-line tools](command-line-tools.html#traces)). The test font, `pipeline.ttf`, is built from `fonts/pipeline-step-by-step/pipeline.fea`. It has Arabic beh, lam and alef in their joining forms, the lam-alef ligature, a fatha that GPOS attaches to beh, a pair of parentheses, and the digits and fraction slash for an automatic fraction. Its glyphs are boxes. Every result and trace on this page was produced by running HarfBuzz {{hb}} on it when the page was built.
+It follows one run all the way, using `hb-shape --trace` ([The command-line tools](command-line-tools.html#traces)). The test font, `pipeline.ttf`, is built from `fonts/pipeline-step-by-step/pipeline.fea`. It has Arabic beh, lam, and alef in their joining forms, the lam-alef ligature, a fatha that GPOS attaches to beh, a pair of parentheses, and the digits and fraction slash for an automatic fraction. Its glyphs are boxes. Every result and trace on this page was produced by running HarfBuzz {{hb}} on it when the page was built.
 
 ## The whole function
 
@@ -44,9 +44,9 @@ hb_ot_shape_internal (hb_ot_shape_context_t *c)
 }
 ```
 
-It falls into five parts. The first five calls prepare the characters: they give each one its Unicode properties, group them into clusters and put them in the order the script is written in. `hb_ot_substitute_pre` turns characters into glyphs and runs GSUB. `hb_ot_position` gives the glyphs advances and runs GPOS. `hb_ot_substitute_post`, despite its name, comes *after* positioning: it is where invisible characters are finally hidden. And the last three lines tidy up.
+It falls into five parts. The first five calls prepare the characters: they give each one its Unicode properties, group them into clusters, and put them in the order the script is written in. `hb_ot_substitute_pre` turns characters into glyphs and runs GSUB. `hb_ot_position` gives the glyphs advances and runs GPOS. `hb_ot_substitute_post`, despite its name, comes *after* positioning: it is where invisible characters are finally hidden. And the last three lines tidy up.
 
-The `hb_ot_shape_context_t` that every step is passed holds the plan, the font, its face, the buffer and the user’s features, and one field of its own, `target_direction`: the direction the caller asked for, saved because the buffer’s direction may be flipped while shaping and is put back at the end.
+The `hb_ot_shape_context_t` that every step is passed holds the plan, the font, its face, the buffer, and the user’s features, and one field of its own, `target_direction`: the direction the caller asked for, saved because the buffer’s direction may be flipped while shaping and is put back at the end.
 
 ## The run
 
@@ -110,7 +110,7 @@ to: start decompose
 
 `hb-shape` numbers clusters by character, so the seven characters arrived as clusters 0 to 6. Now the joiner is in cluster 0, with the parenthesis, and the fatha is in cluster 2, with the beh.
 
-That is step 4. Step 2, `hb_set_unicode_props`, set every glyph’s mask to the plan’s global mask, worked out its Unicode properties, and marked some characters as **continuations** of the one before: marks, and also a zero-width joiner, which belongs with what precedes it, as in emoji sequences. It also set **scratch flags** on the buffer, one-bit notes such as “has continuations”, “has default ignorables” and “has a fraction slash”, which let later steps skip themselves when there is nothing to do. [Unicode inside HarfBuzz](unicode-inside-harfbuzz.html#continuations-just-enough-of-graphemes) has the details of both. Step 4, `hb_form_clusters`, then merges each base with its continuations into one cluster, with `merge_grapheme_clusters`. It only merges at the cluster levels that work by graphemes, 0 (the default) and 3. At level 1 every character keeps its own cluster:
+That is step 4. Step 2, `hb_set_unicode_props`, set every glyph’s mask to the plan’s global mask, worked out its Unicode properties, and marked some characters as **continuations** of the one before: marks, and also a zero-width joiner, which belongs with what precedes it, as in emoji sequences. It also set **scratch flags** on the buffer, one-bit notes such as “has continuations”, “has default ignorables”, and “has a fraction slash”, which let later steps skip themselves when there is nothing to do. [Unicode inside HarfBuzz](unicode-inside-harfbuzz.html#continuations-just-enough-of-graphemes) has the details of both. Step 4, `hb_form_clusters`, then merges each base with its continuations into one cluster, with `merge_grapheme_clusters`. It only merges at the cluster levels that work by graphemes, 0 (the default) and 3. At level 1 every character keeps its own cluster:
 
 ```shape
 pipeline.ttf  (\u200Dب\u064Eلا)  --language=ar  --cluster-level=1
@@ -157,7 +157,7 @@ Mirroring is done on characters, before the `cmap` is consulted, so a font needs
 
 ### Normalization
 
-Step 8 claims all of `var1` for `normalizer_glyph_index` and runs normalization: decompose, reorder marks, recompose. Normalization is where the `cmap` is read: whether a character decomposes depends on which glyphs the font has, so each character’s glyph is looked up there and kept in `normalizer_glyph_index`. The shaper’s `decompose`, `compose` and `reorder_marks` hooks are called from inside it. All of that is the subject of [Normalization](normalization.html). In this run nothing changes:
+Step 8 claims all of `var1` for `normalizer_glyph_index` and runs normalization: decompose, reorder marks, recompose. Normalization is where the `cmap` is read: whether a character decomposes depends on which glyphs the font has, so each character’s glyph is looked up there and kept in `normalizer_glyph_index`. The shaper’s `decompose`, `compose`, and `reorder_marks` hooks are called from inside it. All of that is the subject of [Normalization](normalization.html). In this run nothing changes:
 
 ```trace
 font: pipeline.ttf
@@ -172,7 +172,7 @@ to: end compose
 Step 9, `hb_ot_shape_setup_masks`, sets the feature bits of each glyph’s mask that aren’t simply on everywhere. Mask bits were handed out when the plan was made ([From features to lookups](from-features-to-lookups.html#mask-bits)); every glyph has had the global ones since step 2. Three things add more, in this order:
 
 1. **Fractions.** If step 2 saw a U+2044 FRACTION SLASH and the font has `frac`, or both `numr` and `dnom`, each run of digits before a fraction slash gets `numr` (and `frac`), the slash `frac`, and the digits after it `dnom` (and `frac`). The range is marked unsafe to break.
-2. **The shaper’s `setup_masks`.** The Arabic shaper works out each letter’s joining form here and sets the bit for `init`, `medi`, `fina` or `isol`. It is why the beh in our run will be medial: the joiner before it is join-causing.
+2. **The shaper’s `setup_masks`.** The Arabic shaper works out each letter’s joining form here and sets the bit for `init`, `medi`, `fina`, or `isol`. It is why the beh in our run will be medial: the joiner before it is join-causing.
 3. **User features with a range**, such as `--features=dnom[2:3]`. Their start and end are compared with cluster values, not glyph positions.
 
 The fraction needs no feature to be asked for:
@@ -235,7 +235,7 @@ to: end table GPOS
 * If the font funcs provide horizontal origins, they are added back, because GPOS works from the horizontal origin.
 * Step 16: `GPOS::position_start` clears each glyph’s `attach_chain` and `attach_type`, which GPOS keeps in the spare field of the positions. If the shaper zeroes marks “early”, before GPOS, it sets every GDEF mark’s advance to zero now. USE and the Myanmar shaper do.
 * Step 17: `plan->position` (`:271`) runs GPOS, or `kerx`. Then, if the plan says so, legacy `kern` ([Legacy kern](legacy-kern.html)) or fallback kerning, and `trak` ([AAT positioning](aat-positioning.html)). Which of them the plan uses was decided when it was made, from the tables the font has. Here, the fatha is attached to beh at offset (100, 50).
-* Step 18: shapers that zero marks “late” do it now. The default, Arabic, Hebrew and Thai shapers are among them; the Indic, Khmer and Hangul shapers don’t zero marks at all. If the plan has neither GPOS nor `kerx` and the run is forward, the mark’s offset is moved back by its old advance at the same time, so that it hangs over the glyph before it.
+* Step 18: shapers that zero marks “late” do it now. The default, Arabic, Hebrew, and Thai shapers are among them; the Indic, Khmer, and Hangul shapers don’t zero marks at all. If the plan has neither GPOS nor `kerx` and the run is forward, the mark’s offset is moved back by its old advance at the same time, so that it hangs over the glyph before it.
 * Step 19: `position_finish_advances`, which does nothing in {{hb}}; then `hb_ot_zero_width_default_ignorables`, which gives every default ignorable no advance and no offset along the line; then `position_finish_offsets`, which resolves attachments. GPOS stores a mark’s offset relative to its base, and this adds up the base’s offset and the advances between them. Then, for a synthetically slanted font, each glyph with a vertical offset is moved sideways to match ([Fonts and font functions](fonts-and-font-functions.html#slant)).
 * Horizontal origins are subtracted again, if there are any.
 * Step 20: if the plan has neither GPOS nor `kerx`, and the shaper allows it, marks are placed from glyph extents (“start fallback mark” in a trace; [Fallbacks](fallbacks.html)).
@@ -297,8 +297,8 @@ The `#1` is `UNSAFE_TO_BREAK`. Step 27 gives back `unicode_props`, the last of t
 | `src/hb-ot-shape.cc` | `hb_ot_shape_internal` and every step it calls; the planner decisions (`compile`) that switch steps on and off |
 | `src/hb-ot-shape-normalize.cc` | normalization and the `cmap` lookup |
 | `src/hb-ot-layout.cc` | glyph properties and the digest, `hb_ot_map_t::apply`, GSUB and GPOS entry points |
-| `src/OT/Layout/GPOS/GPOS.hh` | `position_start`, `position_finish_offsets` and `propagate_attachment_offsets` |
-| `src/hb-ot-shape-fallback.cc` | fallback mark positioning, kerning and space widths |
+| `src/OT/Layout/GPOS/GPOS.hh` | `position_start`, `position_finish_offsets`, and `propagate_attachment_offsets` |
+| `src/hb-ot-shape-fallback.cc` | fallback mark positioning, kerning, and space widths |
 | `src/hb-ot-shaper.hh` | the shaper hooks |
 | `src/hb-ot-shaper-arabic.cc` | the Arabic shaper this run used |
 

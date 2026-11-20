@@ -12,7 +12,7 @@ Every number in a table is a claim about the rest of the file. An offset says �
 
 Not every attack needs to read out of bounds. OpenType lets many offsets point at the same subtable, which is how a font shares one Coverage table between several lookups. Nothing stops a font from sharing on purpose, at every level, so that a table of a few kilobytes describes a graph with an enormous number of paths through it. Some structures nest without limit: a COLR paint can contain a paint that contains a paint. A checker that follows every path, or recurses as deep as the data asks, can be made to run for a very long time on a tiny file. So the sanitizer has to bound its own work, as well as the shaper’s.
 
-None of this is hypothetical. HarfBuzz is fuzzed continuously: programs feed it endless mutated fonts, and when one finds a crash, a hang or a runaway allocation, the font is kept as a test. The repository holds 532 fonts in `test/fuzzing/fonts`, and 471 of them are named after the fuzzer report they came from (the [testing chapter](testing-harfbuzz.html) has more).
+None of this is hypothetical. HarfBuzz is fuzzed continuously: programs feed it endless mutated fonts, and when one finds a crash, a hang, or a runaway allocation, the font is kept as a test. The repository holds 532 fonts in `test/fuzzing/fonts`, and 471 of them are named after the fuzzer report they came from (the [testing chapter](testing-harfbuzz.html) has more).
 
 ## The contract
 
@@ -34,7 +34,7 @@ The long comment at the top of `hb-sanitize.hh` (lines 37–104) is the best des
 
 This is a definition of *safe*, not of *valid*. The sanitizer isn’t a font validator, and a font that passes it may still be wrong in many ways the OpenType specification cares about. What it guarantees is narrower and more useful: that the code which reads this table, written as it is, won’t read outside the table.
 
-So what the sanitizer checks depends on what that code assumes. The comment goes on to describe two ways of dividing the work. In `GSUB`, `GPOS` and `GDEF`, the reading code assumes that every offset points inside the table, so the sanitizer must check every offset before any of it is used. In `glyf` and `loca`, the reading code checks each glyph’s offsets itself, when it loads the glyph, so the sanitizer checks nothing. The choice is made table by table, for speed and for simplicity. Checking every glyph’s offsets at load would cost time in proportion to the number of glyphs, which is a lot for a CJK font of which a document uses a few hundred glyphs. Leaving them until use makes loading cost nothing and the total cost proportional to the glyphs actually used. For the layout tables the argument goes the other way: their structure is so deeply nested that checking everything once is far simpler than checking at each of the many places that follow an offset.
+So what the sanitizer checks depends on what that code assumes. The comment goes on to describe two ways of dividing the work. In `GSUB`, `GPOS`, and `GDEF`, the reading code assumes that every offset points inside the table, so the sanitizer must check every offset before any of it is used. In `glyf` and `loca`, the reading code checks each glyph’s offsets itself, when it loads the glyph, so the sanitizer checks nothing. The choice is made table by table, for speed and for simplicity. Checking every glyph’s offsets at load would cost time in proportion to the number of glyphs, which is a lot for a CJK font of which a document uses a few hundred glyphs. Leaving them until use makes loading cost nothing and the total cost proportional to the glyphs actually used. For the layout tables the argument goes the other way: their structure is so deeply nested that checking everything once is far simpler than checking at each of the many places that follow an offset.
 
 Being lenient shows up all over the table code. A few examples:
 
@@ -128,7 +128,7 @@ typename context_t::return_t dispatch (context_t *c, Ts&&... ds) const
 }
 ```
 
-`may_dispatch` is a hook for the sanitizer. Every other context returns `true`, but the sanitizer checks the format field itself before the `switch` reads it (`hb-sanitize.hh:138`). `default_return_value ()` for the sanitizer is `true` (`:143`): that’s why unknown formats pass. `LigatureSubst` has no `sanitize()` of its own, and doesn’t need one. The sanitizer’s own `dispatch` prefers an object’s `sanitize()` if it has one and falls back on its `dispatch()` if not (`:154–163`), so the same `switch` serves for checking, applying, subsetting and the rest.
+`may_dispatch` is a hook for the sanitizer. Every other context returns `true`, but the sanitizer checks the format field itself before the `switch` reads it (`hb-sanitize.hh:138`). `default_return_value ()` for the sanitizer is `true` (`:143`): that’s why unknown formats pass. `LigatureSubst` has no `sanitize()` of its own, and doesn’t need one. The sanitizer’s own `dispatch` prefers an object’s `sanitize()` if it has one and falls back on its `dispatch()` if not (`:154–163`), so the same `switch` serves for checking, applying, subsetting, and the rest.
 
 ## A window and a budget
 
@@ -168,7 +168,7 @@ The sanitizer’s `max_ops` is a different budget from the buffer’s `max_ops`,
 
 ### Recursion
 
-Most of a table can only nest as deep as its format allows: a GSUB lookup holds subtables that hold Coverage tables, and that’s the end of it. (A context lookup refers to other lookups by index, not by offset, so the sanitizer doesn’t follow it.) Two structures can nest themselves: COLR’s `Paint`, and the `Condition` of a FeatureVariations record, which can be the AND, OR or negation of other conditions. Both count their depth with `check_start_recursion` and `end_recursion` (`hb-sanitize.hh:380`), and fail beyond `HB_MAX_NESTING_LEVEL`, which is 64 (`hb-ot-layout-common.hh:4777`, `COLR.hh:2275`). That limit is the same one that limits nested lookups during shaping (see the [Limits appendix](limits.html)).
+Most of a table can only nest as deep as its format allows: a GSUB lookup holds subtables that hold Coverage tables, and that’s the end of it. (A context lookup refers to other lookups by index, not by offset, so the sanitizer doesn’t follow it.) Two structures can nest themselves: COLR’s `Paint`, and the `Condition` of a FeatureVariations record, which can be the AND, OR, or negation of other conditions. Both count their depth with `check_start_recursion` and `end_recursion` (`hb-sanitize.hh:380`), and fail beyond `HB_MAX_NESTING_LEVEL`, which is 64 (`hb-ot-layout-common.hh:4777`, `COLR.hh:2275`). That limit is the same one that limits nested lookups during shaping (see the [Limits appendix](limits.html)).
 
 ### The glyph count
 
@@ -180,7 +180,7 @@ The window can also be narrowed to a single object with `hb_sanitize_with_object
 
 ## Pass or fail
 
-`sanitize_blob` (`hb-sanitize.hh:405`) runs the top-level `sanitize()` and acts on the answer. If the table passed, its blob is made immutable and returned. If it failed, the blob is released and the **empty blob** is returned in its place. There’s no third outcome. A table that is missing from the font gives the empty blob too, so the code that uses a table can’t tell “missing” from “broken”, and doesn’t need to: the empty blob reads as the table’s Null object, all zeros, which is a valid, empty table. A failed `GSUB` reads as a `GSUB` with no scripts, no features and no lookups. How that result is stored on the face, so that the table is never looked for or checked again, is in [Failure is cached as Null](blobs-faces-and-lazy-tables.html#failure-is-cached-as-null).
+`sanitize_blob` (`hb-sanitize.hh:405`) runs the top-level `sanitize()` and acts on the answer. If the table passed, its blob is made immutable and returned. If it failed, the blob is released and the **empty blob** is returned in its place. There’s no third outcome. A table that is missing from the font gives the empty blob too, so the code that uses a table can’t tell “missing” from “broken”, and doesn’t need to: the empty blob reads as the table’s Null object, all zeros, which is a valid, empty table. A failed `GSUB` reads as a `GSUB` with no scripts, no features, and no lookups. How that result is stored on the face, so that the table is never looked for or checked again, is in [Failure is cached as Null](blobs-faces-and-lazy-tables.html#failure-is-cached-as-null).
 
 The test font `good.ttf` has two GSUB lookups that have nothing to do with each other: `liga` makes `f i` into `f_i`, and `calt` turns `a` into `a.alt` before `b`. Its GPOS has a kerning pair, `b a`, and a mark-to-base lookup that puts `acutecomb` over `a` and `b`. Here are the lookups, each with tabs for its views:
 
@@ -218,7 +218,7 @@ Nothing runs between the start of the table and its end. There aren’t even any
 
 ### A list of known bad fonts
 
-There’s one other way a sanitized table can be dropped. After `GDEF`, `GSUB`, `GPOS` and `morx` are sanitized, their accelerators ask `is_blocklisted` (`hb-ot-layout-gsubgpos.hh:6716`) whether this is one of a few specific fonts whose table is known to be harmful, identified by the lengths of their tables. The comment in `hb-ot-layout.cc:159` lists the `GDEF` cases: some versions of Times New Roman Italic and Bold Italic class the ASCII double quote as a mark, and many versions of Tahoma class some spacing IPA symbols as marks, so their `GDEF` is dropped to keep those glyphs from losing their width. The `morx` list (`hb-aat-layout.cc:215`) has one font. The `GSUB` and `GPOS` lists are empty in {{hb}}. A build with `HB_NO_OT_LAYOUT_BLOCKLIST` defined has none of this.
+There’s one other way a sanitized table can be dropped. After `GDEF`, `GSUB`, `GPOS`, and `morx` are sanitized, their accelerators ask `is_blocklisted` (`hb-ot-layout-gsubgpos.hh:6716`) whether this is one of a few specific fonts whose table is known to be harmful, identified by the lengths of their tables. The comment in `hb-ot-layout.cc:159` lists the `GDEF` cases: some versions of Times New Roman Italic and Bold Italic class the ASCII double quote as a mark, and many versions of Tahoma class some spacing IPA symbols as marks, so their `GDEF` is dropped to keep those glyphs from losing their width. The `morx` list (`hb-aat-layout.cc:215`) has one font. The `GSUB` and `GPOS` lists are empty in {{hb}}. A build with `HB_NO_OT_LAYOUT_BLOCKLIST` defined has none of this.
 
 ## Why it repairs nothing
 
@@ -244,7 +244,7 @@ Here is a hand-written illustration, not taken from a real font. An Extension lo
 
 ### HarfBust
 
-In late 2025, Behdad Esfahbod published a puzzle font, HarfBust, made from Anton, which forms a ligature for the word “HarfBust” in HarfBuzz, HarfRust and DirectWrite but not in Core Text, and others for “HarfBuzz” and “HarfRust” in only one engine each. It doesn’t use any special features to do it: its `GSUB` contains deliberately invalid offsets, arranged so that each engine’s way of handling them produces a different font. His explanation, in a comment on HarfBuzz issue #5535, describes the three ways:
+In late 2025, Behdad Esfahbod published a puzzle font, HarfBust, made from Anton, which forms a ligature for the word “HarfBust” in HarfBuzz, HarfRust, and DirectWrite but not in Core Text, and others for “HarfBuzz” and “HarfRust” in only one engine each. It doesn’t use any special features to do it: its `GSUB` contains deliberately invalid offsets, arranged so that each engine’s way of handling them produces a different font. His explanation, in a comment on HarfBuzz issue #5535, describes the three ways:
 
 * **Core Text** discards the offending table, and uses the rest of the font.
 * **DirectWrite** ignores the out-of-bounds offsets, and processes the rest of the table.
@@ -265,8 +265,8 @@ The change had a cost, which NEWS also records. Any check that is stricter than 
 A few things in the source make sense only as remains of the old design:
 
 * `HB_SANITIZE_MAX_EDITS` is still defined, as 32 (`hb-sanitize.hh:107`), with the comment “This limits sanitizing time on really broken fonts.” Nothing reads it.
-* `may_edit`, the edit counter and the second, writable pass are gone. There’s no `try_set` or `neuter` anywhere in `src/`.
-* The blob memory mode `HB_MEMORY_MODE_READONLY_MAY_MAKE_WRITABLE`, and `try_make_writable_inplace_unix`, which calls `mprotect` (`hb-blob.cc:415`), are still there, and fonts opened from a file are still mapped in that mode (`hb-blob.cc:654`). But the sanitizer never asks for writable bytes now. [Blobs, faces and lazy tables](blobs-faces-and-lazy-tables.html#writable-copies-and-why-little-needs-them-now) covers what does.
+* `may_edit`, the edit counter, and the second, writable pass are gone. There’s no `try_set` or `neuter` anywhere in `src/`.
+* The blob memory mode `HB_MEMORY_MODE_READONLY_MAY_MAKE_WRITABLE`, and `try_make_writable_inplace_unix`, which calls `mprotect` (`hb-blob.cc:415`), are still there, and fonts opened from a file are still mapped in that mode (`hb-blob.cc:654`). But the sanitizer never asks for writable bytes now. [Blobs, faces, and lazy tables](blobs-faces-and-lazy-tables.html#writable-copies-and-why-little-needs-them-now) covers what does.
 
 > Since {{hb}}: fixed on HarfBuzz main by [`9172214`](https://github.com/harfbuzz/harfbuzz/commit/91722141bb48a8414284cb3b4001b0c98cce9a19) (17 November 2026), which removes `HB_SANITIZE_MAX_EDITS` (the first item).
 
@@ -287,13 +287,13 @@ bool sanitize (hb_sanitize_context_t *c HB_UNUSED) const
 }
 ```
 
-`loca`’s is the same. The checks are in the `glyf` accelerator instead. It works out the number of glyphs from the length of `loca`, so that reading glyph *n*’s offset and the one after it is always in range (`glyf.hh:254`), takes the smaller of that and the face’s glyph count, and then, each time a glyph is loaded, refuses one whose offsets run backwards or past the end of `glyf` (`glyf.hh:574`). The glyph’s own data, its contours, points and components, is then read with checks against its own length. A broken glyph is then a missing glyph, and every other glyph still works. [Drawing outlines](drawing-outlines.html) has the rest of that code.
+`loca`’s is the same. The checks are in the `glyf` accelerator instead. It works out the number of glyphs from the length of `loca`, so that reading glyph *n*’s offset and the one after it is always in range (`glyf.hh:254`), takes the smaller of that and the face’s glyph count, and then, each time a glyph is loaded, refuses one whose offsets run backwards or past the end of `glyf` (`glyf.hh:574`). The glyph’s own data, its contours, points, and components, is then read with checks against its own length. A broken glyph is then a missing glyph, and every other glyph still works. [Drawing outlines](drawing-outlines.html) has the rest of that code.
 
 CFF and CFF2 are similar in spirit. At load, the sanitizer checks the structure of the table: the INDEXes, the charset against the glyph count, the FDSelect. A glyph’s charstring is just an entry in an INDEX at that point. Its contents are a program, which can only be checked by running it, and the charstring interpreter does its own checking, with its own limit of operations, `HB_CFF_MAX_OPS` (200,000).
 
 ### The AAT tables
 
-`morx` and `kerx` are driven by state machines. Which entry, action or ligature component a machine will read depends on the glyphs being shaped, so most of their indexes can’t be checked until they are used. The AAT apply context therefore carries a sanitizer of its own, over the table being applied, with the glyph count set and the budget set to the maximum (`hb-aat-layout.cc:71–74`). The state-machine code calls it before each read that depends on the text, as in `hb-aat-layout-morx-table.hh:543`, where a ligature action is checked before it’s used, and gives up on that action if the check fails. The [AAT chapter](aat-inside-harfbuzz.html) covers those machines.
+`morx` and `kerx` are driven by state machines. Which entry, action, or ligature component a machine will read depends on the glyphs being shaped, so most of their indexes can’t be checked until they are used. The AAT apply context therefore carries a sanitizer of its own, over the table being applied, with the glyph count set and the budget set to the maximum (`hb-aat-layout.cc:71–74`). The state-machine code calls it before each read that depends on the text, as in `hb-aat-layout-morx-table.hh:543`, where a ligature action is checked before it’s used, and gives up on that action if the check fails. The [AAT chapter](aat-inside-harfbuzz.html) covers those machines.
 
 ### Some of GPOS
 
@@ -313,7 +313,7 @@ Nothing in `GSUB` looks at the flag. Six places in `GPOS` do, and each of them, 
 | `PairPos` format 1 (`PairSet.hh:112`) | the pair value records | their Device offsets |
 | `PairPos` format 2 (`PairPosFormat2.hh:182`) | the class-by-class matrix of value records | their Device offsets |
 | `CursivePos` (`CursivePosFormat1.hh:247`) | the array of entry and exit records | the entry and exit Anchors |
-| `AnchorMatrix` (`AnchorMatrix.hh:99`), in `MarkBasePos`, `MarkLigPos` and `MarkMarkPos` | the matrix of anchor offsets | the base, ligature-component and mark2 Anchors |
+| `AnchorMatrix` (`AnchorMatrix.hh:99`), in `MarkBasePos`, `MarkLigPos`, and `MarkMarkPos` | the matrix of anchor offsets | the base, ligature-component, and mark2 Anchors |
 
 The mark anchors, in each lookup’s `MarkArray`, are still checked at load, and so is everything else: coverage tables, class definitions, the value records’ own bytes.
 
@@ -365,4 +365,4 @@ bad-anchor.ttf  b\u0301
 * Work is bounded: 64 bytes of checking for each byte of table (at least 16,384), 16,384 lookup subtables, and 64 levels of recursion.
 * A table passes or fails as a whole. A failed table becomes the empty blob, and everything that reads it sees an empty table. Since 12.3, nothing is repaired, so one bad offset loses the whole of `GSUB` or `GPOS`.
 * Repairing stopped because writing zeros over bad offsets could change other data that shared those bytes, and so invent rules. Core Text also drops the table. DirectWrite skips the bad offsets and keeps the rest of the table, and NEWS says HarfRust doesn’t drop the table either.
-* `glyf`, `loca` and `hmtx` are checked by the code that reads them, and CFF charstrings and the AAT state machines as they run. In `GPOS`, Anchor and Device offsets inside value records, cursive records and anchor matrices are checked only when they are used, and a bad one loses only itself.
+* `glyf`, `loca`, and `hmtx` are checked by the code that reads them, and CFF charstrings and the AAT state machines as they run. In `GPOS`, Anchor and Device offsets inside value records, cursive records, and anchor matrices are checked only when they are used, and a bad one loses only itself.

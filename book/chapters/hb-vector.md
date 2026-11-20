@@ -1,10 +1,10 @@
 # hb-vector: rendering to SVG and PDF
 
-The draw and paint APIs end at a callback. HarfBuzz walks the font’s data and calls the client: move here, curve to there, push this clip, fill with that gradient. What the client does with the calls was, for most of HarfBuzz’s life, someone else’s business. Since 13.0.0 HarfBuzz has its own answers, in three separate libraries: [hb-raster](hb-raster.html), which turns glyphs into pixels on the CPU; **hb-vector**, which writes them out as SVG or PDF; and [hb-gpu](hb-gpu.html), which encodes them for a fragment shader to draw. Each is a client of the APIs that [Drawing outlines](drawing-outlines.html) and [Color](color.html) describe, and nothing more: it sees glyphs exactly as an application would, with variations, synthetic bold and slant and the font’s scale already applied, and without hinting.
+The draw and paint APIs end at a callback. HarfBuzz walks the font’s data and calls the client: move here, curve to there, push this clip, fill with that gradient. What the client does with the calls was, for most of HarfBuzz’s life, someone else’s business. Since 13.0.0 HarfBuzz has its own answers, in three separate libraries: [hb-raster](hb-raster.html), which turns glyphs into pixels on the CPU; **hb-vector**, which writes them out as SVG or PDF; and [hb-gpu](hb-gpu.html), which encodes them for a fragment shader to draw. Each is a client of the APIs that [Drawing outlines](drawing-outlines.html) and [Color](color.html) describe, and nothing more: it sees glyphs exactly as an application would, with variations, synthetic bold and slant, and the font’s scale already applied, and without hinting.
 
 hb-vector is the one of the three this book uses throughout. Every drawing in it, from the boxes of the GSUB chapter to the gradients of the Color chapter, is a `draw` block, and each block runs the `hb-vector` tool on a test font when the book is built and puts the SVG it writes into the page (`tools/build-site.mjs`). So what the figures show is hb-vector’s output, including, in places, its limits.
 
-The chapter has two halves. The first, Outlines, is all that a client drawing ordinary text needs. The second, Color glyphs, covers COLR gradients, compositing, bitmaps and palettes, and assumes the [Color](color.html) chapter.
+The chapter has two halves. The first, Outlines, is all that a client drawing ordinary text needs. The second, Color glyphs, covers COLR gradients, compositing, bitmaps, and palettes, and assumes the [Color](color.html) chapter.
 
 ## The library
 
@@ -12,14 +12,14 @@ hb-vector is its own shared library, `libharfbuzz-vector`, with one header, `hb-
 
 | Version | What happened |
 |---|---|
-| 13.0.0 | hb-vector arrives, “experimental”, with SVG output only; color glyphs from COLR, `SVG `, `CBDT` and `sbix`; the `hb-vector` tool |
+| 13.0.0 | hb-vector arrives, “experimental”, with SVG output only; color glyphs from COLR, `SVG `, `CBDT`, and `sbix`; the `hb-vector` tool |
 | 13.1.1 | gzip-compressed SVG glyphs, with zlib |
 | 14.2.0 | the API review: PDF output; the SVG id prefix; `_clear` functions; funcs getters take the context; `_glyph` functions return nothing, with `_or_fail` twins; glyph paths no longer shared through `<defs>` and `<use>`; SVG glyphs dropped |
 | 14.5.0 | the work budget shared with the font code |
 | 15.0.0 | “no longer considered experimental”: API and ABI stability apply |
 | 15.1.0 | fixes for mirrored path clips in SVG, and for PDF page bounds and misplaced COLR gradients |
 
-It has two contexts. A **draw context**, `hb_vector_draw_t`, turns outlines into filled paths. A **paint context**, `hb_vector_paint_t`, turns the paint calls of a color glyph into layers, clips, gradients and images. Both are ordinary reference-counted HarfBuzz objects, made with `_create_or_fail` and a format, `HB_VECTOR_FORMAT_SVG` or `HB_VECTOR_FORMAT_PDF`, which is fixed for the context’s life. Each context’s funcs getter takes the context, and returns the SVG or the PDF funcs according to its format (`hb-vector-draw.cc:530`, `hb-vector-paint.cc:510`).
+It has two contexts. A **draw context**, `hb_vector_draw_t`, turns outlines into filled paths. A **paint context**, `hb_vector_paint_t`, turns the paint calls of a color glyph into layers, clips, gradients, and images. Both are ordinary reference-counted HarfBuzz objects, made with `_create_or_fail` and a format, `HB_VECTOR_FORMAT_SVG` or `HB_VECTOR_FORMAT_PDF`, which is fixed for the context’s life. Each context’s funcs getter takes the context, and returns the SVG or the PDF funcs according to its format (`hb-vector-draw.cc:530`, `hb-vector-paint.cc:510`).
 
 A context accumulates many glyphs into one document. The client sets a transform for each glyph, usually a translation to its pen position, and calls `hb_vector_draw_glyph` or `hb_vector_paint_glyph`; at the end, `_render` returns the document as a blob. Here is how the `hb-vector` tool does it for a shaped line, hand-written from `util/vector-output.hh:192–311` and trimmed:
 
@@ -47,7 +47,7 @@ The `_glyph` functions are conveniences. `hb_vector_draw_glyph_or_fail (draw, fo
 
 ### The draw context
 
-The draw context writes one path per glyph, filled with its **foreground** color, opaque black unless set. In SVG each draw callback becomes one path command (`hb-vector-draw.cc:51–89`): `M`, `L`, `Q`, `C` or `Z`. TrueType’s quadratic curves therefore stay quadratic, and CFF’s cubics stay cubic. Here is the book’s variable test font `var.ttf`, from [Design space](design-space.html), with a different foreground for each glyph; the `hb-vector` tool changes the context’s foreground before each glyph when given a list of colors (`util/vector-output.hh:280`):
+The draw context writes one path per glyph, filled with its **foreground** color, opaque black unless set. In SVG each draw callback becomes one path command (`hb-vector-draw.cc:51–89`): `M`, `L`, `Q`, `C`, or `Z`. TrueType’s quadratic curves therefore stay quadratic, and CFF’s cubics stay cubic. Here is the book’s variable test font `var.ttf`, from [Design space](design-space.html), with a different foreground for each glyph; the `hb-vector` tool changes the context’s foreground before each glyph when given a list of colors (`util/vector-output.hh:280`):
 
 ```draw
 font: variations/var.ttf
@@ -111,7 +111,7 @@ Every document is capped at 16 MiB (`HB_VECTOR_MAX_DOCUMENT_SIZE`, `hb-limits.hh
 
 ### The paint context
 
-The paint context is a set of paint funcs, one for SVG and one for PDF. `hb_vector_paint_glyph` pushes the context’s transform, calls `hb_font_paint_glyph` with the context’s palette index and foreground, and pops the transform (`hb-vector-paint.cc:526`). Since `hb_font_paint_glyph` falls back to filling the outline with the foreground ([Color](color.html#the-paint-api)), the paint context draws plain glyphs too; `hb_vector_paint_glyph_or_fail` uses `hb_font_paint_glyph_or_fail` instead and draws nothing for them. The `hb-vector` tool uses its paint context when the font has COLR, `CBDT` or `sbix` data, and its draw context otherwise (`util/vector-output.hh:225`); `--paint` and `--draw` override that.
+The paint context is a set of paint funcs, one for SVG and one for PDF. `hb_vector_paint_glyph` pushes the context’s transform, calls `hb_font_paint_glyph` with the context’s palette index and foreground, and pops the transform (`hb-vector-paint.cc:526`). Since `hb_font_paint_glyph` falls back to filling the outline with the foreground ([Color](color.html#the-paint-api)), the paint context draws plain glyphs too; `hb_vector_paint_glyph_or_fail` uses `hb_font_paint_glyph_or_fail` instead and draws nothing for them. The `hb-vector` tool uses its paint context when the font has COLR, `CBDT`, or `sbix` data, and its draw context otherwise (`util/vector-output.hh:225`); `--paint` and `--draw` override that.
 
 Unlike the draw context, the paint context writes transforms as transforms: the glyph’s position is a `<g transform="matrix(…)">` in SVG and a `cm` in PDF, and an identity transform is skipped in SVG (`hb-vector-paint-svg.cc:378`).
 
@@ -165,14 +165,14 @@ The structure is the paint graph’s. The ClipBox is a clip rectangle; the Paint
 | XOR | `difference` |
 | CLEAR, SRC, DEST, DEST_OVER, SRC_IN, DEST_IN, SRC_OUT, DEST_OUT, SRC_ATOP, DEST_ATOP | none: the group is painted source-over |
 
-`modes.ttf`, this chapter’s test font, has the same pair of discs, a blue backdrop and a red source, composited with SRC_OVER, SRC_IN, DEST_OUT, XOR, PLUS, SCREEN and DIFFERENCE, on `N`, `I`, `O`, `X`, `P`, `S` and `D`:
+`modes.ttf`, this chapter’s test font, has the same pair of discs, a blue backdrop and a red source, composited with SRC_OVER, SRC_IN, DEST_OUT, XOR, PLUS, SCREEN, and DIFFERENCE, on `N`, `I`, `O`, `X`, `P`, `S`, and `D`:
 
 ```draw
 font: modes.ttf
 text: NIOXPSD
 ```
 
-`N`, `I` and `O` are identical, though SRC_IN should leave only the lens where the discs overlap, in red, and DEST_OUT only the blue crescent. `X` is drawn as DIFFERENCE, the same as `D`, where XOR should have left the lens empty. `P` is drawn as SCREEN, the same as `S`; PLUS would have added the colors, which here comes to nearly the same thing. [hb-raster](hb-raster.html) draws all seven as the specification says.
+`N`, `I`, and `O` are identical, though SRC_IN should leave only the lens where the discs overlap, in red, and DEST_OUT only the blue crescent. `X` is drawn as DIFFERENCE, the same as `D`, where XOR should have left the lens empty. `P` is drawn as SCREEN, the same as `S`; PLUS would have added the colors, which here comes to nearly the same thing. [hb-raster](hb-raster.html) draws all seven as the specification says.
 
 Every color glyph in these fonts also has an outline, the Color chapter’s cut-cornered square. `--draw` forces the draw context, which ignores color and draws the outline:
 
@@ -184,7 +184,7 @@ vector-options: --draw
 
 ### Gradients
 
-SVG’s gradients take their stops at offsets from 0 to 1, and clamp the rest. COLR’s stops can lie anywhere, so hb-vector sorts and rescales them with `hb_paint_normalize_color_line` and moves the gradient’s ends to match, so that the colors stay where they were (`hb-vector-paint-svg.cc:694`). A linear gradient’s three COLR points are reduced to SVG’s two with `hb_paint_reduce_linear_anchors`. The extend mode becomes `spreadMethod`, which has pad, repeat and reflect, so nothing is lost: the Color chapter’s `R` and `F` are drawn with their rings ([Color](color.html#gradients-and-color-lines)).
+SVG’s gradients take their stops at offsets from 0 to 1, and clamp the rest. COLR’s stops can lie anywhere, so hb-vector sorts and rescales them with `hb_paint_normalize_color_line` and moves the gradient’s ends to match, so that the colors stay where they were (`hb-vector-paint-svg.cc:694`). A linear gradient’s three COLR points are reduced to SVG’s two with `hb_paint_reduce_linear_anchors`. The extend mode becomes `spreadMethod`, which has pad, repeat, and reflect, so nothing is lost: the Color chapter’s `R` and `F` are drawn with their rings ([Color](color.html#gradients-and-color-lines)).
 
 SVG has no conic gradient. A sweep is cut into tiles by `hb_paint_sweep_gradient_tiles`, which deals with the extend mode, and each tile into wedges no wider than π/16, each a pie slice 32,767 units in radius filled with the color at its middle (`hb-vector-paint-svg.cc:174`). So a sweep in SVG is a fan of flat colors: smooth enough at text sizes, banded when enlarged.
 
@@ -220,7 +220,7 @@ The PDF paint funcs map the same calls onto PDF’s graphics state (`hb-vector-p
 | `image` | an image XObject, `Do` |
 | `push_group_for`, `pop_group` | `q`, an ExtGState with `/BM` for the mode, then `Q` |
 
-Color stops with alpha get a second, gray shading, used as a luminosity soft mask. Groups use `push_group_for` (14.2.0), which tells the client the compositing mode before the group is painted, since PDF sets the blend mode before painting, not after ([Color](color.html#the-paint-api)). The mode table is SVG’s in PDF’s names, with the same approximations for PLUS and XOR (`hb-vector-paint-pdf.cc:1556`). A sweep is meant to be a closer approximation than SVG’s: each patch interpolates its colors smoothly, so there are no bands. But in {{hb}} the colors are wrong. Each patch’s colors come from `hb_color_lerp` (`hb-paint.hh:292`), which assembles its result with the bytes in reverse order, so a red stop comes out as a cyan-blue: `colr1.ttf`’s `S` is cyan and purple in both poppler and Ghostscript. The same function also colors the SVG tiles of a sweep that crosses 0° or 360°, so those are wrong in SVG too. (The comment at the top of the file still says sweeps are “approximated via solid fallback”: it is out of date.) Extra objects, shadings, functions, soft masks and images, count against the same 16 MiB cap as the content (`hb-vector-paint-pdf.cc:91`).
+Color stops with alpha get a second, gray shading, used as a luminosity soft mask. Groups use `push_group_for` (14.2.0), which tells the client the compositing mode before the group is painted, since PDF sets the blend mode before painting, not after ([Color](color.html#the-paint-api)). The mode table is SVG’s in PDF’s names, with the same approximations for PLUS and XOR (`hb-vector-paint-pdf.cc:1556`). A sweep is meant to be a closer approximation than SVG’s: each patch interpolates its colors smoothly, so there are no bands. But in {{hb}} the colors are wrong. Each patch’s colors come from `hb_color_lerp` (`hb-paint.hh:292`), which assembles its result with the bytes in reverse order, so a red stop comes out as a cyan-blue: `colr1.ttf`’s `S` is cyan and purple in both poppler and Ghostscript. The same function also colors the SVG tiles of a sweep that crosses 0° or 360°, so those are wrong in SVG too. (The comment at the top of the file still says sweeps are “approximated via solid fallback”: it is out of date.) Extra objects, shadings, functions, soft masks, and images, count against the same 16 MiB cap as the content (`hb-vector-paint-pdf.cc:91`).
 
 `NEWS` says what the PDF writer is for: color-glyph artwork “that can be embedded directly in PDF documents. Useful for PDF producers such as LibreOffice.” In {{hb}} it falls short in five ways. The book’s figures can’t show PDF; the results below come from `hb-vector -O pdf` on the Color chapter’s fonts and this chapter’s, rendered with poppler’s `pdftoppm` while this chapter was written.
 
@@ -245,7 +245,7 @@ The SVG writer nests transforms at most 64 deep, and ignores further ones, and t
 | `src/hb-vector-paint-svg.cc` | SVG paint callbacks: the compositing table, 75; sweep wedges, 174; rendering, 903 |
 | `src/hb-vector-paint-pdf.cc` | PDF paint: ExtGStates, shadings, Coons meshes, embedded PNGs; rendering, 1697 |
 | `src/hb-vector-buf.hh` | the output buffer, its 16 MiB cap, and locale-free numbers |
-| `src/hb-vector-internal.hh` | blob recycling, transforms and extents shared by both contexts |
+| `src/hb-vector-internal.hh` | blob recycling, transforms, and extents shared by both contexts |
 | `src/hb-limits.hh` | `HB_VECTOR_MAX_DOCUMENT_SIZE`, 181, and the budgets |
 | `util/hb-vector.cc`, `util/vector-output.hh` | the tool, and how it drives its contexts |
 
@@ -254,6 +254,6 @@ The SVG writer nests transforms at most 64 deep, and ignores further ones, and t
 * hb-vector is a separate library, from 13.0.0 and stable since 15.0.0, that writes glyphs as SVG or PDF. It draws every figure in this book.
 * A draw context writes one filled path per glyph, with the transform applied to the points: quadratics stay quadratic in SVG and become cubics in PDF. Numbers have at most `precision` decimals, counted in output units, and never a locale’s comma.
 * Contexts gather a whole document between renders: one set of extents, one work budget, one 16 MiB cap.
-* A paint context writes a color glyph’s paint calls as nested groups, clips, gradients and inline PNGs. Its ids need `hb_vector_paint_set_svg_prefix` when documents share a page; the draw context’s output has none.
+* A paint context writes a color glyph’s paint calls as nested groups, clips, gradients, and inline PNGs. Its ids need `hb_vector_paint_set_svg_prefix` when documents share a page; the draw context’s output has none.
 * SVG has the blend modes but no Porter–Duff operators: PLUS and XOR become screen and difference, and the rest source-over. Sweeps become fans of flat wedges.
 * PDF keeps sweeps smooth but, in {{hb}}, paints them in the wrong colors with a hole at the center, loses repeat and reflect, composites without isolation, drops the alpha of RGBA PNGs, and ignores custom palette colors.

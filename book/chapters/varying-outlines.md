@@ -32,7 +32,7 @@ table: gvar
 glyph: V
 ```
 
-There are four tuples: one for the light master, peaking at weight −1; two for the heavier masters, including the intermediate one, with its own start and end; and one for the narrow master. The light and narrow tuples list only points 1, 6 and 8.
+There are four tuples: one for the light master, peaking at weight −1; two for the heavier masters, including the intermediate one, with its own start and end; and one for the narrow master. The light and narrow tuples list only points 1, 6, and 8.
 
 ### Shared tuples, and a bug fixed in 15.1.0
 
@@ -105,7 +105,7 @@ The specification infers from each tuple’s deltas before multiplying them by t
 
 ### The fast path
 
-Most tuples in most fonts give deltas for every point. For those, `apply_deltas_to_points` (`hb-ot-var-gvar-table.hh:769`) doesn’t build any arrays: it decodes each delta, multiplies it by the scalar and adds it straight into the point (`decompile_deltas_add_to_points`, 692). But that’s only safe if no later tuple needs IUP, because IUP needs the default points, and the fast path has changed them. So before taking the fast path, HarfBuzz looks ahead: if any remaining tuple, with a scalar that isn’t 0, has its own list of points, it takes the slow path, which keeps the deltas apart until a copy of the default points has been made.
+Most tuples in most fonts give deltas for every point. For those, `apply_deltas_to_points` (`hb-ot-var-gvar-table.hh:769`) doesn’t build any arrays: it decodes each delta, multiplies it by the scalar, and adds it straight into the point (`decompile_deltas_add_to_points`, 692). But that’s only safe if no later tuple needs IUP, because IUP needs the default points, and the fast path has changed them. So before taking the fast path, HarfBuzz looks ahead: if any remaining tuple, with a scalar that isn’t 0, has its own list of points, it takes the slow path, which keeps the deltas apart until a copy of the default points has been made.
 
 ## Composites
 
@@ -137,7 +137,7 @@ At weight 613, `V`’s right edge is drawn at fractional positions: in `hb-vecto
 
 HarfBuzz treats damage to gvar in two ways. If a glyph’s variation header can’t be read, its variations are dropped and the glyph is drawn at the default, with the comment “so isn’t applied at all”. But if the data inside a tuple is broken, a run that is too long or a list of points that runs off the end, the whole glyph fails: it isn’t drawn, and if its advance came from the phantoms, it falls back to half an em.
 
-Some other robustness choices: a point number past the end of the glyph is skipped; a point listed twice gets both deltas added; gvar’s own glyph count is never read, and the face’s glyph count is used instead (`hb-ot-var-gvar-table.hh:659`). And HarfBuzz accepts one encoding the specification doesn’t have. The packed deltas in gvar have three kinds of run: zeros, bytes and 16-bit words. HarfBuzz reads them with the same decoder as VARC’s data, which has a fourth, 32-bit run, marked by both flag bits. No conforming font has one in gvar, since to a reader that follows the specification those bits mean a run of zeros.
+Some other robustness choices: a point number past the end of the glyph is skipped; a point listed twice gets both deltas added; gvar’s own glyph count is never read, and the face’s glyph count is used instead (`hb-ot-var-gvar-table.hh:659`). And HarfBuzz accepts one encoding the specification doesn’t have. The packed deltas in gvar have three kinds of run: zeros, bytes, and 16-bit words. HarfBuzz reads them with the same decoder as VARC’s data, which has a fourth, 32-bit run, marked by both flag bits. No conforming font has one in gvar, since to a reader that follows the specification those bits mean a run of zeros.
 
 ## GVAR
 

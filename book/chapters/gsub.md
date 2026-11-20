@@ -4,7 +4,7 @@ By the time HarfBuzz opens a font’s GSUB table, the hard questions about *char
 
 GSUB’s job is to change *which* glyphs are in that buffer. It swaps one glyph for another, splits one into several, joins several into one, and does any of those only in certain surroundings. It never moves anything: positions are GPOS’s job, in the [next chapter](gpos.html). This chapter is about how HarfBuzz reads GSUB and runs it: the order things happen in, which glyphs a lookup can see, and the many small decisions that the OpenType specification leaves open, which HarfBuzz settles in particular ways.
 
-Every example comes from one small test font, built from the feature file `fonts/gsub/ligatures.fea` and two variants of it. Its glyphs are plain boxes, since only their names, their `cmap` and their layout tables matter here. Every shaping result and trace on this page was produced by running HarfBuzz {{hb}} on those fonts when the page was built.
+Every example comes from one small test font, built from the feature file `fonts/gsub/ligatures.fea` and two variants of it. Its glyphs are plain boxes, since only their names, their `cmap`, and their layout tables matter here. Every shaping result and trace on this page was produced by running HarfBuzz {{hb}} on those fonts when the page was built.
 
 ## The shape of the table
 
@@ -48,7 +48,7 @@ The **feature file** view is the source the font was compiled from. It’s how m
 
 The C++ view is worth a closer look, because it’s how all of HarfBuzz’s table code works. `LigatureSubstFormat1_2` is not a class that HarfBuzz fills in by parsing the font. It is a description of the bytes: HarfBuzz points it at the right place in the font’s data and reads the fields where they are. `HBUINT16` is a big-endian 16-bit integer that converts itself to a native one when read. An `OffsetTo<Coverage>` is a 16-bit number that knows what it points to, so `this+coverage` gives the Coverage table. There is no copying and no allocation. [Fonts as bytes](fonts-as-bytes.html) explains these types, and [the sanitizer](trust-nothing-the-sanitizer.html), which checks every offset and array once, when the table is loaded, is what makes it safe to trust them.
 
-The struct is a template on `Types`, `SmallTypes` or `MediumTypes`, so that one piece of code reads both the ordinary 16-bit formats and the wider ones of the “beyond 64k” extension (SingleSubst formats 3 and 4, ChainContext formats 4 and 5, and so on), as [Fonts as bytes](fonts-as-bytes.html#smalltypes-and-mediumtypes) explains.
+The struct is a template on `Types`, `SmallTypes`, or `MediumTypes`, so that one piece of code reads both the ordinary 16-bit formats and the wider ones of the “beyond 64k” extension (SingleSubst formats 3 and 4, ChainContext formats 4 and 5, and so on), as [Fonts as bytes](fonts-as-bytes.html#smalltypes-and-mediumtypes) explains.
 
 The names differ a little between the views. For this lookup:
 
@@ -65,7 +65,7 @@ The names differ a little between the views. For this lookup:
 
 Planning hands over the lookups in **stages**, separated by pauses where a script shaper can step in (an Indic shaper, for example, reorders glyphs between stages). Within a stage, HarfBuzz sorts the lookups by their index in the LookupList (`hb-ot-map.cc:389`; [From features to lookups](from-features-to-lookups.html#stages-and-pauses) covers stages and pauses). It doesn’t sort them by feature, and it doesn’t keep the order in which the features were asked for. [Feature order](feature-order.html) gives the stages for every shaper.
 
-For the default shaper, which handles Latin, nearly every feature is in the same stage. So `ccmp`, `liga`, `calt` and the rest are not applied one feature after another: their lookups are merged into one list and run in lookup order. The test font’s `ccmp` turns `x` into `f i`. It comes after `liga` in the feature file, so its lookup is lookup 4, after `liga`’s lookup 0. The font `ccmp-first.ttf` is the same except that the `ccmp` block comes first in its feature file:
+For the default shaper, which handles Latin, nearly every feature is in the same stage. So `ccmp`, `liga`, `calt`, and the rest are not applied one feature after another: their lookups are merged into one list and run in lookup order. The test font’s `ccmp` turns `x` into `f i`. It comes after `liga` in the feature file, so its lookup is lookup 4, after `liga`’s lookup 0. The font `ccmp-first.ttf` is the same except that the `ccmp` block comes first in its feature file:
 
 ```shape
 ligatures.ttf  x
@@ -169,11 +169,11 @@ Last, `check_glyph_property` asks whether the glyph is one this lookup ignores. 
 
 ## Which glyphs a lookup sees
 
-A ligature lookup for `f i` would be fairly useless if an accent between the two letters stopped it working. OpenType’s answer is the **lookup flag**. A lookup can ignore base glyphs, ligatures or marks, ignore all marks except one attachment class, or ignore all marks except those in one mark-filtering set. Whether a glyph is a base, a ligature or a mark comes from its class in the GDEF table.
+A ligature lookup for `f i` would be fairly useless if an accent between the two letters stopped it working. OpenType’s answer is the **lookup flag**. A lookup can ignore base glyphs, ligatures, or marks, ignore all marks except one attachment class, or ignore all marks except those in one mark-filtering set. Whether a glyph is a base, a ligature, or a mark comes from its class in the GDEF table.
 
 HarfBuzz reads those classes into each glyph’s *glyph properties* (`glyph_props`) just before GSUB starts, in `_hb_ot_layout_set_glyph_props`. A font with no GDEF classes gets classes worked out from Unicode instead (`hb_synthesize_glyph_classes`): non-spacing marks are marks, and everything else is a base, with one exception. Default-ignorable characters, such as the combining grapheme joiner and the Mongolian variation selectors, are never classed as marks, even though they are non-spacing. A comment in the source explains that some Mongolian fonts without GDEF rely on this.
 
-When a substitution puts in a new glyph, HarfBuzz looks up that glyph’s GDEF class, and also records how it got there: the property bits `SUBSTITUTED`, `LIGATED` and `MULTIPLIED` stay with the glyph from then on. The Indic and USE shapers use them: if a consonant has been ligated, for example, the Indic shaper stops treating it as a plain consonant (`hb-ot-shaper-indic.cc:56`).
+When a substitution puts in a new glyph, HarfBuzz looks up that glyph’s GDEF class, and also records how it got there: the property bits `SUBSTITUTED`, `LIGATED`, and `MULTIPLIED` stay with the glyph from then on. The Indic and USE shapers use them: if a consonant has been ligated, for example, the Indic shaper stops treating it as a plain consonant (`hb-ot-shaper-indic.cc:56`).
 
 ### Skipping, step by step
 
@@ -212,7 +212,7 @@ ligatures.ttf  f\u200Ci
 
 The joiners are still in the output. They have no glyph in this font, and late in shaping HarfBuzz replaces default ignorables with an invisible glyph of zero width, here the space glyph. The ZWJ comes after the ligature, in the same cluster. Where glyphs that a ligature passed over end up is the next subject.
 
-The flags come from planning ([From features to lookups](from-features-to-lookups.html#the-flags)). For the default shaper, only `mark` and `mkmk` have them. The Arabic shaper gives manual ZWJ to nearly all its features, so that a ZWJ there really does block a ligature, and the Indic shaper gives both flags to its basic forms features (`nukt`, `akhn`, `rphf` and the rest). One further rule only applies to GSUB: in scripts whose shaper splits text into syllables, a lookup can be limited to one syllable at a time, so that no rule can match across a syllable boundary. The matcher checks for that too.
+The flags come from planning ([From features to lookups](from-features-to-lookups.html#the-flags)). For the default shaper, only `mark` and `mkmk` have them. The Arabic shaper gives manual ZWJ to nearly all its features, so that a ZWJ there really does block a ligature, and the Indic shaper gives both flags to its basic forms features (`nukt`, `akhn`, `rphf`, and the rest). One further rule only applies to GSUB: in scripts whose shaper splits text into syllables, a lookup can be limited to one syllable at a time, so that no rule can match across a syllable boundary. The matcher checks for that too.
 
 ## The lookup types, as HarfBuzz runs them
 
@@ -459,7 +459,7 @@ Each substitution that combines glyphs merges their clusters, so every glyph kee
 | `src/hb-ot-layout.cc` | `apply_forward`, `apply_backward`, `apply_string`, and `hb_ot_map_t::apply`, which runs a plan’s lookups stage by stage |
 | `src/hb-ot-map.cc` | turning features into the sorted, staged list of lookups |
 | `src/hb-set-digest.hh` | the set digests |
-| `src/hb-limits.hh` | nesting, length and operation limits |
+| `src/hb-limits.hh` | nesting, length, and operation limits |
 
 To watch any of this happen, run `hb-shape` with `--trace`. For the more detailed messages shown on this page (“ligating glyphs at 0,2”), HarfBuzz has to be built with `HB_BUFFER_MESSAGE_MORE` defined, as this book’s `tools/build-harfbuzz.sh` does.
 

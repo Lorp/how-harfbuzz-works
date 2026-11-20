@@ -13,7 +13,7 @@ A TrueType [composite glyph](drawing-outlines.html#composite-glyphs) is a list o
 * **Only the offset can vary.** Under gvar, each component of a composite counts as one point, its offset ([Varying outlines](varying-outlines.html#composites)). Nothing varies its scale or matrix, so a part can’t get wider, or turn further, as the weight changes.
 * **The component is drawn where the composite is.** At weight 600, a composite’s components are at weight 600 too. The ㄱ of 가 shares its width with ㅏ; the ㄱ of 고 has the whole width. To composites, those are two glyphs, and the font must store both, and every other shape of ㄱ it needs.
 
-VARC removes both limits. A component’s transform is stored as separate numbers (translation, rotation, scales, skews and a center), each of which can vary. And each component sets some axes to values of its own, which can vary too, to say where in the design space its glyph is drawn. So a font stores each part once, as a small variable glyph whose axes are the ways it can change, and each glyph that uses it says where on those axes to draw it.
+VARC removes both limits. A component’s transform is stored as separate numbers (translation, rotation, scales, skews, and a center), each of which can vary. And each component sets some axes to values of its own, which can vary too, to say where in the design space its glyph is drawn. So a font stores each part once, as a small variable glyph whose axes are the ways it can change, and each glyph that uses it says where on those axes to draw it.
 
 > For type designers: HarfBuzz’s NEWS for 12.0.0 compares VARC to the “smart components” some font editors offer. Without VARC, a compiled font can hold them only as plain outlines or composites.
 
@@ -119,7 +119,7 @@ A VARC glyph is a list of **components**. Each is a packed record (`VarComponent
 
 ### Step 2: the condition
 
-A condition is a small expression over the coordinates: an axis in a range, or a value from the variation store above zero, combined with *and*, *or* and *not*. It is evaluated at the parent’s coordinates (`VARC.cc:376`), and a component whose condition is false isn’t drawn, so a glyph can change its structure, as a heavy weight might drop a stroke.
+A condition is a small expression over the coordinates: an axis in a range, or a value from the variation store above zero, combined with *and*, *or*, and *not*. It is evaluated at the parent’s coordinates (`VARC.cc:376`), and a component whose condition is false isn’t drawn, so a glyph can change its structure, as a heavy weight might drop a stroke.
 
 Glyph 3’s component has no condition. In `varc-ac01-conditional.ttf`, 각’s middle component is drawn only above a certain weight:
 
@@ -133,7 +133,7 @@ Between weight 590 and 610, the glyph goes from two contours to four.
 
 ### Step 3: the axis values and their deltas
 
-The component sets `0000`, `0001` and `0002` to −4227, 819 and −8484 in 2.14 units: −0.258, 0.05 and −0.5178. Its flags say these vary, and give index 0 into the variation store, where the item has three numbers for each region (decoded by `varc-dump.py`, with fontTools reading the store):
+The component sets `0000`, `0001`, and `0002` to −4227, 819, and −8484 in 2.14 units: −0.258, 0.05, and −0.5178. Its flags say these vary, and give index 0 into the variation store, where the item has three numbers for each region (decoded by `varc-dump.py`, with fontTools reading the store):
 
 ```
 ── item 0:0 (VarIdx 0): 3 numbers for each of 3 regions
@@ -174,7 +174,7 @@ for (unsigned i = 0; i < axisIndices.length; i++)
   coord_setter[axisIndices[i]] = hb_clamp_to<int> (round (axisValues[i]));
 ```
 
-A component starts from its parent’s coordinates, or, with the `RESET_UNSPECIFIED_AXES` flag, from the font’s, as the user set them. Then it sets the axes it names, each rounded to a whole 2.14 unit. The ㄱ starts from weight 0.5 and will be drawn at weight 0.5, `0000` −0.258, `0001` 0.04004 (655.5 rounded to 656) and `0002` −0.5178. The weight passes through, so glyph 4’s own weight variations apply.
+A component starts from its parent’s coordinates, or, with the `RESET_UNSPECIFIED_AXES` flag, from the font’s, as the user set them. Then it sets the axes it names, each rounded to a whole 2.14 unit. The ㄱ starts from weight 0.5 and will be drawn at weight 0.5, `0000` −0.258, `0001` 0.04004 (655.5 rounded to 656), and `0002` −0.5178. The weight passes through, so glyph 4’s own weight variations apply.
 
 Three more things about this step:
 
@@ -196,9 +196,9 @@ t.skew (-skewX, skewY);
 t.translate (-tCenterX, -tCenterY);
 ```
 
-That is the standard’s pseudo-code exactly, negated horizontal skew included. Read upwards, it is what happens to a point: move the center to the origin, skew, scale, rotate, move back and translate. A missing field is 0, or 1 for a scale, except that a horizontal scale with no vertical one is used for both (`VARC.cc:444`). The result is multiplied onto the levels above (`VARC.cc:451`); for the ㄱ, it is simply a move by (−10, 24).
+That is the standard’s pseudo-code exactly, negated horizontal skew included. Read upwards, it is what happens to a point: move the center to the origin, skew, scale, rotate, move back, and translate. A missing field is 0, or 1 for a scale, except that a horizontal scale with no vertical one is used for both (`VARC.cc:444`). The result is multiplied onto the levels above (`VARC.cc:451`); for the ㄱ, it is simply a move by (−10, 24).
 
-`varc-6868.ttf`, a single Chinese character, 桨, uses much more: components rotated by 52°, 90° and −231°, scaled unevenly, transformed about a center, and three levels deep, with 31 axes, 29 of them private:
+`varc-6868.ttf`, a single Chinese character, 桨, uses much more: components rotated by 52°, 90°, and −231°, scaled unevenly, transformed about a center, and three levels deep, with 31 axes, 29 of them private:
 
 ```draw
 font: hb:test/api/fonts/varc-6868.ttf
@@ -210,7 +210,7 @@ print: 400 550 700
 
 ### Step 6: the leaf
 
-Last, `VARC::get_path_at` is called for glyph 4, with the component’s coordinates and transform. VARC doesn’t cover glyph 4, so it is a **leaf**, drawn by `glyf`, CFF2 or CFF, in that order, through a pen that transforms every point. Drawn by `hb-vector` at step 4’s coordinates and moved by (−10, 24), glyph 4 lands on the ㄱ of `hb-vector`’s 가 to within a hundredth of a unit.
+Last, `VARC::get_path_at` is called for glyph 4, with the component’s coordinates and transform. VARC doesn’t cover glyph 4, so it is a **leaf**, drawn by `glyf`, CFF2, or CFF, in that order, through a pen that transforms every point. Drawn by `hb-vector` at step 4’s coordinates and moved by (−10, 24), glyph 4 lands on the ㄱ of `hb-vector`’s 가 to within a hundredth of a unit.
 
 A leaf needn’t be a different glyph. `VARC::get_path_at` won’t recurse into the glyph it’s already drawing (`VARC.cc:475`):
 
@@ -234,7 +234,7 @@ hb:test/api/fonts/varc-static-gvar.ttf  ab  --show-extents
 
 ### Two sets of coordinates
 
-The condition and the deltas (steps 2, 3 and 5) are evaluated at the parent’s coordinates; the outline (step 6) is drawn at the component’s. That is on purpose. The deltas say how the parent wants its part placed and shaped as *the parent* changes; the component’s coordinates describe the part’s own shape, which knows nothing of where it’s used. It also lets a glyph’s components share one cache of region scalars (`VARC.cc:546`).
+The condition and the deltas (steps 2, 3, and 5) are evaluated at the parent’s coordinates; the outline (step 6) is drawn at the component’s. That is on purpose. The deltas say how the parent wants its part placed and shaped as *the parent* changes; the component’s coordinates describe the part’s own shape, which knows nothing of where it’s used. It also lets a glyph’s components share one cache of region scalars (`VARC.cc:546`).
 
 In 가 the two agree on everything the store’s regions use, weight and optical size. In 桨 they don’t. 桨’s third component is 木, glyph 7, and 木’s fifth is its stem: glyph 9, a plain 1000-unit square, scaled to a thin upright. At weight 700, `varc-dump.py` finds:
 
@@ -257,7 +257,7 @@ A component can itself be a VARC glyph, so drawing recurses, with each level’s
 
 A part has its own parameters. A stroke is curved or straight, tapered or blunt; a radical is tall or squat, its strokes heavy or light. They make sense only for that part, and there may be dozens: a designer doesn’t want them among the font’s axes, as sliders meaning nothing to a user. Each part should have them privately, and each glyph that uses it set them, so that the one 木 the font stores can be full height in one character and squat in another. Axes used this way are VARC’s **hidden axes**.
 
-桨’s components are glyphs 2, 5 and 7: 夕, 丬 and 木. Each is a VARC glyph made of strokes, and the strokes are leaves, among them a straight bar 1,000 units long (glyphs 3 and 8) and the square (glyph 9). The parts on their own, at the font’s defaults, then 桨:
+桨’s components are glyphs 2, 5, and 7: 夕, 丬, and 木. Each is a VARC glyph made of strokes, and the strokes are leaves, among them a straight bar 1,000 units long (glyphs 3 and 8) and the square (glyph 9). The parts on their own, at the font’s defaults, then 桨:
 
 ```draw
 font: hb:test/api/fonts/varc-6868.ttf
@@ -276,7 +276,7 @@ at: 0019=0; 0019=0.25; 0019=0.494
 
 The parameter lowers the crossbar and shortens the strokes, but leaves the crossbar and stem as thick as they were, which a vertical scale wouldn’t. Stroke weight is a parameter too: `0018`, which widened the stem above.
 
-The leaves have parameters of their own. Glyph 3, the bar, has a dozen. Here it is at its default, then with `0000`, `0002` and `0012` at 1:
+The leaves have parameters of their own. Glyph 3, the bar, has a dozen. Here it is at its default, then with `0000`, `0002`, and `0012` at 1:
 
 ```draw
 font: hb:test/api/fonts/varc-6868.ttf
@@ -301,13 +301,13 @@ text: 桨
 at: wght=400; wght=700
 ```
 
-The strokes now take 夕’s, 丬’s and 木’s settings as their own, and bend, swell and twist. Compare [the slider above](#step-5-the-transform).
+The strokes now take 夕’s, 丬’s, and 木’s settings as their own, and bend, swell, and twist. Compare [the slider above](#step-5-the-transform).
 
 The flag resets to the font’s coordinates, not to zero, so the component still follows the weight and any axis the user set; it drops only the parent’s own settings. Leaving it off is right when parent and part share an axis’s meaning, so that a setting should flow down: in `varc-ac00-ac01.ttf`, glyph 3 only wraps glyph 4, and a syllable that set `0003` on glyph 3 would reach glyph 4 through it.
 
 ## The multiple item variation store
 
-VARC’s deltas come from a **multiple item variation store** (`hb-ot-layout-common.hh:3858`), a variant of the item variation store of HVAR, MVAR and GDEF ([Deltas](deltas.html#item-variation-stores)), with two differences.
+VARC’s deltas come from a **multiple item variation store** (`hb-ot-layout-common.hh:3858`), a variant of the item variation store of HVAR, MVAR, and GDEF ([Deltas](deltas.html#item-variation-stores)), with two differences.
 
 **Items are lists.** In the ordinary store, an item is one number, such as a glyph’s advance. Here it is a list: one for a component’s axis values, another for its transform. They vary together, over the same regions, so each region’s scalar is worked out once for the list. `MultiVarData::get_delta` (`hb-ot-layout-common.hh:3451`, trimmed) walks the regions, and for each either skips its numbers or adds them all in:
 
@@ -328,11 +328,11 @@ for (unsigned regionIndex = 0; regionIndex < regionCount; regionIndex++)
 }
 ```
 
-So the numbers are stored region by region. In an ordinary store, 木’s fourteen axis values would need fourteen items, fourteen indices and fourteen lookups.
+So the numbers are stored region by region. In an ordinary store, 木’s fourteen axis values would need fourteen items, fourteen indices, and fourteen lookups.
 
 **Regions name only the axes they use.** An ordinary region has an entry for every fvar axis; here a region lists only its own, by index (`SparseVarRegionAxis`, `hb-ot-layout-common.hh:2594`). 桨’s 39 regions each name one or two of its 31 axes. A region that names no axes counts everywhere, with a scalar of 1, even at the default. That lets a static VARC font have “deltas” that are really constants, and it’s why `MultiItemVarStoreInstancer` applies deltas even when every coordinate is 0 (`hb-ot-layout-common.hh:4285`), which an ordinary store never does.
 
-Here is the item for 木’s axis values in 桨, decoded by `varc-dump.py`. Each region has fourteen numbers, for `0000`, `0003`, `0005`, `0007`, `0011`, `0012`, `0014`, `0016`, `0017`, `0018`, `0019`, `0020`, `0022` and `0023`:
+Here is the item for 木’s axis values in 桨, decoded by `varc-dump.py`. Each region has fourteen numbers, for `0000`, `0003`, `0005`, `0007`, `0011`, `0012`, `0014`, `0016`, `0017`, `0018`, `0019`, `0020`, `0022`, and `0023`:
 
 ```
 ── item 0:4 (VarIdx 4): 14 numbers for each of 3 regions
@@ -343,7 +343,7 @@ region 2 (wght 0…1…1 × opsz 0…1…1): [0, 0, -4375, -246, 0, 0, 0, 1491, 
 
 At weight 700, normalized 1, only the first region counts, in full. `0018`, tenth, goes from 377 to 377 + 6504 = 6881, 0.023 to 0.42; `0017`, ninth, from 0.039 to 0.542. Both thicken 木’s strokes (as drawings of 木 at each show), and that is how 桨 gets bold: its leaves have no weight variations. In `varc-ac00-ac01.ttf` it’s the other way round: the leaves vary with weight, and the components pass the weight through.
 
-The stem’s transform item, four numbers per region for `translateX`, `translateY`, `scaleX` and `scaleY`, shows how sparse such data is:
+The stem’s transform item, four numbers per region for `translateX`, `translateY`, `scaleX`, and `scaleY`, shows how sparse such data is:
 
 ```
 ── item 3:7 (VarIdx 196615): 4 numbers for each of 25 regions
@@ -380,7 +380,7 @@ Seventeen bytes, for three varying axes and a varying offset.
 
 **Variable-length integers.** The flags and indices are each an `HBUINT32VAR` (`hb-open-type.hh:149`), one to five bytes. The first byte’s leading 1 bits say how many follow: below `0x80`, none; `10`, one; `110`, two; `1110`, three; `11110000`, a plain 32-bit number. Most indices take one byte; in 桨, whose store has four data lists, they carry an outer part and take three (196608, outer 3 and inner 0, is `c3 00 00`).
 
-**Flags ordered by frequency.** The commonest flags are the low 7 bits, which fit in one byte: resetting, having axes, the two kinds of variation, translations and rotation (`VarComponent::flags_t`, `VARC.hh:51`). A condition, scales, a center, skews or a 24-bit glyph ID need two: 木’s first stroke’s flags, `0xf7f`, are `8f 7f`. For each reserved bit (15 and up) that is set, HarfBuzz skips one more variable-length integer (`VARC.cc:139`), so later fields can be stepped over.
+**Flags ordered by frequency.** The commonest flags are the low 7 bits, which fit in one byte: resetting, having axes, the two kinds of variation, translations, and rotation (`VarComponent::flags_t`, `VARC.hh:51`). A condition, scales, a center, skews, or a 24-bit glyph ID need two: 木’s first stroke’s flags, `0xf7f`, are `8f 7f`. For each reserved bit (15 and up) that is set, HarfBuzz skips one more variable-length integer (`VARC.cc:139`), so later fields can be stepped over.
 
 **Only the fields that are there.** The glyph ID is 16 bits unless `GID_IS_24BIT` is set; each 16-bit transform field is stored only if flagged. A record doesn’t store its length: decoding it finds the next.
 
@@ -415,7 +415,7 @@ varc-static-gvar-lsb.ttf  ab  --show-extents
 
 `b` moves to 100, as any `glyf` glyph would. By the standard, `a` should stay at 50; HarfBuzz draws it at 150. It matters only for fonts whose side bearings differ from their outlines’ left edges.
 
-**The layout.** In two places HarfBuzz, fontTools and the test fonts agree with each other and not with the standard: the standard’s list of conditions has no count field, and it measures the offsets in a region from the list of regions rather than from the region. Both look like errors in the standard.
+**The layout.** In two places HarfBuzz, fontTools, and the test fonts agree with each other and not with the standard: the standard’s list of conditions has no count field, and it measures the offsets in a region from the list of regions rather than from the region. Both look like errors in the standard.
 
 And one bug, which no standard would allow. A leaf’s outline is scaled to the font’s size before the transform is applied, and HarfBuzz scales only the transform’s translation to match (`VARC.cc:487`):
 
@@ -449,10 +449,10 @@ options: --font-size=2000,1000
 
 ## In short
 
-* A VARC glyph is a list of components, each with a condition, its own axis settings and a full transform, all of which can vary.
+* A VARC glyph is a list of components, each with a condition, its own axis settings, and a full transform, all of which can vary.
 * A component’s condition and deltas are evaluated at its parent’s coordinates; its outline is drawn at its own.
 * Hidden axes, up to 4096 and unclamped, are each part’s private parameters, set per use; `RESET_UNSPECIFIED_AXES` stops a part inheriting its parent’s.
 * The multiple item variation store gives a component one list of deltas for all its values, over regions naming only the axes they use.
 * Records are packed tightly. A glyph that names itself as a component is drawn from its own outline.
 * VARC changes drawing and extents only, never advances or shaping.
-* HarfBuzz differs from the 2026 standard on side bearings, mixed leaf formats and a missing scale default, and it draws rotated components wrongly when the font is scaled unevenly.
+* HarfBuzz differs from the 2026 standard on side bearings, mixed leaf formats, and a missing scale default, and it draws rotated components wrongly when the font is scaled unevenly.

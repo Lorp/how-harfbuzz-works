@@ -1,4 +1,4 @@
-# Blobs, faces and lazy tables
+# Blobs, faces, and lazy tables
 
 The [last two chapters](fonts-as-bytes.html) showed how HarfBuzz reads a table: it lays a struct over the bytes, and [the sanitizer](trust-nothing-the-sanitizer.html) checks those bytes once so that the struct can be trusted afterward. This chapter is about where the bytes come from, and when each table is checked. The answer to the second question is: as late as possible, and only once.
 
@@ -73,9 +73,9 @@ A blob can be made writable: `hb_blob_get_data_writable` asks for it, and `try_m
 
 This used to matter. The sanitizer once repaired broken tables by editing them, and it needed writable bytes to do it. Since HarfBuzz 12.3 it repairs nothing (the [sanitizer chapter](trust-nothing-the-sanitizer.html) tells that story): a table either passes, and is made immutable, or is dropped. So nothing on the path from a font file to a shaped run writes to a blob anymore, and the `mprotect` route is, in practice, unused: the file blob is made immutable as soon as a face is made from it, and `hb_blob_get_data_writable` refuses an immutable blob. The few places in the library that need writable bytes make a copy. `cvar`, for example, copies the `cvt` table with `hb_blob_copy_writable_or_fail` before applying its deltas to it (`hb-ot-var-cvar-table.hh:178`).
 
-## Objects, references and user data
+## Objects, references, and user data
 
-Blobs, faces, fonts, buffers and the other public objects all start with the same header (`hb-object.hh:213`):
+Blobs, faces, fonts, buffers, and the other public objects all start with the same header (`hb-object.hh:213`):
 
 ```c++
 struct hb_object_header_t
@@ -156,7 +156,7 @@ The tag `HB_TAG_NONE` asks for the whole file. Any other tag is looked up in the
 
 ### Collections and the face index
 
-A TrueType Collection (TTC) holds several faces in one file, each with its own table directory. Identical tables can be stored once and pointed at from several directories. The test file `pair.ttc` is a collection of two of the fonts from the [GSUB chapter](gsub.html), `ligatures.ttf` and `ccmp-first.ttf`. Its two directories point at the same bytes for every table except `GSUB` and `head`, so the two faces share their glyphs, `cmap` and metrics, and differ only in the order of their lookups. HarfBuzz counts the faces with `hb_face_count` (`hb-face.cc:80`), which sanitizes the container and asks it:
+A TrueType Collection (TTC) holds several faces in one file, each with its own table directory. Identical tables can be stored once and pointed at from several directories. The test file `pair.ttc` is a collection of two of the fonts from the [GSUB chapter](gsub.html), `ligatures.ttf` and `ccmp-first.ttf`. Its two directories point at the same bytes for every table except `GSUB` and `head`, so the two faces share their glyphs, `cmap`, and metrics, and differ only in the order of their lookups. HarfBuzz counts the faces with `hb_face_count` (`hb-face.cc:80`), which sanitizes the container and asks it:
 
 ```info
 pair.ttc  --show-face-count
@@ -171,7 +171,7 @@ pair.ttc  x  --face-index=1
 
 In a collection, table offsets count from the start of the file, so `base_offset` is zero. In a dfont, they count from the start of each face’s resource, and `get_face` returns where that is. A single sfnt ignores the index altogether.
 
-The index is a 32-bit number, but only its low 16 bits choose a face: the closure stores `index & 0xFFFF` (`hb-face.cc:170`). The high 16 bits, if they aren’t zero, choose a **named instance** of a variable font, counting from one. The face only keeps them. It is `hb_font_create` that reads them, and sets the font to named instance `(index >> 16) - 1` (`hb-font.cc:2155`). The test font `instances.ttf` is the variable font from the [design space chapter](design-space.html) with three named instances added: Thin, Bold and Black. `hb-shape` passes `--face-index` straight to the face, so 65536 (1 << 16) asks for instance 0, 131072 for instance 1, and so on:
+The index is a 32-bit number, but only its low 16 bits choose a face: the closure stores `index & 0xFFFF` (`hb-face.cc:170`). The high 16 bits, if they aren’t zero, choose a **named instance** of a variable font, counting from one. The face only keeps them. It is `hb_font_create` that reads them, and sets the font to named instance `(index >> 16) - 1` (`hb-font.cc:2155`). The test font `instances.ttf` is the variable font from the [design space chapter](design-space.html) with three named instances added: Thin, Bold, and Black. `hb-shape` passes `--face-index` straight to the face, so 65536 (1 << 16) asks for instance 0, 131072 for instance 1, and so on:
 
 ```shape
 instances.ttf  IHV
@@ -213,7 +213,7 @@ Two numbers are needed so often that the face keeps them in fields of its own: `
 
 ### Immutability
 
-`hb_font_create` makes its face immutable (`hb-font.cc:2113`), and so does `hb_shape_plan_create2` (`hb-shape-plan.cc:267`). From then on the face’s setters do nothing: `hb_face_set_index`, `hb_face_set_upem`, `hb_face_set_glyph_count` and `hb_face_set_get_table_tags_func` all check the flag first. A face is meant to be set up and then only read.
+`hb_font_create` makes its face immutable (`hb-font.cc:2113`), and so does `hb_shape_plan_create2` (`hb-shape-plan.cc:267`). From then on the face’s setters do nothing: `hb_face_set_index`, `hb_face_set_upem`, `hb_face_set_glyph_count`, and `hb_face_set_get_table_tags_func` all check the flag first. A face is meant to be set up and then only read.
 
 Immutable doesn’t mean nothing inside it changes. Its tables are still loaded on first use, its shape-plan cache still grows, and both are written to by whichever thread gets there first. What immutability promises is that nothing a caller can *see* changes, which is what makes lazy loading safe to do behind the caller’s back.
 
@@ -254,11 +254,11 @@ Data * get_data () const
 
 `head` is first in the enum, so its loader is one pointer after `face`. That is why the comment insists that `face` comes “JUST before” the loaders, and why the enum starts with a dummy `ORDER_ZERO`. With about forty tables on the list in a full build, the trick halves the size of the table slots. The list’s own header comment is blunt about the cost that remains: “Don’t add a table unless it’s used though. This is not exactly zero-cost.”
 
-The list is cut down at compile time. A build with `HB_NO_VERTICAL` has no `vhea`, `vmtx` or `VORG` slots, one with `HB_NO_COLOR` none for the color tables, and so on. Some tables a face uses aren’t on it at all, because an accelerator loads them for itself: `HVAR` and `VVAR` are loaded by the `hmtx` and `vmtx` accelerators, and the 24-bit `GLYF` and `LOCA` by the `glyf` accelerator.
+The list is cut down at compile time. A build with `HB_NO_VERTICAL` has no `vhea`, `vmtx`, or `VORG` slots, one with `HB_NO_COLOR` none for the color tables, and so on. Some tables a face uses aren’t on it at all, because an accelerator loads them for itself: `HVAR` and `VVAR` are loaded by the `hmtx` and `vmtx` accelerators, and the 24-bit `GLYF` and `LOCA` by the `glyf` accelerator.
 
 ### Loading without a lock
 
-Every loader is a `hb_lazy_loader_t` (`hb-machinery.hh:185`), and every access, whether `face->table.GSUB->…`, `*face->table.head` or a plain `get()`, comes down to `get_stored` (`:230`):
+Every loader is a `hb_lazy_loader_t` (`hb-machinery.hh:185`), and every access, whether `face->table.GSUB->…`, `*face->table.head`, or a plain `get()`, comes down to `get_stored` (`:230`):
 
 ```c++
 Stored * get_stored () const
@@ -315,7 +315,7 @@ and reading it turns the blob into the struct with `blob->as<T> ()`, which is a 
 | `cmap` | chooses the best subtable once, finds the variation-selector subtable, prepares format 4 for fast searching, and allocates a 1 KB cache of recent lookups |
 | `GSUB`, `GPOS` | the table, its lookup count, and an array of empty slots, one per lookup, for the lookup accelerators |
 | `GDEF` | the table, minus a few known-bad ones; small mark-filtering sets flattened into bitmaps |
-| `glyf` | chooses `GLYF`/`LOCA` or `glyf`/`loca`, reads the `loca` format from `head`, and keeps pointers to the `gvar`, `hmtx` and `vmtx` accelerators it will need |
+| `glyf` | chooses `GLYF`/`LOCA` or `glyf`/`loca`, reads the `loca` format from `head`, and keeps pointers to the `gvar`, `hmtx`, and `vmtx` accelerators it will need |
 | `hmtx`, `vmtx` | the metrics table and its `HVAR` or `VVAR` |
 | `maxp` | the glyph count, from `MAXP` if there is one, else `maxp` |
 
@@ -323,7 +323,7 @@ The accelerators are lazy inside, too. A `GSUB` accelerator doesn’t build the 
 
 ### Failure is cached as Null
 
-A table that is missing, or that fails sanitizing, doesn’t leave its slot empty. `reference_table` returns the empty blob in both cases, and the empty blob is stored like any other, so the next access finds a non-`NULL` pointer and returns at once. The table is never looked for again, and never sanitized again, for the life of the face. Every caller then reads the Null object of the table’s type, all zeros, which (as [Fonts as bytes](fonts-as-bytes.html) explains) reads as a valid, empty table: a `GSUB` with no scripts, features or lookups. No code that uses a table has to check whether it loaded.
+A table that is missing, or that fails sanitizing, doesn’t leave its slot empty. `reference_table` returns the empty blob in both cases, and the empty blob is stored like any other, so the next access finds a non-`NULL` pointer and returns at once. The table is never looked for again, and never sanitized again, for the life of the face. Every caller then reads the Null object of the table’s type, all zeros, which (as [Fonts as bytes](fonts-as-bytes.html) explains) reads as a valid, empty table: a `GSUB` with no scripts, features, or lookups. No code that uses a table has to check whether it loaded.
 
 The [sanitizer chapter](trust-nothing-the-sanitizer.html#pass-or-fail) shows what that does to shaping. Seen from the face, it looks like this. `broken-gsub.ttf` is `ligatures.ttf` from the GSUB chapter with one offset changed: the GSUB header’s offset to its lookup list points far past the end of the table. The table is still in the font’s directory, with its 274 bytes. But when `hb-info` asks for the features, what it gets is the Null `GSUB`, so it lists none:
 
@@ -334,7 +334,7 @@ broken-gsub.ttf  --list-features
 
 > For type designers: if a font shapes as though it had no layout at all, though `hb-info --list-tables` shows the table, a table that failed sanitizing is the likely reason.
 
-For accelerators, the failure that matters is of a different kind. An accelerator is built even when its table is missing: it’s an accelerator for an empty table. What can fail is allocating it. Then `create` returns `NULL`, which can’t be stored, since `NULL` means “not loaded yet”. So the loader stores a **tagged Null** instead: the address of the accelerator’s Null object with its lowest bit set (`hb-machinery.hh:273`). Readers clear the bit and get the Null accelerator, and the destroy code recognizes the tag and frees nothing. A comment explains why it checks the bit and not the address: the Null pool is internal to each of HarfBuzz’s libraries (`libharfbuzz`, `libharfbuzz-subset` and the rest each have their own copy), so another library sharing the face would not recognize the Null object by its address. The same tagging is used for the per-shaper data on faces and fonts, whose Null is `NULL` itself.
+For accelerators, the failure that matters is of a different kind. An accelerator is built even when its table is missing: it’s an accelerator for an empty table. What can fail is allocating it. Then `create` returns `NULL`, which can’t be stored, since `NULL` means “not loaded yet”. So the loader stores a **tagged Null** instead: the address of the accelerator’s Null object with its lowest bit set (`hb-machinery.hh:273`). Readers clear the bit and get the Null accelerator, and the destroy code recognizes the tag and frees nothing. A comment explains why it checks the bit and not the address: the Null pool is internal to each of HarfBuzz’s libraries (`libharfbuzz`, `libharfbuzz-subset`, and the rest each have their own copy), so another library sharing the face would not recognize the Null object by its address. The same tagging is used for the per-shaper data on faces and fonts, whose Null is `NULL` itself.
 
 ## The first GSUB access, step by step
 
@@ -360,7 +360,7 @@ this->accels = (hb_atomic_t<hb_ot_layout_lookup_accelerator_t *> *)
 
 (`lazy_some_gpos` lets GPOS leave some checks until its data is used. It makes no difference to GSUB.)
 
-**3. The glyph count.** `reference_table` (`hb-sanitize.hh:441`) first gives the sanitizer the number of glyphs, whatever the table, because some tables’ checks (in `gvar`, CFF, `sbix` and the AAT tables) compare against it:
+**3. The glyph count.** `reference_table` (`hb-sanitize.hh:441`) first gives the sanitizer the number of glyphs, whatever the table, because some tables’ checks (in `gvar`, CFF, `sbix`, and the AAT tables) compare against it:
 
 ```c++
 if (!num_glyphs_set)
@@ -372,7 +372,7 @@ If the face doesn’t know it yet, this goes through `load_num_glyphs` to `face-
 
 **4. The bytes.** `hb_face_reference_table` calls the face’s `reference_table_func`, which for a face from a file is `_hb_face_for_data_reference_table`. It finds the face in the file, finds `GSUB` in its directory, and returns a sub-blob of the file blob: no copying, and no check of the contents yet.
 
-**5. The check.** `sanitize_blob` (`hb-sanitize.hh:405`) casts the sub-blob’s bytes to `GSUB` and calls its `sanitize`, which walks every script, feature, lookup and subtable offset. The outcome is one of two:
+**5. The check.** `sanitize_blob` (`hb-sanitize.hh:405`) casts the sub-blob’s bytes to `GSUB` and calls its `sanitize`, which walks every script, feature, lookup, and subtable offset. The outcome is one of two:
 
 ```c++
 if (sane)
@@ -409,7 +409,7 @@ So the pattern HarfBuzz is built for is: one blob per file, one face per face in
 | `src/hb-object.hh` | the object header: reference counts, the immutable flag, user data |
 | `src/hb-face.hh`, `src/hb-face.cc` | the face, `hb_face_create`, `_hb_face_for_data_reference_table`, `hb_face_count`, face loaders, immutability |
 | `src/hb-face-builder.cc` | the face builder, and writing its tables out as a font file |
-| `src/hb-open-file.hh` | the containers: sfnt, TTC and dfont, and the table directory |
+| `src/hb-open-file.hh` | the containers: sfnt, TTC, and dfont, and the table directory |
 | `src/hb-machinery.hh` | `hb_lazy_loader_t`, `hb_table_lazy_loader_t`, `hb_face_lazy_loader_t`, tagged nulls |
 | `src/hb-ot-face.hh`, `src/hb-ot-face-table-list.hh`, `src/hb-ot-face.cc` | the per-face table slots, generated from the table list |
 | `src/hb-sanitize.hh` | `reference_table` and `sanitize_blob`, where loading meets checking |

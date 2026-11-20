@@ -4,7 +4,7 @@ HarfBuzz turns one run of text into one row of positioned glyphs, on a line of n
 
 What HarfBuzz does give back for that work is in each `hb_glyph_info_t`: the cluster, which ties glyphs to the text, and three glyph flags, which say where the result can be cut and joined without shaping again. [Buffers](buffers.html) explains how both are made inside the library. This chapter is about using them: what they promise, how a line breaker uses them, where the promise has gaps, and what the application has to do itself.
 
-The examples use one small test font, `apps.ttf`, built from `fonts/for-applications/apps.fea`. It has *fi*, *ff* and *ffi* ligatures, two kerning pairs (hyphen with *T*, and *T* with *o*), and beh in its four Arabic forms with tatweel. A few examples borrow fonts from other chapters. Every shaping result on this page was produced by running HarfBuzz {{hb}} when the page was built.
+The examples use one small test font, `apps.ttf`, built from `fonts/for-applications/apps.fea`. It has *fi*, *ff*, and *ffi* ligatures, two kerning pairs (hyphen with *T*, and *T* with *o*), and beh in its four Arabic forms with tatweel. A few examples borrow fonts from other chapters. Every shaping result on this page was produced by running HarfBuzz {{hb}} when the page was built.
 
 ## Mapping glyphs back to text
 
@@ -15,7 +15,7 @@ apps.ttf  office  --language=en
 apps.ttf  ببب  --language=ar
 ```
 
-In *office* the ligature has cluster 1 and the *c* after it 4, so the ligature covers characters 1, 2 and 3. In right-to-left text the glyphs come out in visual order, so the clusters fall along the buffer instead of rising: the first glyph is the last beh. An application that goes from text to glyphs (to color a range, or to find where a selection starts) looks for the cluster that contains the character; one that goes from glyphs to text (to find what was clicked) takes the glyph’s cluster and the next one.
+In *office* the ligature has cluster 1 and the *c* after it 4, so the ligature covers characters 1, 2, and 3. In right-to-left text the glyphs come out in visual order, so the clusters fall along the buffer instead of rising: the first glyph is the last beh. An application that goes from text to glyphs (to color a range, or to find where a selection starts) looks for the cluster that contains the character; one that goes from glyphs to text (to find what was clicked) takes the glyph’s cluster and the next one.
 
 Cursor positions come from the same arithmetic. A boundary between two clusters is a place a cursor can go, and its position is the sum of the advances before it. Inside a cluster of several characters, HarfBuzz gives no position. For a ligature, the font may: GDEF can hold **ligature carets**, and `hb_ot_layout_get_ligature_carets` (`hb-ot-layout.cc:397`) returns them, one fewer than the ligature has components. The test font gives *ffi* carets at 300 and 600. The documentation warns that the positions are “unshaped”, so kerning applied to the ligature has to be added by the caller, and the function reads only GDEF, not the AAT `lcar` table. A font without carets leaves the application to divide the ligature itself, for example into equal parts (a common choice, not something HarfBuzz does).
 
@@ -42,7 +42,7 @@ apps.ttf  a fine non-Toxic office  --language=en  --show-flags  --unsafe-to-conc
 
 The kerning pairs leave the only marks. The hyphen is kerned against the *T* (its advance is 200, not 300), so the *T* is unsafe to break; the *T* is kerned against the *o*, so the *o* is too. The hyphen itself is clear, because a pair marks only its interior: breaking *before* the hyphen would not separate the pair. Every other boundary in the paragraph is safe. The ligatures leave nothing to see, since each is a single cluster with no boundary inside it.
 
-Not every backend is this precise. The Core Text, DirectWrite, Uniscribe, Graphite, `kbts` and `wasm` backends mark the whole buffer unsafe to break ([hb_shape and its backends](hb_shape-and-its-backends.html)). The `ot` shaper’s AAT paths mark the whole buffer unsafe to concat: `morx` (`hb-aat-layout-morx-table.hh:1465`, shown in [AAT inside HarfBuzz](aat-inside-harfbuzz.html#clusters-and-safe-breaking)), `kerx` (`hb-aat-layout-kerx-table.hh:1058`), and the machine that applies the legacy `kern` table (`hb-kern.hh:54`):
+Not every backend is this precise. The Core Text, DirectWrite, Uniscribe, Graphite, `kbts`, and `wasm` backends mark the whole buffer unsafe to break ([hb_shape and its backends](hb_shape-and-its-backends.html)). The `ot` shaper’s AAT paths mark the whole buffer unsafe to concat: `morx` (`hb-aat-layout-morx-table.hh:1465`, shown in [AAT inside HarfBuzz](aat-inside-harfbuzz.html#clusters-and-safe-breaking)), `kerx` (`hb-aat-layout-kerx-table.hh:1058`), and the machine that applies the legacy `kern` table (`hb-kern.hh:54`):
 
 ```shape
 aat-positioning/kerx.ttf  AVTo  --language=en  --show-flags  --unsafe-to-concat
@@ -168,9 +168,9 @@ Reshaping is cheap in another way as well: the plan is cached, so shaping a few 
 
 ## Runs the application must find
 
-HarfBuzz doesn’t itemize. Before it is called, the application splits each paragraph into runs of one script, one direction, one language and one font, with one set of features. The directions come from the Unicode bidirectional algorithm, the scripts from Unicode’s script property with the application’s own rules for characters such as spaces, digits and punctuation that belong to no one script, the languages from the document’s markup or settings ([Why shaping exists](why-shaping-exists.html#runs-and-the-three-things-harfbuzz-must-be-told)), and the fonts from its own fallback, when the chosen font lacks a character. Each run goes to HarfBuzz in logical order, as the text is stored, not reordered for display: HarfBuzz reverses a right-to-left run itself, after positioning, and mirrors brackets in it ([The pipeline, step by step](pipeline-step-by-step.html#into-visual-order)).
+HarfBuzz doesn’t itemize. Before it is called, the application splits each paragraph into runs of one script, one direction, one language, and one font, with one set of features. The directions come from the Unicode bidirectional algorithm, the scripts from Unicode’s script property with the application’s own rules for characters such as spaces, digits, and punctuation that belong to no one script, the languages from the document’s markup or settings ([Why shaping exists](why-shaping-exists.html#runs-and-the-three-things-harfbuzz-must-be-told)), and the fonts from its own fallback, when the chosen font lacks a character. Each run goes to HarfBuzz in logical order, as the text is stored, not reordered for display: HarfBuzz reverses a right-to-left run itself, after positioning, and mirrors brackets in it ([The pipeline, step by step](pipeline-step-by-step.html#into-visual-order)).
 
-`hb_buffer_guess_segment_properties` (`hb-buffer.cc:746`) is not an itemizer. It looks for the first character whose script isn’t Common, Inherited or Unknown, takes the direction from that script, and the language from the locale ([Why shaping exists](why-shaping-exists.html#runs-and-the-three-things-harfbuzz-must-be-told)). Given mixed text, it calls the whole run by the first script it sees:
+`hb_buffer_guess_segment_properties` (`hb-buffer.cc:746`) is not an itemizer. It looks for the first character whose script isn’t Common, Inherited, or Unknown, takes the direction from that script, and the language from the locale ([Why shaping exists](why-shaping-exists.html#runs-and-the-three-things-harfbuzz-must-be-told)). Given mixed text, it calls the whole run by the first script it sees:
 
 ```shape
 apps.ttf  a بب  --language=ar
@@ -230,9 +230,9 @@ The [Quick start](quick-start.html) programs are as short as they can be, and mo
 | Step | How: the user manual | Why: this book |
 |---|---|---|
 | Check that the file was a font | [Object lifecycle management](https://harfbuzz.github.io/object-model-lifecycle.html) | [hb_face_create](blobs-faces-and-lazy-tables.html#hb_face_create) |
-| Set the direction, script and language | [Setting buffer properties](https://harfbuzz.github.io/setting-buffer-properties.html) | [Why shaping exists](why-shaping-exists.html#runs-and-the-three-things-harfbuzz-must-be-told) |
+| Set the direction, script, and language | [Setting buffer properties](https://harfbuzz.github.io/setting-buffer-properties.html) | [Why shaping exists](why-shaping-exists.html#runs-and-the-three-things-harfbuzz-must-be-told) |
 | Set the size | [Fonts, faces and output](https://harfbuzz.github.io/fonts-and-faces.html) | [Three kinds of size](fonts-and-font-functions.html#three-kinds-of-size) |
-| Keep faces and fonts, and reuse buffers | [Object lifecycle management](https://harfbuzz.github.io/object-model-lifecycle.html), and [Buffers, language, script and direction](https://harfbuzz.github.io/buffers-language-script-and-direction.html) | [Objects, references and user data](blobs-faces-and-lazy-tables.html#objects-references-and-user-data) |
+| Keep faces and fonts, and reuse buffers | [Object lifecycle management](https://harfbuzz.github.io/object-model-lifecycle.html), and [Buffers, language, script and direction](https://harfbuzz.github.io/buffers-language-script-and-direction.html) | [Objects, references, and user data](blobs-faces-and-lazy-tables.html#objects-references-and-user-data) |
 | Share objects between threads | [Object lifecycle management](https://harfbuzz.github.io/object-model-lifecycle.html) | [Sharing a face between threads](blobs-faces-and-lazy-tables.html#sharing-a-face-between-threads) |
 | Check that shaping succeeded | not in the manual; the API reference has [`hb_buffer_allocation_successful`](https://harfbuzz.github.io/harfbuzz-hb-buffer.html#hb-buffer-allocation-successful) | [Running the plan, and failing](hb_shape-and-its-backends.html#running-the-plan-and-failing) |
 
@@ -260,7 +260,7 @@ The same comment warns that the first call uses `setlocale`, which many C librar
 | File | What’s there |
 |---|---|
 | `src/hb-buffer.h` | the glyph flags and their documentation, including the reshaping method; the buffer flags; the cluster levels |
-| `src/hb-buffer.hh` | `unsafe_to_break`, `unsafe_to_concat`, `safe_to_insert_tatweel` and `_set_glyph_flags` |
+| `src/hb-buffer.hh` | `unsafe_to_break`, `unsafe_to_concat`, `safe_to_insert_tatweel`, and `_set_glyph_flags` |
 | `src/hb-buffer.cc` | `hb_buffer_add_utf` and its context, `hb_buffer_append`, `guess_segment_properties`, `set_masks` |
 | `src/hb-buffer-verify.cc` | the three checks behind `HB_BUFFER_FLAG_VERIFY` |
 | `src/hb-ot-shape.cc` | `hb_propagate_flags` |
@@ -276,5 +276,5 @@ The same comment warns that the first call uses `setlocale`, which many C librar
 * A line breaker shapes the paragraph once, cuts where the flags allow, and reshapes only around flagged breaks, or as little as the unsafe-to-concat method needs. A break inside a cluster always needs reshaping.
 * `--verify` checks the flags by reshaping. A few shapers and tables in {{hb}} set them too optimistically.
 * Context, given through the `item_offset` of the add functions, reaches only Arabic joining and the dotted-circle test, never lookups.
-* Itemization, font fallback, line breaking and justification are the application’s; HarfBuzz offers the tatweel flag, and an experimental justifier that uses variation axes.
+* Itemization, font fallback, line breaking, and justification are the application’s; HarfBuzz offers the tatweel flag, and an experimental justifier that uses variation axes.
 * Before shipping: check that the file was a font and that shaping succeeded, set the language instead of letting it come from the locale, and count clusters in the units the text was added in.

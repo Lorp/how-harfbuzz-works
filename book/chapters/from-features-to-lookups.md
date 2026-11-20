@@ -20,7 +20,7 @@ The map is what the plan keeps (`hb-ot-map.hh:42`):
 | `lookups[2]` | the GSUB and GPOS lookups, as `lookup_map_t`: index, mask, flags, and the tag of the feature that brought it |
 | `stages[2]` | for each stage, where its lookups end in `lookups`, and its pause function |
 
-`features` is sorted by tag, so that `get_mask`, `get_1_mask` and the other queries can find a tag by binary search (`hb-ot-map.hh:121`). The pipeline uses those queries for features it treats specially, such as `frac` and `kern`, as [Shape plans and their cache](shape-plans-and-their-cache.html#the-ot-part) lists.
+`features` is sorted by tag, so that `get_mask`, `get_1_mask`, and the other queries can find a tag by binary search (`hb-ot-map.hh:121`). The pipeline uses those queries for features it treats specially, such as `frac` and `kern`, as [Shape plans and their cache](shape-plans-and-their-cache.html#the-ot-part) lists.
 
 ## Which features are asked for
 
@@ -40,7 +40,7 @@ The map is what the plan keeps (`hb-ot-map.hh:42`):
 | 10 | the application’s features | on, or with their own bits if they have a range |
 | 11 | the script shaper’s overrides | its `override_features` |
 
-Each request is one call to `add_feature` (`hb-ot-map.cc:97`), which records the tag, the value, the flags and the current stage of each table. `enable_feature` is `add_feature` with the global flag, and `disable_feature` is the same with value 0. Nothing is looked up in the font yet.
+Each request is one call to `add_feature` (`hb-ot-map.cc:97`), which records the tag, the value, the flags, and the current stage of each table. `enable_feature` is `add_feature` with the global flag, and `disable_feature` is the same with value 0. Nothing is looked up in the font yet.
 
 Order decides two things: which stage a feature lands in, and which request wins when a tag is asked for twice.
 
@@ -61,7 +61,7 @@ Every feature the planner adds is global except `rtlm`, `frac`, `numr` and `dnom
 
 ### Harf and Buzz
 
-`Harf`, `HARF`, `Buzz` and `BUZZ` are private tags, not registered features. The only comments on them are “Considered required” for the first of each pair and “Considered discretionary” for the second (`hb-ot-shape.cc:359`, `:368`), and nothing in the map treats the two kinds differently: all four are simply turned on. What makes them useful is where they are added. `Harf` comes before the script shaper’s features and `Buzz` after them, so a font can put lookups in either place: `Harf`’s run before the shaper’s first pause, and `Buzz`’s after its last, whatever their position in the LookupList. Neither `NEWS` nor the manual mentions them, and the subsetter keeps them as features to retain (`hb-subset-input.cc:134`). The comments’ “required” and “discretionary” are the font’s business: one plausible use is a font that wants the lowercase tag kept on while the uppercase one is offered to users (inferred). `arabic.ttf` shows them at work in [Stages and pauses](#stages-and-pauses).
+`Harf`, `HARF`, `Buzz`, and `BUZZ` are private tags, not registered features. The only comments on them are “Considered required” for the first of each pair and “Considered discretionary” for the second (`hb-ot-shape.cc:359`, `:368`), and nothing in the map treats the two kinds differently: all four are simply turned on. What makes them useful is where they are added. `Harf` comes before the script shaper’s features and `Buzz` after them, so a font can put lookups in either place: `Harf`’s run before the shaper’s first pause, and `Buzz`’s after its last, whatever their position in the LookupList. Neither `NEWS` nor the manual mentions them, and the subsetter keeps them as features to retain (`hb-subset-input.cc:134`). The comments’ “required” and “discretionary” are the font’s business: one plausible use is a font that wants the lowercase tag kept on while the uppercase one is offered to users (inferred). `arabic.ttf` shows them at work in [Stages and pauses](#stages-and-pauses).
 
 ## When a tag is asked for twice
 
@@ -113,7 +113,7 @@ In the third run, `calt` stops at cluster 2 although nobody asked for that, and 
 
 With duplicates merged, `compile` reads the chosen language system’s features into a map from tag to feature index, once per table (`hb_ot_layout_collect_features_map`, `hb-ot-layout.cc:1316`). If a language system lists two features with the same tag, the earlier one wins: the code loops backwards “such that earlier entries win”, because a font, `arialuni_t.ttf`, was found that only works that way (`:1328`).
 
-A feature can be found in GSUB, in GPOS or in both, and keeps its index in each. One that is in neither is dropped, unless it has `F_HAS_FALLBACK`, in which case it is kept, marked `needs_fallback`, so that HarfBuzz’s fallback can use its mask bits ([Fallbacks](fallbacks.html)). Only `vert` looks further, through `F_GLOBAL_SEARCH`, taking the first `vert` in the FeatureList even if the language system doesn’t list it (`hb-ot-map.cc:311`). The comment where it is added explains: “We really want to find a ‘vert’ feature if there’s any in the font, no matter which script/langsys it is listed (or not) under.”
+A feature can be found in GSUB, in GPOS, or in both, and keeps its index in each. One that is in neither is dropped, unless it has `F_HAS_FALLBACK`, in which case it is kept, marked `needs_fallback`, so that HarfBuzz’s fallback can use its mask bits ([Fallbacks](fallbacks.html)). Only `vert` looks further, through `F_GLOBAL_SEARCH`, taking the first `vert` in the FeatureList even if the language system doesn’t list it (`hb-ot-map.cc:311`). The comment where it is added explains: “We really want to find a ‘vert’ feature if there’s any in the font, no matter which script/langsys it is listed (or not) under.”
 
 ### The required feature
 
@@ -190,7 +190,7 @@ The planner itself uses few bits (`frac`, `numr`, `dnom`, `rtlm`, eight for `ran
 
 A **pause** ends a stage. `add_gsub_pause` and `add_gpos_pause` push a stage boundary, optionally with a **pause function**, and move the builder on to the next stage (`hb-ot-map.cc:198`); every feature added after it is in the new stage. `compile` adds one last pause to each table (`:353`). When the map runs, the pause function is called after the stage’s lookups, and if it returns true, because it may have added glyphs, the buffer’s digest is refreshed (`hb-ot-layout.cc:2122`). [GSUB: substituting glyphs](gsub.html#the-order-lookups-run-in) explains why stages matter: within one, lookups run in LookupList order, whatever their features; across them, the stage order wins.
 
-The default shaper adds no pauses, so after `rvrn` every feature is in one stage. The others use pauses for two reasons. Some need to do work between features: the Indic shaper finds syllables before any lookup and reorders after the basic forms (`hb-ot-shaper-indic.cc:249`–`:265`), and USE, Khmer and Myanmar do the same. Others need features applied one at a time: the Arabic shaper puts a pause after each joining feature (`hb-ot-shaper-arabic.cc:219`), following what Uniscribe was found to do. The script chapters describe each. [Feature order](feature-order.html) lists the stages of every shaper.
+The default shaper adds no pauses, so after `rvrn` every feature is in one stage. The others use pauses for two reasons. Some need to do work between features: the Indic shaper finds syllables before any lookup and reorders after the basic forms (`hb-ot-shaper-indic.cc:249`–`:265`), and USE, Khmer, and Myanmar do the same. Others need features applied one at a time: the Arabic shaper puts a pause after each joining feature (`hb-ot-shaper-arabic.cc:219`), following what Uniscribe was found to do. The script chapters describe each. [Feature order](feature-order.html) lists the stages of every shaper.
 
 No shaper adds a GPOS pause in {{hb}}: GPOS always has one stage.
 

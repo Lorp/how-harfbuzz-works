@@ -7,7 +7,7 @@
 Planning sorts features into **stages** ([From features to lookups](from-features-to-lookups.html#stages-and-pauses)):
 
 * Stages run one after another, in a fixed order that the shaper sets.
-* Within a stage, lookups run in LookupList order, whatever features they belong to ([GSUB](gsub.html#the-order-lookups-run-in)). The order in which the features are listed, requested or written doesn’t count.
+* Within a stage, lookups run in LookupList order, whatever features they belong to ([GSUB](gsub.html#the-order-lookups-run-in)). The order in which the features are listed, requested, or written doesn’t count.
 * GPOS always has one stage. All its lookups run in LookupList order, after all of GSUB.
 
 So each table below lists stages, not features. Within one stage, the features are listed alphabetically, because their order there is the font’s, not HarfBuzz’s.
@@ -16,9 +16,9 @@ Between the stages, the tables show the other steps HarfBuzz’s trace reports, 
 
 | Step | What it is |
 |---|---|
-| *preprocess-text* | the shaper’s work on the characters before shaping, such as composing Hangul jamo ([Hebrew, Thai, Lao and Hangul](hebrew-thai-lao-and-hangul.html)) |
+| *preprocess-text* | the shaper’s work on the characters before shaping, such as composing Hangul jamo ([Hebrew, Thai, Lao, and Hangul](hebrew-thai-lao-and-hangul.html)) |
 | *decompose*, *reorder*, *compose* | normalization’s three rounds ([Normalization](normalization.html)) |
-| *reordering …* | a shaper moving glyphs between stages: the Indic, Khmer, Myanmar and USE reorderings |
+| *reordering …* | a shaper moving glyphs between stages: the Indic, Khmer, Myanmar, and USE reorderings |
 | *postprocess-glyphs* | the shaper’s work after GPOS, such as stretching for Arabic `stch` ([Joining scripts](joining-scripts.html)) |
 | *fallback mark*, *fallback kern* | HarfBuzz positioning marks or kerning itself, for a font without the GPOS features ([Fallbacks](fallbacks.html)) |
 
@@ -34,7 +34,7 @@ A feature that is missing from a table wasn’t asked for. Under the Indic shape
 
 ## The default shaper
 
-The default shaper handles Latin, Greek, Cyrillic, Han and most other scripts, and Thai and Lao use its features too ([From tags to a shaper](choosing-a-script-shaper.html#from-tags-to-a-shaper)). It adds no pauses, so after `rvrn` everything is one stage: the font’s lookup order decides everything else.
+The default shaper handles Latin, Greek, Cyrillic, Han, and most other scripts, and Thai and Lao use its features too ([From tags to a shaper](choosing-a-script-shaper.html#from-tags-to-a-shaper)). It adds no pauses, so after `rvrn` everything is one stage: the font’s lookup order decides everything else.
 
 ```order
 fonts: order-latn
@@ -50,7 +50,7 @@ text: א
 options: --features=smcp
 ```
 
-In vertical text, `vert` replaces the horizontal features `calt`, `clig`, `curs`, `dist`, `kern`, `liga` and `rclt`:
+In vertical text, `vert` replaces the horizontal features `calt`, `clig`, `curs`, `dist`, `kern`, `liga`, and `rclt`:
 
 ```order
 fonts: order-latn
@@ -60,7 +60,7 @@ options: --features=smcp  --direction=ttb
 
 ## Arabic
 
-The Arabic shaper is used for Arabic in horizontal text, and for Syriac in horizontal text if the font has a Syriac script tag. The other joining scripts, such as Mongolian and N’Ko, are shaped by USE ([Joining scripts](joining-scripts.html#joining-scripts-under-use)); [Choosing a script shaper](choosing-a-script-shaper.html#from-tags-to-a-shaper) has the conditions. It puts a pause after each joining feature, and after `rlig`, so `isol`, `fina`, `fin2`, `fin3`, `medi`, `med2`, `init` and `rlig` each run on their own, in that order ([Joining scripts](joining-scripts.html#the-features-in-order)):
+The Arabic shaper is used for Arabic in horizontal text, and for Syriac in horizontal text if the font has a Syriac script tag. The other joining scripts, such as Mongolian and N’Ko, are shaped by USE ([Joining scripts](joining-scripts.html#joining-scripts-under-use)); [Choosing a script shaper](choosing-a-script-shaper.html#from-tags-to-a-shaper) has the conditions. It puts a pause after each joining feature, and after `rlig`, so `isol`, `fina`, `fin2`, `fin3`, `medi`, `med2`, `init`, and `rlig` each run on their own, in that order ([Joining scripts](joining-scripts.html#the-features-in-order)):
 
 ```order
 fonts: order-arab
@@ -112,7 +112,7 @@ Only `rphf` and `pref` have stages of their own, because what each one did is re
 
 ## Hangul
 
-The Hangul shaper composes or decomposes the jamo before shaping, and its `ljmo`, `vjmo` and `tjmo` share the default shaper’s single stage ([Hebrew, Thai, Lao and Hangul](hebrew-thai-lao-and-hangul.html)):
+The Hangul shaper composes or decomposes the jamo before shaping, and its `ljmo`, `vjmo`, and `tjmo` share the default shaper’s single stage ([Hebrew, Thai, Lao, and Hangul](hebrew-thai-lao-and-hangul.html)):
 
 ```order
 fonts: order-hang
@@ -127,7 +127,7 @@ A font with a `morx` table that HarfBuzz uses gets none of the GSUB stages: `mor
 ## What it means for a font
 
 * Under the default shaper, the order of lookups in the LookupList is the order in which they run, apart from `rvrn`. In a feature file, that is the order the lookups are written in.
-* Under the default shaper, no feature is “early” or “late” except `rvrn`. `calt` runs late only if its lookups come late in the LookupList. Under the Arabic, Indic, Khmer, Myanmar and USE shapers it really is late, in the last stage with the presentation features.
+* Under the default shaper, no feature is “early” or “late” except `rvrn`. `calt` runs late only if its lookups come late in the LookupList. Under the Arabic, Indic, Khmer, Myanmar, and USE shapers it really is late, in the last stage with the presentation features.
 * Under a shaper with stages, a lookup can’t see the output of a feature in a later stage, wherever it is in the LookupList. A `ccmp` lookup never sees what `init` made, under the Arabic shaper or the Indic one.
 * `rvrn` always runs first, in a stage of its own.
 * An application’s features, such as `smcp` or `ss01`, always run in the last stage, after all reordering, so they can’t change how a syllable is reordered.
@@ -147,5 +147,5 @@ A font with a `morx` table that HarfBuzz uses gets none of the GSUB stages: `mor
 
 * Features run in stages: in order across stages, and in LookupList order within one.
 * The default shaper has one stage after `rvrn`, so the font decides the order.
-* The Arabic, Indic, Khmer, Myanmar and USE shapers add stages, and reorder glyphs between them.
+* The Arabic, Indic, Khmer, Myanmar, and USE shapers add stages, and reorder glyphs between them.
 * An application’s features run last in GSUB, and GPOS runs after GSUB, in one stage.

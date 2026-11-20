@@ -4,7 +4,7 @@ A combining mark needs something to combine with. When a vowel sign begins a lin
 
 There are four places in HarfBuzz that insert one. They were written at different times, for different shapers, and they differ in when they run, in what they test, in what they give the circle, and in whether they check that the font has one at all. The script chapters met each of them in passing. This chapter puts them side by side.
 
-The examples use three small test fonts, built from `fonts/dotted-circles-and-broken-clusters/circles.fea`. Their glyphs are boxes: a Latin *a* and a combining acute, and a few Devanagari, Khmer, Myanmar and Brahmi letters and vowel signs. `circle.ttf` has a dotted circle, a GDEF table and a `mark` feature that attaches the acute and Devanagari vowel sign U to a base, the dotted circle among them. `no-circle.ttf` is the same font with U+25CC left out of its `cmap` (the glyph is still there, but no character reaches it). `bare.ttf` is `circle.ttf` without GDEF and GPOS. A few examples borrow fonts from the script chapters. Every result on this page was produced by HarfBuzz {{hb}} when the page was built.
+The examples use three small test fonts, built from `fonts/dotted-circles-and-broken-clusters/circles.fea`. Their glyphs are boxes: a Latin *a* and a combining acute, and a few Devanagari, Khmer, Myanmar, and Brahmi letters and vowel signs. `circle.ttf` has a dotted circle, a GDEF table, and a `mark` feature that attaches the acute and Devanagari vowel sign U to a base, the dotted circle among them. `no-circle.ttf` is the same font with U+25CC left out of its `cmap` (the glyph is still there, but no character reaches it). `bare.ttf` is `circle.ttf` without GDEF and GPOS. A few examples borrow fonts from the script chapters. Every result on this page was produced by HarfBuzz {{hb}} when the page was built.
 
 ## Four paths
 
@@ -90,13 +90,13 @@ The circle is there in the first line, before any of the shaper’s steps; the I
 
 ## Broken clusters
 
-The four syllabic shapers each divide the text into syllables with a grammar, as [the Indic model](indic-model.html#finding-syllables), [Khmer and Myanmar](khmer-and-myanmar.html) and [the Universal Shaping Engine](universal-shaping-engine.html) describe. Each grammar has a catch-all for marks with no base: a **broken cluster**, a syllable made of what may follow a base, with no base before it. Indic’s is `reph? n? complex_syllable_tail` (`hb-ot-shaper-indic-machine.rl:107`), Khmer’s `Robatic? (H.cn)* (H | syllable_tail)`, Myanmar’s `k? VS? syllable_tail`, and USE’s a tail with an optional leading repha. A lone vowel sign is one in all four. When the scanner finds one, it also sets a buffer scratch flag, `HB_BUFFER_SCRATCH_FLAG_HAS_BROKEN_SYLLABLE`, so a buffer with none can skip the next step at once.
+The four syllabic shapers each divide the text into syllables with a grammar, as [the Indic model](indic-model.html#finding-syllables), [Khmer and Myanmar](khmer-and-myanmar.html), and [the Universal Shaping Engine](universal-shaping-engine.html) describe. Each grammar has a catch-all for marks with no base: a **broken cluster**, a syllable made of what may follow a base, with no base before it. Indic’s is `reph? n? complex_syllable_tail` (`hb-ot-shaper-indic-machine.rl:107`), Khmer’s `Robatic? (H.cn)* (H | syllable_tail)`, Myanmar’s `k? VS? syllable_tail`, and USE’s a tail with an optional leading repha. A lone vowel sign is one in all four. When the scanner finds one, it also sets a buffer scratch flag, `HB_BUFFER_SCRATCH_FLAG_HAS_BROKEN_SYLLABLE`, so a buffer with none can skip the next step at once.
 
 Which sequences count as broken is the grammars’ business, and it changes with them. `NEWS` for 10.2.0, for instance, says “Don’t insert U+25CC DOTTED CIRCLE before superscript/subscript digits”.
 
 ### Where the circle goes
 
-Each shaper calls the same function at the start of its reordering, in the GSUB pause after its first features: Indic in `initial_reordering_indic` (`hb-ot-shaper-indic.cc:983`), Khmer in `reorder_khmer` (`:309`), Myanmar in `reorder_myanmar` (`:330`) and USE in `reorder_use` (`:455`). Trimmed, it is (`hb-ot-shaper-syllabic.cc:33`):
+Each shaper calls the same function at the start of its reordering, in the GSUB pause after its first features: Indic in `initial_reordering_indic` (`hb-ot-shaper-indic.cc:983`), Khmer in `reorder_khmer` (`:309`), Myanmar in `reorder_myanmar` (`:330`), and USE in `reorder_use` (`:455`). Trimmed, it is (`hb-ot-shaper-syllabic.cc:33`):
 
 ```c++
   if (unlikely (buffer->flags & HB_BUFFER_FLAG_DO_NOT_INSERT_DOTTED_CIRCLE))
@@ -189,7 +189,7 @@ indic-model/scripts.ttf  \u0D4E\u0D3E  --language=ml
 indic-model/scripts.ttf  \u0D4E\u0D3E  --language=ml  --cluster-level=1
 ```
 
-The reph that RA and a virama make is not a character, and the insertion doesn’t pass over it, though the Indic grammar puts it in the broken cluster (`reph?`). So RA, virama and a vowel sign get their circle before the RA. The circle becomes the base, the RA a consonant after it, and the reph is never made: the Indic shaper makes one only of RA + virama at the start of a syllable. A circle typed in the same place gives a reph on the circle:
+The reph that RA and a virama make is not a character, and the insertion doesn’t pass over it, though the Indic grammar puts it in the broken cluster (`reph?`). So RA, virama, and a vowel sign get their circle before the RA. The circle becomes the base, the RA a consonant after it, and the reph is never made: the Indic shaper makes one only of RA + virama at the start of a syllable. A circle typed in the same place gives a reph on the circle:
 
 ```shape
 circle.ttf  र\u094D\u0941  --language=hi
@@ -197,7 +197,7 @@ circle.ttf  र\u094D\u25CC\u0941  --language=hi
 universal-shaping-engine/deva3.ttf  र\u094D\u0941  --language=hi
 ```
 
-The first line shows RA with a visible virama after the circle, where the second has the reph; it looks like a bug (the comment “Insert dottedcircle after possible Repha” suggests the reph was meant to be kept). When the circle comes in before the shaper looks, from the vowel constraints below, the reph does form on it, and HarfBuzz’s own test, `indic-vowel-letter-spoofing.tests`, expects exactly that for RA, virama and LETTER I. The third line is USE, under `dev3`, where RA + virama is a syllable of its own, a virama-terminated cluster, so the vowel sign after it is broken by itself and the reph, formed in the first syllable, stays before the circle.
+The first line shows RA with a visible virama after the circle, where the second has the reph; it looks like a bug (the comment “Insert dottedcircle after possible Repha” suggests the reph was meant to be kept). When the circle comes in before the shaper looks, from the vowel constraints below, the reph does form on it, and HarfBuzz’s own test, `indic-vowel-letter-spoofing.tests`, expects exactly that for RA, virama, and LETTER I. The third line is USE, under `dev3`, where RA + virama is a syllable of its own, a virama-terminated cluster, so the vowel sign after it is broken by itself and the reph, formed in the first syllable, stays before the circle.
 
 ### Clusters
 
@@ -248,11 +248,11 @@ It doesn’t look at the pre-context either. [Tone marks](hebrew-thai-lao-and-ha
 
 ## Vowel constraints
 
-Some scripts can write the same vowel in two ways that look alike. In Devanagari, LETTER A with VOWEL SIGN AA looks like LETTER AA, but it isn’t LETTER AA to a search, a sort or a spelling checker, and HarfBuzz’s tests of it are called “vowel letter spoofing”. Microsoft lists such sequences as invalid clusters, and HarfBuzz shows a dotted circle inside them, since issue #1019, in what the code calls an “UGLY UGLY UGLY business of adding dotted-circle in the middle of vowel-sequences that look like another vowel”.
+Some scripts can write the same vowel in two ways that look alike. In Devanagari, LETTER A with VOWEL SIGN AA looks like LETTER AA, but it isn’t LETTER AA to a search, a sort, or a spelling checker, and HarfBuzz’s tests of it are called “vowel letter spoofing”. Microsoft lists such sequences as invalid clusters, and HarfBuzz shows a dotted circle inside them, since issue #1019, in what the code calls an “UGLY UGLY UGLY business of adding dotted-circle in the middle of vowel-sequences that look like another vowel”.
 
 ### The data
 
-The list is Microsoft’s: `src/ms-use/IndicShapingInvalidCluster.txt`, whose header gives the dates 2015-03-12 and 2019-11-08 and which defines one property, `Indic_Shaping_Invalid_Cluster`: “sequences of characters that should be treated as invalid clusters”. It has 103 sequences in 16 scripts: Devanagari, Bengali, Gurmukhi, Gujarati, Oriya, Tamil, Telugu, Kannada, Malayalam, Sinhala, Brahmi, Khojki, Khudawadi, Tirhuta, Modi and Takri. Most are an independent vowel followed by a vowel sign, but not all:
+The list is Microsoft’s: `src/ms-use/IndicShapingInvalidCluster.txt`, whose header gives the dates 2015-03-12 and 2019-11-08 and which defines one property, `Indic_Shaping_Invalid_Cluster`: “sequences of characters that should be treated as invalid clusters”. It has 103 sequences in 16 scripts: Devanagari, Bengali, Gurmukhi, Gujarati, Oriya, Tamil, Telugu, Kannada, Malayalam, Sinhala, Brahmi, Khojki, Khudawadi, Tirhuta, Modi, and Takri. Most are an independent vowel followed by a vowel sign, but not all:
 
 | Sequence | Kind |
 |---|---|
@@ -325,7 +325,7 @@ After RA + virama the circle is the base of a standalone cluster that begins wit
 
 ### What the circle is given
 
-`output_glyph` makes the new entry by copying the current one, which is the character the circle goes before (`hb-buffer.hh:313`). So the circle gets that character’s cluster, mask and Unicode properties. `_output_dotted_circle` clears one of them, the continuation bit, so that the circle starts a grapheme of its own; the rest stay. At the default cluster level, step 4 had already merged the vowel sign into the cluster of the letter before it, so all three glyphs share cluster 0; at level 1 the circle has the vowel sign’s cluster, 1.
+`output_glyph` makes the new entry by copying the current one, which is the character the circle goes before (`hb-buffer.hh:313`). So the circle gets that character’s cluster, mask, and Unicode properties. `_output_dotted_circle` clears one of them, the continuation bit, so that the circle starts a grapheme of its own; the rest stay. At the default cluster level, step 4 had already merged the vowel sign into the cluster of the letter before it, so all three glyphs share cluster 0; at level 1 the circle has the vowel sign’s cluster, 1.
 
 The general category it keeps is the vowel sign’s, a mark. In a font with GDEF that is harmless, since GDEF gives the dotted circle glyph its class. In a font without GDEF, HarfBuzz synthesizes classes from the general category, so the circle becomes a mark, and USE, which zeroes marks by class before GPOS ([Zeroing marks](fallbacks.html#zeroing-marks)), takes away its advance. Brahmi is shaped by USE:
 
@@ -375,8 +375,8 @@ The first line shows LETTER A and VOWEL SIGN AA together with no circle, which i
 
 ## In short
 
-* Four functions insert U+25CC DOTTED CIRCLE: one at the start of a paragraph, for every shaper; the vowel constraints, for Indic and USE; the Hangul shaper’s, for tone marks; and one for broken clusters, shared by Indic, Khmer, Myanmar and USE. One buffer flag turns them all off.
-* The first needs `BOT`, no pre-context and a leading mark, and runs before the others, so its circle leaves nothing broken. It inserts the character, with U+25CC’s own properties.
+* Four functions insert U+25CC DOTTED CIRCLE: one at the start of a paragraph, for every shaper; the vowel constraints, for Indic and USE; the Hangul shaper’s, for tone marks; and one for broken clusters, shared by Indic, Khmer, Myanmar, and USE. One buffer flag turns them all off.
+* The first needs `BOT`, no pre-context, and a leading mark, and runs before the others, so its circle leaves nothing broken. It inserts the character, with U+25CC’s own properties.
 * A broken cluster is a syllable with no base. Its circle goes in at the syllable’s start, after a repha character but not after RA + virama, as a glyph with the shaper’s base category, the syllable’s first cluster, and no Unicode or GDEF properties.
 * The vowel constraints are Microsoft’s 103 sequences in 16 scripts, generated into code. They insert the character without checking the font, so a font without a dotted circle gets `.notdef`, and the circle copies the properties of the vowel sign after it, so in a font without GDEF, USE zeroes it.
 * Only the first path reads the pre-context. A syllable split between runs gets a circle at the split.

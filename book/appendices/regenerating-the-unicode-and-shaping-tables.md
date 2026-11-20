@@ -1,8 +1,8 @@
 # Regenerating the Unicode and shaping tables
 
-A good part of HarfBuzz’s source is written by programs. The Unicode properties, the categories of the Indic and USE shapers, the Arabic joining types, the mapping from BCP 47 languages to OpenType language systems and the syllable state machines are all generated, and the generated files are committed to the repository. Building HarfBuzz never downloads anything and never runs a data generator. The generators are run by hand, by a maintainer, when Unicode or one of the registries changes.
+A good part of HarfBuzz’s source is written by programs. The Unicode properties, the categories of the Indic and USE shapers, the Arabic joining types, the mapping from BCP 47 languages to OpenType language systems, and the syllable state machines are all generated, and the generated files are committed to the repository. Building HarfBuzz never downloads anything and never runs a data generator. The generators are run by hand, by a maintainer, when Unicode or one of the registries changes.
 
-The scripts live in `src/`, and are of two kinds. The **data generators** read the Unicode Character Database, Microsoft’s data for the Universal Shaping Engine and two registries of language tags, and are run through `src/update-unicode-tables.make`. The **build helpers** are run by meson as part of an ordinary build: they turn Ragel grammars into C, stamp the version into a header, and write the single-file amalgamations. This appendix lists both: what each reads, what it writes, which corrections it makes by hand, and which chapter explains the result.
+The scripts live in `src/`, and are of two kinds. The **data generators** read the Unicode Character Database, Microsoft’s data for the Universal Shaping Engine, and two registries of language tags, and are run through `src/update-unicode-tables.make`. The **build helpers** are run by meson as part of an ordinary build: they turn Ragel grammars into C, stamp the version into a header, and write the single-file amalgamations. This appendix lists both: what each reads, what it writes, which corrections it makes by hand, and which chapter explains the result.
 
 ## Generated files and their inputs
 
@@ -60,7 +60,7 @@ Each generated file begins with the command that made it and the first lines of 
 
 ### gen-ucd-table.py
 
-Reads the XML database through `packTab.ucdxml` and writes five properties for every code point: general category, canonical combining class, script, the Bidi mirroring glyph (as a difference) and the canonical decomposition. [Unicode inside HarfBuzz](unicode-inside-harfbuzz.html#the-built-in-tables) explains the encoding. Its second input is `hb-script-list.h`, a hand-written public header: the generator numbers the scripts in the order of the `HB_SCRIPT_*` lines there (`gen-ucd-table.py:147`), so a script Unicode adds must be added to that header before the table can be regenerated. Hangul syllables are left out of the decompositions on purpose, since `hb-ucd.cc` computes them (`:63`). The only change it makes to the data is the “sloppy” variant, which fills unassigned code points from their neighbors (`:257`).
+Reads the XML database through `packTab.ucdxml` and writes five properties for every code point: general category, canonical combining class, script, the Bidi mirroring glyph (as a difference), and the canonical decomposition. [Unicode inside HarfBuzz](unicode-inside-harfbuzz.html#the-built-in-tables) explains the encoding. Its second input is `hb-script-list.h`, a hand-written public header: the generator numbers the scripts in the order of the `HB_SCRIPT_*` lines there (`gen-ucd-table.py:147`), so a script Unicode adds must be added to that header before the table can be regenerated. Hangul syllables are left out of the decompositions on purpose, since `hb-ucd.cc` computes them (`:63`). The only change it makes to the data is the “sloppy” variant, which fills unassigned code points from their neighbors (`:257`).
 
 The usage line names `ucd.nounihan.grouped.xml`, and the makefile passes the `.zip`; `packTab.ucdxml` reads either (inferred from the makefile working).
 
@@ -70,7 +70,7 @@ Reads every property in `emoji-data.txt`, but writes only `Extended_Pictographic
 
 ### gen-arabic-table.py
 
-Writes three things. The **joining table**, from `ArabicShaping.txt`, with three changes: type C is stored as D, the Syriac joining groups Alaph and Dalath Rish replace their letters’ type, and anything unlisted is X, decided at run time ([Joining scripts](joining-scripts.html#joining-types)). The **shaping table**, a row of initial, medial, final and isolated presentation forms for each letter, from the `<initial>`, `<medial>`, `<final>` and `<isolated>` decompositions in `UnicodeData.txt`. And the **ligature tables** for fallback shaping, only for the ligatures in its `LIGATURES` list (`gen-arabic-table.py:139`).
+Writes three things. The **joining table**, from `ArabicShaping.txt`, with three changes: type C is stored as D, the Syriac joining groups Alaph and Dalath Rish replace their letters’ type, and anything unlisted is X, decided at run time ([Joining scripts](joining-scripts.html#joining-types)). The **shaping table**, a row of initial, medial, final, and isolated presentation forms for each letter, from the `<initial>`, `<medial>`, `<final>`, and `<isolated>` decompositions in `UnicodeData.txt`. And the **ligature tables** for fallback shaping, only for the ligatures in its `LIGATURES` list (`gen-arabic-table.py:139`).
 
 Its overrides are in the data it adds: three made-up `UnicodeData.txt` lines for Private Use ligatures (U+F201 LELLAH, U+F211 lam-meem-jeem, U+F2EE shadda with fathatan, `:156`), which exist only for the legacy PUA fonts. A mark ligature is recognized by a leading U+0020 in its decomposition, which the generator drops before reversing the components (`:175`). `Blocks.txt` is read into a dictionary that nothing uses (`:45`, `:379`), and U+F2EE is in `LIGATURES` twice; neither affects the output.
 
@@ -80,11 +80,11 @@ Writes one function, `has_arabic_joining`: a `switch` over every script, other t
 
 ### gen-arabic-pua.py
 
-Reads the two committed files, “Legacy Simplified Arabic encoding” and “Legacy Traditional Arabic encoding”, each a list of PUA code, Unicode code point and name, and packs the inverse maps, Unicode to PUA, as `_hb_arabic_pua_simp_map` and `_hb_arabic_pua_trad_map`. They are used by `cmap` (`hb-ot-cmap-table.hh:2222`) and by the FreeType font funcs (`hb-ft.cc:451`), not by the shaper. The files don’t say where they came from.
+Reads the two committed files, “Legacy Simplified Arabic encoding” and “Legacy Traditional Arabic encoding”, each a list of PUA code, Unicode code point, and name, and packs the inverse maps, Unicode to PUA, as `_hb_arabic_pua_simp_map` and `_hb_arabic_pua_trad_map`. They are used by `cmap` (`hb-ot-cmap-table.hh:2222`) and by the FreeType font funcs (`hb-ft.cc:451`), not by the shaper. The files don’t say where they came from.
 
 ### gen-indic-table.py
 
-One table serves the Indic, Khmer and Myanmar shapers: a 16-bit value per code point, a category in the low byte and a position in the high byte. Only some blocks are kept (`ALLOWED_BLOCKS`, `gen-indic-table.py:25`), plus U+00A0 and U+25CC. The steps, from Unicode’s two Indic properties to HarfBuzz’s categories and positions, are described in [The Indic model](indic-model.html#where-the-table-comes-from).
+One table serves the Indic, Khmer, and Myanmar shapers: a 16-bit value per code point, a category in the low byte and a position in the high byte. Only some blocks are kept (`ALLOWED_BLOCKS`, `gen-indic-table.py:25`), plus U+00A0 and U+25CC. The steps, from Unicode’s two Indic properties to HarfBuzz’s categories and positions, are described in [The Indic model](indic-model.html#where-the-table-comes-from).
 
 The hand-written parts are larger than the derivation:
 
@@ -93,18 +93,18 @@ The hand-written parts are larger than the derivation:
 * **`category_overrides`** (`:207`), about 140 code points. The variation selectors U+FE00 to U+FE0F become `VS` and six punctuation and box characters `PLACEHOLDER`, both “not Myanmar-specific”. Ten RAs become `Ra`. Some Vedic signs become tone marks or `Symbol` (with TODOs saying they should be restricted). Grantha marks are included “according to ScriptExtensions.txt”, so that Tamil text can use them. Single characters follow, each with an issue or pull request. Then the Khmer classes (`Robatic`, `Xgroup`, `Ygroup`; U+17D3 is “Just guessing. Uniscribe doesn’t categorize it.”) and the Myanmar ones, from Microsoft’s Myanmar specification. One Myanmar override is commented out: “The spec says D0, but Uniscribe doesn’t seem to do.”
 * **The matra positions** (`:393`–`:432`), per block, with one marked “Deviate from spec” (Gurmukhi top matras), and **`position_overrides`** (`:386`) for U+0A51 and U+0B01.
 
-Unicode’s positions are discarded for every category except `CM`, `SM`, `RS`, `H`, `M` and `MPst` (`:457`), and consonants all get `BASE_C`. Khmer and Myanmar vowel signs are given a category from their position instead (`:473`), [as Khmer and Myanmar explains](khmer-and-myanmar.html#categories).
+Unicode’s positions are discarded for every category except `CM`, `SM`, `RS`, `H`, `M`, and `MPst` (`:457`), and consonants all get `BASE_C`. Khmer and Myanmar vowel signs are given a category from their position instead (`:473`), [as Khmer and Myanmar explains](khmer-and-myanmar.html#categories).
 
 ### gen-use-table.py
 
-Reads nine files. The seven UCD files give each code point its Indic syllabic and positional categories, joining type, whether it is default ignorable, general category, block and script. The two `ms-use/*-Additional.txt` files, Microsoft’s, are read last into the same two slots, so their values replace Unicode’s (`gen-use-table.py:92`): DOTTED CIRCLE becomes a `Consonant`, and scripts outside Unicode’s Indic properties, such as Mongolian and Adlam, get values at all. Each code point is then passed through a list of predicates that follow Microsoft’s derivation of USE categories, and exactly one must say yes.
+Reads nine files. The seven UCD files give each code point its Indic syllabic and positional categories, joining type, whether it is default ignorable, general category, block, and script. The two `ms-use/*-Additional.txt` files, Microsoft’s, are read last into the same two slots, so their values replace Unicode’s (`gen-use-table.py:92`): DOTTED CIRCLE becomes a `Consonant`, and scripts outside Unicode’s Indic properties, such as Mongolian and Adlam, get values at all. Each code point is then passed through a list of predicates that follow Microsoft’s derivation of USE categories, and exactly one must say yes.
 
 HarfBuzz’s own corrections, in the order of the source:
 
-* five scripts are dropped, since other shapers handle them: Arabic, Lao, Samaritan, Syriac and Thai (`DISABLED_SCRIPTS`, `:40`);
+* five scripts are dropped, since other shapers handle them: Arabic, Lao, Samaritan, Syriac, and Thai (`DISABLED_SCRIPTS`, `:40`);
 * Microsoft’s `Consonant_Final_Modifier` is read as `Syllable_Modifier` and its positional `NA` as `Not_Applicable` (`:85`, `:88`);
-* joining letters and joiners, the generic bases (the same six characters as the Indic table’s placeholders, `:224`), three viramas with classes of their own (U+0DCA, U+1A60 and the other invisible stackers), and which default ignorables are `WJ` (excluding the Hangul fillers and U+1BCA0 to U+1BCA3, `:297`) are all decided in the predicates;
-* in `map_to_use` (`:382`), U+1CE2 to U+1CE8, four Tibetan signs and U+1CED get syllabic categories, and U+11302, U+11303 and U+114C1 the position `Top`; U+0F7F is excused from the check that a positioned category has a position (`:411`).
+* joining letters and joiners, the generic bases (the same six characters as the Indic table’s placeholders, `:224`), three viramas with classes of their own (U+0DCA, U+1A60, and the other invisible stackers), and which default ignorables are `WJ` (excluding the Hangul fillers and U+1BCA0 to U+1BCA3, `:297`) are all decided in the predicates;
+* in `map_to_use` (`:382`), U+1CE2 to U+1CE8, four Tibetan signs, and U+1CED get syllabic categories, and U+11302, U+11303, and U+114C1 the position `Top`; U+0F7F is excused from the check that a positioned category has a position (`:411`).
 
 [The Universal Shaping Engine](universal-shaping-engine.html#harfbuzzs-own-changes) has the full table, with what each comment says. Two of the TODOs explain themselves as missing values “in Unicode 13.0.0” (`:389`, `:393`). Whether Unicode 18.0 has since assigned them can’t be checked without the data files, which aren’t in the repository; if it has, the overrides are now redundant.
 
@@ -116,17 +116,17 @@ Reads Microsoft’s list of 103 sequences that should be shown as broken, `ms-us
 
 ### gen-tag-table.py
 
-At 1,498 lines the largest generator. It parses the OpenType language system tag page as HTML, taking from each row the name, the tag and the ISO 639 codes, and the IANA registry for names, scopes, macrolanguages, deprecations and variants. Tags are matched through the ISO codes (three-letter codes are turned into two-letter ones where those exist, through a table of 185 entries copied from SIL, `gen-tag-table.py:112`); names are used only for the comments in the output. Then it adds each macrolanguage’s individual languages, orders the OpenType tags for each language by rank, and writes:
+At 1,498 lines the largest generator. It parses the OpenType language system tag page as HTML, taking from each row the name, the tag, and the ISO 639 codes, and the IANA registry for names, scopes, macrolanguages, deprecations, and variants. Tags are matched through the ISO codes (three-letter codes are turned into two-letter ones where those exist, through a table of 185 entries copied from SIL, `gen-tag-table.py:112`); names are used only for the comments in the output. Then it adds each macrolanguage’s individual languages, orders the OpenType tags for each language by rank, and writes:
 
 * `ot_languages2` and `ot_languages3`, from two- and three-letter language subtags to OpenType tags, with comments such as “Avaric -> Avar”;
-* `hb_ot_tags_from_complex_language`, generated C for tags with a script, region or variant, such as `zh-Hant-HK` or `und-fonipa`;
+* `hb_ot_tags_from_complex_language`, generated C for tags with a script, region, or variant, such as `zh-Hant-HK` or `und-fonipa`;
 * `hb_ot_ambiguous_tag_to_language`, the way back for OpenType tags that several languages share.
 
 The corrections are an explicit block (`:755`–`:871`): 63 `add_language` calls (Chinese by region and script, the Quechua varieties, phonetic transcription as `und-fonipa`, Polytonic Greek as `el-polyton`), ten tags removed and re-added differently, five rank adjustments, names and macrolanguages for three retired codes, and a `disambiguation` map of 33 OpenType tags to the BCP 47 tag they should turn back into (`:893`). The comments it copies from the two registries are checked against a list of allowed characters before they are written (`sanitize_comment`, `:57`), since they end up in C source.
 
 ### gen-os2-unicode-ranges.py
 
-Reads lines of bit number, block name and range, and prints `_hb_os2_unicode_ranges`, sorted by first code point, for the subsetter’s recalculation of the `OS/2` Unicode range bits. The output has to be pasted into `hb-ot-os2-unicode-ranges.hh` by hand.
+Reads lines of bit number, block name, and range, and prints `_hb_os2_unicode_ranges`, sorted by first code point, for the subsetter’s recalculation of the `OS/2` Unicode range bits. The output has to be pasted into `hb-ot-os2-unicode-ranges.hh` by hand.
 
 ## The build helpers
 
@@ -141,7 +141,7 @@ These run in every meson build, from `src/meson.build`, and read nothing outside
 | `harfbuzz*.def` | `gen-def.py` | the public headers | the Windows export list; leaves out eleven experimental functions unless `-Dexperimental_api=true` |
 | `hb-gpu-*-{glsl,wgsl,msl,hlsl}.hh` | `gen-gpu-shader-artifacts.py` | the shader sources | each shader as a C string ([hb-gpu](hb-gpu.html#what-the-application-supplies)) |
 
-The helpers that write into `src/` do it so that the committed copies stay current. `gen-ragel-artifacts.py`, `gen-gpu-shader-artifacts.py` and `gen-harfbuzz-world.py` also handle a read-only source tree: they compare instead, and stop with “out of date; regenerate with a writable source tree” if the committed file differs.
+The helpers that write into `src/` do it so that the committed copies stay current. `gen-ragel-artifacts.py`, `gen-gpu-shader-artifacts.py`, and `gen-harfbuzz-world.py` also handle a read-only source tree: they compare instead, and stop with “out of date; regenerate with a writable source tree” if the committed file differs.
 
 ## The Ragel machines
 
@@ -165,11 +165,11 @@ The machines once needed Ragel for every build from git (“Removed generated fi
 
 ## A new Unicode version
 
-`RELEASING.md`, HarfBuzz’s release checklist, says nothing about Unicode data: it covers NEWS, API documentation, the version bump and tagging. The practice shows in `NEWS`. Since Unicode 14.0, each version has had a release of its own, every time in September: 3.0.0 (Unicode 14.0, 17 September 2021), 5.2.0 (15.0), 8.2.1 (15.1), 10.0.0 (16.0), 11.5.0 (17.0) and 14.5.0 (“Update Unicode 18.0 data and script support”, 21 September 2026).
+`RELEASING.md`, HarfBuzz’s release checklist, says nothing about Unicode data: it covers NEWS, API documentation, the version bump, and tagging. The practice shows in `NEWS`. Since Unicode 14.0, each version has had a release of its own, every time in September: 3.0.0 (Unicode 14.0, 17 September 2021), 5.2.0 (15.0), 8.2.1 (15.1), 10.0.0 (16.0), 11.5.0 (17.0), and 14.5.0 (“Update Unicode 18.0 data and script support”, 21 September 2026).
 
 From the generators and the code that 14.5.0 touched, an update has these steps (inferred as a sequence; each step is in the source):
 
-1. **New scripts first.** Add each to `hb-script-list.h`, with its four-letter tag, a `Since:` line and the Unicode version in a comment (`HB_SCRIPT_JURCHEN`, `/*18.0*/`). `gen-ucd-table.py` reads the list from there.
+1. **New scripts first.** Add each to `hb-script-list.h`, with its four-letter tag, a `Since:` line, and the Unicode version in a comment (`HB_SCRIPT_JURCHEN`, `/*18.0*/`). `gen-ucd-table.py` reads the list from there.
 2. **Microsoft’s data.** Copy in the new `ms-use/*-Additional.txt` files, which Microsoft updates for each Unicode version.
 3. **Regenerate.** `make -f update-unicode-tables.make clean-sources`, then `make -f update-unicode-tables.make`, remembering that `DerivedCoreProperties.txt` and `emoji-test.txt` must be deleted by hand.
 4. **Fix what fails.** The generators assert rather than guess. A new syllabic category value stops `gen-indic-table.py` with a `KeyError` in `category_map` if it falls in an allowed block; a character that no USE predicate, or two, accepts stops `gen-use-table.py` at its assertion; a new value must also be added to `property_names` there.
@@ -188,7 +188,7 @@ Read from the code, none affecting the output in {{hb}}:
 * `gen-arabic-table.py` reads `Blocks.txt` for nothing and lists U+F2EE twice; `gen-arabic-joining-list.py`’s usage string has an old name; `gen-emoji-table.py`’s header names only `emoji-data.txt`, not `emoji-test.txt`.
 * `gen-tag-table.py` and `gen-os2-unicode-ranges.py` give `docs.microsoft.com` URLs, which now redirect to `learn.microsoft.com`, and the ISO 639 table cites `www-01.sil.org`.
 
-> Since {{hb}}: partly fixed on HarfBuzz main by [`ebfcf19`](https://github.com/harfbuzz/harfbuzz/commit/ebfcf19c720f3328754ecdde620eb45c2fa8088c), [`c66b1a5`](https://github.com/harfbuzz/harfbuzz/commit/c66b1a505795d701b27c67702809814ee250d6cd) and [`b873113`](https://github.com/harfbuzz/harfbuzz/commit/b873113f410f0fa0b215f225aec5d76eb55c22e3) (17 November 2026): the version regex, the Ragel argument check and `SOURCES` (the first three items); the other items remain.
+> Since {{hb}}: partly fixed on HarfBuzz main by [`ebfcf19`](https://github.com/harfbuzz/harfbuzz/commit/ebfcf19c720f3328754ecdde620eb45c2fa8088c), [`c66b1a5`](https://github.com/harfbuzz/harfbuzz/commit/c66b1a505795d701b27c67702809814ee250d6cd), and [`b873113`](https://github.com/harfbuzz/harfbuzz/commit/b873113f410f0fa0b215f225aec5d76eb55c22e3) (17 November 2026): the version regex, the Ragel argument check, and `SOURCES` (the first three items); the other items remain.
 
 ## Where to read the source
 
@@ -198,7 +198,7 @@ Read from the code, none affecting the output in {{hb}}:
 | `src/gen-ucd-table.py` | the UCD properties and their encoding |
 | `src/gen-emoji-table.py` | Extended_Pictographic, and `emoji-clusters.tests` |
 | `src/gen-arabic-table.py`, `src/gen-arabic-joining-list.py`, `src/gen-arabic-pua.py` | joining types, presentation forms, fallback ligatures, the joining scripts, the PUA maps |
-| `src/gen-indic-table.py` | the Indic, Khmer and Myanmar categories, with their overrides |
+| `src/gen-indic-table.py` | the Indic, Khmer, and Myanmar categories, with their overrides |
 | `src/gen-use-table.py` | the USE predicates and HarfBuzz’s corrections |
 | `src/ms-use/` | Microsoft’s files, under the MIT license |
 | `src/gen-vowel-constraints.py` | the vowel constraint function |
@@ -210,7 +210,7 @@ Read from the code, none affecting the output in {{hb}}:
 
 ## In short
 
-* Generated tables are committed; a build never downloads data. `update-unicode-tables.make`, run by hand from `src/`, fetches the latest UCD, emoji data and language registries and runs nine generators, most through packTab.
+* Generated tables are committed; a build never downloads data. `update-unicode-tables.make`, run by hand from `src/`, fetches the latest UCD, emoji data, and language registries and runs nine generators, most through packTab.
 * Every generated header records its command and its inputs’ versions: in {{hb}}, Unicode 18.0.0 throughout, except `DerivedCoreProperties.txt` at 17.0.0 in the USE table.
 * The corrections that shape HarfBuzz’s behavior are in the generators: `category_overrides` in `gen-indic-table.py`, the predicates and `map_to_use` in `gen-use-table.py`, and the manual block in `gen-tag-table.py`. Microsoft’s `ms-use/` files correct Unicode for USE before HarfBuzz does.
 * Seven Ragel grammars are compiled to committed headers when meson finds Ragel 6.10. The headers name no version.

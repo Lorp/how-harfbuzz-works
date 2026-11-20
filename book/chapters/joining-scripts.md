@@ -2,9 +2,9 @@
 
 In a joining script, a letter’s shape depends on whether it connects to its neighbors. [Why shaping exists](why-shaping-exists.html#one-character-many-shapes-joining-and-contextual-forms) showed beh taking four forms, and [The pipeline, step by step](pipeline-step-by-step.html#masks) showed where the decision is made: in the Arabic shaper’s `setup_masks` hook, before any glyph exists, a state machine reads each character’s joining type and sets one feature bit in its mask. This chapter takes that machine apart, then covers the rest of the Arabic shaper: its feature order, Syriac Alaph, mark reordering, `stch`, and shaping from presentation forms when a font has no Arabic `GSUB`.
 
-Only Arabic and Syriac get the Arabic shaper ([Choosing a script shaper](choosing-a-script-shaper.html#arabic-and-syriac)). Mongolian, N’Ko and the other joining scripts go to the Universal Shaping Engine, which borrows the same state machine; the last section is about that.
+Only Arabic and Syriac get the Arabic shaper ([Choosing a script shaper](choosing-a-script-shaper.html#arabic-and-syriac)). Mongolian, N’Ko, and the other joining scripts go to the Universal Shaping Engine, which borrows the same state machine; the last section is about that.
 
-The test fonts are built by `fonts/joining-scripts/build-fonts.py`: `joining.ttf` (from `joining.fea`) has Arabic, Syriac and Mongolian letters in their joining forms, `presentation.ttf` has no layout tables, only presentation-form glyphs, and `stch.ttf` has Syriac letters and an abbreviation mark. Every result was produced by HarfBuzz {{hb}} when the page was built.
+The test fonts are built by `fonts/joining-scripts/build-fonts.py`: `joining.ttf` (from `joining.fea`) has Arabic, Syriac, and Mongolian letters in their joining forms, `presentation.ttf` has no layout tables, only presentation-form glyphs, and `stch.ttf` has Syriac letters and an abbreviation mark. Every result was produced by HarfBuzz {{hb}} when the page was built.
 
 ## Joining types
 
@@ -89,7 +89,7 @@ The machine also sets glyph flags ([Buffers](buffers.html#glyph-flags)): `safe_t
 
 ## Syriac and Alaph
 
-Syriac has more forms than Arabic. Alaph, an R letter, has five: isolated, final when it joins the letter before it, and three more, each with a feature of its own: `fin2`, `fin3` and `med2`. In HarfBuzz’s table, an Alaph is:
+Syriac has more forms than Arabic. Alaph, an R letter, has five: isolated, final when it joins the letter before it, and three more, each with a feature of its own: `fin2`, `fin3`, and `med2`. In HarfBuzz’s table, an Alaph is:
 
 * **final** (`fina`) after a letter that joins it, in states 2 and 3;
 * **`fin2`** at the end of a word after a letter that doesn’t join it, in state 1 (after an R letter or an isolated Alaph) or state 5;
@@ -174,7 +174,7 @@ The alef and the madda compose across the hamza. Canonically, that text is not e
 
 ## Stretching: `stch`
 
-The Syriac abbreviation mark, U+070F, is a line drawn over the letters of an abbreviation, as long as they are. A font draws it with the feature `stch`, which replaces the mark with a sequence of glyphs, some of fixed length and some to be repeated; the comment above HarfBuzz’s code points to Microsoft’s Syriac script development specification for an example. HarfBuzz implements it “in a generic way, such that the Arabic subtending marks can use it as well” (`:448`), so any font can use it under the Arabic shaper. `stch.ttf` breaks the mark into an end, a repeating bar and another end:
+The Syriac abbreviation mark, U+070F, is a line drawn over the letters of an abbreviation, as long as they are. A font draws it with the feature `stch`, which replaces the mark with a sequence of glyphs, some of fixed length and some to be repeated; the comment above HarfBuzz’s code points to Microsoft’s Syriac script development specification for an example. HarfBuzz implements it “in a generic way, such that the Arabic subtending marks can use it as well” (`:448`), so any font can use it under the Arabic shaper. `stch.ttf` breaks the mark into an end, a repeating bar, and another end:
 
 ```views
 font: stch.ttf
@@ -183,9 +183,9 @@ fea: stch.fea stch
 cpp: Sequence
 ```
 
-**Recording.** `stch` is the first of the shaper’s features, and `record_stch` (`:456`) runs right after it. It looks for every glyph that a multiple substitution has *multiplied* (a property GSUB sets, [GSUB](gsub.html#glyph-properties)), and gives it an action that the joining machine never uses: STCH_FIXED if its component number is even and STCH_REPEATING if odd (`:475`). It is the same byte as the joining action (“We abuse the same byte for other things”, `:131`), which is free again by then, since the joining masks were set before GSUB. The comment warns that `rtlm`, `frac` and the other features in the same stage could also multiply a glyph, and assumes they don’t.
+**Recording.** `stch` is the first of the shaper’s features, and `record_stch` (`:456`) runs right after it. It looks for every glyph that a multiple substitution has *multiplied* (a property GSUB sets, [GSUB](gsub.html#glyph-properties)), and gives it an action that the joining machine never uses: STCH_FIXED if its component number is even and STCH_REPEATING if odd (`:475`). It is the same byte as the joining action (“We abuse the same byte for other things”, `:131`), which is free again by then, since the joining masks were set before GSUB. The comment warns that `rtlm`, `frac`, and the other features in the same stage could also multiply a glyph, and assumes they don’t.
 
-**Measuring.** Nothing more happens until the very end of shaping. `apply_stch` (`:482`), run from `postprocess_glyphs`, after GPOS and in visual order, finds each run of tiles and measures the “rest of the word”: the glyphs after it in logical order whose general category is a letter other than upper-, lower- or titlecase, a mark, a number, a symbol, private use or unassigned, or which are default ignorables (`HB_ARABIC_GENERAL_CATEGORY_IS_WORD`, `:45`). Spaces and punctuation end it. The tiles’ advances are read from the font and kept in the position’s scratch field, `stch_advance()` (`:39`). Then it works out how many extra copies of the repeating tiles fill the width left after the fixed ones (`:586`). If that leaves a gap, it adds one more copy and overlaps all the copies a little to take up the excess (`:589`).
+**Measuring.** Nothing more happens until the very end of shaping. `apply_stch` (`:482`), run from `postprocess_glyphs`, after GPOS and in visual order, finds each run of tiles and measures the “rest of the word”: the glyphs after it in logical order whose general category is a letter other than upper-, lower-, or titlecase, a mark, a number, a symbol, private use, or unassigned, or which are default ignorables (`HB_ARABIC_GENERAL_CATEGORY_IS_WORD`, `:45`). Spaces and punctuation end it. The tiles’ advances are read from the font and kept in the position’s scratch field, `stch_advance()` (`:39`). Then it works out how many extra copies of the repeating tiles fill the width left after the fixed ones (`:586`). If that leaves a gap, it adds one more copy and overlaps all the copies a little to take up the excess (`:589`).
 
 **Cutting.** A second pass makes room, copies each repeating tile that many times, sets every tile’s advance to zero, and gives each an offset, so that the tiles lie over the word without taking any space. The range is marked unsafe to break.
 
@@ -228,7 +228,7 @@ Each beh becomes the glyph the font maps to its presentation form. Lam and alef 
 
 ### When
 
-Three conditions, all decided when the plan is made. The script must be Arabic: Syriac and the others have no fallback. Each of `isol`, `fina`, `medi`, `init` and `rlig` is added with `F_HAS_FALLBACK` (`:221`, `:231`), so it keeps a mask bit even if the font doesn’t have it, and the joining machine’s actions still reach the masks. And `data_create_arabic` (`:273`) turns fallback on only if *none* of `isol`, `fina`, `medi` and `init` was found in the font’s GSUB, for the chosen script and language. One is enough to turn it off:
+Three conditions, all decided when the plan is made. The script must be Arabic: Syriac and the others have no fallback. Each of `isol`, `fina`, `medi`, `init`, and `rlig` is added with `F_HAS_FALLBACK` (`:221`, `:231`), so it keeps a mask bit even if the font doesn’t have it, and the joining machine’s actions still reach the masks. And `data_create_arabic` (`:273`) turns fallback on only if *none* of `isol`, `fina`, `medi`, and `init` was found in the font’s GSUB, for the chosen script and language. One is enough to turn it off:
 
 ```shape
 presentation-init.ttf  ببب  --language=ar
@@ -241,7 +241,7 @@ presentation-init.ttf  بلا  --language=ar
 
 The lookups can only be made with a font, which the plan doesn’t have, so they are made the first time the plan is used, by `arabic_fallback_shape` (`:417`), and kept in the plan ([Shape plans and their cache](shape-plans-and-their-cache.html)). `arabic_fallback_plan_init_unicode` (`hb-ot-shaper-arabic-fallback.hh:295`) makes up to seven, in the order of `arabic_fallback_features` (`:42`):
 
-1. Four single substitutions, for `init`, `medi`, `fina` and `isol`. Each is made from a column of `shaping_table`, which gives the four presentation forms of each character from U+0621 to U+06D3. A pair is kept if the font has a glyph for both characters, the two glyphs differ, and both IDs are below 65536 (`:72`).
+1. Four single substitutions, for `init`, `medi`, `fina`, and `isol`. Each is made from a column of `shaping_table`, which gives the four presentation forms of each character from U+0621 to U+06D3. A pair is kept if the font has a glyph for both characters, the two glyphs differ, and both IDs are below 65536 (`:72`).
 2. Three ligature substitutions, all for `rlig`: three-part ligatures, such as LAM WITH MEEM WITH HAH, then two-part ones, such as lam-alef, then mark ligatures, shadda with a vowel. The first two ignore marks; the mark ligatures, of course, don’t.
 
 They are real GSUB lookups, written into a stack buffer by the serializer, copied, and given accelerators like any font’s; an empty one is dropped. `arabic_fallback_plan_shape` (`:367`) then applies them in order, each with its feature’s mask, in the pause after the font’s `rlig`. Since they don’t come from the font’s lookup list, a trace shows their substitutions with no “start lookup” around them:
@@ -262,7 +262,7 @@ The ligature tables are in presentation forms, not in letters: lam-alef is U+FED
 
 If no lookup can be synthesized, because the font has no presentation forms either, HarfBuzz tries two older conventions.
 
-The first is a font whose glyph IDs are Windows code page 1256 byte values. `arabic_fallback_plan_init_win1256` (`:251`) checks five: alef must be glyph 199, lam 225, alef maksura 236, yeh 237 and sukun 250. If they all are, HarfBuzz uses a hand-written set of five lookups compiled into the library, in `hb-ot-shaper-arabic-win1256.hh`. That file writes its OpenType bytes with C macros, and includes itself twice: once to measure each piece and once to emit it (“First we measure, then we cut.”). It was written for Firefox (NEWS for 0.9.34, Mozilla bug 1045139) and was built only on Windows until 14.4.0. `win1256.ttf` has 256 glyphs and maps the letters to those IDs:
+The first is a font whose glyph IDs are Windows code page 1256 byte values. `arabic_fallback_plan_init_win1256` (`:251`) checks five: alef must be glyph 199, lam 225, alef maksura 236, yeh 237, and sukun 250. If they all are, HarfBuzz uses a hand-written set of five lookups compiled into the library, in `hb-ot-shaper-arabic-win1256.hh`. That file writes its OpenType bytes with C macros, and includes itself twice: once to measure each piece and once to emit it (“First we measure, then we cut.”). It was written for Firefox (NEWS for 0.9.34, Mozilla bug 1045139) and was built only on Windows until 14.4.0. `win1256.ttf` has 256 glyphs and maps the letters to those IDs:
 
 ```shape
 win1256.ttf  ببلا  --language=ar  --no-glyph-names
@@ -281,7 +281,7 @@ The three made-up ligatures are found by looking their PUA code points up direct
 
 ## Joining scripts under USE
 
-`gen-arabic-joining-list.py` writes `has_arabic_joining`, from `ArabicShaping.txt` and `Scripts.txt`: the scripts with characters whose joining type is neither T nor U. They are Adlam, Arabic, Chorasmian, Hanifi Rohingya, Mandaic, Manichaean, Mongolian, N’Ko, Old Uyghur, Phags-pa, Psalter Pahlavi, Sogdian and Syriac. All but Arabic and Syriac are shaped by the Universal Shaping Engine (NEWS for 2.8.0 records the move). For these, `data_create_use` makes an Arabic plan of its own (`hb-ot-shaper-use.cc:156`), and `setup_masks_use` first calls `setup_masks_arabic_plan` with it (`:189`): the same state machine, with the same context and joiners.
+`gen-arabic-joining-list.py` writes `has_arabic_joining`, from `ArabicShaping.txt` and `Scripts.txt`: the scripts with characters whose joining type is neither T nor U. They are Adlam, Arabic, Chorasmian, Hanifi Rohingya, Mandaic, Manichaean, Mongolian, N’Ko, Old Uyghur, Phags-pa, Psalter Pahlavi, Sogdian, and Syriac. All but Arabic and Syriac are shaped by the Universal Shaping Engine (NEWS for 2.8.0 records the move). For these, `data_create_use` makes an Arabic plan of its own (`hb-ot-shaper-use.cc:156`), and `setup_masks_use` first calls `setup_masks_arabic_plan` with it (`:189`): the same state machine, with the same context and joiners.
 
 ```shape
 joining.ttf  ᠠᠠᠠ  --language=mn
@@ -292,7 +292,7 @@ joining-DFLT.ttf  ᠠᠠᠠ  --language=mn
 
 Mongolian A takes its three forms. Mongolian is the one script the machine knows: after joining, `mongolian_variation_selectors` (`hb-ot-shaper-arabic.cc:380`) copies each character’s action onto a free variation selector, U+180B to U+180D or U+180F, after it. A variation selector is transparent, so otherwise it would get no mask, and a lookup in `init` matching the letter and the selector together, as `joining.ttf` has for FVS1, would fail at the selector. The narrow no-break space Mongolian uses before suffixes is non-joining in HarfBuzz’s data, and so the letters on either side of it are isolated. The last line is the same lookups under `DFLT` only, which sends Mongolian to the default shaper ([Choosing a script shaper](choosing-a-script-shaper.html#from-tags-to-a-shaper)): there is no joining at all.
 
-The same machine, but less around it. USE adds only `isol`, `init`, `medi` and `fina` (`:62`), in one stage after its reordering, so they run in LookupList order, with no pause between them and nothing for `fin2`, `fin3` or `med2`. It has no `stch`, no fallback from presentation forms (`do_fallback` needs Arabic script), and no pause between `rlig` and `calt`. Scripts not on the list get USE’s own topographical forms, from syllables rather than joining types (`setup_topographical_masks`, `:232`); that, and the rest of USE, is in [The Universal Shaping Engine](universal-shaping-engine.html).
+The same machine, but less around it. USE adds only `isol`, `init`, `medi`, and `fina` (`:62`), in one stage after its reordering, so they run in LookupList order, with no pause between them and nothing for `fin2`, `fin3`, or `med2`. It has no `stch`, no fallback from presentation forms (`do_fallback` needs Arabic script), and no pause between `rlig` and `calt`. Scripts not on the list get USE’s own topographical forms, from syllables rather than joining types (`setup_topographical_masks`, `:232`); that, and the rest of USE, is in [The Universal Shaping Engine](universal-shaping-engine.html).
 
 ## Configuration
 
@@ -303,8 +303,8 @@ The same machine, but less around it. USE adds only `isol`, `init`, `medi` and `
 | File | What’s there |
 |---|---|
 | `src/hb-ot-shaper-arabic.cc` | joining types, the state machine, the features and pauses, `stch`, mark reordering |
-| `src/hb-ot-shaper-arabic-table.hh` | generated: joining types, `shaping_table` and the ligature tables |
-| `src/gen-arabic-table.py` | its generator, from `ArabicShaping.txt`, `UnicodeData.txt` and `Blocks.txt` |
+| `src/hb-ot-shaper-arabic-table.hh` | generated: joining types, `shaping_table`, and the ligature tables |
+| `src/gen-arabic-table.py` | its generator, from `ArabicShaping.txt`, `UnicodeData.txt`, and `Blocks.txt` |
 | `src/hb-ot-shaper-arabic-fallback.hh` | lookups synthesized from presentation forms, and the Windows-1256 detection |
 | `src/hb-ot-shaper-arabic-win1256.hh` | the hand-written Windows-1256 lookups |
 | `src/hb-ot-shaper-arabic-pua.hh`, `src/gen-arabic-pua.py` | maps from Unicode to the legacy PUA encodings |
@@ -316,8 +316,8 @@ The same machine, but less around it. USE adds only `isol`, `init`, `medi` and `
 
 * Joining types come from `ArabicShaping.txt`; C is treated as D, and Syriac Alaph and Dalath-Rish have columns of their own.
 * A seven-state machine walks the text once, from pre-context to post-context, skipping transparent characters and correcting each letter’s form when it sees the next. Each action sets one feature’s mask bit.
-* Syriac Alaph has `fin2`, `fin3` and `med2` forms. Each joining feature has its own stage, before `rlig`; for Arabic only, `calt` is a stage after `rlig`.
+* Syriac Alaph has `fin2`, `fin3`, and `med2` forms. Each joining feature has its own stage, before `rlig`; for Arabic only, `calt` is a stage after `rlig`.
 * Modifier combining marks such as hamza above are moved to the front of their mark run and renumbered 25 or 26, which can let a later mark compose across them.
 * `stch` turns a mark into fixed and repeating tiles, which are repeated and laid over the following word after positioning. An exact fit misplaces them.
-* Arabic in a font with none of `isol`, `fina`, `medi` and `init` is shaped with lookups synthesized from the presentation forms in its `cmap`, or built-in ones for Windows-1256 fonts.
-* Mongolian, N’Ko and the other joining scripts are shaped by USE with the same state machine, but only the four basic forms, in one stage, and with no fallback or `stch`.
+* Arabic in a font with none of `isol`, `fina`, `medi`, and `init` is shaped with lookups synthesized from the presentation forms in its `cmap`, or built-in ones for Windows-1256 fonts.
+* Mongolian, N’Ko, and the other joining scripts are shaped by USE with the same state machine, but only the four basic forms, in one stage, and with no fallback or `stch`.

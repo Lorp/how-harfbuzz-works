@@ -2,7 +2,7 @@
 
 Everything HarfBuzz shapes passes through one object, the `hb_buffer_t`. An application fills it with characters, sets a few properties, hands it to `hb_shape`, and reads glyphs and positions back out of the same object. In between, the buffer is HarfBuzz’s working memory. Every step of the pipeline reads and rewrites the same arrays, and keeps notes about each glyph in private fields that change meaning several times during a single call.
 
-[Why shaping exists](why-shaping-exists.html) introduced the two structs a buffer returns, `hb_glyph_info_t` and `hb_glyph_position_t`, along with segment properties, clusters and three of the cluster levels. This chapter is about the machinery underneath: how the buffer makes a separate output array only when it has to, how eight bytes of scratch space in each glyph are lent to one stage after another, how clusters are merged and what each of the four cluster levels changes, what the glyph flags and buffer flags do, and how a buffer can be watched and checked while it is shaped.
+[Why shaping exists](why-shaping-exists.html) introduced the two structs a buffer returns, `hb_glyph_info_t` and `hb_glyph_position_t`, along with segment properties, clusters, and three of the cluster levels. This chapter is about the machinery underneath: how the buffer makes a separate output array only when it has to, how eight bytes of scratch space in each glyph are lent to one stage after another, how clusters are merged and what each of the four cluster levels changes, what the glyph flags and buffer flags do, and how a buffer can be watched and checked while it is shaped.
 
 The examples use one small test font, `buffers.ttf`, built from `fonts/buffers/buffers.fea`. It has an *fi* ligature whose lookup passes over marks, a multiple substitution that turns *x* into *f i*, a combining acute with a mark attachment, a dotted circle, beh in its four Arabic forms with tatweel, and the Devanagari conjunct K.SSA. Every shaping result and trace on this page was produced by running HarfBuzz {{hb}} on it when the page was built.
 
@@ -17,13 +17,13 @@ The examples use one small test font, `buffers.ttf`, built from `fonts/buffers/b
 | State | `successful`, `have_output`, `have_positions` | whether anything has failed, and which arrays mean something |
 | Context | `context[2][5]`, `context_len[2]` | up to five code points either side of the run |
 | Per call | `allocated_var_bits`, `serial`, `random_state`, `scratch_flags`, `max_len`, `max_ops`, `digest` | working state for one shaping call |
-| Messaging | `message_func`, `changed_func`, `message_depth` and their data | the tracing hooks |
+| Messaging | `message_func`, `changed_func`, `message_depth`, and their data | the tracing hooks |
 
-Of the settings, `replacement` (U+FFFD by default) is what invalid UTF-8, UTF-16 or UTF-32 decodes to, `not_found` is the glyph for a character the font lacks (`.notdef` by default), and `invisible` is the glyph that hidden default ignorables become (the font’s space by default). `hb_buffer_clear_contents` (`clear`, `hb-buffer.cc:301`) forgets the text, the segment properties and the context, and keeps the settings. `hb_buffer_reset` (`:286`) also restores the default settings. Neither removes a message callback. The `scratch_flags` are hints that one stage leaves for later ones, such as “there are default ignorables” or “GPOS attached something”, so that a later stage can skip a loop over the buffer when its flag is clear (`hb-buffer.hh:46`).
+Of the settings, `replacement` (U+FFFD by default) is what invalid UTF-8, UTF-16, or UTF-32 decodes to, `not_found` is the glyph for a character the font lacks (`.notdef` by default), and `invisible` is the glyph that hidden default ignorables become (the font’s space by default). `hb_buffer_clear_contents` (`clear`, `hb-buffer.cc:301`) forgets the text, the segment properties, and the context, and keeps the settings. `hb_buffer_reset` (`:286`) also restores the default settings. Neither removes a message callback. The `scratch_flags` are hints that one stage leaves for later ones, such as “there are default ignorables” or “GPOS attached something”, so that a later stage can skip a loop over the buffer when its flag is clear (`hb-buffer.hh:46`).
 
 ## Content types
 
-A buffer’s **content type** is `INVALID` (empty), `UNICODE` (characters) or `GLYPHS` (glyph IDs), and it says what the `codepoint` field of every `hb_glyph_info_t` means. The transitions look after themselves, as the comment on `hb_buffer_set_content_type` explains, so a loop of “clear, add text, shape” never sets the type by hand: adding text to an empty buffer makes it `UNICODE`, and a successful `hb_shape_plan_execute` makes it `GLYPHS`.
+A buffer’s **content type** is `INVALID` (empty), `UNICODE` (characters), or `GLYPHS` (glyph IDs), and it says what the `codepoint` field of every `hb_glyph_info_t` means. The transitions look after themselves, as the comment on `hb_buffer_set_content_type` explains, so a loop of “clear, add text, shape” never sets the type by hand: adding text to an empty buffer makes it `UNICODE`, and a successful `hb_shape_plan_execute` makes it `GLYPHS`.
 
 Inside the `ot` shaper, the switch happens partway through, in `hb_ot_map_glyphs_fast` (`hb-ot-shape.cc:844`), just before GSUB. A trace shows it, because `hb-shape` prints each state differently: characters in angle brackets, glyphs in square brackets, and glyphs with advances once positions exist.
 
@@ -39,7 +39,7 @@ The buffer is Unicode during normalization, glyphs without positions during GSUB
 
 ## Adding text
 
-The `hb_buffer_add_utf8`, `_utf16`, `_utf32`, `_latin1` and `_codepoints` functions all go through one template, `hb_buffer_add_utf` (`hb-buffer.cc:1868`). Each takes the caller’s whole string, with an `item_offset` and `item_length` saying which part of it is the run, and sets each character’s cluster to its offset in the string, in the string’s own code units:
+The `hb_buffer_add_utf8`, `_utf16`, `_utf32`, `_latin1`, and `_codepoints` functions all go through one template, `hb_buffer_add_utf` (`hb-buffer.cc:1868`). Each takes the caller’s whole string, with an `item_offset` and `item_length` saying which part of it is the run, and sets each character’s cluster to its offset in the string, in the string’s own code units:
 
 ```shape
 buffers.ttf  \u00E9fi  --language=en
@@ -67,7 +67,7 @@ Segment properties, and guessing them, are covered in [Why shaping exists](why-s
 
 A buffer has two arrays of 20-byte records, `info` and `pos`, which grow together in `enlarge` (`hb-buffer.cc:159`). Two static assertions in `hb-buffer.hh:38` insist that the two structs are exactly the same size, and the reason is a third array, `out_info`, which has no memory of its own.
 
-Many steps read the glyphs in order and write a new sequence that may be longer or shorter: normalization, GSUB lookups, dotted-circle insertion and several script shapers. For these the buffer has an output mode. `clear_output` (`:401`) starts it, setting `have_output` and pointing `out_info` at the same memory as `info`. The step reads the input at `idx` and appends to the output at `out_len`. `next_glyph` copies the current glyph to the output, but while the two arrays are the same and `out_len` equals `idx`, the glyph is already where it belongs, so nothing is copied (`hb-buffer.hh:354`):
+Many steps read the glyphs in order and write a new sequence that may be longer or shorter: normalization, GSUB lookups, dotted-circle insertion, and several script shapers. For these the buffer has an output mode. `clear_output` (`:401`) starts it, setting `have_output` and pointing `out_info` at the same memory as `info`. The step reads the input at `idx` and appends to the output at `out_len`. `next_glyph` copies the current glyph to the output, but while the two arrays are the same and `out_len` equals `idx`, the glyph is already where it belongs, so nothing is copied (`hb-buffer.hh:354`):
 
 ```c++
 bool next_glyph ()
@@ -108,13 +108,13 @@ copy e         out_info          [ a  f  i  e ]   idx 3  out_len 4
 sync           info ← out_info, pos ← old info, len 4
 ```
 
-That is why there are no positions during GSUB. `clear_positions` (`:412`) ends output mode, sets `have_positions` and zeroes the array, and GPOS then works in place: its lookups never use output mode (`always_inplace`, `hb-ot-layout.cc:1965`), and neither do reverse chained substitutions. Other backends borrow the same memory: `get_scratch_buffer` (`hb-buffer.cc:255`) hands the positions array to the Core Text, DirectWrite, Uniscribe and Graphite backends as scratch space.
+That is why there are no positions during GSUB. `clear_positions` (`:412`) ends output mode, sets `have_positions`, and zeroes the array, and GPOS then works in place: its lookups never use output mode (`always_inplace`, `hb-ot-layout.cc:1965`), and neither do reverse chained substitutions. Other backends borrow the same memory: `get_scratch_buffer` (`hb-buffer.cc:255`) hands the positions array to the Core Text, DirectWrite, Uniscribe, and Graphite backends as scratch space.
 
 Contextual lookups need one more operation. A nested lookup may have to run at a position the main loop has passed, so `move_to` (`:477`) moves the boundary between output and input either way, copying glyphs across, and if the output has outgrown the input, `shift_forward` (`:225`) first makes room. Both are charged to the buffer’s operation budget. And messages to a tracing callback are only sent when output and input agree: `message_impl` asserts that the buffer is in sync (`hb-buffer.cc:2441`), so a callback never sees a half-finished lookup.
 
 ## Eight bytes of scratch space
 
-Each `hb_glyph_info_t` has two private fields, `var1` and `var2`, unions that can be read as one 32-bit number, two 16-bit numbers or four bytes. Together they are eight bytes per glyph for HarfBuzz’s notes. No stage needs all eight for the whole of shaping, so the bytes are lent out and taken back as shaping goes along, like registers in a processor. Each use is a macro that names a field, in `hb-ot-layout.hh:154`:
+Each `hb_glyph_info_t` has two private fields, `var1` and `var2`, unions that can be read as one 32-bit number, two 16-bit numbers, or four bytes. Together they are eight bytes per glyph for HarfBuzz’s notes. No stage needs all eight for the whole of shaping, so the bytes are lent out and taken back as shaping goes along, like registers in a processor. Each use is a macro that names a field, in `hb-ot-layout.hh:154`:
 
 ```c++
 #define unicode_props()  var2.u16[0]
@@ -123,7 +123,7 @@ Each `hb_glyph_info_t` has two private fields, `var1` and `var2`, unions that ca
 #define syllable()       var1.u8[3]  /* GSUB/GPOS shaping boundaries */
 ```
 
-so that `info.glyph_props()` reads as a field. The script shapers share two more bytes, `ot_shaper_var_u8_category()` and `ot_shaper_var_u8_auxiliary()` (`hb-ot-shaper.hh:38`), which each shaper renames: `indic_category()`, `arabic_shaping_action()` and so on.
+so that `info.glyph_props()` reads as a field. The script shapers share two more bytes, `ot_shaper_var_u8_category()` and `ot_shaper_var_u8_auxiliary()` (`hb-ot-shaper.hh:38`), which each shaper renames: `indic_category()`, `arabic_shaping_action()`, and so on.
 
 The lending is checked. The buffer keeps one bit per byte in `allocated_var_bits`, and `HB_BUFFER_ALLOCATE_VAR (buffer, glyph_props)` works out from the field’s offset and size which bytes it occupies (`hb-buffer.hh:724`) and claims them (`:151`):
 
@@ -142,7 +142,7 @@ Claiming a byte twice fails an assertion, and so does releasing one that isn’t
 
 ### Who has which byte, and when
 
-Bytes 0–3 are `var1` and 4–7 are `var2`. This table lists every allocation in the `ot` shaper in {{hb}}, from the `HB_BUFFER_ALLOCATE_VAR`, `HB_BUFFER_TRY_ALLOCATE_VAR` and `HB_BUFFER_DEALLOCATE_VAR` calls, in the order the bytes are claimed:
+Bytes 0–3 are `var1` and 4–7 are `var2`. This table lists every allocation in the `ot` shaper in {{hb}}, from the `HB_BUFFER_ALLOCATE_VAR`, `HB_BUFFER_TRY_ALLOCATE_VAR`, and `HB_BUFFER_DEALLOCATE_VAR` calls, in the order the bytes are claimed:
 
 | Field | Bytes | Claimed | Released |
 |---|---|---|---|
@@ -156,13 +156,13 @@ Bytes 0–3 are `var1` and 4–7 are `var2`. This table lists every allocation i
 | `syllable` | 3 | a syllabic shaper’s first GSUB pause, which finds syllables (`hb-ot-shaper-indic.cc:418`, `-khmer.cc:194`, `-myanmar.cc:158`, `-use.cc:301`) | a pause at the end of GSUB, `hb_syllabic_clear_var` (`hb-ot-shaper-syllabic.cc:107`) |
 | `syllable`, borrowed as a class cache | 3 | at the start of a lookup whose cache goes to a format 2 context subtable, if the byte is free (`hb-ot-layout-gsubgpos.hh:3079`) | at the end of that lookup (`:3091`) |
 
-The design shows in the table. `normalizer_glyph_index` takes the whole of `var1`, but only while the text is normalized and masks are set up, and it is released just before `glyph_props` and `lig_props` claim three of the same bytes. The fourth, `syllable`, waits for an Indic, Khmer, Myanmar or USE shaper to claim it in a GSUB pause, and is given back before GSUB ends. The shapers’ own bytes are claimed while masks are set up, when normalization still holds all of `var1`, so they have to live in `var2`.
+The design shows in the table. `normalizer_glyph_index` takes the whole of `var1`, but only while the text is normalized and masks are set up, and it is released just before `glyph_props` and `lig_props` claim three of the same bytes. The fourth, `syllable`, waits for an Indic, Khmer, Myanmar, or USE shaper to claim it in a GSUB pause, and is given back before GSUB ends. The shapers’ own bytes are claimed while masks are set up, when normalization still holds all of `var1`, so they have to live in `var2`.
 
 The last row is the neatest. A format 2 context lookup matches glyphs by class, and finding a glyph’s class in a ClassDef table is a search. Each lookup lets one subtable use a cache, the one that says it would save most (`hb-ot-layout-gsubgpos.hh:1585`). When that is a format 2 context subtable and no shaper holds `syllable`, it claims the byte with `HB_BUFFER_TRY_ALLOCATE_VAR`, which returns false rather than asserting, and sets it to 255, “not known”, on every glyph. Each glyph’s class is then stored there the first time it is looked up (`get_class_cached`, `:1856`), and a glyph that the lookup substitutes has its byte reset to 255 (`_set_glyph_class`, `:1345`). When a syllabic shaper holds the byte, the lookup runs without the cache. Since syllables are released before GPOS, GPOS context lookups in those scripts can use it.
 
 The positions have a scratch field too, `hb_glyph_position_t.var`, outside the allocation bits. GPOS keeps attachments there, `attach_chain()` and `attach_type()` (`OT/Layout/GPOS/Common.hh:17`), and the Arabic shaper keeps `stch` advances (`hb-ot-shaper-arabic.cc:39`). Both run only after `clear_positions`, when the array really holds positions.
 
-> For programmers: `mask`, `var1`, `var2` and `var` are private, and after shaping they hold whatever the last stage to use them left. Read glyph flags with `hb_glyph_info_get_glyph_flags`. Other backends use the same fields differently: Core Text, DirectWrite and Uniscribe keep glyph offsets in `var1` and `var2` while converting their results.
+> For programmers: `mask`, `var1`, `var2`, and `var` are private, and after shaping they hold whatever the last stage to use them left. Read glyph flags with `hb_glyph_info_get_glyph_flags`. Other backends use the same fields differently: Core Text, DirectWrite, and Uniscribe keep glyph offsets in `var1` and `var2` while converting their results.
 
 What `unicode_props` holds is in [Unicode inside HarfBuzz](unicode-inside-harfbuzz.html), and what `glyph_props` and `lig_props` hold is in the [GSUB chapter](gsub.html#glyph-properties).
 
@@ -238,7 +238,7 @@ The pipeline never calls `merge_clusters_impl` directly. It calls one of four fu
 | `merge_out_clusters` | monotone (0 or 1) | nothing |
 | `merge_out_grapheme_clusters` | grapheme (0 or 3) | nothing |
 
-`merge_clusters` is the common one. A ligature calls it (`ligate_input`, `hb-ot-layout-gsubgpos.hh:2091`), as do `replace_glyphs`, `buffer->sort` (which normalization uses to put marks in order, `hb-buffer.cc:2239`) and the Indic, Khmer, USE, Arabic and Hebrew shapers when they move or combine glyphs. Normalization calls `merge_out_clusters` when it composes two characters into one. Only one place calls `merge_grapheme_clusters`: `hb_form_clusters` (`hb-ot-shape.cc:581`), at the start of shaping, which groups each base character with the characters that continue it.
+`merge_clusters` is the common one. A ligature calls it (`ligate_input`, `hb-ot-layout-gsubgpos.hh:2091`), as do `replace_glyphs`, `buffer->sort` (which normalization uses to put marks in order, `hb-buffer.cc:2239`), and the Indic, Khmer, USE, Arabic, and Hebrew shapers when they move or combine glyphs. Normalization calls `merge_out_clusters` when it composes two characters into one. Only one place calls `merge_grapheme_clusters`: `hb_form_clusters` (`hb-ot-shape.cc:581`), at the start of shaping, which groups each base character with the characters that continue it.
 
 ## The four cluster levels
 
@@ -251,7 +251,7 @@ The two properties those functions test make up the cluster levels’ names. **G
 | 2 | `CHARACTERS` | no | no |
 | 3 | `GRAPHEMES` | yes | no |
 
-HarfBuzz’s code tests the properties with `HB_BUFFER_CLUSTER_LEVEL_IS_MONOTONE`, `_IS_GRAPHEMES` and `_IS_CHARACTERS`, not by comparing numbers. Level 3 and the three macros arrived together in 11.0.0, according to `NEWS`. The header documents all four levels; the clusters chapter of the user manual (`docs/usermanual-clusters.xml`) still describes three.
+HarfBuzz’s code tests the properties with `HB_BUFFER_CLUSTER_LEVEL_IS_MONOTONE`, `_IS_GRAPHEMES`, and `_IS_CHARACTERS`, not by comparing numbers. Level 3 and the three macros arrived together in 11.0.0, according to `NEWS`. The header documents all four levels; the clusters chapter of the user manual (`docs/usermanual-clusters.xml`) still describes three.
 
 What continues a base is decided by the “continuation” bit in `unicode_props`, which [Unicode inside HarfBuzz](unicode-inside-harfbuzz.html#continuations-just-enough-of-graphemes) lists in full: marks, and a few other characters, but not ZWNJ. HarfBuzz implements only “enough of Unicode Graphemes” for its own purposes. Hence the header’s description of level 3 as “similar to the Unicode Grapheme Cluster algorithm, but … not exactly the same”.
 
@@ -286,7 +286,7 @@ buffers.ttf  क\u094Dष\u093F  --cluster-level=2
 buffers.ttf  क\u094Dष\u093F  --cluster-level=3
 ```
 
-The characters are KA (0), virama (1), SSA (2) and I (3). At the monotone levels the Indic shaper’s reordering merges the whole syllable into cluster 0. At level 2 the vowel sign keeps cluster 3 and comes first. Level 3 is the new case: the virama was merged with KA and the vowel sign with SSA before shaping, since both are marks, and the reordering merged nothing more. The vowel sign comes first with cluster 2, the grapheme SSA + I, and the conjunct has 0. The clusters are out of order, but each is a whole grapheme, which is what level 3 is for: a program can tell which grapheme each glyph came from, without the merging that order requires, which at level 0 swallowed the whole syllable.
+The characters are KA (0), virama (1), SSA (2), and I (3). At the monotone levels the Indic shaper’s reordering merges the whole syllable into cluster 0. At level 2 the vowel sign keeps cluster 3 and comes first. Level 3 is the new case: the virama was merged with KA and the vowel sign with SSA before shaping, since both are marks, and the reordering merged nothing more. The vowel sign comes first with cluster 2, the grapheme SSA + I, and the conjunct has 0. The clusters are out of order, but each is a whole grapheme, which is what level 3 is for: a program can tell which grapheme each glyph came from, without the merging that order requires, which at level 0 swallowed the whole syllable.
 
 The level matters in a few other places. When `hb_ensure_native_direction` reverses a run it keeps each grapheme’s characters in order, and at level 1 also merges each grapheme’s clusters (`_hb_ot_layout_reverse_graphemes`, `hb-ot-layout.hh:401`). The verifier runs only at the monotone levels. And when glyph flags are set across a range, the smallest cluster is found by scanning the whole range only at level 2 (`hb-buffer.hh:664`, `:694`); otherwise only the first and last glyphs are looked at, which is right when clusters are in order. Level 3 is not in order, but in {{hb}} it doesn’t get the full scan.
 
@@ -306,7 +306,7 @@ The three glyph flags live in the low bits of the mask (`hb-buffer.h:160`):
 
 The versions are from `NEWS`; the header gives 4.0.0 for `UNSAFE_TO_CONCAT`, the release that added the buffer flag that produces it. What applications do with them is in [For applications](for-applications.html). Here is how they are made.
 
-All three are set over a range of glyphs by `_set_glyph_flags` (`hb-buffer.hh:488`), which ignores ranges longer than 255. `unsafe_to_break` sets both unsafe flags, so unsafe to break implies unsafe to concat, and it sets them only on the range’s *interior*: every glyph except those of the cluster with the smallest value, the cluster the range starts from (`_infos_set_glyph_flags`, `:649`). A context match, a kerning pair, an Arabic join and an Indic syllable each mark their range this way, and so does every `merge_clusters` at a level where it doesn’t merge. (A ligature needs no flag of its own at the monotone levels: it merges its glyphs into one cluster, which leaves no boundary inside it to break at.)
+All three are set over a range of glyphs by `_set_glyph_flags` (`hb-buffer.hh:488`), which ignores ranges longer than 255. `unsafe_to_break` sets both unsafe flags, so unsafe to break implies unsafe to concat, and it sets them only on the range’s *interior*: every glyph except those of the cluster with the smallest value, the cluster the range starts from (`_infos_set_glyph_flags`, `:649`). A context match, a kerning pair, an Arabic join, and an Indic syllable each mark their range this way, and so does every `merge_clusters` at a level where it doesn’t merge. (A ligature needs no flag of its own at the monotone levels: it merges its glyphs into one cluster, which leaves no boundary inside it to break at.)
 
 Unsafe to concat is expensive, because it has to be recorded where matching *fails*: a ligature that nearly matched is just where different text would change the result. So `unsafe_to_concat` does nothing unless the buffer has `HB_BUFFER_FLAG_PRODUCE_UNSAFE_TO_CONCAT` (`:526`):
 
@@ -346,7 +346,7 @@ The buffer flags (`hb-buffer.h:396`) are the application’s instructions about 
 | `PRODUCE_UNSAFE_TO_CONCAT` | 0x40 | `unsafe_to_concat` and flag propagation |
 | `PRODUCE_SAFE_TO_INSERT_TATWEEL` | 0x80 | `safe_to_insert_tatweel` and flag propagation |
 
-`NEWS` lists the first three as new in 0.9.7. The rest arrived in 1.8.0, 2.4.0, 3.4.0, 4.0.0 and 5.1.0, in table order.
+`NEWS` lists the first three as new in 0.9.7. The rest arrived in 1.8.0, 2.4.0, 3.4.0, 4.0.0, and 5.1.0, in table order.
 
 **BOT and EOT** say the buffer begins or ends a paragraph. The `ot` shaper reads only `BOT`, for one purpose: a mark at the start of a paragraph has no base, and HarfBuzz gives it a dotted circle, if the font has one, but only when `BOT` is set and there is no pre-context:
 
@@ -358,7 +358,7 @@ buffers.ttf  \u0301  --bot  --text-before=e
 
 Without `BOT` the mark might belong to a base before the buffer, so it is left alone. With `BOT`, the dotted circle takes the mark’s cluster and the mark attaches to it. With an *e* in the pre-context there is a base, and nothing is inserted. This is the rule `NEWS` announced in 0.9.34, “if there’s pre-context text in the buffer, HarfBuzz ignores the BOT flag”, so that an application can set `BOT` and `EOT` on every run of a paragraph and let the context decide. The dotted circles that syllabic shapers insert into broken syllables don’t depend on `BOT`: they are in [Dotted circles and broken clusters](dotted-circles-and-broken-clusters.html). `EOT` is read by nothing in the `ot` shaper. The verifier clears both on fragments from the middle of the text. `hb-shape` sets neither unless given `--bot` or `--eot`.
 
-**The default-ignorable flags** decide what becomes of characters such as ZWJ, ZWNJ and variation selectors once they have done their work. By default, after positioning, each is replaced with the `invisible` glyph or the space glyph, with no advance (`hb_ot_hide_default_ignorables`), or deleted if the font has no space. `PRESERVE` keeps the font’s own glyph, `.notdef` if there is none, and wins over `REMOVE`, which deletes them. [Unicode inside HarfBuzz](unicode-inside-harfbuzz.html#hidden-preserved-or-removed) shows all three.
+**The default-ignorable flags** decide what becomes of characters such as ZWJ, ZWNJ, and variation selectors once they have done their work. By default, after positioning, each is replaced with the `invisible` glyph or the space glyph, with no advance (`hb_ot_hide_default_ignorables`), or deleted if the font has no space. `PRESERVE` keeps the font’s own glyph, `.notdef` if there is none, and wins over `REMOVE`, which deletes them. [Unicode inside HarfBuzz](unicode-inside-harfbuzz.html#hidden-preserved-or-removed) shows all three.
 
 Hiding comes after GSUB and GPOS, so lookups still see the characters, and pass over them, as the [GSUB chapter](gsub.html#joiners) describes. `DO_NOT_INSERT_DOTTED_CIRCLE` has no `hb-shape` option. `VERIFY` is described below.
 
@@ -395,9 +395,9 @@ Both pass, so the output is what it would be without `--verify`.
 
 ### Comparing and writing out
 
-The verifier compares buffers with the public `hb_buffer_diff` (`hb-buffer.cc:2278`). It returns flags, not a yes or no: different content types, different lengths, and glyph by glyph, different glyph IDs, clusters, glyph flags or positions, with an allowed error for positions. Given the dotted circle’s glyph ID, it also says whether the reference contains one, or `.notdef`, cases in which, the header says, a caller “may not care so much about other differences”.
+The verifier compares buffers with the public `hb_buffer_diff` (`hb-buffer.cc:2278`). It returns flags, not a yes or no: different content types, different lengths, and glyph by glyph, different glyph IDs, clusters, glyph flags, or positions, with an allowed error for positions. Given the dotted circle’s glyph ID, it also says whether the reference contains one, or `.notdef`, cases in which, the header says, a caller “may not care so much about other differences”.
 
-`hb-shape` prints with `hb_buffer_serialize_glyphs` (`hb-buffer-serialize.cc`), in TEXT or JSON, with flags to leave out clusters, positions or names, or add extents and glyph flags. `HB_BUFFER_SERIALIZE_FLAG_NO_ADVANCES` (`--no-advances`, part of `--ned`) prints each glyph’s absolute position instead of its advance:
+`hb-shape` prints with `hb_buffer_serialize_glyphs` (`hb-buffer-serialize.cc`), in TEXT or JSON, with flags to leave out clusters, positions, or names, or add extents and glyph flags. `HB_BUFFER_SERIALIZE_FLAG_NO_ADVANCES` (`--no-advances`, part of `--ned`) prints each glyph’s absolute position instead of its advance:
 
 ```shape
 buffers.ttf  ببب  --output-format=json  --show-flags

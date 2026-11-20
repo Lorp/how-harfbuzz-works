@@ -1,6 +1,6 @@
-# Hebrew, Thai, Lao and Hangul
+# Hebrew, Thai, Lao, and Hangul
 
-Hebrew, Thai, Lao and Korean need no syllable machine and no reordering of letters. A font’s own GSUB and GPOS can do nearly everything their text needs, and HarfBuzz’s shapers for them are small: three files, none of them 500 lines long, license included. Each exists for a job the font can’t do on its own, either because it has to be done to the characters before they become glyphs, or because it depends on what the font has.
+Hebrew, Thai, Lao, and Korean need no syllable machine and no reordering of letters. A font’s own GSUB and GPOS can do nearly everything their text needs, and HarfBuzz’s shapers for them are small: three files, none of them 500 lines long, license included. Each exists for a job the font can’t do on its own, either because it has to be done to the characters before they become glyphs, or because it depends on what the font has.
 
 | Shaper | Scripts | Hooks it fills | Its job |
 |---|---|---|---|
@@ -44,7 +44,7 @@ hebrew-mark.ttf  ל\u05B4\u05BD  --language=he  --no-positions
 hebrew-mark.ttf  ל\u05B7\u05B4\u034F\u05BD  --language=he  --no-positions
 ```
 
-The output is in visual order, so read it from the right: `lamed`, `patah`, `meteg`, `hiriq`, whichever order the points were typed in. A qamats, sheva and etnahta swap the same way. Without a patah or qamats, hiriq and meteg keep their sorted order. A combining grapheme joiner between the hiriq and the meteg puts them in different runs, and nothing moves (the joiner is the `space` glyph: [GSUB](gsub.html#joiners)).
+The output is in visual order, so read it from the right: `lamed`, `patah`, `meteg`, `hiriq`, whichever order the points were typed in. A qamats, sheva, and etnahta swap the same way. Without a patah or qamats, hiriq and meteg keep their sorted order. A combining grapheme joiner between the hiriq and the meteg puts them in different runs, and nothing moves (the joiner is the `space` glyph: [GSUB](gsub.html#joiners)).
 
 The source gives no reason beyond the names in its comment, and the swap’s history is no clearer: `NEWS` for 5.0.0 says only “Improve multiple mark interactions in Hebrew”. The pattern is the one in the traditional spelling of Jerusalem, יְרוּשָׁלִַם, whose lamed carries both a patah and a hiriq, and the swap keeps a meteg or accent next to the first of the two vowels (inferred).
 
@@ -52,9 +52,9 @@ The source gives no reason beyond the names in its comment, and the swap’s his
 
 Unicode’s Alphabetic Presentation Forms block has Hebrew **presentation forms** from U+FB1D to U+FB4F, most of them letters with their points, such as SHIN WITH SHIN DOT (U+FB2A) or VAV WITH HOLAM (U+FB4B). They have canonical decompositions, but they are excluded from composition, so normalization never makes one from its parts. Old fonts, with no GPOS to place the points, drew these forms instead and mapped them in their `cmap`.
 
-The Hebrew shaper’s `compose` hook makes them anyway, for those fonts. When Unicode’s composition finds nothing, and the plan has no `mark` feature, it composes about three dozen pairs into presentation forms: a dagesh with each letter that has a dagesh form, shin and sin dots with SHIN, rafe with BET, KAF and PE, and five more with particular vowels (`hb-ot-shaper-hebrew.cc:81`). Normalization’s last round calls the hook, and as with any composition, only uses the result if the font has a glyph for it ([Normalization](normalization.html#round-three-recompose)). A composed form can compose again, so SHIN, dagesh and shin dot become U+FB2C in two steps.
+The Hebrew shaper’s `compose` hook makes them anyway, for those fonts. When Unicode’s composition finds nothing, and the plan has no `mark` feature, it composes about three dozen pairs into presentation forms: a dagesh with each letter that has a dagesh form, shin and sin dots with SHIN, rafe with BET, KAF, and PE, and five more with particular vowels (`hb-ot-shaper-hebrew.cc:81`). Normalization’s last round calls the hook, and as with any composition, only uses the result if the font has a glyph for it ([Normalization](normalization.html#round-three-recompose)). A composed form can compose again, so SHIN, dagesh, and shin dot become U+FB2C in two steps.
 
-`hebrew-old.ttf` has the letters, the points and seven presentation forms, and no layout tables at all. `hebrew-mark.ttf` adds a GPOS with a `mark` feature under `hebr`, and `hebrew-mark-DFLT.ttf` has the same GPOS under `DFLT`:
+`hebrew-old.ttf` has the letters, the points, and seven presentation forms, and no layout tables at all. `hebrew-mark.ttf` adds a GPOS with a `mark` feature under `hebr`, and `hebrew-mark-DFLT.ttf` has the same GPOS under `DFLT`:
 
 ```shape
 hebrew-old.ttf  ש\u05C1  --language=he
@@ -144,7 +144,7 @@ HarfBuzz chooses them too, if the text is Thai and GSUB didn’t find the `thai`
 | the other consonants, U+0E01 to U+0E2E | normal (NC) | T0 | B0 |
 | anything else | | T3 | B2 |
 
-Each mark is an upper vowel or sign (MAI HAN-AKAT, SARA I to SARA UEE, MAITAIKHU, NIKHAHIT, YAMAKKAN), a lower vowel (SARA U, SARA UU, PHINTHU) or a tone mark (MAI EK to THANTHAKHAT), and moves both machines on. The transitions that do something are:
+Each mark is an upper vowel or sign (MAI HAN-AKAT, SARA I to SARA UEE, MAITAIKHU, NIKHAHIT, YAMAKKAN), a lower vowel (SARA U, SARA UU, PHINTHU), or a tone mark (MAI EK to THANTHAKHAT), and moves both machines on. The transitions that do something are:
 
 | Where | Mark | Action |
 |---|---|---|
@@ -216,7 +216,7 @@ The PUA fallback is Thai only: its tables hold only Thai code points, and the te
 
 ### Syllables and jamo
 
-A Korean syllable is written as a block of two or three letters, **jamo**: a leading consonant (L), a vowel (V) and an optional trailing consonant (T). Unicode encodes the jamo, U+1100 to U+11FF and two extension blocks, and also 11,172 **precomposed syllables**, U+AC00 to U+D7A3, one for each combination of the 19 modern leading consonants, 21 vowels and 28 trailing choices (27 consonants or none). The syllables decompose to jamo by arithmetic, and the jamo compose back. The other jamo, in U+1100 to U+11FF and the extension blocks U+A960 and U+D7B0, are for **Old Hangul**, Korean as written before the twentieth century, whose syllables have no precomposed characters. A font shows an Old Hangul syllable by combining jamo glyphs, chosen by the features `ljmo`, `vjmo` and `tjmo`.
+A Korean syllable is written as a block of two or three letters, **jamo**: a leading consonant (L), a vowel (V), and an optional trailing consonant (T). Unicode encodes the jamo, U+1100 to U+11FF and two extension blocks, and also 11,172 **precomposed syllables**, U+AC00 to U+D7A3, one for each combination of the 19 modern leading consonants, 21 vowels, and 28 trailing choices (27 consonants or none). The syllables decompose to jamo by arithmetic, and the jamo compose back. The other jamo, in U+1100 to U+11FF and the extension blocks U+A960 and U+D7B0, are for **Old Hangul**, Korean as written before the twentieth century, whose syllables have no precomposed characters. A font shows an Old Hangul syllable by combining jamo glyphs, chosen by the features `ljmo`, `vjmo`, and `tjmo`.
 
 So one syllable can come as a precomposed character `<LV>` or `<LVT>`, as jamo `<L,V>` or `<L,V,T>`, or as `<LV,T>`, and a font may have a glyph for the precomposed syllable, or jamo that combine, or both. Fonts, a comment in normalization says, “are not designed to mix-and-match pre-composed syllables and Jamo” (`hb-ot-shape-normalize.cc:440`). The Hangul shaper’s job is to pick one for each syllable, from what the font has.
 
@@ -246,7 +246,7 @@ hangul-no-gak.ttf  각  --language=ko
 hangul-no-gak.ttf  각  --language=ko
 ```
 
-Each spelling of a syllable gives the same glyphs in the same font: GAK where the font has it, and otherwise the three jamo in their `ljmo`, `vjmo` and `tjmo` forms. The trace shows the decomposition in the characters:
+Each spelling of a syllable gives the same glyphs in the same font: GAK where the font has it, and otherwise the three jamo in their `ljmo`, `vjmo`, and `tjmo` forms. The trace shows the decomposition in the characters:
 
 ```trace
 font: hangul-no-gak.ttf
@@ -265,7 +265,7 @@ hangul.ttf  가ᇫ  --language=ko
 
 ### The jamo features
 
-`collect_features_hangul` adds `ljmo`, `vjmo` and `tjmo` to the plan. They aren’t global: each gets its own mask bit ([From features to lookups](from-features-to-lookups.html#mask-bits)). While it composes and decomposes, the shaper writes into a spare byte of each jamo it leaves (`hangul_shaping_feature`, a buffer variable that [Buffers](buffers.html) lists) which of the three it should get, and `setup_masks_hangul` turns that into the feature’s mask bit (`:408`). So a font’s `ljmo` lookup only touches an L that begins a syllable of jamo. A leading consonant on its own isn’t one:
+`collect_features_hangul` adds `ljmo`, `vjmo`, and `tjmo` to the plan. They aren’t global: each gets its own mask bit ([From features to lookups](from-features-to-lookups.html#mask-bits)). While it composes and decomposes, the shaper writes into a spare byte of each jamo it leaves (`hangul_shaping_feature`, a buffer variable that [Buffers](buffers.html) lists) which of the three it should get, and `setup_masks_hangul` turns that into the feature’s mask bit (`:408`). So a font’s `ljmo` lookup only touches an L that begins a syllable of jamo. A leading consonant on its own isn’t one:
 
 ```shape
 hangul.ttf  ᄀ  --language=ko
@@ -274,7 +274,7 @@ hangul.ttf  가ᇫ  --language=ko
 
 ### `calt`, kept off jamo
 
-Uniscribe doesn’t apply `calt` to Hangul, and some fonts, Noto Sans CJK and Source Han Sans among them, put all their jamo lookups in `calt`, where they aren’t wanted (the comment at `:69`, citing HarfBuzz discussion #4853; [Why shaping exists](why-shaping-exists.html) has more on Uniscribe’s influence). Until 14.3.0 HarfBuzz turned `calt` off for the whole run. Now `override_features_hangul` asks for `calt` once more, which gives it a mask bit of its own ([From features to lookups](from-features-to-lookups.html)), and `setup_masks_hangul` clears that bit on every jamo character, L, V or T. Everything else in the run, syllables included, keeps `calt`. The test font’s `calt` changes the first of two KIYEOKs, and the first of two GAs:
+Uniscribe doesn’t apply `calt` to Hangul, and some fonts, Noto Sans CJK and Source Han Sans among them, put all their jamo lookups in `calt`, where they aren’t wanted (the comment at `:69`, citing HarfBuzz discussion #4853; [Why shaping exists](why-shaping-exists.html) has more on Uniscribe’s influence). Until 14.3.0 HarfBuzz turned `calt` off for the whole run. Now `override_features_hangul` asks for `calt` once more, which gives it a mask bit of its own ([From features to lookups](from-features-to-lookups.html)), and `setup_masks_hangul` clears that bit on every jamo character, L, V, or T. Everything else in the run, syllables included, keeps `calt`. The test font’s `calt` changes the first of two KIYEOKs, and the first of two GAs:
 
 ```shape
 hangul.ttf  ᄀᄀ  --language=ko
@@ -310,7 +310,7 @@ The dotted circle is made by `replace_glyphs`, which copies the tone mark’s bu
 
 ### Old Hangul and `KOH`
 
-The shaper never looks at the language. OpenType has a language system tag for Old Hangul, `KOH`, and HarfBuzz maps the language `ko` to `KOR` and then `KOH`, and `okm`, Middle Korean, to `KOH` (`hb-ot-tag-table.hh:113`, `:933`; [Choosing a script shaper](choosing-a-script-shaper.html#from-a-language-to-language-system-tags)). So a font that keeps its jamo features under `KOH` alone still gets them for Korean text, unless it also has a `KOR` language system. `hangul-koh.ttf` registers `ljmo`, `vjmo` and `tjmo` only under `KOH`:
+The shaper never looks at the language. OpenType has a language system tag for Old Hangul, `KOH`, and HarfBuzz maps the language `ko` to `KOR` and then `KOH`, and `okm`, Middle Korean, to `KOH` (`hb-ot-tag-table.hh:113`, `:933`; [Choosing a script shaper](choosing-a-script-shaper.html#from-a-language-to-language-system-tags)). So a font that keeps its jamo features under `KOH` alone still gets them for Korean text, unless it also has a `KOR` language system. `hangul-koh.ttf` registers `ljmo`, `vjmo`, and `tjmo` only under `KOH`:
 
 ```shape
 hangul-koh.ttf  ᄒᆞᆫ  --language=ko
@@ -318,7 +318,7 @@ hangul-koh.ttf  ᄒᆞᆫ  --language=okm
 hangul-koh.ttf  ᄒᆞᆫ  --language=en
 ```
 
-> For type designers: the Hangul shaper uses a precomposed syllable whenever the font has it, and decomposes it whenever the font lacks it and has all its jamo. A font with jamo features for Old Hangul still gets precomposed glyphs for modern syllables. Put jamo lookups in `ljmo`, `vjmo` and `tjmo`, not `calt`, and don’t rely on `calt` reaching jamo.
+> For type designers: the Hangul shaper uses a precomposed syllable whenever the font has it, and decomposes it whenever the font lacks it and has all its jamo. A font with jamo features for Old Hangul still gets precomposed glyphs for modern syllables. Put jamo lookups in `ljmo`, `vjmo`, and `tjmo`, not `calt`, and don’t rely on `calt` reaching jamo.
 
 ## Where to read the source
 
@@ -327,7 +327,7 @@ hangul-koh.ttf  ᄒᆞᆫ  --language=en
 | `src/hb-ot-shaper-hebrew.cc` | `compose_hebrew` (presentation forms), `reorder_marks_hebrew`, the `gpos_tag` |
 | `src/hb-ot-shaper-thai.cc` | `preprocess_text_thai` (SARA AM), `do_thai_pua_shaping` and `thai_pua_shape` (the PUA fallback) |
 | `src/hb-ot-shaper-hangul.cc` | `preprocess_text_hangul` (composing, decomposing, tone marks), the jamo features and `calt` masks |
-| `src/hb-unicode.hh` | the modified combining classes for Hebrew, Thai and Lao |
+| `src/hb-unicode.hh` | the modified combining classes for Hebrew, Thai, and Lao |
 | `src/hb-ot-shape-normalize.cc` | where `compose` and `reorder_marks` are called, and mode `NONE` |
 | `src/hb-ot-shape.cc` | `has_gpos_mark` and the `gpos_tag` test, in the planner |
 | `src/hb-ot-tag-table.hh` | `ko` to `KOR` and `KOH`, generated by `gen-tag-table.py` |
@@ -340,7 +340,7 @@ None of this chapter’s tables is generated: the Hebrew presentation forms, the
 * Thai and Lao: SARA AM is always split into NIKHAHIT and SARA AA, and the NIKHAHIT moved back before any tone mark, so the font needs those two glyphs.
 * Thai fonts without a `thai` GSUB script get marks and consonants swapped for the Windows or Mac private-use glyphs that old fonts used, chosen by two small state machines.
 * Lao shares the Thai shaper because its block mirrors Thai’s, 0x80 higher; the PUA fallback is Thai only.
-* Hangul: each syllable becomes a precomposed glyph if the font has the whole of it, and jamo with `ljmo`, `vjmo` and `tjmo` otherwise. `calt` is kept off jamo only.
+* Hangul: each syllable becomes a precomposed glyph if the font has the whole of it, and jamo with `ljmo`, `vjmo`, and `tjmo` otherwise. `calt` is kept off jamo only.
 * Hangul tone marks move before their syllable unless they have zero width. The dotted circle the shaper adds for a stray tone mark is given the tone mark’s properties, which looks like a bug.
 
 > Since {{hb}}: fixed on HarfBuzz main by [`2831a8a`](https://github.com/harfbuzz/harfbuzz/commit/2831a8a45c77c180373987312958d31b3575a72c) (17 November 2026), so main gives the tone mark’s dotted circle U+25CC’s own properties (the item on Hangul tone marks).

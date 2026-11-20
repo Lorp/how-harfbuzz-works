@@ -4,7 +4,7 @@ Before GPOS, a TrueType font kerned with a table of its own, `kern`: a list of g
 
 This chapter is about that table: its two incompatible versions, the four subtable formats HarfBuzz reads, the coverage bits, the plan’s decision whether to use it, and the loop that applies it. Kerning that comes from an application’s font functions, when a font has no kerning table of any kind, is in [Fallbacks](fallbacks.html). Apple’s newer `kerx` table shares most of its code with `kern`, and has a chapter of its own, [AAT positioning](aat-positioning.html).
 
-The examples come from one test font, `kern.ttf`, built by `fonts/legacy-kern/build-fonts.py`, and eight variants of it. It has box glyphs for a few Latin letters, a combining acute, and two letters each of Thai, Devanagari and Hebrew. It has no GSUB and no GPOS, only a `kern` table. Every shaping result and trace on this page was produced by running HarfBuzz {{hb}} on those fonts when the page was built.
+The examples come from one test font, `kern.ttf`, built by `fonts/legacy-kern/build-fonts.py`, and eight variants of it. It has box glyphs for a few Latin letters, a combining acute, and two letters each of Thai, Devanagari, and Hebrew. It has no GSUB and no GPOS, only a `kern` table. Every shaping result and trace on this page was produced by running HarfBuzz {{hb}} on those fonts when the page was built.
 
 ## Two tables called kern
 
@@ -53,9 +53,9 @@ Checking the table is the [sanitizer](trust-nothing-the-sanitizer.html)’s work
 | 2 | a left class table, a right class table, and an array of values | both | `KerxSubTableFormat2` |
 | 3 | a class for every glyph on each side, and a matrix of indices into a list of values | Apple | `KernSubTableFormat3` |
 
-Formats 0, 1 and 2 are `kerx`’s own structs, made with the `kern` header and `ObsoleteTypes`: 16-bit offsets, and class values that are byte offsets rather than indices. Only format 3 has a struct of its own. HarfBuzz doesn’t check which header a format came under, so it would run a format 1 or 3 subtable in a Microsoft table too. A build with `HB_NO_AAT_SHAPE` leaves out formats 1 and 3 and the Apple header with them (`:148`), so an Apple `kern` table is then ignored.
+Formats 0, 1, and 2 are `kerx`’s own structs, made with the `kern` header and `ObsoleteTypes`: 16-bit offsets, and class values that are byte offsets rather than indices. Only format 3 has a struct of its own. HarfBuzz doesn’t check which header a format came under, so it would run a format 1 or 3 subtable in a Microsoft table too. A build with `HB_NO_AAT_SHAPE` leaves out formats 1 and 3 and the Apple header with them (`:148`), so an Apple `kern` table is then ignored.
 
-Format 0 is the common one. Its pairs are a `BinSearchArrayOf`, with the usual `searchRange`, `entrySelector` and `rangeShift`, and `KerxSubTableFormat0::get_kerning` finds a pair by binary search (`hb-aat-layout-kerx-table.hh:101`). That only works if the pairs are sorted, by left glyph ID and then right, as the specification requires. `unsorted.ttf` has `kern.ttf`’s pairs in descending order, and none of them is found:
+Format 0 is the common one. Its pairs are a `BinSearchArrayOf`, with the usual `searchRange`, `entrySelector`, and `rangeShift`, and `KerxSubTableFormat0::get_kerning` finds a pair by binary search (`hb-aat-layout-kerx-table.hh:101`). That only works if the pairs are sorted, by left glyph ID and then right, as the specification requires. `unsorted.ttf` has `kern.ttf`’s pairs in descending order, and none of them is found:
 
 ```shape
 unsorted.ttf  AVTo  --language=en
@@ -118,11 +118,11 @@ cross.ttf  AVAV  --language=en
 cross.ttf  AVTo  --language=en
 ```
 
-The V is raised by 100, and so is everything after it, until another pair raises it again. The ordinary subtable before it has still kerned A V along the line. The specification says “The value 0x8000 in the kerning data resets the cross-stream kerning back to 0.” Only the format 1 state machine knows that (`hb-aat-layout-kerx-table.hh:360`). The kern machine, which runs formats 0, 2 and 3, takes 0x8000 as −32,768, so the `o` ends up 32,668 units below the line instead of on it. That looks like a HarfBuzz bug. A plan with cross-stream `kern` doesn’t move marks back by their advance when it zeroes them, nor position them itself (`hb-ot-shape.cc:198`), and a plan with a format 1 subtable doesn’t zero marks at all (`:189`). [The pipeline, step by step](pipeline-step-by-step.html#gpos-and-what-surrounds-it) shows where those steps are.
+The V is raised by 100, and so is everything after it, until another pair raises it again. The ordinary subtable before it has still kerned A V along the line. The specification says “The value 0x8000 in the kerning data resets the cross-stream kerning back to 0.” Only the format 1 state machine knows that (`hb-aat-layout-kerx-table.hh:360`). The kern machine, which runs formats 0, 2, and 3, takes 0x8000 as −32,768, so the `o` ends up 32,668 units below the line instead of on it. That looks like a HarfBuzz bug. A plan with cross-stream `kern` doesn’t move marks back by their advance when it zeroes them, nor position them itself (`hb-ot-shape.cc:198`), and a plan with a format 1 subtable doesn’t zero marks at all (`:189`). [The pipeline, step by step](pipeline-step-by-step.html#gpos-and-what-surrounds-it) shows where those steps are.
 
 ### Vertical subtables
 
-The direction bit means that an OpenType subtable without `Horizontal` is for vertical text. In practice it is never used. In vertical text the plan’s kerning feature is `vkrn`, not `kern` (`hb-ot-shape.cc:127`), and `vkrn` is neither turned on by default nor kept, as `kern` is, when the font lacks it. So the kerning mask is zero, and no format 0, 2 or 3 subtable kerns (read from the code). The test fonts’ subtable is horizontal, and is skipped in vertical text as it should be:
+The direction bit means that an OpenType subtable without `Horizontal` is for vertical text. In practice it is never used. In vertical text the plan’s kerning feature is `vkrn`, not `kern` (`hb-ot-shape.cc:127`), and `vkrn` is neither turned on by default nor kept, as `kern` is, when the font lacks it. So the kerning mask is zero, and no format 0, 2, or 3 subtable kerns (read from the code). The test fonts’ subtable is horizontal, and is skipped in vertical text as it should be:
 
 ```shape
 kern.ttf  AV  --language=en  --direction=ttb
@@ -132,7 +132,7 @@ kern.ttf  AV  --language=en  --direction=ttb
 
 ## When the plan uses kern
 
-Whether `kern` runs is decided when the shape plan is made, in `hb_ot_shape_planner_t::compile` (`hb-ot-shape.cc:127`–`187`), along with GPOS, `kerx` and fallback kerning; [Fallbacks](fallbacks.html#who-decides) quotes the code. The legacy `kern` table is used when all of these are true:
+Whether `kern` runs is decided when the shape plan is made, in `hb_ot_shape_planner_t::compile` (`hb-ot-shape.cc:127`–`187`), along with GPOS, `kerx`, and fallback kerning; [Fallbacks](fallbacks.html#who-decides) quotes the code. The legacy `kern` table is used when all of these are true:
 
 1. The font has no `kerx`. Any `kerx` that the first test passed over is taken up in the second, so a font with both never uses `kern`.
 2. GPOS isn’t being used, or it is but has no `kern` feature in the language system it chose. `has_gpos_kern` asks the map, so it looks only at GPOS’s choice of script and language, not at the whole table.
@@ -159,7 +159,7 @@ This is the behavior since HarfBuzz 2.0.0. Before it, the `kern` table was used 
 
 ### The kern feature and its mask
 
-`kern` is one of the default horizontal features, with `F_HAS_FALLBACK` ([From features to lookups](from-features-to-lookups.html#the-flags)): it gets a mask bit even when neither GSUB nor GPOS has it, because the `kern` table and fallback kerning both read that bit. `kern_mask` is the bit, and `requested_kerning` says whether there is one. Turning the feature off for the whole text removes it from the map. Then formats 0, 2 and 3 return at once (`hb-aat-layout-kerx-table.hh:109`); format 1 still runs if it is cross-stream (`:422`).
+`kern` is one of the default horizontal features, with `F_HAS_FALLBACK` ([From features to lookups](from-features-to-lookups.html#the-flags)): it gets a mask bit even when neither GSUB nor GPOS has it, because the `kern` table and fallback kerning both read that bit. `kern_mask` is the bit, and `requested_kerning` says whether there is one. Turning the feature off for the whole text removes it from the map. Then formats 0, 2, and 3 return at once (`hb-aat-layout-kerx-table.hh:109`); format 1 still runs if it is cross-stream (`:422`).
 
 Turned off for part of the text, the feature clears the bit on those glyphs, and a pair is kerned only if *both* its glyphs have it. The second glyph is found by the skipping iterator, which won’t match a glyph without the mask:
 
@@ -214,17 +214,17 @@ Thai and Devanagari aren’t kerned, though their pairs are in the table. Hebrew
 
 12.2.0’s `NEWS` says: “Disable legacy `kern` table for most shapers, enabling it only for default, Arabic, Hangul, and Hebrew shapers.” Until then, the plan’s line was `plan.apply_kern = true`.
 
-The reason was double kerning. HarfBuzz issue #5607 reported that the legacy table was being used “in more common scenarios” than the manual said: whenever the chosen language system has no `kern` feature. Fonts compiled by ufo2ft for scripts such as Devanagari kern with `dist` instead, so there is no `kern` feature, and the same pairs, often between characters common to several scripts, were also in the `kern` table that the font carried for older software. HarfBuzz applied both. Behdad Esfahbod suggested reusing the shaper’s `fallback_position`, then true only for the default, Hebrew and Arabic shapers, and the change was made in pull request #5609. Jonathan Kew asked in its review whether Hangul should keep the table too, since `dist` is meant for Indic and other Brahmi-derived scripts, and Hangul’s `fallback_position` was turned on (commit 63e8c13e), which also gave Hangul fallback mark positioning. A second commit made fallback kerning, through the font functions, follow the same setting (5973479e, [Fallbacks](fallbacks.html)).
+The reason was double kerning. HarfBuzz issue #5607 reported that the legacy table was being used “in more common scenarios” than the manual said: whenever the chosen language system has no `kern` feature. Fonts compiled by ufo2ft for scripts such as Devanagari kern with `dist` instead, so there is no `kern` feature, and the same pairs, often between characters common to several scripts, were also in the `kern` table that the font carried for older software. HarfBuzz applied both. Behdad Esfahbod suggested reusing the shaper’s `fallback_position`, then true only for the default, Hebrew, and Arabic shapers, and the change was made in pull request #5609. Jonathan Kew asked in its review whether Hangul should keep the table too, since `dist` is meant for Indic and other Brahmi-derived scripts, and Hangul’s `fallback_position` was turned on (commit 63e8c13e), which also gave Hangul fallback mark positioning. A second commit made fallback kerning, through the font functions, follow the same setting (5973479e, [Fallbacks](fallbacks.html)).
 
 So the rule isn’t about `dist`. A Thai or Indic font with a `kern` table and no GPOS at all isn’t kerned either, as `kern.ttf` shows. Apart from Hangul, the shapers that lost the table are the ones that already left mark positioning to the font. The test suite has the case from the issue (`test/shape/data/in-house/tests/per-script-kern-fallback.tests`).
 
 HarfBuzz’s manual hasn’t caught up. `docs/usermanual-opentype-features.xml` still says that HarfBuzz uses the `kern` table “if neither table is found”, meaning `kerx` and GPOS, which hasn’t been true since 2018 and says nothing of the shapers.
 
-> For type designers: in HarfBuzz, a `kern` table is a fallback for Latin, Cyrillic, Greek, Arabic, Hebrew, Hangul and the other scripts the default shaper handles, and only where GPOS has no `kern` feature in the language system it chooses. Every language system needs its `kern` feature, or that language gets the old table instead, with its own values. For Thai, Lao, Khmer, Myanmar and the Indic and USE scripts, kerning has to be in GPOS.
+> For type designers: in HarfBuzz, a `kern` table is a fallback for Latin, Cyrillic, Greek, Arabic, Hebrew, Hangul, and the other scripts the default shaper handles, and only where GPOS has no `kern` feature in the language system it chooses. Every language system needs its `kern` feature, or that language gets the old table instead, with its own values. For Thai, Lao, Khmer, Myanmar, and the Indic and USE scripts, kerning has to be in GPOS.
 
 ## How the kerning is applied
 
-Every format but 1 ends in the same loop, the **kern machine**, `hb_kern_machine_t::kern` (`hb-kern.hh:46`). It is a template over a *driver* with a `get_kerning (left, right)` method: each subtable format is a driver, and so is fallback kerning, whose driver asks the font functions. Trimmed of the vertical case, the cross-stream case and scaling’s on-off switch, and with its `goto` written as an `if`:
+Every format but 1 ends in the same loop, the **kern machine**, `hb_kern_machine_t::kern` (`hb-kern.hh:46`). It is a template over a *driver* with a `get_kerning (left, right)` method: each subtable format is a driver, and so is fallback kerning, whose driver asks the font functions. Trimmed of the vertical case, the cross-stream case, and scaling’s on-off switch, and with its `goto` written as an `if`:
 
 ```c++
 buffer->unsafe_to_concat ();
@@ -259,7 +259,7 @@ for (unsigned int idx = 0; idx < count;)
 
 Five things follow from it.
 
-**It is GPOS’s iterator.** The context is made for table 1, GPOS, with the lookup flag `IgnoreMarks` and the kerning mask. So the second glyph of a pair is found as a GPOS pair lookup with `IgnoreMarks` would find it: marks are passed over, and so are ZWJ, ZWNJ and the other default ignorables ([What a lookup passes over](gpos.html#what-a-lookup-passes-over)). A `kern` table has no lookup flags of its own; this is HarfBuzz’s choice for it:
+**It is GPOS’s iterator.** The context is made for table 1, GPOS, with the lookup flag `IgnoreMarks` and the kerning mask. So the second glyph of a pair is found as a GPOS pair lookup with `IgnoreMarks` would find it: marks are passed over, and so are ZWJ, ZWNJ, and the other default ignorables ([What a lookup passes over](gpos.html#what-a-lookup-passes-over)). A `kern` table has no lookup flags of its own; this is HarfBuzz’s choice for it:
 
 ```shape
 kern.ttf  A\u0301V  --language=en
@@ -271,7 +271,7 @@ A space is a glyph like any other, so A and V either side of one aren’t a pair
 
 **The value is split.** Half goes on the first glyph’s advance, rounded down; the rest goes on the second glyph’s advance and, to put it back where it would have been, on its offset. Every glyph after the pair moves by the whole value, and so does the second glyph’s drawing, so it looks the same as GPOS’s kerning; but the change is shared between the two glyphs’ advances, which moves the boundary between them, where a caret goes, halfway. That was the reason 4.0.0’s `NEWS` gave for splitting GPOS kerning the same way, “for improved cursor positioning”. GPOS does it now only in a build with `HB_SPLIT_KERN`, which is off ([Safe to break](gpos.html#safe-to-break)); the kern machine always does it. Compare the English and Turkish results for `both.ttf` above: −50 all on A from GPOS, −80 shared from `kern`.
 
-**Every glyph starts a pair.** After a pair, the loop moves to its second glyph, which then starts the next: A V A V is tried as A V, V A and A V. Each subtable runs over the whole buffer in its own pass, from `KerxTable::apply` (`hb-aat-layout-kerx-table.hh:1055`).
+**Every glyph starts a pair.** After a pair, the loop moves to its second glyph, which then starts the next: A V A V is tried as A V, V A, and A V. Each subtable runs over the whole buffer in its own pass, from `KerxTable::apply` (`hb-aat-layout-kerx-table.hh:1055`).
 
 **Pairs are left and right.** In right-to-left text, `KerxTable::apply` reverses the buffer into visual order before a subtable runs and back afterward (`:1091`), so the first glyph of a pair is always the left-hand one, as both specifications define it. GPOS works in logical order instead. In the Hebrew example above, the pair is bet then gimel, left to right, so it kerns “גב”, typed gimel first, and not “בג”. A pair moved from a `kern` table to GPOS for a right-to-left script has to be turned round.
 
@@ -285,7 +285,7 @@ both.ttf  oA  --language=en  --show-flags  --unsafe-to-concat
 
 `o A` isn’t a pair in either font. With GPOS kerning only A is marked, by the pair lookup that tried it; with the `kern` table, both glyphs are, and they would be with `-kern` in `both.ttf` too, since the plan then still runs the table. Unsafe to concatenate is only a hint that reshaping may be needed, so this costs an application work, not correctness. [Buffers](buffers.html#glyph-flags) explains the flags.
 
-The trace shows the table, its subtable and the machine, each with its own messages:
+The trace shows the table, its subtable, and the machine, each with its own messages:
 
 ```trace
 font: kern.ttf
@@ -300,9 +300,9 @@ to: end table kern
 | File | What’s there |
 |---|---|
 | `src/hb-ot-kern-table.hh` | `kern`: the union of the two versions, `KernOTSubTableHeader` and `KernAATSubTableHeader` with their coverage bits, `KernSubTable` and its dispatch, `KernSubTableFormat3`, the accelerator |
-| `src/hb-aat-layout-kerx-table.hh` | `KerxTable`, shared by `kern` and `kerx`: subtable iteration, direction and cross-stream handling, sanitizing; `KerxSubTableFormat0`, `1` and `2` |
+| `src/hb-aat-layout-kerx-table.hh` | `KerxTable`, shared by `kern` and `kerx`: subtable iteration, direction and cross-stream handling, sanitizing; `KerxSubTableFormat0`, `1`, and `2` |
 | `src/hb-kern.hh` | `hb_kern_machine_t`, the pair loop |
-| `src/hb-ot-shape.cc` | the plan’s choice between GPOS, `kerx`, `kern` and fallback kerning (`:127`), and `hb_ot_shape_plan_t::position` (`:271`) |
+| `src/hb-ot-shape.cc` | the plan’s choice between GPOS, `kerx`, `kern`, and fallback kerning (`:127`), and `hb_ot_shape_plan_t::position` (`:271`) |
 | `src/hb-ot-layout.cc` | `hb_ot_layout_has_kerning`, `has_machine_kerning`, `has_cross_kerning`, and `hb_ot_layout_kern` (`:130`) |
 | `src/hb-ot-shaper-*.cc` | each shaper’s `fallback_position` |
 | `test/shape/data/in-house/tests/` | `per-script-kern-fallback.tests`, `tt-kern-gpos.tests`, `kern-format1.tests`, `kern-format2.tests` |
@@ -311,8 +311,8 @@ to: end table kern
 
 ## In short
 
-* There are two `kern` tables, Microsoft’s version 0 and Apple’s version 1.0, told apart by their first 16 bits. HarfBuzz reads formats 0, 1, 2 and 3 under either.
+* There are two `kern` tables, Microsoft’s version 0 and Apple’s version 1.0, told apart by their first 16 bits. HarfBuzz reads formats 0, 1, 2, and 3 under either.
 * Format 0 is searched by binary search, so its pairs must be sorted. Format 2 class values count from the start of the subtable. Subtables always add up: the override and minimum bits are ignored. Cross-stream values shift every later glyph, and outside format 1 nothing resets them.
-* The table is used when the font has no `kerx`, GPOS has no `kern` feature in the language system it chose (or isn’t used), and the shaper’s `fallback_position` is true: the default, Arabic, Hebrew and Hangul shapers.
-* Since 12.2.0, Thai, Lao, Indic, Khmer, Myanmar and USE text never uses it, because fonts for those scripts kerned the same pairs twice, in `dist` and in `kern`.
+* The table is used when the font has no `kerx`, GPOS has no `kern` feature in the language system it chose (or isn’t used), and the shaper’s `fallback_position` is true: the default, Arabic, Hebrew, and Hangul shapers.
+* Since 12.2.0, Thai, Lao, Indic, Khmer, Myanmar, and USE text never uses it, because fonts for those scripts kerned the same pairs twice, in `dist` and in `kern`.
 * The kern machine passes over marks, needs the `kern` mask on both glyphs, reads pairs left to right, and splits each value between the two glyphs’ advances.
