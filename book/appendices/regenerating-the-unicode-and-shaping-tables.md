@@ -74,7 +74,7 @@ Its overrides are in the data it adds: three made-up `UnicodeData.txt` lines for
 
 ### gen-arabic-joining-list.py
 
-Writes one function, `has_arabic_joining`: a `switch` over every script, other than Common and Inherited, that has a character in `ArabicShaping.txt` whose type isn’t T or U. The USE shaper calls it to decide whether to run the Arabic joining machine. In {{hb}} that is thirteen scripts ([Joining scripts](joining-scripts.html#joining-scripts-under-use)). No overrides. Its usage string calls it `gen-arabic-joining-table.py`, an old name.
+Writes one function, `has_arabic_joining`: a `switch` over every script, other than Common and Inherited, that has a character in `ArabicShaping.txt` whose type isn’t T or U. The USE shaper calls it to decide whether to run the Arabic joining machine. In {{hb}} that is 13 scripts ([Joining scripts](joining-scripts.html#joining-scripts-under-use)). No overrides. Its usage string calls it `gen-arabic-joining-table.py`, an old name.
 
 ### gen-arabic-pua.py
 
@@ -136,7 +136,7 @@ These run in every meson build, from `src/meson.build`, and read nothing outside
 | `hb-version.h` | `gen-hb-version.py` | `hb-version.h.in` and the project version | |
 | `harfbuzz.cc`, `harfbuzz-subset.cc` | `gen-harfbuzzcc.py` | meson’s source lists | one `#include` per `.cc` file; copied into `src/` if it changed |
 | `harfbuzz-world.cc` | `gen-harfbuzz-world.py` | `harfbuzz-world.cc.in` and tagged source lists | every library in one file ([Building HarfBuzz](building-harfbuzz.html#single-file-builds)) |
-| `harfbuzz*.def` | `gen-def.py` | the public headers | the Windows export list; leaves out eleven experimental functions unless `-Dexperimental_api=true` |
+| `harfbuzz*.def` | `gen-def.py` | the public headers | the Windows export list; leaves out 11 experimental functions unless `-Dexperimental_api=true` |
 | `hb-gpu-*-{glsl,wgsl,msl,hlsl}.hh` | `gen-gpu-shader-artifacts.py` | the shader sources | each shader as a C string ([hb-gpu](hb-gpu.html#what-the-application-supplies)) |
 
 The helpers that write into `src/` do it so that the committed copies stay current. `gen-ragel-artifacts.py`, `gen-gpu-shader-artifacts.py`, and `gen-harfbuzz-world.py` also handle a read-only source tree: they compare instead, and stop with “out of date; regenerate with a writable source tree” if the committed file differs.

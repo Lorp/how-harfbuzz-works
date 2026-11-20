@@ -299,7 +299,7 @@ font: limits.ttf
 text: hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhs
 ```
 
-Sixty-four are drawn. The sixty-fifth runs the budget out, and from there on nothing is drawn, not even the plain square, which on its own costs almost nothing. The shaping beneath is unaffected: the budget belongs to drawing.
+Of those, 64 are drawn. The 65th runs the budget out, and from there on nothing is drawn, not even the plain square, which on its own costs almost nothing. The shaping beneath is unaffected: the budget belongs to drawing.
 
 > For programmers: a client with its own draw funcs gets a fresh budget for every glyph, which is safe and usually what it wants. A renderer that draws whole pages from untrusted fonts can provide `get_budget_remaining` to bound the page as a whole, and then has to recharge it, with `set_budget`, at whatever unit of work it thinks right.
 

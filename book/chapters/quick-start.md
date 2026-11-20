@@ -15,7 +15,7 @@ Each language’s section starts with the smallest useful HarfBuzz program: it l
 
 Every program below is in the book’s repository, in [`examples/quick-start/`](https://github.com/Lorp/how-harfbuzz-works/tree/main/examples/quick-start), and is compiled and run when the book is built: what is shown under a listing is that program’s output. The commands around them are hand-written.
 
-All of the examples use Libre Baskerville, a Baskerville by Impallari Type under the SIL Open Font License, and the text “office coffee”, as the previous chapter did. The text is chosen so that shaping shows: the font’s standard ligatures turn the *ffi* of “office” and the *ff* of “coffee” into one glyph each, so the thirteen characters become ten glyphs. The font is in the book’s repository, in [`fonts/quick-start/`](https://github.com/Lorp/how-harfbuzz-works/tree/main/fonts/quick-start), and comes from Google Fonts, which is where to get it:
+All of the examples use Libre Baskerville, a Baskerville by Impallari Type under the SIL Open Font License, and the text “office coffee”, as the previous chapter did. The text is chosen so that shaping shows: the font’s standard ligatures turn the *ffi* of “office” and the *ff* of “coffee” into one glyph each, so the 13 characters become ten glyphs. The font is in the book’s repository, in [`fonts/quick-start/`](https://github.com/Lorp/how-harfbuzz-works/tree/main/fonts/quick-start), and comes from Google Fonts, which is where to get it:
 
 ```
 curl -L -o LibreBaskerville.ttf \

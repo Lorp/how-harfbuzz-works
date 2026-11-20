@@ -9,6 +9,7 @@ Before writing or editing anything in `book/`, read `notes/writing-brief.md`: it
 * Typographic quotes and apostrophes (“ ” ‘ ’) in prose; straight ones only in code.
 * American spelling: color, behavior, center.
 * The serial comma: “A, B, and C”.
+* Numbers one to ten in words, 11 and above in numerals.
 * Plain headings that say what the section is about; no wordplay.
 * Bold only where a term is defined, since the index and glossary are made from bold terms.
 * `{{hb}}` for the HarfBuzz version the book describes.

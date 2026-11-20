@@ -356,7 +356,7 @@ Each of these answers one question about one font, once. To check that a font ke
 $ curl -L -o LibreBaskerville.ttf "https://github.com/google/fonts/raw/main/ofl/librebaskerville/LibreBaskerville%5Bwght%5D.ttf"
 ```
 
-`hb-shape` shows what the font does with the text. The thirteen characters become ten glyphs:
+`hb-shape` shows what the font does with the text. The 13 characters become ten glyphs:
 
 ```command
 font: quick-start/LibreBaskerville.ttf

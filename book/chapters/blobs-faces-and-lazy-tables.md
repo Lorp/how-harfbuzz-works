@@ -252,7 +252,7 @@ Data * get_data () const
 { return *(((Data **) (void *) this) - WheresData); }
 ```
 
-`head` is first in the enum, so its loader is one pointer after `face`. That is why the comment insists that `face` comes “JUST before” the loaders, and why the enum starts with a dummy `ORDER_ZERO`. With about forty tables on the list in a full build, the trick halves the size of the table slots. The list’s own header comment is blunt about the cost that remains: “Don’t add a table unless it’s used though. This is not exactly zero-cost.”
+`head` is first in the enum, so its loader is one pointer after `face`. That is why the comment insists that `face` comes “JUST before” the loaders, and why the enum starts with a dummy `ORDER_ZERO`. With about 40 tables on the list in a full build, the trick halves the size of the table slots. The list’s own header comment is blunt about the cost that remains: “Don’t add a table unless it’s used though. This is not exactly zero-cost.”
 
 The list is cut down at compile time. A build with `HB_NO_VERTICAL` has no `vhea`, `vmtx`, or `VORG` slots, one with `HB_NO_COLOR` none for the color tables, and so on. Some tables a face uses aren’t on it at all, because an accelerator loads them for itself: `HVAR` and `VVAR` are loaded by the `hmtx` and `vmtx` accelerators, and the 24-bit `GLYF` and `LOCA` by the `glyf` accelerator.
 

@@ -328,11 +328,11 @@ for (unsigned regionIndex = 0; regionIndex < regionCount; regionIndex++)
 }
 ```
 
-So the numbers are stored region by region. In an ordinary store, 木’s fourteen axis values would need fourteen items, fourteen indices, and fourteen lookups.
+So the numbers are stored region by region. In an ordinary store, 木’s 14 axis values would need 14 items, 14 indices, and 14 lookups.
 
 **Regions name only the axes they use.** An ordinary region has an entry for every fvar axis; here a region lists only its own, by index (`SparseVarRegionAxis`, `hb-ot-layout-common.hh:2653`). 桨’s 39 regions each name one or two of its 31 axes. A region that names no axes counts everywhere, with a scalar of 1, even at the default. That lets a static VARC font have “deltas” that are really constants, and it’s why `MultiItemVarStoreInstancer` applies deltas even when every coordinate is 0 (`hb-ot-layout-common.hh:4369`), which an ordinary store never does.
 
-Here is the item for 木’s axis values in 桨, decoded by `varc-dump.py`. Each region has fourteen numbers, for `0000`, `0003`, `0005`, `0007`, `0011`, `0012`, `0014`, `0016`, `0017`, `0018`, `0019`, `0020`, `0022`, and `0023`:
+Here is the item for 木’s axis values in 桨, decoded by `varc-dump.py`. Each region has 14 numbers, for `0000`, `0003`, `0005`, `0007`, `0011`, `0012`, `0014`, `0016`, `0017`, `0018`, `0019`, `0020`, `0022`, and `0023`:
 
 ```
 ── item 0:4 (VarIdx 4): 14 numbers for each of 3 regions
@@ -376,7 +376,7 @@ With tens of thousands of glyphs, each of several components, VARC packs its rec
 0102  00 18           translateY = 24
 ```
 
-Seventeen bytes, for three varying axes and a varying offset.
+That is 17 bytes, for three varying axes and a varying offset.
 
 **Variable-length integers.** The flags and indices are each an `HBUINT32VAR` (`hb-open-type.hh:149`), one to five bytes. The first byte’s leading 1 bits say how many follow: below `0x80`, none; `10`, one; `110`, two; `1110`, three; `11110000`, a plain 32-bit number. Most indices take one byte; in 桨, whose store has four data lists, they carry an outer part and take three (196608, outer 3 and inner 0, is `c3 00 00`).
 

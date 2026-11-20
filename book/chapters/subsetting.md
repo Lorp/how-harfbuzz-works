@@ -1,6 +1,6 @@
 # Subsetting
 
-A web page that uses a font for one heading doesn’t need the font’s two thousand other glyphs. A **subsetter** takes a font and a description of what to keep, usually a set of characters, and writes a new, smaller font that still does for those characters what the original did: maps them to glyphs, substitutes and positions those glyphs, draws them.
+A web page that uses a font for one heading doesn’t need the font’s 2,000 other glyphs. A **subsetter** takes a font and a description of what to keep, usually a set of characters, and writes a new, smaller font that still does for those characters what the original did: maps them to glyphs, substitutes and positions those glyphs, draws them.
 
 HarfBuzz’s subsetter is a separate library, `harfbuzz-subset`, with its own header, `hb-subset.h`. It was declared stable in 3.0.0, whose NEWS credits Garret Rieger and Qunxin Liu of Google Fonts and earlier work by Michiharu Ariza of Adobe. It reads fonts with the table structs shaping uses, through one more dispatch context, `subset` ([Fonts as bytes](fonts-as-bytes.html#dispatch-contexts)), and writes them with the serializer and repacker of [the next chapter](writing-tables.html).
 
@@ -33,7 +33,7 @@ An `hb_subset_input_t` is eight sets and a word of flags. Each set is an `hb_set
 | `NO_SUBSET_TABLE_TAG` | tables to copy unchanged | `gasp`, `fpgm`, `prep`, `VDMX`, `DSIG` |
 | `NAME_ID` | `name` records to keep | IDs 0 to 6 |
 | `NAME_LANG_ID` | their languages | 0x409 (English, United States) |
-| `LAYOUT_FEATURE_TAG` | GSUB and GPOS features to keep | about eighty: see below |
+| `LAYOUT_FEATURE_TAG` | GSUB and GPOS features to keep | about 80: see below |
 | `LAYOUT_SCRIPT_TAG` | scripts to keep | all (an inverted, empty set) |
 
 A table in both lists, like `DSIG`, is dropped: dropping is checked first.
@@ -66,7 +66,7 @@ Three things in the input aren’t sets. The axis settings, from `hb_subset_inpu
 
 ## The plan
 
-The plan is built by the constructor of `hb_subset_plan_t` (`hb-subset-plan.cc:773`); any failure clears its `successful` flag, and `hb_subset_plan_create_or_fail` then returns `NULL`. It copies the input, and since 15.2.0 it corrects two of the flags first. It clears `NO_HINTING` for a font that needs its hinting to render correctly (`hb-subset-plan.cc:779`): a glyf font whose family name, or the checksums of its `cvt `, `fpgm`, and `prep`, are on a list of legacy CJK fonts, such as MingLiU and DFKai-SB, taken from FreeType, which loads these fonts only with their hinting (`hb-subset-hinting.hh`, from FreeType’s `ttobjs.c`). And it sets `RETAIN_GIDS` when a table that refers to glyphs but can’t be subset is going to be kept (`:795`): `EBDT`, `EBLC`, `JSTF`, `LTSH`, `SVG `, the AAT layout tables, Apple’s bitmap and other glyph tables, or the Graphite tables, kept because the caller passes them through (the list is `unsubsettable_glyph_tables`, `:713`). Such a table is copied as it is, so its glyph IDs must still be right. Then the constructor creates an empty face builder for the output, and refuses to pass a `VARC` table through unchanged while glyph IDs change or axes are instanced. It normalizes the axis settings, then works out the characters to keep (`_populate_unicodes_to_retain`), the glyphs to keep (`_populate_gids_to_retain`), and their new IDs (`_create_old_gid_to_new_gid_map`). Last, it collects what particular tables will need, such as the GDEF mark glyph sets still in use and, when instancing, new metrics. The result is sixty-six members (`hb-subset-plan-member-list.hh`): glyph maps and sets, the lookups and features kept and their new indices, COLR layers and palettes, `name` IDs, axis locations, a cache of sanitized source tables. Each table’s `subset` reads what it needs from there.
+The plan is built by the constructor of `hb_subset_plan_t` (`hb-subset-plan.cc:773`); any failure clears its `successful` flag, and `hb_subset_plan_create_or_fail` then returns `NULL`. It copies the input, and since 15.2.0 it corrects two of the flags first. It clears `NO_HINTING` for a font that needs its hinting to render correctly (`hb-subset-plan.cc:779`): a glyf font whose family name, or the checksums of its `cvt `, `fpgm`, and `prep`, are on a list of legacy CJK fonts, such as MingLiU and DFKai-SB, taken from FreeType, which loads these fonts only with their hinting (`hb-subset-hinting.hh`, from FreeType’s `ttobjs.c`). And it sets `RETAIN_GIDS` when a table that refers to glyphs but can’t be subset is going to be kept (`:795`): `EBDT`, `EBLC`, `JSTF`, `LTSH`, `SVG `, the AAT layout tables, Apple’s bitmap and other glyph tables, or the Graphite tables, kept because the caller passes them through (the list is `unsubsettable_glyph_tables`, `:713`). Such a table is copied as it is, so its glyph IDs must still be right. Then the constructor creates an empty face builder for the output, and refuses to pass a `VARC` table through unchanged while glyph IDs change or axes are instanced. It normalizes the axis settings, then works out the characters to keep (`_populate_unicodes_to_retain`), the glyphs to keep (`_populate_gids_to_retain`), and their new IDs (`_create_old_gid_to_new_gid_map`). Last, it collects what particular tables will need, such as the GDEF mark glyph sets still in use and, when instancing, new metrics. The result is 66 members (`hb-subset-plan-member-list.hh`): glyph maps and sets, the lookups and features kept and their new indices, COLR layers and palettes, `name` IDs, axis locations, a cache of sanitized source tables. Each table’s `subset` reads what it needs from there.
 
 ## Characters first
 
@@ -264,7 +264,7 @@ The limit is a defense against hostile fonts as much as a shortcut: a closure ru
 
 ### Testing the closure
 
-The fixed order and the pass limit are judgments, and they can be tested. `nested.ttf` has one contextual rule in `ccmp` that applies twenty single substitutions to the same glyph, one after another, `a` → `s1` → `s2` … → `s20`. Its feature file (`fonts/subsetting/nested.fea`) defines the twenty lookups `L19` down to `L0`, and then:
+The fixed order and the pass limit are judgments, and they can be tested. `nested.ttf` has one contextual rule in `ccmp` that applies 20 single substitutions to the same glyph, one after another, `a` → `s1` → `s2` … → `s20`. Its feature file (`fonts/subsetting/nested.fea`) defines the 20 lookups `L19` down to `L0`, and then:
 
 ```
 feature ccmp {
@@ -272,7 +272,7 @@ feature ccmp {
 } ccmp;
 ```
 
-Shaping applies all twenty. The closure applies `L0` to `a`, and `L1`, at the same position, sees `L0`’s pending `s1`, and so on down the rule, so one pass reaches `s20`, and the subset keeps `a`, all twenty substitutes, and `.notdef`, and shapes as the original does:
+Shaping applies all 20. The closure applies `L0` to `a`, and `L1`, at the same position, sees `L0`’s pending `s1`, and so on down the rule, so one pass reaches `s20`, and the subset keeps `a`, all 20 substitutes, and `.notdef`, and shapes as the original does:
 
 ```info
 nested.ttf  --show-glyph-count

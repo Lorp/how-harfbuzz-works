@@ -350,7 +350,7 @@
 
 **Unicode funcs.** The table of callbacks a buffer uses to ask about characters: general category, combining class, mirroring, script, composition, and decomposition.
 
-**Unicode properties.** Sixteen bits HarfBuzz keeps on each glyph for the whole of shaping: its general category, ignorable, hidden, and continuation bits, and a byte whose meaning depends on the category.
+**Unicode properties.** The 16 bits HarfBuzz keeps on each glyph for the whole of shaping: its general category, ignorable, hidden, and continuation bits, and a byte whose meaning depends on the category.
 
 **Universal Shaping Engine (USE).** Microsoft’s shaping model for scripts that have no shaper of their own, driven by Unicode character properties: in effect the Indic model with most of its script-specific rules taken out.
 

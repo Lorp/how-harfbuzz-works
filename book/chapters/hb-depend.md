@@ -121,7 +121,7 @@ This is the whole graph, as `depend-graph` prints it. It isn’t a live block: i
   glyf -> acutecomb
 ```
 
-Seven of the eighteen glyphs have edges. The others lead nowhere: `.notdef`, `space`, `acutecomb`, the ligatures, and the alternates are ends of paths. Four things in this output are worth a closer look.
+Seven of the 18 glyphs have edges. The others lead nowhere: `.notdef`, `space`, `acutecomb`, the ligatures, and the alternates are ends of paths. Four things in this output are worth a closer look.
 
 **The alternates.** An alternate substitution gives an edge to every alternate. A closure can’t know which one an application will choose.
 

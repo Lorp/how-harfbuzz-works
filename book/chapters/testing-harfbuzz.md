@@ -128,7 +128,7 @@ The text-rendering-tests set is imported by its own `update.py` from the Unicode
 
 ## The API tests
 
-`test/api` tests the public C API, one file per subject: `test-buffer.c`, `test-font.c`, `test-ot-layout.c`, `test-subset-glyf.c`, and about seventy more. They use GLib’s test framework, so they are built only when GLib is found (`test/api/meson.build:1`), and the files for FreeType, Graphite, CoreText, DirectWrite, and cairo only when those are. `hb-test.h` wraps the framework so that a test is registered by its function’s name: `hb_test_add (test_buffer_properties)` becomes the test path `/buffer/properties`.
+`test/api` tests the public C API, one file per subject: `test-buffer.c`, `test-font.c`, `test-ot-layout.c`, `test-subset-glyf.c`, and about 70 more. They use GLib’s test framework, so they are built only when GLib is found (`test/api/meson.build:1`), and the files for FreeType, Graphite, CoreText, DirectWrite, and cairo only when those are. `hb-test.h` wraps the framework so that a test is registered by its function’s name: `hb_test_add (test_buffer_properties)` becomes the test path `/buffer/properties`.
 
 The tests are ordinary assertions: create an object, call the API, `g_assert_true` on what comes back. Their fonts are in `test/api/fonts`, some made by Python scripts beside them, such as `generate-cff2-nested-delta-font.py`, which build edge cases no font editor would produce. `results-paint/` holds the expected output of the paint API.
 
@@ -198,7 +198,7 @@ The input is the font, at a scale of 12. Its last 64 bytes are read again as 16 
 
 **Continuous fuzzing.** `NEWS` for 1.0.5, in 2015, reports memory access bugs “discovered using libFuzzer”, and “we now have continuous fuzzing set up, to avoid issues like these creeping in again.” The repository’s own part of that is `.github/workflows/cifuzz.yml`: on every pull request, OSS-Fuzz’s CIFuzz action builds the fuzzers of the OSS-Fuzz project `harfbuzz` and runs them for 600 seconds, failing the pull request if they find a crash.
 
-**Failing allocations.** Code that handles running out of memory rarely runs. When the fuzzers are built for libFuzzer (`-Dfuzzer_ldflags=…`), HarfBuzz is compiled with `HB_CUSTOM_MALLOC` and `src/failing-alloc.c` (`src/meson.build:660`), whose `hb_malloc_impl`, `hb_calloc_impl`, and `hb_realloc_impl` return null about one time in sixteen:
+**Failing allocations.** Code that handles running out of memory rarely runs. When the fuzzers are built for libFuzzer (`-Dfuzzer_ldflags=…`), HarfBuzz is compiled with `HB_CUSTOM_MALLOC` and `src/failing-alloc.c` (`src/meson.build:660`), whose `hb_malloc_impl`, `hb_calloc_impl`, and `hb_realloc_impl` return null about one time in 16:
 
 ```c
 void* hb_malloc_impl (size_t size)

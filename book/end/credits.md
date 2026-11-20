@@ -4,13 +4,13 @@ HarfBuzz is the work of many people. The lists below are HarfBuzz’s own, from 
 
 ## Authors
 
-HarfBuzz’s [`AUTHORS`](https://github.com/harfbuzz/harfbuzz/blob/15.2.0/AUTHORS) file names fourteen people:
+HarfBuzz’s [`AUTHORS`](https://github.com/harfbuzz/harfbuzz/blob/15.2.0/AUTHORS) file names 14 people:
 
 Behdad Esfahbod, David Corbett, David Turner, Ebrahim Byagowi, Garret Rieger, Jonathan Kew, Khaled Hosny, Lars Knoll, Martin Hosken, Owen Taylor, Roderick Sheeter, Roozbeh Pournader, Simon Hausmann, and Werner Lemberg.
 
 ## Most commits
 
-Everyone with fifty or more commits to [harfbuzz/harfbuzz](https://github.com/harfbuzz/harfbuzz), as GitHub’s contributor list counted them on 17 November 2026, leaving out the bot that updates dependencies. A commit can be one line or a whole shaper, so the numbers measure activity, not contribution, and GitHub counts only commits it can match to an account. Names are from each account’s profile or its commits.
+Everyone with 50 or more commits to [harfbuzz/harfbuzz](https://github.com/harfbuzz/harfbuzz), as GitHub’s contributor list counted them on 17 November 2026, leaving out the bot that updates dependencies. A commit can be one line or a whole shaper, so the numbers measure activity, not contribution, and GitHub counts only commits it can match to an account. Names are from each account’s profile or its commits.
 
 | Name | GitHub | Commits |
 |---|---|--:|

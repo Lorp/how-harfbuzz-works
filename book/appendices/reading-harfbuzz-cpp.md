@@ -12,7 +12,7 @@ Three rules explain most of what is unusual.
 
 **No exceptions.** The library is compiled with `-fno-exceptions` and `-fno-rtti` (in the top-level Meson build file). Nothing throws. Instead a container that fails to allocate remembers it, and `in_error ()` becomes true. Objects that own several containers, such as buffers, keep a flag called **`successful`** that goes false on the first failure and stays false.
 
-**All memory through `hb_malloc`.** Every allocation goes through `hb_malloc`, `hb_calloc`, `hb_realloc`, and `hb_free`. They are the C library’s functions unless HarfBuzz is built with `HB_CUSTOM_MALLOC` and the four `hb_*_impl` functions are supplied (`hb.hh:553`). The fuzzers use exactly that: `failing-alloc.c` fails one allocation in sixteen at random, so the out-of-memory paths are run all the time. (The four are public API since 11.0.0, “Not of much use to clients”, says `hb-common.h`.)
+**All memory through `hb_malloc`.** Every allocation goes through `hb_malloc`, `hb_calloc`, `hb_realloc`, and `hb_free`. They are the C library’s functions unless HarfBuzz is built with `HB_CUSTOM_MALLOC` and the four `hb_*_impl` functions are supplied (`hb.hh:553`). The fuzzers use exactly that: `failing-alloc.c` fails one allocation in 16 at random, so the out-of-memory paths are run all the time. (The four are public API since 11.0.0, “Not of much use to clients”, says `hb-common.h`.)
 
 Together these give the pattern that most container code follows: **carry on, check once**. Operations on a container that has failed do nothing and return quietly, so a long run of them needs only one check at the end. Here is the subsetter building the map from old glyph IDs to new ones, trimmed (`hb-subset-plan.cc:565`):
 
