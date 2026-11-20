@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Testing and debugging fonts with HarfBuzz · How HarfBuzz Works</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=Commissioner:wght@500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one reading column of ~66ch; figures (views, shaping runs, traces)
+   break out to a wider measure, because code and buffers need the room. */
+:root {
+  --paper: #f6f7f9;
+  --ink: #1a1e27;
+  --muted: #5a6373;
+  --rule: #d8dce4;
+  --well: #eceff5;
+  --accent: #2c48c9;
+  --accent-soft: #dfe5fb;
+  --hit: #7a4b00;
+  --ok: #1d7a3c;
+  --font-text: "Source Serif 4", "Iowan Old Style", Georgia, serif;
+  --font-head: "Commissioner", "Helvetica Neue", Arial, sans-serif;
+  --font-code: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --measure: 620px;
+  --wide: 58rem;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #13161d; --ink: #e3e6ed; --muted: #9aa2b1; --rule: #2b313d;
+    --well: #1b2029; --accent: #93a6ff; --accent-soft: #252d4a; --hit: #f0c674; --ok: #72d08f;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #13161d; --ink: #e3e6ed; --muted: #9aa2b1; --rule: #2b313d;
+  --well: #1b2029; --accent: #93a6ff; --accent-soft: #252d4a; --hit: #f0c674; --ok: #72d08f;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--paper); color: var(--ink);
+  font: 400 1.0625rem/1.65 var(--font-text);
+  font-optical-sizing: auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 4rem;
+}
+body::before {
+  content: ""; position: fixed; inset: 0 0 auto;
+  height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--paper);
+}
+.page { max-width: var(--wide); margin: 0 auto; display: grid; }
+.page > * { width: 100%; min-width: 0; }
+.flow { display: grid; min-width: 0; }
+.flow > * { width: 100%; max-width: var(--measure); justify-self: start; min-width: 0; }
+.flow > .views, .flow > .shape, .flow > .trace, .flow > table { max-width: var(--wide); }
+.flow > .macros, .flow > .listing, .flow > .command-run { max-width: var(--wide); }
+.macros table { display: table; table-layout: fixed; font-size: .85rem; }
+.macros th:nth-child(1) { width: 25%; }
+.macros th:nth-child(2) { width: 35%; }
+.macros th:nth-child(3) { width: 17%; }
+.macros th:nth-child(4) { width: 23%; }
+.macros td:nth-child(1) code { overflow-wrap: anywhere; }
+.macros td { overflow-wrap: break-word; }
+.flow > .bugs { max-width: var(--wide); }
+.bugs table { display: table; table-layout: fixed; font-size: .85rem; }
+.bugs th:nth-child(1) { width: 9%; }
+.bugs th:nth-child(2) { width: 31%; }
+.bugs td:first-child .kind { margin: 0; white-space: nowrap; }
+.bugs th:nth-child(3) { width: 20%; }
+.bugs th:nth-child(4) { width: 9%; }
+.bugs th:nth-child(5) { width: 31%; }
+.bugs td { overflow-wrap: break-word; }
+/* A report's status upstream: a mark and the word, in a color, so that
+   neither color nor mark has to carry it alone. */
+.status svg { width: .85em; height: .85em; vertical-align: -.08em; margin-right: .35em; }
+.st-fixed, .st-partly { color: var(--ok); }
+.st-progress { color: var(--accent); }
+.st-changed { color: var(--muted); }
+.st-open { color: var(--ink); }
+.st-declined { color: var(--muted); }
+
+/* Top: the book and the HarfBuzz version. */
+.masthead {
+  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between;
+  gap: .5rem 1.5rem; padding-block: 1.5rem .75rem;
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--font-head);
+}
+.masthead .book { font-weight: 700; letter-spacing: .01em; }
+.masthead .book a { color: inherit; text-decoration: none; }
+.masthead .sub { color: var(--muted); font-weight: 500; }
+.masthead .ver { color: var(--muted); font: 400 .8rem var(--font-code); }
+button {
+  font: inherit; color: var(--ink); background: none; cursor: pointer;
+  border: 1px solid var(--rule); border-radius: 4px; padding: .2rem .6rem;
+}
+button[aria-selected="true"] {
+  background: var(--accent-soft); border-color: var(--accent); color: var(--ink);
+}
+button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+details.contents { padding-block: .75rem 0; font: 500 .9rem var(--font-head); }
+details.contents summary { cursor: pointer; color: var(--muted); }
+/* The whole contents opens at full length (no inner scroll box), in two
+   columns where there's room, without splitting a part across them. */
+details.contents .toc { padding-bottom: .75rem; columns: 2 20rem; column-gap: 2.5rem; }
+details.contents .toc .toc-section { break-inside: avoid; }
+
+/* Contents: in the header, and in full on the title page */
+.toc .toc-section { margin-top: .9rem; }
+.toc .toc-head { margin: 0 0 .2rem; font: 600 .72rem var(--font-head); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.toc ol { list-style: none; margin: 0; padding: 0; line-height: 1.7; }
+.toc li { display: grid; grid-template-columns: 2.2em 1fr; }
+.toc li > a { grid-column: 2; }
+.toc .num { grid-column: 1; color: var(--muted); font-variant-numeric: tabular-nums; }
+.toc li.planned > a { color: var(--muted); }
+.toc .summary { grid-column: 2; display: block; margin: -.1rem 0 .5rem; color: var(--muted); font: 400 .92rem/1.45 var(--font-text); }
+.toc.full { font: 500 1.05rem var(--font-head); }
+.toc .toc-sub { grid-column: 2; margin: 0 0 .4rem; font: 400 .9rem/1.5 var(--font-text); }
+.toc .toc-sub li { display: block; }
+.toc .toc-sub .toc-sub { margin: 0 0 .2rem 1.2em; font-size: .85rem; color: var(--muted); }
+.toc .toc-sub .toc-sub a { color: var(--muted); }
+.toc.full .toc-section { margin-top: 1.75rem; }
+.eyebrow { margin: 2.5rem 0 -1.5rem; font: 600 .78rem var(--font-head); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.planned-note { color: var(--muted); font-style: italic; padding: .75rem 1rem; background: var(--well); border-radius: 6px; }
+
+/* Text */
+h1, h2, h3 { font-family: var(--font-head); line-height: 1.2; text-wrap: balance; }
+h1 { font-size: 2.6rem; font-weight: 500; letter-spacing: -.01em; margin: 2.5rem 0 1rem; }
+h2 { font-size: 1.55rem; font-weight: 600; margin: 2.75rem 0 .5rem; padding-top: .75rem; border-top: 1px solid var(--rule); }
+h3 { font-size: 1.15rem; font-weight: 600; margin: 1.75rem 0 .25rem; }
+p, ul, ol { margin: 0 0 1rem; }
+a { color: var(--accent); text-underline-offset: .15em; }
+code { font-family: var(--font-code); font-size: .86em; font-variant-ligatures: none; }
+p code, li code, td code { background: var(--well); padding: .05em .3em; border-radius: 3px; }
+blockquote {
+  margin: 1.25rem 0; padding: .25rem 0 .25rem 1.1rem; border-left: 3px solid var(--accent);
+  color: var(--ink);
+}
+blockquote p:last-child { margin-bottom: 0; }
+table { border-collapse: collapse; width: 100%; font-size: .95rem; margin: 0 0 1.25rem; display: block; overflow-x: auto; }
+th, td { text-align: left; vertical-align: top; padding: .35rem .75rem .35rem 0; border-bottom: 1px solid var(--rule); }
+th { font: 600 .78rem var(--font-head); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+pre { margin: 0; overflow-x: auto; }
+pre code { font-size: .82rem; line-height: 1.55; }
+/* In the PDF, each chapter is a <section> inside .flow. */
+.flow > pre, .flow > section > pre { background: var(--well); padding: .9rem 1rem; border-radius: 6px; margin-bottom: 1.25rem; }
+
+/* Figures: views of a lookup */
+.views { margin: .5rem 0 1.75rem; border: 1px solid var(--rule); border-radius: 6px; background: var(--well); }
+.views .tabs { display: flex; flex-wrap: wrap; gap: .25rem; padding: .5rem; border-bottom: 1px solid var(--rule); font: 500 .8rem var(--font-head); }
+.views .pane { padding: .9rem 1rem; }
+.views .pane:not(.on) { display: none; }
+.views .src { display: inline-block; margin-top: .6rem; font: 400 .78rem var(--font-code); }
+.views figcaption { padding: 0 1rem .6rem; color: var(--muted); font: 400 .78rem var(--font-code); }
+
+/* Figures: shaping runs and traces */
+.shape, .trace { margin: .5rem 0 1.75rem; overflow-x: auto; }
+.shape table, .trace table { display: table; margin: 0; font-size: .85rem; }
+.shape td.font, .shape td.opt { font: 400 .78rem var(--font-code); color: var(--muted); white-space: nowrap; }
+.shape td.in .txt { display: block; font: 400 1.05rem var(--font-code); }
+.shape td.in .cps { display: block; font: 400 .7rem var(--font-code); color: var(--muted); white-space: nowrap; }
+.shape td.out code, .trace td.buf code { background: none; padding: 0; white-space: nowrap; color: var(--hit); font-weight: 600; }
+.shape td.out code { white-space: pre; }
+.trace { border: 1px solid var(--rule); border-radius: 6px; }
+.trace-head { padding: .5rem .75rem; border-bottom: 1px solid var(--rule); background: var(--well); }
+.trace-head code { background: none; font-size: .78rem; color: var(--muted); }
+.trace td { padding: .3rem .75rem; }
+.trace td.what { font: 400 .78rem var(--font-code); white-space: nowrap; color: var(--ink); }
+.trace tr:last-child td { border-bottom: 0; }
+
+/* Figures: example programs, their output, and live demos. The glyphs are
+   black on transparent, so they sit on white in dark mode too. */
+.listing { margin: .5rem 0 1rem; border: 1px solid var(--rule); border-radius: 6px; background: var(--well); }
+.listing figcaption { padding: .45rem 1rem; border-bottom: 1px solid var(--rule); font: 400 .78rem var(--font-code); color: var(--muted); }
+.listing pre { padding: .9rem 1rem; }
+.example-output { margin: 0 0 1.75rem; }
+.example-output img { display: block; max-width: 100%; height: auto; background: #fff; border: 1px solid var(--rule); padding: .5rem; box-sizing: content-box; }
+.example-output img.vector { width: 24rem; }
+.example-output img.pixels { image-rendering: pixelated; }
+.flow > .example-output.text { max-width: var(--wide); }
+.example-output pre { background: var(--well); border: 1px solid var(--rule); border-radius: 6px; padding: .6rem 1rem; white-space: pre-wrap; overflow-wrap: anywhere; }
+.example-output figcaption { font-size: .78rem; color: var(--muted); margin-top: .25rem; }
+/* What kind of picture an output is: vector or raster */
+.kind { display: inline-block; margin-right: .4em; padding: 0 .45em; border: 1px solid var(--rule); border-radius: 3px; font: 600 .7rem var(--font-head); letter-spacing: .04em; text-transform: uppercase; color: var(--ink); }
+.demo { margin: 0 0 1.75rem; padding: .75rem 1rem; border: 1px solid var(--rule); border-radius: 6px; font: 400 .85rem var(--font-head); }
+.demo input[type=text] { width: 16rem; max-width: 100%; font: inherit; }
+.demo input[type=number] { width: 4rem; font: inherit; }
+.demo-canvas { margin: .75rem 0 .25rem; overflow-x: auto; }
+.demo canvas { display: block; background: #fff; border: 1px solid var(--rule); }
+.demo-note { margin: 0; font-size: .78rem; color: var(--muted); }
+
+/* Figures: a command line, run when the page was built, and what it gives */
+.command-run { margin: .5rem 0 1.75rem; }
+.command-run pre { margin: 0; padding: .6rem 1rem; border-radius: 6px; background: var(--well); }
+.command-run pre.command-output { margin-top: .4rem; background: none; border: 1px solid var(--rule); }
+.command-run img { display: block; margin-top: .6rem; max-width: 100%; height: auto; background: #fff; border: 1px solid var(--rule); }
+.command-run img.vector { width: 24rem; padding: .5rem; box-sizing: content-box; }
+.command-run img.pixels { image-rendering: pixelated; }
+.command-run figcaption { font-size: .78rem; color: var(--muted); margin-top: .25rem; }
+
+/* Figures: outlines drawn by hb-vector */
+.rasters { margin: .5rem 0 1.75rem; }
+.raster { margin: 0 0 .75rem; }
+.raster img { display: block; max-width: 100%; height: auto; image-rendering: pixelated; border: 1px solid var(--rule); }
+.raster figcaption { font-size: .78rem; color: var(--muted); margin-top: .25rem; }
+.draw { margin: .5rem 0 1.75rem; border: 1px solid var(--rule); border-radius: 6px; padding: .75rem 1rem .5rem; }
+.draw .frames { display: flex; flex-wrap: wrap; gap: 1rem; }
+.draw.slider .frames { display: block; }
+.draw .frame { flex: 1 1 10rem; min-width: 0; }
+.draw .frame[hidden] { display: none; }
+.draw svg { display: block; width: 100%; height: auto; max-height: 14rem; color: var(--ink); }
+.draw.row svg { max-height: 9rem; }
+.draw .frame-label { font: 600 .75rem var(--font-code); color: var(--muted); margin-top: .35rem; }
+.draw .frame-shape { display: block; background: none; padding: 0; font-size: .78rem; color: var(--hit); font-weight: 600; white-space: nowrap; overflow-x: auto; }
+.draw.slider .frame-label { display: none; }
+.draw .control { display: flex; align-items: center; gap: .75rem; margin-top: .6rem; font: 600 .8rem var(--font-code); }
+.draw .control input { flex: 1; accent-color: var(--accent); }
+.draw .control output { min-width: 3.5em; text-align: right; font-variant-numeric: tabular-nums; }
+.draw figcaption { margin-top: .5rem; color: var(--muted); font: 400 .75rem var(--font-code); }
+.draw figcaption code { background: none; padding: 0; }
+.ttx pre { padding: .9rem 1rem; max-height: 28rem; overflow: auto; }
+.ttx figcaption { padding: .5rem 1rem .6rem; color: var(--muted); font: 400 .78rem var(--font-code); border-top: 1px solid var(--rule); }
+.info td.out pre { margin: 0; }
+.info td.out code { white-space: pre; }
+
+footer.version { margin: 1.25rem 0 2rem; font: 400 .75rem var(--font-head); color: var(--muted); }
+footer.version a { color: inherit; }
+nav.pager { display: flex; justify-content: space-between; gap: 1rem; padding-top: 2rem; margin-top: 2rem; border-top: 1px solid var(--rule); font: 500 .95rem var(--font-head); }
+
+@media (max-width: 600px) {
+  body { font-size: 1rem; }
+  h1 { font-size: 2rem; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+/* Text for one medium only: the screen hides print-only text, and print
+   (the PDF build, or printing a page) hides screen-only text. */
+.print-only { display: none !important; }
+@media print {
+  .screen-only { display: none !important; }
+  .print-only { display: revert !important; }
+}
+/* The two indexes. */
+.index .index-letter { margin-top: 1.25rem; }
+.index .index-letter h2 { margin: 0 0 .4rem; font-size: 1.1rem; }
+.index ul { list-style: none; margin: 0; padding: 0; columns: 2 16rem; column-gap: 2rem; }
+.index li { break-inside: avoid; margin: 0 0 .2rem; padding-left: 1.2em; text-indent: -1.2em; line-height: 1.4; }
+.index a.loc { font-variant-numeric: tabular-nums; }
+.index a.loc.def { font-weight: 700; }
+.index .term code { font-size: .9em; }
+</style>
+
+</head>
+<body>
+<div class="page">
+  <header class="masthead">
+    <div><span class="book"><a href="title.html">How HarfBuzz Works</a></span> <span class="sub">From Unicode to positioned glyphs, and everything in between</span></div>
+    <span class="ver">HarfBuzz 15.2.0</span>
+  </header>
+  <details class="contents"><summary>Contents</summary><nav class="toc"><div class="toc-section"><ol><li><a href="title.html">How HarfBuzz Works</a></li><li><a href="foreword.html">Foreword</a></li><li><a href="preface.html">Preface</a></li><li><a href="introduction.html">Introduction</a></li><li><a href="notation.html">Reading this book</a></li></ol></div><div class="toc-section"><p class="toc-head">Part I: Getting started</p><ol><li><span class="num">1</span> <a href="why-shaping-exists.html">Why shaping exists</a></li><li><span class="num">2</span> <a href="command-line-tools.html">The command-line tools</a></li><li><span class="num">3</span> <a href="quick-start.html">Quick start: shaping text, then drawing it</a></li><li><span class="num">4</span> <a href="building-harfbuzz.html">Building HarfBuzz</a></li></ol></div><div class="toc-section"><p class="toc-head">Part II: Foundations</p><ol><li><span class="num">5</span> <a href="fonts-as-bytes.html">Fonts as bytes</a></li><li><span class="num">6</span> <a href="trust-nothing-the-sanitizer.html">Trust nothing: the sanitizer</a></li><li><span class="num">7</span> <a href="blobs-faces-and-lazy-tables.html">Blobs, faces, and lazy tables</a></li><li><span class="num">8</span> <a href="fonts-and-font-functions.html">Fonts and font functions</a></li><li><span class="num">9</span> <a href="where-metrics-come-from.html">Where metrics come from</a></li></ol></div><div class="toc-section"><p class="toc-head">Part III: Text in</p><ol><li><span class="num">10</span> <a href="unicode-inside-harfbuzz.html">Unicode inside HarfBuzz</a></li><li><span class="num">11</span> <a href="buffers.html">Buffers</a></li><li><span class="num">12</span> <a href="hb_shape-and-its-backends.html">hb_shape and its backends</a></li></ol></div><div class="toc-section"><p class="toc-head">Part IV: Planning</p><ol><li><span class="num">13</span> <a href="shape-plans-and-their-cache.html">Shape plans and their cache</a></li><li><span class="num">14</span> <a href="from-features-to-lookups.html">From features to lookups</a></li><li><span class="num">15</span> <a href="choosing-a-script-shaper.html">Choosing a script shaper</a></li></ol></div><div class="toc-section"><p class="toc-head">Part V: The pipeline</p><ol><li><span class="num">16</span> <a href="pipeline-step-by-step.html">The pipeline, step by step</a></li><li><span class="num">17</span> <a href="normalization.html">Normalization</a></li><li><span class="num">18</span> <a href="gsub.html">GSUB: substituting glyphs</a></li><li><span class="num">19</span> <a href="gpos.html">GPOS: positioning glyphs</a></li><li><span class="num">20</span> <a href="fallbacks.html">Fallbacks</a></li><li><span class="num">21</span> <a href="legacy-kern.html">Legacy kern</a></li><li><span class="num">22</span> <a href="vertical-text.html">Vertical text</a></li></ol></div><div class="toc-section"><p class="toc-head">Part VI: Scripts</p><ol><li><span class="num">23</span> <a href="joining-scripts.html">Joining scripts</a></li><li><span class="num">24</span> <a href="hebrew-thai-lao-and-hangul.html">Hebrew, Thai, Lao, and Hangul</a></li><li><span class="num">25</span> <a href="indic-model.html">The Indic model</a></li><li><span class="num">26</span> <a href="khmer-and-myanmar.html">Khmer and Myanmar</a></li><li><span class="num">27</span> <a href="universal-shaping-engine.html">The Universal Shaping Engine</a></li><li><span class="num">28</span> <a href="dotted-circles-and-broken-clusters.html">Dotted circles and broken clusters</a></li></ol></div><div class="toc-section"><p class="toc-head">Part VII: Apple Advanced Typography</p><ol><li><span class="num">29</span> <a href="aat-inside-harfbuzz.html">AAT inside HarfBuzz</a></li><li><span class="num">30</span> <a href="aat-positioning.html">AAT positioning</a></li></ol></div><div class="toc-section"><p class="toc-head">Part VIII: Variations</p><ol><li><span class="num">31</span> <a href="design-space.html">Design space</a></li><li><span class="num">32</span> <a href="deltas.html">Deltas</a></li><li><span class="num">33</span> <a href="varying-outlines.html">Varying outlines</a></li><li><span class="num">34</span> <a href="variable-components.html">VARC: variable components</a></li></ol></div><div class="toc-section"><p class="toc-head">Part IX: Drawing</p><ol><li><span class="num">35</span> <a href="drawing-outlines.html">Drawing outlines</a></li><li><span class="num">36</span> <a href="color.html">Color</a></li><li><span class="num">37</span> <a href="hb-raster.html">hb-raster: rendering to pixels</a></li><li><span class="num">38</span> <a href="hb-vector.html">hb-vector: rendering to SVG and PDF</a></li><li><span class="num">39</span> <a href="hb-gpu.html">hb-gpu: rendering on the GPU</a></li></ol></div><div class="toc-section"><p class="toc-head">Part X: Writing fonts</p><ol><li><span class="num">40</span> <a href="subsetting.html">Subsetting</a></li><li><span class="num">41</span> <a href="writing-tables.html">Writing tables</a></li><li><span class="num">42</span> <a href="instancing.html">Instancing</a></li><li><span class="num">43</span> <a href="hb-depend.html">hb-depend: the glyph dependency graph</a></li></ol></div><div class="toc-section"><p class="toc-head">Part XI: Using HarfBuzz</p><ol><li><span class="num">44</span> <a href="for-applications.html">For applications</a></li><li><span class="num">45</span> <a href="integrations.html">Integrations: FreeType, cairo, ICU, and the platforms</a></li><li><span class="num">46</span> <a href="other-tables.html">Other tables</a></li><li><span class="num">47</span> <a href="testing-and-debugging-fonts-with-harfbuzz.html">Testing and debugging fonts with HarfBuzz</a></li></ol></div><div class="toc-section"><p class="toc-head">Part XII: HarfBuzz and its relatives</p><ol><li><span class="num">48</span> <a href="testing-harfbuzz.html">Testing HarfBuzz</a></li><li><span class="num">49</span> <a href="harfrust.html">HarfRust</a></li><li><span class="num">50</span> <a href="family.html">The family</a></li></ol></div><div class="toc-section"><p class="toc-head">Appendices</p><ol><li><span class="num">A</span> <a href="feature-order.html">Feature order</a></li><li><span class="num">B</span> <a href="reading-feature-files.html">Reading feature files</a></li><li><span class="num">C</span> <a href="reading-harfbuzz-cpp.html">Reading HarfBuzz’s C++</a></li><li><span class="num">D</span> <a href="limits.html">Limits</a></li><li><span class="num">E</span> <a href="compile-time-configuration.html">Compile-time configuration</a></li><li><span class="num">F</span> <a href="regenerating-the-unicode-and-shaping-tables.html">Regenerating the Unicode and shaping tables</a></li><li><span class="num">G</span> <a href="bugs-this-book-found.html">Bugs this book found</a></li></ol></div><div class="toc-section"><ol><li><a href="glossary.html">Glossary</a></li><li><a href="bibliography.html">Bibliography</a></li><li><a href="credits.html">Credits</a></li><li><a href="general-index.html">Index</a></li><li><a href="code-index.html">Code index</a></li><li><a href="colophon.html">Colophon</a></li></ol></div></nav></details>
+  <main class="flow">
+<p class="eyebrow">Part XI · Using HarfBuzz</p>
+<h1 id="testing-and-debugging-fonts-with-harfbuzz">47. Testing and debugging fonts with HarfBuzz</h1>
+<p id="ix-1">A font maker turns to a shaping engine with two kinds of question. The first comes while a font is being made: a rule has been written, and the text doesn’t come out as it should. The second comes once the font works: will it still work after the next change? This chapter answers both with HarfBuzz’s own tools: the first by narrowing a problem down to the step that causes it, the second with tests that every build of the font must pass, run by <strong>continuous integration</strong> (CI), which builds a project on a server each time a change is pushed.</p>
+<p>HarfBuzz is the natural engine for both. Chrome, Firefox, Android, and most other software shape text with it, so for most of a font’s users, what HarfBuzz does with the font <em>is</em> what the font does. <code>hb-shape</code> gives the same answer those programs get for the same text and settings, and it can show each step it took to get there. And HarfBuzz’s own test suite has a format for expected results, and a runner for them, that work as well for a font maker’s tests as for HarfBuzz’s.</p>
+<p id="ix-2">The chapter is for font makers and font engineers. Its examples use small test fonts built from feature files with the program in <a href="testing-harfbuzz.html#testing-with-a-font-of-your-own">Testing with a font of your own</a>, so their glyphs are boxes. How HarfBuzz tests itself is in <a href="testing-harfbuzz.html">Testing HarfBuzz</a>.</p>
+<blockquote>
+<p id="ix-3">This chapter uses <code>hb-shape</code>, <code>hb-info</code>, <code>hb-subset</code>, and the drawing tools without explaining their switches. <a href="command-line-tools.html">The command-line tools</a> is the place to get familiar with them: it describes each switch, with recipes for single questions about a font.</p>
+</blockquote>
+<h2 id="when-a-font-doesnt-work">When a font doesn’t work</h2>
+<p id="ix-4">The font in this section has two rules that don’t do what its maker meant. Its feature file:</p>
+<pre><code>languagesystem DFLT dflt;
+languagesystem latn dflt;
+
+feature liga {
+  script DFLT;
+  sub f i by f_i;
+} liga;
+
+feature dlig {
+  sub T h by T_h;
+} dlig;
+</code></pre>
+<p>Its maker reports that neither ligature ever forms. The steps below work for any such problem: reproduce it, find the step that goes wrong, decide whose problem it is, cut it down, and keep it as a test.</p>
+<h3 id="reproduce-it-with-hb-shape">Reproduce it with hb-shape</h3>
+<p id="ix-5">Start by getting <code>hb-shape</code> to give the wrong result. Use the text that goes wrong, and give it everything the application gives its shaper: the language (from the document, such as an HTML <code>lang</code> attribute, or from the user’s settings), the script and direction if the application sets them, and the features it turns on or off, such as CSS <code>font-feature-settings</code> (<a href="command-line-tools.html#direction-script-and-language">Direction, script, and language</a>, <a href="command-line-tools.html#features">Features</a>). Leave one out and <code>hb-shape</code> may be answering a different question: a <code>locl</code> lookup that runs only for one language, or a feature the application turns off.</p>
+<div class="shape"><table><thead><tr><th>Font</th><th>Text</th><th>Options</th><th>hb-shape output</th></tr></thead><tbody><tr><td class="font">broken.ttf</td><td class="in"><span class="txt">fit</span><span class="cps">U+0066 U+0069 U+0074</span></td><td class="opt">--language=en</td><td class="out"><code>[f=0+500|i=1+500|t=2+500]</code></td></tr><tr><td class="font">broken.ttf</td><td class="in"><span class="txt">Th</span><span class="cps">U+0054 U+0068</span></td><td class="opt">--language=en</td><td class="out"><code>[T=0+500|h=1+500]</code></td></tr></tbody></table></div>
+<p>Both go wrong here, as reported. If <code>hb-shape</code> gets the right answer, the question moves to the application: what it passes to HarfBuzz, whether it has the build of the font it should (an installed copy, a cached web font), and whether it shapes with HarfBuzz at all.</p>
+<h3 id="find-the-step">Find the step</h3>
+<p id="ix-6"><code>hb-info</code> says what the font offers for the text’s script and language (<a href="command-line-tools.html#which-features-apply-in-this-language">Which features apply in this language?</a>):</p>
+<div class="shape info"><table><thead><tr><th>Font</th><th>Options</th><th>hb-info output</th></tr></thead><tbody><tr><td class="font">broken.ttf</td><td class="opt">--list-scripts</td><td class="out"><pre><code>Layout script information:
+
+Table: GSUB
+	Script: Zyyy (DFLT)
+	Script: Latn (latn)
+Table: GPOS</code></pre></td></tr><tr><td class="font">broken.ttf</td><td class="opt">--list-features --script=Latn</td><td class="out"><pre><code>Layout features information:
+
+Table: GSUB
+	Script: latn
+	Language: Default
+	Feature: dlig
+Table: GPOS</code></pre></td></tr></tbody></table></div>
+<p id="ix-7">The font has two scripts, <code>DFLT</code> and <code>latn</code>, and under <code>latn</code> it has only <code>dlig</code>. Latin text gets the features of the font’s <code>latn</code> script, and falls back to <code>DFLT</code> only if the font has no <code>latn</code> (<a href="choosing-a-script-shaper.html">Choosing a script shaper</a>), so the <code>liga</code> rule, written under <code>DFLT</code> alone, never runs. A trace shows the same from the other side: GSUB starts, under the script tag <code>latn</code>, and ends without running a lookup:</p>
+<div class="trace"><div class="trace-head"><code>hb-shape broken.ttf "fit" --language=en --trace</code></div><table><tbody><tr><td class="what">start table GSUB script tag &#x27;latn&#x27;</td><td class="buf"><code>[f=0|i=1|t=2]</code></td></tr><tr><td class="what">end table GSUB script tag &#x27;latn&#x27;</td><td class="buf"><code>[f=0|i=1|t=2]</code></td></tr></tbody></table></div>
+<p id="ix-8">Shaped as text whose script <code>DFLT</code> serves, the rule works, so the rule itself is right:</p>
+<div class="shape"><table><thead><tr><th>Font</th><th>Text</th><th>Options</th><th>hb-shape output</th></tr></thead><tbody><tr><td class="font">broken.ttf</td><td class="in"><span class="txt">fit</span><span class="cps">U+0066 U+0069 U+0074</span></td><td class="opt">--language=en --script=Zyyy</td><td class="out"><code>[f_i=0+900|t=2+500]</code></td></tr></tbody></table></div>
+<p id="ix-9">The fix is in the feature file: write the rule before any <code>script</code> statement, which registers it under every language system, as most feature files do (<a href="reading-feature-files.html">Reading feature files</a>).</p>
+<p id="ix-10">The <em>Th</em> ligature is a different case. <code>dlig</code> is registered under <code>latn</code>, but it is a discretionary feature, off unless asked for. HarfBuzz turns on a fixed set of features by default, and <code>dlig</code> isn’t one of them (<a href="from-features-to-lookups.html#which-features-are-asked-for">Which features are asked for</a>). Asked for, it works:</p>
+<div class="shape"><table><thead><tr><th>Font</th><th>Text</th><th>Options</th><th>hb-shape output</th></tr></thead><tbody><tr><td class="font">broken.ttf</td><td class="in"><span class="txt">Th</span><span class="cps">U+0054 U+0068</span></td><td class="opt">--language=en --features=dlig</td><td class="out"><code>[T_h=0+900]</code></td></tr></tbody></table></div>
+<p id="ix-11">So nothing is broken: the user has to turn the feature on (in CSS, <code>font-variant-ligatures: discretionary-ligatures</code>). If the ligature was meant to form always, it belongs in <code>liga</code> or <code>calt</code>, not <code>dlig</code>.</p>
+<p id="ix-12">When the features are all there, the trace shows which lookup did the wrong thing, or which one never ran, and the recipe <a href="command-line-tools.html#why-didnt-this-ligature-form">Why didn’t this ligature form?</a> works through one. Turning features off one at a time, with <code>--features=-calt</code> and so on, finds which feature is responsible when there are many.</p>
+<h3 id="decide-whose-problem-it-is">Decide whose problem it is</h3>
+<p id="ix-13">In this font, <code>hb-info</code> and the trace were enough: one rule was registered in the wrong place, and the other is in a feature that is off by default. Most problems are in the font, but not all: when the font’s tables look right and the result is still wrong, try other engines: the same text in another HarfBuzz release, in the platform shapers where HarfBuzz is built with them, and in HarfRust (<a href="#other-shapers-and-other-versions">Other shapers and other versions</a>). If every engine gives the same wrong result, the font is almost certainly the cause, however right the rule looks: read it again beside the trace. If HarfBuzz alone differs, look in this book’s chapter for the script, since many differences are deliberate, and in HarfBuzz’s issues, since many are known. If it is still unexplained, it may be a HarfBuzz bug, worth reporting on <a href="https://github.com/harfbuzz/harfbuzz/issues">HarfBuzz’s issue tracker</a>. The next step makes the small font that such a report needs.</p>
+<h3 id="cut-it-down">Cut it down</h3>
+<p>A problem is easiest to understand, and to report, in a small font. <code>hb-subset</code> keeps what a text needs and drops the rest (<a href="command-line-tools.html#hb-subset">hb-subset</a>):</p>
+<pre><code>$ hb-subset broken.ttf --text=&quot;fit&quot; --glyph-names -o fit.ttf
+</code></pre>
+<p id="ix-14"><code>--glyph-names</code> keeps the glyph names, which a subset otherwise drops, so that the results still read <code>f_i</code>, not a glyph number. Check that the subset still goes wrong. Then, if there is a feature file, cut the layout down further: take out features, then lookups, then rules, checking each time, until only what goes wrong is left. If the outlines don’t matter, rebuild what is left with box glyphs. HarfBuzz’s own tests are made the same way, from a font subset to the text of the test (<a href="testing-harfbuzz.html#the-format-of-a-test">The format of a test</a>), and a bug report with a font of a few glyphs, the <code>hb-shape</code> command, and the output expected is one its developers can turn straight into a test.</p>
+<h3 id="keep-the-case">Keep the case</h3>
+<p>Once the problem is fixed, keep the text that went wrong, with its options and the result it should give, as a test. Then the problem can’t come back unnoticed. The rest of the chapter is about such tests.</p>
+<h2 id="keeping-a-font-working">Keeping a font working</h2>
+<p id="ix-15">Fonts are revised after they ship, and their layout tables with them. A new alternate is added, a class gains a glyph, a feature file is reordered, a glyph is renamed, a compiler is updated. Each change can alter how some text comes out, and nothing in the font says which. The way to find out is to keep a record of what the font did, and compare every new build with it.</p>
+<p id="ix-16">Today that comparison is best made by CI: one more step in the font’s build shapes the test texts with the new build and fails if the output doesn’t match the record. Nobody has to remember to run it, and a mistake is caught in the change that made it. The sections below build that up: recording the font’s output, choosing what to test, running the tests and reading a failure, and then running them in CI.</p>
+<p id="ix-17">The examples from here on use two releases of one test font. Release 1 has an <em>fi</em> ligature and kerns <em>T</em> with <em>o</em>:</p>
+<pre><code>feature liga {
+  sub f i by f_i;
+} liga;
+
+feature kern {
+  pos T o -80;
+} kern;
+</code></pre>
+<p>Release 2 adds a contextual alternate, a different <em>o</em> after <em>T</em>, and nothing else:</p>
+<pre><code>feature calt {
+  sub T o' by o.alt;
+} calt;
+</code></pre>
+<p id="ix-18">It’s a common kind of change, and it has a common kind of mistake in it: the kerning wasn’t updated for the new glyph. Nothing warns about it. The font compiles, and each feature does what its rules say.</p>
+<h3 id="recording-what-the-font-does">Recording what the font does</h3>
+<p>A test is a text, the options to shape it with, and the result. The result isn’t written by hand: it is what HarfBuzz gives now, recorded once and checked by eye, and from then on it is what every later build must give. Here is what release 1 gives for four texts:</p>
+<div class="shape"><table><thead><tr><th>Font</th><th>Text</th><th>Options</th><th>hb-shape output</th></tr></thead><tbody><tr><td class="font">release-1.ttf</td><td class="in"><span class="txt">To</span><span class="cps">U+0054 U+006F</span></td><td class="opt">--language=en</td><td class="out"><code>[T=0+420|o=1+500]</code></td></tr><tr><td class="font">release-1.ttf</td><td class="in"><span class="txt">fit</span><span class="cps">U+0066 U+0069 U+0074</span></td><td class="opt">--language=en</td><td class="out"><code>[f_i=0+900|t=2+500]</code></td></tr><tr><td class="font">release-1.ttf</td><td class="in"><span class="txt">fi</span><span class="cps">U+0066 U+0069</span></td><td class="opt">--language=en --features=-liga</td><td class="out"><code>[f=0+500|i=1+500]</code></td></tr><tr><td class="font">release-1.ttf</td><td class="in"><span class="txt">To␣fit</span><span class="cps">U+0054 U+006F U+0020 U+0066 U+0069 U+0074</span></td><td class="opt">--language=en</td><td class="out"><code>[T=0+420|o=1+500|space=2+500|f_i=3+900|t=5+500]</code></td></tr></tbody></table></div>
+<p id="ix-19">Each is right: <em>T</em> and <em>o</em> are kerned by −80, and <em>fi</em> is one glyph, except where <code>liga</code> is turned off.</p>
+<p id="ix-20">HarfBuzz keeps its own expected results in <code>.tests</code> files, one test to a line: the font, the <code>hb-shape</code> options, the text as code points, and the expected output, separated by semicolons (<a href="testing-harfbuzz.html#the-format-of-a-test">The format of a test</a>). Nothing in the format is particular to HarfBuzz’s fonts, so a font maker’s tests can use it too, and HarfBuzz’s runner will run them. This program records a <code>.tests</code> file from a list of cases, by running <code>hb-shape</code> on each:</p>
+<figure class="listing"><figcaption><a href="https://github.com/Lorp/how-harfbuzz-works/blob/main/examples/font-tests/record-tests.py"><code>examples/font-tests/record-tests.py</code></a></figcaption><pre><code class="language-python">&quot;&quot;&quot;Record what HarfBuzz does with a font now, as lines of a .tests file.
+
+usage: python3 record-tests.py HB-SHAPE FONT CASES &gt; FONT.tests
+
+CASES has one case per line: the text, then, after a tab, any hb-shape
+options for it (--language=en, --features=-liga ...). Each output line is
+one test in the format of HarfBuzz&#x27;s own test/shape suite: the font, the
+options, the text as code points, and the result hb-shape gives today.
+Keep the .tests file beside the font: the font is named without a folder.
+
+Needs only Python 3 and hb-shape.
+&quot;&quot;&quot;
+import os
+import subprocess
+import sys
+
+
+def main(hb_shape, font, cases):
+    env = dict(os.environ, LC_ALL=&quot;C&quot;)  # as run-tests.py runs it
+    with open(cases, encoding=&quot;utf-8&quot;) as f:
+        for line in f:
+            line = line.rstrip(&quot;\n&quot;)
+            if not line or line.startswith(&quot;#&quot;):
+                continue
+            text, _, options = line.partition(&quot;\t&quot;)
+            unicodes = &quot;,&quot;.join(f&quot;U+{ord(c):04X}&quot; for c in text)
+            result = subprocess.run(
+                [hb_shape, font, &quot;--unicodes&quot;, unicodes, *options.split()],
+                capture_output=True, text=True, env=env, check=True,
+            ).stdout.strip()
+            print(f&quot;{os.path.basename(font)};{options};{unicodes};{result}&quot;)
+
+
+if __name__ == &quot;__main__&quot;:
+    if len(sys.argv) != 4:
+        sys.exit(__doc__)
+    main(*sys.argv[1:])
+</code></pre></figure>
+
+<p>Its cases file has one case to a line, the text and, after a tab, the options:</p>
+<pre><code>To	--language=en
+fit	--language=en
+fi	--language=en --features=-liga
+To fit	--language=en
+</code></pre>
+<p id="ix-21">Run on release 1, saved as <code>myfont.ttf</code>, the program writes:</p>
+<pre><code>myfont.ttf;--language=en;U+0054,U+006F;[T=0+420|o=1+500]
+myfont.ttf;--language=en;U+0066,U+0069,U+0074;[f_i=0+900|t=2+500]
+myfont.ttf;--language=en --features=-liga;U+0066,U+0069;[f=0+500|i=1+500]
+myfont.ttf;--language=en;U+0054,U+006F,U+0020,U+0066,U+0069,U+0074;[T=0+420|o=1+500|space=2+500|f_i=3+900|t=5+500]
+</code></pre>
+<p id="ix-22">The results are the ones above. The font is named without a folder, because the runner finds it beside the <code>.tests</code> file, so each build of the font is saved under the same name in the same place. Pass <code>--language</code> in every case: <code>hb-shape</code> otherwise takes the language from the locale, and the recording and the rerun could disagree.</p>
+<p id="ix-23">Glyph names make the results readable, and a font built without them (a <code>post</code> table of version 3, as many shipping fonts have) is recorded with glyph IDs instead, as <code>gid</code> followed by the number. Either works, but a test with names is easier to check by eye and survives a change in glyph order. Record from a build with names if the build process can make one.</p>
+<h3 id="what-to-test">What to test</h3>
+<p>The tests only see what they shape. Some places to look, in roughly the order they catch problems:</p>
+<ul>
+<li id="ix-24"><strong>Every rule in context, and just out of it.</strong> A contextual rule needs a case where its context matches and one where it nearly does: <em>To</em> and <em>Tx</em>, a mark after a base and after a space. Release 2’s mistake is found by any case with <em>T o</em> in it.</li>
+<li id="ix-25"><strong>Every script and language system the font registers.</strong> A <code>locl</code> lookup only runs under its language, so a Turkish <em>i</em> needs <code>--language=tr</code> to be seen at all (<a href="choosing-a-script-shaper.html">Choosing a script shaper</a>). Give every case its language.</li>
+<li id="ix-26"><strong>Marks on every base they should attach to</strong>, including a base reached through a ligature, and two marks stacked.</li>
+<li id="ix-27"><strong>Broken text.</strong> A mark with no base, or a syllable a script’s rules reject, gets a dotted circle from HarfBuzz (<a href="dotted-circles-and-broken-clusters.html">Dotted circles and broken clusters</a>). A case for each says what users see when they type something unusual.</li>
+<li id="ix-28"><strong>Text at the edges.</strong> <code>--text-before</code> and <code>--text-after</code> give a case the context a line break or a style change would, without shaping it: the start of a word after a punctuation mark, an Arabic letter that joins to text in another run.</li>
+<li id="ix-29"><strong>Variable fonts at every threshold.</strong> Testing at the named instances isn’t enough when a substitution switches somewhere in between.</li>
+</ul>
+<p id="ix-30">The last needs an example. This font, from <a href="shape-plans-and-their-cache.html">Shape plans and their cache</a>, substitutes <code>H</code> for <code>I</code> from weight 600 to 695, and <code>V</code> from 700:</p>
+<div class="shape"><table><thead><tr><th>Font</th><th>Text</th><th>Options</th><th>hb-shape output</th></tr></thead><tbody><tr><td class="font">shape-plans-and-their-cache/featvar.ttf</td><td class="in"><span class="txt">I</span><span class="cps">U+0049</span></td><td class="opt">--variations=wght=400 --language=en --ned</td><td class="out"><code>[I]</code></td></tr><tr><td class="font">shape-plans-and-their-cache/featvar.ttf</td><td class="in"><span class="txt">I</span><span class="cps">U+0049</span></td><td class="opt">--variations=wght=600 --language=en --ned</td><td class="out"><code>[H]</code></td></tr><tr><td class="font">shape-plans-and-their-cache/featvar.ttf</td><td class="in"><span class="txt">I</span><span class="cps">U+0049</span></td><td class="opt">--variations=wght=695 --language=en --ned</td><td class="out"><code>[H]</code></td></tr><tr><td class="font">shape-plans-and-their-cache/featvar.ttf</td><td class="in"><span class="txt">I</span><span class="cps">U+0049</span></td><td class="opt">--variations=wght=696 --language=en --ned</td><td class="out"><code>[I]</code></td></tr><tr><td class="font">shape-plans-and-their-cache/featvar.ttf</td><td class="in"><span class="txt">I</span><span class="cps">U+0049</span></td><td class="opt">--variations=wght=700 --language=en --ned</td><td class="out"><code>[V]</code></td></tr><tr><td class="font">shape-plans-and-their-cache/featvar.ttf</td><td class="in"><span class="txt">I</span><span class="cps">U+0049</span></td><td class="opt">--variations=wght=900 --language=en --ned</td><td class="out"><code>[V]</code></td></tr></tbody></table></div>
+<p id="ix-31">Tests at 400 and 900 never see the <code>H</code>, nor the gap at 696, where the <code>I</code> comes back: the conditions say 0.59, and a user value of 696 normalizes to just above it. A feature file says where the switches are; the cases should sit on each side of each of them (<a href="design-space.html">Design space</a> explains the normalization).</p>
+<h3 id="running-the-tests">Running the tests</h3>
+<p id="ix-32">HarfBuzz’s runner is <a class="src" href="https://github.com/harfbuzz/harfbuzz/blob/15.2.0/test/shape/run-tests.py"><code>test/shape/run-tests.py</code></a>, in its source tree. It is one Python file with no dependencies beyond Python itself, so it can be copied out and used with any <code>hb-shape</code> (<a href="building-harfbuzz.html">Building HarfBuzz</a> shows how to get one). It takes the path of <code>hb-shape</code>, then one or more <code>.tests</code> files:</p>
+<pre><code>$ python3 run-tests.py /path/to/hb-shape myfont.tests
+</code></pre>
+<p id="ix-33">Two things it does are worth having in a font’s tests. It runs every test with <code>--verify --unsafe-to-concat --safe-to-insert-tatweel</code> (<code>run-tests.py:284</code>), so a test also checks that the font gives the same result when the text is cut where a line could break; more on that <a href="#results-that-change-at-a-line-break">below</a>. And it runs every test once for each kind of font functions the <code>hb-shape</code> was built with (<code>:143</code>–<code>:150</code>), so that a build with FreeType checks HarfBuzz’s metrics against FreeType’s too. An <code>@shapers=</code> or <code>@font-funcs=</code> line in the file narrows that (<a href="testing-harfbuzz.html#how-a-test-is-run">How a test is run</a>).</p>
+<p id="ix-34">Run on release 1, every test passes. Here is what it printed for release 2, saved as <code>myfont.ttf</code> in its place, run by hand with the book’s <code>hb-shape</code> (its path shortened to <code>hb-shape</code>, the first three lines left out, and the options the runner adds shown as <code>…</code>):</p>
+<pre><code># Supported font-funcs: ['ot']
+# Running tests in myfont.tests
+not ok 1 - hb-shape myfont.ttf --unicodes U+0054,U+006F --language=en …
+ok 2 - hb-shape myfont.ttf --unicodes U+0066,U+0069,U+0074 --language=en …
+ok 3 - hb-shape myfont.ttf --unicodes U+0066,U+0069 --language=en --features=-liga …
+not ok 4 - hb-shape myfont.ttf --unicodes U+0054,U+006F,U+0020,U+0066,U+0069,U+0074 --language=en …
+# 2 tests passed; 2 failed; 0 skipped.
+1..4
+</code></pre>
+<p>and, on standard error, for each failure:</p>
+<pre><code>   ---
+   test_file: &quot;myfont.tests&quot;
+   cmd: &quot;hb-shape myfont.ttf --unicodes U+0054,U+006F --language=en …&quot;
+   actual:   &quot;[T=0+500|o.alt=1+500]&quot;
+   expected: &quot;[T=0+420|o=1+500]&quot;
+   ...
+</code></pre>
+<p id="ix-35">The output is TAP, the format Meson’s test runner reads. One thing to know before calling it from a build script: it exits with 0 whether or not tests fail. Nothing after the count is checked (<code>run-tests.py:357</code>, the last line), because Meson reads the <code>ok</code> and <code>not ok</code> lines itself. A script should look for <code>not ok</code>, or for the summary line, rather than the exit status.</p>
+<h3 id="reading-a-failure">Reading a failure</h3>
+<p>The runner says what changed. Shaped by both releases, the text that failed shows it plainly:</p>
+<div class="shape"><table><thead><tr><th>Font</th><th>Text</th><th>Options</th><th>hb-shape output</th></tr></thead><tbody><tr><td class="font">release-1.ttf</td><td class="in"><span class="txt">To</span><span class="cps">U+0054 U+006F</span></td><td class="opt">--language=en</td><td class="out"><code>[T=0+420|o=1+500]</code></td></tr><tr><td class="font">release-2.ttf</td><td class="in"><span class="txt">To</span><span class="cps">U+0054 U+006F</span></td><td class="opt">--language=en</td><td class="out"><code>[T=0+500|o.alt=1+500]</code></td></tr></tbody></table></div>
+<p id="ix-36">In release 2 the <em>o</em> is <code>o.alt</code>, as intended, and the <em>T</em> has lost its kerning: its advance is 500, not 420. Drawn, with every glyph a box, the two releases look like this:</p>
+<div class="rasters"><figure class="raster"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIwAAAA1CAYAAACTBQODAAAA1klEQVR4nO3csYnEQBAAQd2bUk4KZ7NRUIps3r9zvkHwHFTBuMMYzZr7mpnZ4I9+/vsAvotgSARDIhgSwZAIhkQwJIIhEQyJYEgEQyIYEsGQCIZEMCSCoZk3a63Ztu2RWWvNdV2P7TvP8/3cr9r/5BzH8XHrfd+P7d/3/WP/zIwXhkQwJIIhEQyJYEgEQyIYEsGQCIZEMCSCIREMiWBIBEMiGBLBkAiGRDAkgiERDIlgSARDIhiSl4+dKbwwJIIhEQyJYEgEQyIYEsGQCIZEMCSCIREMyS+cGt3jzORfIgAAAABJRU5ErkJggg==" width="280" height="106" alt="To␣fit, rendered by hb-raster"><figcaption><code>hb-raster release-1.ttf To␣fit --font-size=48</code> (140 × 53 pixels, shown 2 times larger)</figcaption></figure><figure class="raster"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAAA1CAYAAACul2LlAAAAyUlEQVR4nO3cMQ7CQAwAwcCTkj/dn/Ja05OODUJIM5Jby8XqynvMzGzwoeevD+C/CYhEQCQCIhEQiYBIBEQiIBIBkQiIREAkAiIREImASAREIiCaebPWmm3bbpm11vt6+780x3Fcbj3P87b9+75f9s/MeIFIBEQiIBIBkQiIREAkAiIREImASAREIiASAZEIiERAJAIiERCJgEgERCIgEgGRCIhEQCQCInn4aJzCC0QiIBIBkQiIREAkAiIREImASAREIiASAZG8ACNU7dyYIxAWAAAAAElFTkSuQmCC" width="288" height="106" alt="To␣fit, rendered by hb-raster"><figcaption><code>hb-raster release-2.ttf To␣fit --font-size=48</code> (144 × 53 pixels, shown 2 times larger)</figcaption></figure></div>
+<p id="ix-37">A trace finds the cause. It needs an <code>hb-shape</code> built with detailed messages (<a href="building-harfbuzz.html">Building HarfBuzz</a>), and <a href="command-line-tools.html#traces">Traces</a> explains what it prints. For release 2:</p>
+<div class="trace"><div class="trace-head"><code>hb-shape release-2.ttf "To" --language=en --trace</code></div><table><tbody><tr><td class="what">start lookup 1 feature &#x27;calt&#x27;</td><td class="buf"><code>[T=0|o=1]</code></td></tr><tr><td class="what">start recursing to lookup 2 at 1</td><td class="buf"><code>[T=0|o=1]</code></td></tr><tr><td class="what">replacing glyph at 1 (single substitution)</td><td class="buf"><code>[T=0|o=1]</code></td></tr><tr><td class="what">replaced glyph at 1 (single substitution)</td><td class="buf"><code>[T=0|o.alt=1]</code></td></tr><tr><td class="what">end recursing to lookup 2</td><td class="buf"><code>[T=0|o.alt=1]</code></td></tr><tr><td class="what">end lookup 1 feature &#x27;calt&#x27;</td><td class="buf"><code>[T=0|o.alt=1]</code></td></tr><tr><td class="what">end table GSUB script tag &#x27;latn&#x27;</td><td class="buf"><code>[T=0|o.alt=1]</code></td></tr><tr><td class="what">start table GPOS script tag &#x27;latn&#x27;</td><td class="buf"><code>[T=0+500|o.alt=1+500]</code></td></tr><tr><td class="what">start lookup 0 feature &#x27;kern&#x27;</td><td class="buf"><code>[T=0+500|o.alt=1+500]</code></td></tr><tr><td class="what">end lookup 0 feature &#x27;kern&#x27;</td><td class="buf"><code>[T=0+500|o.alt=1+500]</code></td></tr></tbody></table></div>
+<p id="ix-38"><code>calt</code> replaces the <em>o</em> with <code>o.alt</code>, and then <code>kern</code> runs and changes nothing, because its pair is <em>T o</em>, and there is no longer an <em>o</em>. Substitution always comes before positioning, so GPOS only ever sees what GSUB has left. The recipe <a href="command-line-tools.html#why-didnt-this-ligature-form">Why didn’t this ligature form?</a> works through the same reading for a substitution.</p>
+<p id="ix-39">Then comes the decision only the font maker can make: is the change a mistake, or the new intended behavior? Here it is a mistake, and the fix is in the font, <code>pos T [o o.alt] -80;</code>. Had the change been intended, the tests would be recorded again instead, as <a href="#running-the-tests-in-ci">Running the tests in CI</a> shows.</p>
+<h3 id="results-that-change-at-a-line-break">Results that change at a line break</h3>
+<p id="ix-40">Line breaking means shaping a text in pieces. An application shapes a paragraph once, picks the breaks, and reuses the glyphs on each side when the glyph flags say it can (<a href="for-applications.html">For applications</a>). If a font’s result for a piece differs from the same glyphs in the whole, a line ends or begins with the wrong glyphs, and only where it happens to break.</p>
+<p><code>--verify</code> checks that, for one text at a time: it shapes the pieces between every break the flags allow, and compares them with the whole (<a href="command-line-tools.html#verifying">Verifying</a>). The runner turns it on for every test, so a font’s tests check it for free. When verification fails, <code>hb-shape</code> prints the reason on standard error, and <code>error: Shaping failed.</code> in place of the result, so the test fails with that as its actual output. <a href="for-applications.html#checking-the-flags">For applications</a> shows texts that fail.</p>
+<p id="ix-41">A failure there isn’t always the font’s fault. The flags are set by HarfBuzz, from what the lookups did, and some of the failures in that chapter are HarfBuzz setting them wrongly. But it is always a break where the font’s text comes out differently in an application, so it is worth knowing about, and worth reporting to HarfBuzz if the font is doing nothing unusual. To test a text that should only be checked whole, record it with <code>*</code> as its expected result: the runner then counts it as passed without comparing anything, and runs it without <code>--verify</code> (<code>run-tests.py:298</code>).</p>
+<h3 id="running-the-tests-in-ci">Running the tests in CI</h3>
+<p id="ix-42">The <code>.tests</code> file is kept in the repository with the font’s sources, so CI can check every change against it before the font is released.</p>
+<p id="ix-43">The usual way to run shaping tests in CI is fontspector, the successor to fontbakery, with tests in a JSON format of their own (<a href="#font-qa-tools">Font QA tools</a>). Large projects work this way. Each of the Noto fonts’ repositories has a GitHub Actions workflow that, for every branch, builds the font, runs the QA checks, including any shaping tests in its <code>qa/shaping_tests</code> folder, and compares the build with the font’s previous release using <code>gftools.diffenator</code>, which renders test strings from both and shows the differences (<a href="https://github.com/notofonts/notofonts.github.io">notofonts.github.io</a>, its README). Fontspector shapes with HarfRust, not HarfBuzz. To test against HarfBuzz itself, run the same kind of tests with <code>hb-shape</code> and HarfBuzz’s own runner, as the rest of this section does. A font can use both.</p>
+<p id="ix-44">The step is the same as on a desktop: build the font, then run the tests and fail if any test failed:</p>
+<pre><code>$ python3 run-tests.py &quot;$(command -v hb-shape)&quot; myfont.tests &gt; results.tap
+$ ! grep -q '^not ok' results.tap
+</code></pre>
+<p id="ix-45">The second command fails when the file has a <code>not ok</code> line, and so fails the build. On GitHub Actions, for example, a workflow could do it like this. It is an example, hand-written and not run by this book, and it assumes the font is built by a <code>build.sh</code> and its tests are in <code>tests/</code>:</p>
+<pre><code>name: Shaping tests
+on: [push, pull_request]
+jobs:
+  shaping:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: &quot;3.12&quot;
+      - run: pip install meson ninja fonttools==4.38.0
+      - name: Build HarfBuzz 15.2.0
+        run: |
+          git clone --depth 1 --branch 15.2.0 https://github.com/harfbuzz/harfbuzz.git hb
+          meson setup hb/build hb -Dtests=disabled -Ddocs=disabled
+          ninja -C hb/build util/hb-shape
+      - run: sh build.sh
+      - name: Run the tests
+        run: |
+          python3 hb/test/shape/run-tests.py &quot;$PWD/hb/build/util/hb-shape&quot; tests/myfont.tests &gt; results.tap
+          cat results.tap
+          ! grep -q '^not ok' results.tap
+</code></pre>
+<p id="ix-46">The runner’s source comes with the HarfBuzz it builds, so the two always match. The failures’ details, the actual and expected results, go to standard error, which the CI log shows.</p>
+<p>Not every failure is a mistake. When a change is meant to alter the output, the tests are recorded again in the same change, and the difference in the <code>.tests</code> file says exactly what the change did. Had release 2’s alternate been intended, recording again would have given:</p>
+<pre><code>-myfont.ttf;--language=en;U+0054,U+006F;[T=0+420|o=1+500]
++myfont.ttf;--language=en;U+0054,U+006F;[T=0+500|o.alt=1+500]
+ myfont.ttf;--language=en;U+0066,U+0069,U+0074;[f_i=0+900|t=2+500]
+ myfont.ttf;--language=en --features=-liga;U+0066,U+0069;[f=0+500|i=1+500]
+-myfont.ttf;--language=en;U+0054,U+006F,U+0020,U+0066,U+0069,U+0074;[T=0+420|o=1+500|space=2+500|f_i=3+900|t=5+500]
++myfont.ttf;--language=en;U+0054,U+006F,U+0020,U+0066,U+0069,U+0074;[T=0+500|o.alt=1+500|space=2+500|f_i=3+900|t=5+500]
+</code></pre>
+<p>That is what a reviewer reads in the pull request: each changed result beside the old one. Here it shows the alternate, and also that <em>T</em> lost its kerning, which nobody intended. A change that alters results without changing the <code>.tests</code> file fails; one that changes the file has said, in its diff, what it changed. So the new results are read before they are committed: a suite whose expected results are regenerated without being read checks nothing.</p>
+<p>Three things keep the comparison honest:</p>
+<ul>
+<li id="ix-47"><strong>A fixed HarfBuzz.</strong> The <code>hb-shape</code> should be a known release, pinned or built from source, since a CI machine’s packaged one may be years old (<a href="building-harfbuzz.html">Building HarfBuzz</a>). Moving to a new release is a change of its own, so that a difference it causes isn’t mistaken for one the font caused.</li>
+<li id="ix-48"><strong>A fixed compiler.</strong> The font is built by a compiler, and a new version of it may split lookups differently or choose other subtable formats (<a href="reading-feature-files.html#the-compilers">Reading feature files</a>). Pin its version too, and update it in a change of its own.</li>
+<li id="ix-49"><strong>The same settings everywhere.</strong> The runner sets <code>LC_ALL=C</code> (<code>run-tests.py:19</code>), and every test gives its language, so a test means the same on every machine.</li>
+</ul>
+<h2 id="other-shapers-and-other-versions">Other shapers and other versions</h2>
+<p id="ix-50">A font’s users don’t all have the same HarfBuzz, and some don’t have HarfBuzz at all. The same tests can be run more widely.</p>
+<ul>
+<li><strong>Another HarfBuzz release.</strong> HarfBuzz changes its output from time to time, to fix a bug or follow the specification, and <code>NEWS</code> records it. Running the suite with a new release before applications ship it shows whether the font is affected. A difference here is usually HarfBuzz’s change, not the font’s, and is a question for HarfBuzz, or for the font if it relied on the old behavior.</li>
+<li id="ix-51"><strong>The platform shapers.</strong> On macOS and Windows, HarfBuzz can be built with Core Text, DirectWrite, and Uniscribe as shapers (<a href="hb_shape-and-its-backends.html">hb_shape and its backends</a>), and <code>hb-shape --shapers=coretext</code> shapes with the system’s engine but prints in HarfBuzz’s format. The runner tests only <code>ot</code> unless the environment variable <code>HB_SHAPER_LIST</code> names more (<code>run-tests.py:147</code>), or the file has an <code>@shapers=</code> line. Expect some differences: the engines differ where the specifications leave room, and HarfBuzz’s chapters on each script say where.</li>
+<li id="ix-52"><strong>HarfRust.</strong> HarfBuzz built with its <code>harfrust</code> backend shapes with HarfRust through the same <code>hb-shape</code> (<code>--shapers=harfrust</code>), and so runs the same tests (<a href="harfrust.html#the-harfrust-backend-in-harfbuzz">The harfrust backend in HarfBuzz</a>).</li>
+</ul>
+<p id="ix-53">The book’s build has only the <code>ot</code> and <code>fallback</code> shapers, so none of these runs here.</p>
+<h2 id="proofs">Proofs</h2>
+<p id="ix-54">A test says which glyphs come out and where. It doesn’t say whether they look right: a wrong but consistent result passes forever once it is recorded. So the first recording of a case is checked by eye, and a proof is the easiest way to do that. <code>hb-view</code>, <code>hb-raster</code>, and <code>hb-vector</code> draw text as HarfBuzz shapes it, with the same options as <code>hb-shape</code> (<a href="command-line-tools.html#drawing-hb-vector-hb-raster-and-hb-view">Drawing</a>), so a proof of the cases file shows exactly what the tests recorded. Release 2’s <em>To</em> above is easy to miss in a list of numbers and hard to miss in a picture.</p>
+<h2 id="font-qa-tools">Font QA tools</h2>
+<p id="ix-55">Fontspector, the Rust successor to fontbakery, runs a font maker’s shaping tests as checks in its Google Fonts profile: <code>shaping/regression</code> compares the results with expected ones, and <code>shaping/forbidden</code> fails if a forbidden glyph, such as <code>.notdef</code> or a visible virama, appears (<code>profile-googlefonts/src/checks/shaping/</code> in <a href="https://github.com/fonttools/fontspector">fontspector</a>). Fontbakery has checks of the same names. The tests are JSON files, in the format Simon Cozens describes in <a href="https://simoncozens.github.io/tdd-for-otl/"><em>Better Fonts Through Test-Driven Development</em></a>. Here is one of Noto Looped Thai’s (<code>qa/shaping_tests/looped.json</code> in <a href="https://github.com/notofonts/thai">notofonts/thai</a>), trimmed:</p>
+<pre><code>{
+  &quot;expectation&quot;: &quot;uni0E23=0+510|uni0E37=0@-625,0+0|uni0E48.small=0@-215,-1+0|uni0E2D=3+584|…&quot;,
+  &quot;input&quot;: &quot;รื่องนั้&quot;,
+  &quot;note&quot;: &quot;Issue #21&quot;,
+  &quot;only&quot;: &quot;NotoLoopedThai-Regular.ttf&quot;
+}
+</code></pre>
+<p>The expectation is HarfBuzz’s output format, as <code>hb-shape</code> prints it, without the brackets: so a <code>.tests</code> line and a JSON test record the same thing, and either can be made from the other. The note ties the test to the issue it came from, which is <a href="#keep-the-case">Keep the case</a> in practice.</p>
+<p id="ix-56">Fontspector shapes with HarfRust (its <code>Cargo.toml</code>), and fontbakery with uharfbuzz, HarfBuzz’s Python binding, by way of vharfbuzz. HarfRust follows HarfBuzz closely, but not exactly (<a href="harfrust.html">HarfRust</a>), so a result that matters is worth checking with HarfBuzz too.</p>
+<p>Their other checks are outside this book: outlines, metadata, spacing, naming, and the rest of what makes a font fit to ship.</p>
+<h2 id="where-to-read-the-source">Where to read the source</h2>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>What’s there</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a class="src" href="https://github.com/harfbuzz/harfbuzz/blob/15.2.0/test/shape/run-tests.py"><code>test/shape/run-tests.py</code></a></td>
+<td>the runner: the backends it tries, the options it adds, its TAP output</td>
+</tr>
+<tr>
+<td><a class="src" href="https://github.com/harfbuzz/harfbuzz/blob/15.2.0/test/shape/README.md"><code>test/shape/README.md</code></a>, <code>test/shape/record-test.sh</code></td>
+<td>how HarfBuzz records its own tests, with a subset of the font</td>
+</tr>
+<tr>
+<td><a class="src" href="https://github.com/harfbuzz/harfbuzz/blob/15.2.0/util/batch.hh"><code>util/batch.hh</code></a></td>
+<td><code>--batch</code>, which the runner drives</td>
+</tr>
+<tr>
+<td><a class="src" href="https://github.com/harfbuzz/harfbuzz/blob/15.2.0/src/hb-buffer-verify.cc"><code>src/hb-buffer-verify.cc</code></a></td>
+<td>what <code>--verify</code> checks, and the messages it prints</td>
+</tr>
+<tr>
+<td><code>examples/font-tests/record-tests.py</code> (this book)</td>
+<td>recording a <code>.tests</code> file from a list of cases</td>
+</tr>
+</tbody>
+</table>
+<h2 id="in-short">In short</h2>
+<ul>
+<li>When a font doesn’t work, reproduce the problem with <code>hb-shape</code> and everything the application passes, find the step with <code>hb-info</code> and <code>--trace</code>, try other engines to see whose problem it is, and cut it down with <code>hb-subset</code> to a font small enough to report.</li>
+<li>Most “broken” rules are registered under a script or language the text doesn’t get, or in a feature that is off by default.</li>
+<li>Record what HarfBuzz does with the font now, check it by eye, and compare every later build with it. HarfBuzz’s <code>.tests</code> format holds the record, and its <code>run-tests.py</code> runs it with any <code>hb-shape</code>.</li>
+<li>Test every contextual rule in and just out of context, every language system, marks, broken text, text at the edges, and variable fonts on each side of every threshold.</li>
+<li>The runner adds <code>--verify</code>, so every test also checks the font at line breaks, and it runs every test with each kind of font functions the build has. It exits with 0 even when tests fail: look for <code>not ok</code>.</li>
+<li>A failure is read by shaping both builds and tracing the new one. Then decide: fix the font, or record the new result on purpose.</li>
+<li>Run the tests in CI on every change, with a pinned HarfBuzz release and a pinned compiler. When a change is meant to alter the output, record the tests again in the same change, so that the diff of the <code>.tests</code> file shows what it altered.</li>
+<li>The usual CI route is fontspector, the successor to fontbakery, with JSON tests, as the Noto fonts use; it shapes with HarfRust. HarfBuzz’s own runner tests against HarfBuzz itself, and a font can use both. The same tests also run with another HarfBuzz release and the platform shapers.</li>
+</ul>
+
+  </main>
+  <nav class="pager"><a rel="prev" href="other-tables.html">← Other tables</a><a rel="next" href="testing-harfbuzz.html">Testing HarfBuzz →</a></nav>
+  <footer class="version">Draft, <a href="https://github.com/Lorp/how-harfbuzz-works/commit/18e7593c3fdd3761ec0f92afa958dbcc9960e50b">20 November 2026 · 18e7593</a>. It describes HarfBuzz 15.2.0.</footer>
+</div>
+
+<script>
+(function () {
+  // Each lookup's tabs change only that lookup. Every lookup starts on
+  // the spec-like view.
+  function show(fig, v) {
+    var has = fig.querySelector('.pane[data-view="' + v + '"]');
+    var s = has ? v : "spec";
+    fig.querySelectorAll(".pane").forEach(function (p) { p.classList.toggle("on", p.dataset.view === s); });
+    fig.querySelectorAll(".tabs button").forEach(function (b) { b.setAttribute("aria-selected", String(b.dataset.view === s)); });
+  }
+  document.addEventListener("click", function (e) {
+    var tab = e.target.closest(".views .tabs button");
+    if (tab) show(tab.closest("figure.views"), tab.dataset.view);
+  });
+  document.querySelectorAll("figure.views").forEach(function (fig) { show(fig, "spec"); });
+
+  // Sliders on drawings: every frame was drawn when the book was built, so
+  // moving the slider shows the nearest one.
+  document.querySelectorAll(".draw.slider").forEach(function (fig) {
+    var input = fig.querySelector("input[type=range]");
+    var out = fig.querySelector("output");
+    var frames = Array.prototype.slice.call(fig.querySelectorAll(".frame"));
+    input.addEventListener("input", function () {
+      var v = Number(input.value), best = frames[0];
+      frames.forEach(function (f) {
+        if (Math.abs(f.dataset.value - v) < Math.abs(best.dataset.value - v)) best = f;
+      });
+      frames.forEach(function (f) { f.hidden = f !== best; });
+      out.textContent = best.dataset.value;
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
