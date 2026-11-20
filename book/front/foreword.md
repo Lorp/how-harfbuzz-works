@@ -2,9 +2,9 @@
 
 For twenty years, what happened in HarfBuzz stayed in HarfBuzz.
 
-Not by design. Every line of production code I have written is Open Source. HarfBuzz has been there all along for anyone to read. But open is not the same as read, and I should know; HarfBuzz began with things I couldn’t read.
+Not by design. Every line of production code I have written is Open Source. HarfBuzz has been there all along for anyone to read. But open is not the same as readable, and I should know; HarfBuzz began with things I couldn’t read.
 
-In 1999 it was Persian on the internet. Netscape couldn’t draw it at all. Internet Explorer 5 had just become the first browser that could. But the fonts that came with Windows drew one letter wrong: the medial form of the Persian *yeh*. This was a decade before webfonts were widely used. A page wouldn’t bring its own font. It got whatever was on the reader’s machine. The font was Microsoft’s, and so was the engine. We were not allowed to fix either.
+In 1999 it was Persian on the internet. Netscape couldn’t draw it at all. Internet Explorer 5 had just become the first browser that could. But the fonts that came with Windows drew one letter wrong: the medial form of the Persian *yeh*. This was more than a decade before webfonts were widely used. A page wouldn’t bring its own font. It got whatever was on the reader’s machine. The font was Microsoft’s, and so was the engine. We were not allowed to fix either.
 
 That same year, when I was seventeen, a friend and mentor handed me a printout of the Unicode Bidirectional Algorithm to take home for the [Norouz](https://en.wikipedia.org/wiki/Nowruz) holidays. It was nineteen pages long. I made many attempts at reading it and couldn’t make any sense of it. Then we found a rough Open Source implementation called FriBidi. That, I could read. I could also fix it. So I did, until it matched the specification, and I learned C in the process. I have worked on software I am allowed to fix ever since.
 
