@@ -1,6 +1,6 @@
 # Draft bug reports for HarfBuzz
 
-Eighty-two possible bugs found while writing the book, drafted for the HarfBuzz issue tracker. None has been filed. Each report carries a tag naming the batch it was sent in, to go with it when it’s filed: 1–65 are `hhw-20261117`, the batch shown to Behdad Esfahbod on 17 November 2026. 66–82, found later, are `hhw-20261118`, the second batch, of 18 November 2026. Each was reproduced on HarfBuzz 15.1.0 (commit `3df40d9b`), built by `tools/build-harfbuzz.sh` (meson, with FreeType, ICU and cairo off), on macOS. Repros use `test/subset/data/fonts/Roboto-Regular.ttf` from HarfBuzz’s own repository where they can, so they need nothing from this book.
+Eighty-three possible bugs found while writing the book, drafted for the HarfBuzz issue tracker. None has been filed. Each report carries a tag naming the batch it was sent in, to go with it when it’s filed: 1–65 are `hhw-20261117`, the batch shown to Behdad Esfahbod on 17 November 2026. 66–82, found later, are `hhw-20261118`, the second batch, of 18 November 2026. 83 is `hhw-20261120`, of 20 November 2026. Each was reproduced on HarfBuzz 15.1.0 (commit `3df40d9b`), built by `tools/build-harfbuzz.sh` (meson, with FreeType, ICU and cairo off), on macOS. Repros use `test/subset/data/fonts/Roboto-Regular.ttf` from HarfBuzz’s own repository where they can, so they need nothing from this book.
 
 **The numbers are permanent.** HarfBuzz pull requests and commits already cite these reports by number (“How HarfBuzz Works bug 75”), so a number, once given, always means the same report:
 
@@ -10,7 +10,7 @@ Eighty-two possible bugs found while writing the book, drafted for the HarfBuzz 
 * Fixed reports stay, with how they were fixed.
 * The table in Testing HarfBuzz uses the same numbers.
 
-Since 17 November many of them have been fixed on HarfBuzz’s `main` branch, and others have open pull requests. On 18 November 2026 every report was rechecked against `main` at commit `454f9c49c` (17 November 2026), built with the same options, by rerunning its repro or, for those read from the code, reading the code again. Each report ends with the result, under **On main.**: fixed (with the commit and pull request), changed, in progress (with the open pull request and its branch), or still present.
+Since 17 November many of them have been fixed on HarfBuzz’s `main` branch, and others have open pull requests. On 18 November 2026 every report was rechecked against `main` at commit `454f9c49c` (17 November 2026), built with the same options, by rerunning its repro or, for those read from the code, reading the code again. Report 83, written on 20 November, was checked against `main` at `94715f603` (19 November 2026). Each report ends with the result, under **On main.**: fixed (with the commit and pull request), changed, in progress (with the open pull request and its branch), or still present.
 
 ---
 
@@ -1511,6 +1511,27 @@ U+25FB 0
 **Expected.** Either the six code points are given records so that `is_BASE_OTHER` applies, or the list is removed and the difference from the specification noted.
 
 **On main.** Still present (`test-use-table` built from `main` at `454f9c49c` gives the same categories).
+
+---
+
+## 83. The user manual’s Configuration options describe ten of the thirty-three Meson options
+
+**Tag:** `hhw-20261120`
+
+**Summary.** The user manual’s “Configuration options” section (`docs/usermanual-install-harfbuzz.xml:178`, published at <https://harfbuzz.github.io/building.html#configuration>) describes `-Dcairo`, `-Dcoretext`, `-Ddirectwrite`, `-Ddocs`, `-Dfreetype`, `-Dgdi`, `-Dglib`, `-Dgobject`, `-Dgraphite` and `-Dicu`. `meson_options.txt` has thirty-three options. The other twenty-three aren’t mentioned: `benchmark`, `chafa`, `cmakepackagedir`, `doc_tests`, `experimental_api`, `fontations`, `fuzzer_ldflags`, `gpu`, `gpu_demo`, `harfrust`, `icu_builtin`, `introspection`, `kbts`, `png`, `ragel_subproject`, `raster`, `subset`, `tests`, `utilities`, `vector`, `wasm`, `with_libstdcxx` and `zlib`. Among them are the options that decide which of HarfBuzz’s own libraries are built (`subset`, `raster`, `vector`, `gpu`), the alternative shapers (`harfrust`, `fontations`, `kbts`), and `experimental_api`.
+
+**Repro.**
+
+```
+$ grep -o "option('[a-z_]*'" meson_options.txt | sort > options
+$ grep -o '<command>-D[a-z_]*' docs/usermanual-install-harfbuzz.xml | sed 's/<command>-D//' | sort -u > documented
+$ comm -23 <(sed "s/option('//;s/'//" options) documented | wc -l
+23
+```
+
+**Expected.** Each option described, or the section pointing to `meson_options.txt` and `meson configure` for the full list.
+
+**On main.** Still present (`main` at `94715f603`, 19 November 2026).
 
 ---
 

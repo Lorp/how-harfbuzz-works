@@ -4,6 +4,8 @@ HarfBuzz can be built without most of what it can do. A browser wants all of it;
 
 This appendix lists them. It starts with how the macros are processed, then the three ready-made sets of them, the macros that change speed and size rather than features, every `HB_NO_*` macro in the {{hb}} source, the other switches, and the Meson build options. Chapters that mention a macro link here; the table of `HB_NO_*` macros links back to the chapter that explains what each one removes.
 
+HarfBuzz explains configuration itself in two places: its user manual’s [Configuration options](https://harfbuzz.github.io/building.html#configuration), for the Meson options, and [`CONFIG.md`](https://github.com/harfbuzz/harfbuzz/blob/{{hb}}/CONFIG.md), for the macros, as advice on small builds. This appendix is drawn from the source instead, `hb-config.hh` and `meson_options.txt`, so it lists everything in {{hb}}: in particular, the manual describes only ten of the thirty-three Meson options.
+
 ## How the macros are processed
 
 All configuration goes through one header, `hb-config.hh`. `hb.hh` includes it before anything else it includes (`hb.hh:168`), and every source file includes `hb.hh` first, so every file sees the same answers. The header does its work in this order:
