@@ -61,6 +61,8 @@ The files written; a one-paragraph summary; synonyms and “see also” links th
 
 ## Notes for particular chapters
 
-* **40 For applications.** Chapters 1 and 8 explain clusters and the flags; this chapter is what an application does with them. `--verify`, `--text-before` and `--text-after` can show reshaping at a break live, both where it’s safe and where a font makes it unsafe.
-* **41 Testing HarfBuzz.** The test suites are described from their files in `test/` (the shaping test format, the fuzzer corpora): our build has tests off, so nothing from them runs live unless `tools/build-harfbuzz.sh` changes. Traces and `--verify` can run live. It also covers the possible HarfBuzz bugs that writing this book turned up just by building examples (`notes/upstream-bug-reports.md`), with what happened to each upstream.
-* **42 The family.** Mostly about other projects, so every claim needs a source in that project (see “Sources”). Chapter 9 covers the harfrust backend inside HarfBuzz; this chapter covers HarfRust as a project. Comparisons across platforms are prose with sources: our build can’t run them.
+Chapters are named, not numbered, here, as the numbers change when chapters move.
+
+* **For applications.** Why shaping exists and Buffers explain clusters and the flags; this chapter is what an application does with them. `--verify`, `--text-before` and `--text-after` can show reshaping at a break live, both where it’s safe and where a font makes it unsafe.
+* **Testing HarfBuzz.** The test suites are described from their files in `test/` (the shaping test format, the fuzzer corpora): our build has tests off, so nothing from them runs live unless `tools/build-harfbuzz.sh` changes. Traces and `--verify` can run live. It also covers the possible HarfBuzz bugs that writing this book turned up just by building examples (`notes/upstream-bug-reports.md`), with what happened to each upstream.
+* **The family.** Mostly about other projects, so every claim needs a source in that project (see “Sources”). hb_shape and its backends covers the harfrust backend inside HarfBuzz, and HarfRust has a chapter of its own; this chapter points to it. Comparisons across platforms are prose with sources: our build can’t run them.
