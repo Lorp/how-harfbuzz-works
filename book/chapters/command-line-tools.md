@@ -6,6 +6,8 @@ Every shaping result in this book is `hb-shape` output. This chapter explains it
 
 As everywhere in the book, the results and pictures below were made by running the tools of HarfBuzz {{hb}} when the page was built. Commands shown in plain code blocks are hand-written.
 
+> For type designers: this chapter is for getting familiar with the tools, one switch at a time. For using them on a font of your own, to find out why a rule doesn’t work or to check that the font keeps working from one build to the next, see [Testing and debugging fonts with HarfBuzz](testing-and-debugging-fonts-with-harfbuzz.html), which puts these tools to work and links back here for each switch.
+
 ## The tools
 
 | Tool | What it does | Library | Built |

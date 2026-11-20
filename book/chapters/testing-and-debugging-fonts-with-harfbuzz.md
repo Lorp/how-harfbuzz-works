@@ -4,7 +4,9 @@ A font maker turns to a shaping engine with two kinds of question. The first com
 
 HarfBuzz is the natural engine for both. Chrome, Firefox, Android, and most other software shape text with it, so for most of a font’s users, what HarfBuzz does with the font *is* what the font does. `hb-shape` gives the same answer those programs get for the same text and settings, and it can show each step it took to get there. And HarfBuzz’s own test suite has a format for expected results, and a runner for them, that work as well for a font maker’s tests as for HarfBuzz’s.
 
-The chapter is for font makers and font engineers. Its examples use small test fonts built from feature files with the program in [Testing with a font of your own](testing-harfbuzz.html#testing-with-a-font-of-your-own), so their glyphs are boxes. The switches it uses are explained in [The command-line tools](command-line-tools.html), and how HarfBuzz tests itself is in [Testing HarfBuzz](testing-harfbuzz.html).
+The chapter is for font makers and font engineers. Its examples use small test fonts built from feature files with the program in [Testing with a font of your own](testing-harfbuzz.html#testing-with-a-font-of-your-own), so their glyphs are boxes. How HarfBuzz tests itself is in [Testing HarfBuzz](testing-harfbuzz.html).
+
+> For type designers: this chapter uses `hb-shape`, `hb-info`, `hb-subset`, and the drawing tools without explaining their switches. [The command-line tools](command-line-tools.html) is the place to get familiar with them: it describes each switch, with recipes for single questions about a font.
 
 ## When a font doesn’t work
 
