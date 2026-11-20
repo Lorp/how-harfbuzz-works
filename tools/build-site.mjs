@@ -1138,6 +1138,24 @@ function subheadings(p, md, depth) {
   return heads.length ? list(2, 0)[0] : "";
 }
 
+// Bug tables (rows with an HHW pill): the status word that starts each row's
+// last cell gets a mark before it, in a color. The marks are drawn, as the book's fonts
+// may not have them.
+const STATUS = {
+  "Fixed": ["fixed", '<circle cx="8" cy="8" r="6.9" fill="currentColor"/>'],
+  "Partly fixed": ["partly", '<circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 2a6 6 0 0 1 0 12z" fill="currentColor"/>'],
+  "In progress": ["progress", '<circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-dasharray="3 2.2"/>'],
+  "Changed": ["changed", '<path d="M2.5 9.5c1.5-3 3.5-3 5.5 0s4 3 5.5 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>'],
+  "Open": ["open", '<circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.8"/>'],
+};
+function markStatuses(html) {
+  return html.replace(/<tr>(?:(?!<\/tr>)[\s\S])*?class="kind">HHW-[\s\S]*?<\/tr>/g, (row) =>
+    row.replace(/(<td(?: id="[^"]*")?>)(Fixed|Partly fixed|In progress|Changed|Open)\b(?=(?:(?!<\/td>)[\s\S])*<\/td>\s*<\/tr>)/g, (m, td, word) => {
+      const [cls, svg] = STATUS[word];
+      return `${td}<span class="status st-${cls}"><svg viewBox="0 0 16 16" aria-hidden="true">${svg}</svg></span>${word}`;
+    }));
+}
+
 // The page for a chapter that's planned but not written yet.
 function plannedSource(p) {
   return `# ${p.title}\n\n${p.summary}\n\n<p class="planned-note">This ${p.section.kind === "appendices" ? "appendix" : "chapter"} ` +
@@ -1167,7 +1185,7 @@ function main(outDir, fragment) {
       .replace("<p>{{contents}}</p>", () => `<nav class="toc full">${fullContents}</nav>`)
       .replace("<p>{{index:general}}</p>", () => index.html("general"))
       .replace("<p>{{index:code}}</p>", () => index.html("code"));
-    body = linkSources(body);
+    body = markStatuses(linkSources(body));
     // A chapter is headed “15. Title”, under “Part IV · Name”.
     if (p.section.kind === "part") body = body.replace(/(<h1[^>]*>)/, `$1${p.number}. `);
     if (p.eyebrow) body = `<p class="eyebrow">${esc(p.eyebrow)}</p>\n` + body;
