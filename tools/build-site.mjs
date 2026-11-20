@@ -547,7 +547,10 @@ function blockTable(body, fonts) {
 // unchanged example isn't run again.
 const EXAMPLES = path.join(ROOT, "examples");
 // Listings link to their files in the book's repository, on GitHub.
-const REPOSITORY = JSON.parse(fs.readFileSync(path.join(ROOT, "book", "book.json"), "utf8")).repository;
+const BOOK_META = JSON.parse(fs.readFileSync(path.join(ROOT, "book", "book.json"), "utf8"));
+const REPOSITORY = BOOK_META.repository;
+// {{repository}} and {{harfbuzz-repository}}: the two addresses, without https://.
+const bare = (url) => url.replace(/^https?:\/\//, "");
 const EXAMPLES_CACHE = path.join(ROOT, ".cache", "examples");
 
 function run(exe, args, opts = {}) {
@@ -1181,7 +1184,7 @@ function main(outDir, fragment) {
     const src = p.planned ? plannedSource(p) : p.src;
     const fonts = path.join(ROOT, "fonts", slug);
     index.begin(p);
-    let body = makeRenderer(fonts, index).render(src.replaceAll("{{hb}}", HB_TAG).replaceAll("{{version}}", version.label))
+    let body = makeRenderer(fonts, index).render(src.replaceAll("{{hb}}", HB_TAG).replaceAll("{{repository}}", bare(REPOSITORY)).replaceAll("{{harfbuzz-repository}}", bare(BOOK_META.harfbuzzRepository)).replaceAll("{{version}}", version.label))
       .replace("<p>{{contents}}</p>", () => `<nav class="toc full">${fullContents}</nav>`)
       .replace("<p>{{index:general}}</p>", () => index.html("general"))
       .replace("<p>{{index:code}}</p>", () => index.html("code"));

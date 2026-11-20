@@ -118,6 +118,7 @@ function content(slug) {
     ? `<div class="part-title" id="part-${page.part.label.split(" ")[1]}"><p class="part-label">${esc(page.part.label)}</p><h1 class="part-name">${esc(page.part.name)}</h1></div>\n<div class="front blank">&nbsp;</div>\n`
     : "";
   // The title page: its description goes on the imprint's page, at the top.
+  // (A screen-only paragraph is for the website only.)
   // The contents are printed twice: in brief, the chapters with their
   // summaries; then in detail, on a right-hand page of its own, with each
   // chapter's sections. The book's title, which is these pages, isn't listed.
@@ -128,6 +129,8 @@ function content(slug) {
     titleIntro = html.slice(0, h2).match(/<p>(?!<strong>)[\s\S]*?<\/p>/g).join("\n");
     html = html.slice(0, h2) .replace(/<p>(?!<strong>)[\s\S]*?<\/p>\s*/g, "") + html.slice(h2);
     html = html.replace(/<li><a href="#title">[\s\S]*?<\/li>/, "");
+    // The website’s addresses: the imprint has its own.
+    html = html.replace(/<p class="screen-only">[\s\S]*?<\/p>\s*/g, "");
     const paged = (nav) => nav.replace(/(<a href="#([^"]+)"[^>]*>[\s\S]*?<\/a>)/g, (m, a, target) =>
       `${a}<span class="tocpg" data-target="${target}">000</span>`);
     html = html.replace(/<nav class="toc full">[\s\S]*?<\/nav>/, (nav) =>
@@ -163,7 +166,7 @@ const front = [
 <p><i>${esc(meta.title)}</i>: ${esc(meta.subtitle).replace(/^./, (c) => c.toLowerCase())}</p>
 <p>By ${esc(meta.author)}${meta.with ? ` with ${esc(meta.with)}` : ""}</p>
 <p>${esc(version.label)}. It describes HarfBuzz ${esc(meta.harfbuzz)}, and every example in it was run on that version.</p>
-<p>The book’s source and issues: ${esc(meta.repository.replace(/^https?:\/\//, ""))}<br>HarfBuzz’s source and issues: github.com/harfbuzz/harfbuzz</p>
+<p>The book’s source and issues: ${esc(meta.repository.replace(/^https?:\/\//, ""))}<br>HarfBuzz’s source and issues: ${esc(meta.harfbuzzRepository.replace(/^https?:\/\//, ""))}</p>
 <p>Set in Source Serif 4, Commissioner, and JetBrains Mono.</p>
 </div>`,
 ].join("\n");

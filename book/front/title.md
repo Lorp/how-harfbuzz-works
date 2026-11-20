@@ -6,6 +6,8 @@ A book about HarfBuzz, the text shaping engine used by Chrome, Firefox, Android,
 
 This is a draft. Every chapter is written, but the book is still being checked and revised, so some details will change before it’s finished.
 
+<p class="screen-only">The book’s source and issues: <a href="https://{{repository}}">{{repository}}</a><br>HarfBuzz’s source and issues: <a href="https://{{harfbuzz-repository}}">{{harfbuzz-repository}}</a></p>
+
 ## Contents
 
 {{contents}}
