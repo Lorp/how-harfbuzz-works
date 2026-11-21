@@ -32,9 +32,9 @@ Fonts written:
                     send a deleted glyph back to state 0, like a glyph of no
                     class
   loop.ttf          latin.ttf's glyphs, with a Contextual subtable whose
-                    entries for `a` have SetMark and DontAdvance and stay in
-                    state 0, a loop only the buffer's budget ends, then a
-                    Noncontextual one: e -> e.sc
+                    entries for `a` replace it by itself, have DontAdvance
+                    and stay in state 0, a loop only the buffer's budget
+                    ends, then a Noncontextual one: e -> e.sc
 """
 import io
 import os
@@ -233,14 +233,15 @@ def build_latin(out, feat=True, gsub=None):
 # ---------------------------------------------------------------- loop
 
 def build_loop(out):
-    # In state 0, `a` marks itself and leads back to state 0 without
-    # advancing: a machine that would never stop if nothing stopped it.
-    # (Without SetMark, the entry would do nothing, and HarfBuzz would skip
-    # the subtable: `a` couldn't start anything.)
+    # In state 0, `a` is replaced by itself, through lookup 0, and leads
+    # back to state 0 without advancing: a machine that would never stop
+    # if nothing stopped it. (The entry has to act. Since 15.2.0 HarfBuzz
+    # skips a subtable none of whose entries can act on a glyph of the
+    # text, and an entry that only set the mark doesn't count.)
     ctx = state_table_xml("Contextual", {"a": 4}, [
-        {4: {"to": 0, "flags": ["SetMark", "DontAdvance"]}},
-        {4: {"to": 0, "flags": ["SetMark", "DontAdvance"]}},
-    ])
+        {4: {"to": 0, "flags": ["DontAdvance"], "current": 0}},
+        {4: {"to": 0, "flags": ["DontAdvance"], "current": 0}},
+    ], '<PerGlyphLookup index="0"><Lookup glyph="a" value="a"/></PerGlyphLookup>')
     # Then e -> e.sc, in a subtable after it.
     sc = '<Substitution><Lookup glyph="e" value="e.sc"/></Substitution>'
     fb = base_font(LATIN, "HBBook AAT Loop")

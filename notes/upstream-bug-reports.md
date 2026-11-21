@@ -12,7 +12,7 @@ Eighty-six possible bugs found while writing the book, drafted for the HarfBuzz 
 
 Since 17 November many of them have been fixed on HarfBuzz’s `main` branch, and others have open pull requests. On 18 November 2026 every report was rechecked against `main` at commit `454f9c49c` (17 November 2026), built with the same options, by rerunning its repro or, for those read from the code, reading the code again. Report 83, written on 20 November, was checked against `main` at `94715f603` (19 November 2026). Each report ends with the result, under **On main.**: fixed (with the commit and pull request), changed, in progress (with the open pull request and its branch), or still present. On 20 November 2026 every report was checked again, against HarfBuzz 15.2.0, released that day with every fix merged up to 19 November, and against `main` at `8846dbbf6` (20 November 2026), by rerunning its repro where it had changed; each report ends with the result, under **In 15.2.0 and on main**. Fifty-three are fixed in 15.2.0 and fifteen more on `main`; seven are partly fixed, one is changed but not fixed, two were declined (13 and 32), and five still apply.
 
-On 21 November 2026 the reports were checked once more, against `main` at `1b988bc38` (21 November 2026) and against HarfBuzz’s recent issues and pull requests. Between `8846dbbf6` and `1b988bc38`, `main` changed only in the paint, raster, vector, and cairo code (#6835 to #6837, #6862 to #6865, and #6867). So the repros were rerun, on Linux, with the options above, for the reports those changes could touch (37, 66, 67, and 69) and for the reports not yet fixed that have a repro to run (7, 23, 40, 50, 64, 82, 83, 85, and 86). For the others not yet fixed (57, 63, 65, 81, and 84) the files they concern are the same in both commits. Each report whose status or history changed, or that is not yet fixed, ends with the result, under **On main (21 November 2026)**. What changed: 7 is withdrawn, as HarfBuzz and the published ISO standard agree; one more item of 37 is fixed on `main`; 40 is declined, by a pull request that the earlier check missed; 67 has two follow-ups; and 71 and 82 are on the issue tracker. Of the 85 reports that stand, 53 are fixed in 15.2.0 and 15 more on `main`; seven are partly fixed, one is changed but not fixed, three were declined (13, 32, and 40), and six still apply (50, and 82 to 86).
+On 21 November 2026 the reports were checked once more, against `main` at `1b988bc38` (21 November 2026) and against HarfBuzz’s recent issues and pull requests. Between `8846dbbf6` and `1b988bc38`, `main` changed only in the paint, raster, vector, and cairo code (#6835 to #6837, #6862 to #6865, and #6867). So the repros were rerun, on Linux, with the options above, for the reports those changes could touch (37, 66, 67, and 69) and for the reports not yet fixed that have a repro to run (7, 23, 40, 50, 64, 82, 83, 85, and 86). For the others not yet fixed (57, 63, 65, 81, and 84) the files they concern are the same in both commits. Each report whose status or history changed, or that is not yet fixed, ends with the result, under **On main (21 November 2026)**. What changed: 7 is withdrawn, as HarfBuzz and the published ISO standard agree; one more item of 37 is fixed on `main`; 40 is declined, by a pull request that the earlier check missed; 67 has two follow-ups; and 71 and 82 are on the issue tracker. Of the 85 reports that stand, 53 are fixed in 15.2.0 and 15 more on `main`; seven are partly fixed, one is changed but not fixed, three were declined (13, 32, and 40), and six still apply (50, and 82 to 86). Five of the six have pull requests since, opened on 21 November 2026 and not yet merged: #6868 for 83, #6869 for 86, #6870 for 82, #6871 for 85, and #6872, a draft, for 84. The reports say so.
 
 ---
 
@@ -904,7 +904,7 @@ $ hb-shape circle.ttf $'\u0905\u200D\u093E'
 
 **In 15.2.0 and on main (20 November 2026).** Unchanged: Partly fixed: #6691 corrects the stale comments and documentation, and #6730 documents that PDF gradients only pad; the API differences remain; the pull requests named are in 15.2.0.
 
-**On main (21 November 2026).** One more item is fixed, on `main` only. `3c242a7da`, part of #6863 (21 November 2026), paints linear and radial gradients that repeat or reflect in PDF, a period of the color line at a time, and takes the note that only PAD is supported out of the documentation. `colr1.ttf`’s `R` and `F` now have their rings in PDF: four shadings each, where 15.2.0 writes one. The API differences remain (`hb-vector.h:281`, `:288` at `1b988bc38`).
+**On main (21 November 2026).** One more item is fixed, on `main` only. `3c242a7da`, part of #6863 (21 November 2026), paints linear and radial gradients that repeat or reflect in PDF, a period of the color line at a time, and takes the note that only PAD is supported out of the documentation. `colr1.ttf`’s `R` and `F` now have their rings in PDF: four shadings each, where 15.2.0 writes one. The API differences remain (`hb-vector.h:281`, `:288` at `1b988bc38`), and are declined: HarfBuzz doesn’t change public API for a difference that does no harm.
 
 ---
 
@@ -1787,7 +1787,7 @@ U+25FB 0
 
 **In 15.2.0 and on main (20 November 2026).** Still present in 15.2.0 and on main at `8846dbbf6`.
 
-**On main (21 November 2026).** Still present on main at `1b988bc38`: `test-use-table` gives the same categories. Filed as issue #6828 on 20 November 2026, as a question. David Corbett answered there the same day: Microsoft should add these bases to `IndicSyllabicCategory-Additional.txt`, and until it does the generator should override them, as a section removed in `13bb46cfd` used to. So the list is to be made to apply, not removed. No pull request yet.
+**On main (21 November 2026).** Still present on main at `1b988bc38`: `test-use-table` gives the same categories. Filed as issue #6828 on 20 November 2026, as a question. David Corbett answered there the same day: Microsoft should add these bases to `IndicSyllabicCategory-Additional.txt`, and until it does the generator should override them, as a section removed in `13bb46cfd` used to. So the list is to be made to apply, not removed. In progress: pull request #6870 (branch `use-generic-bases`, “Give the generic bases named by code point their class”), which gives the six code points records, so that they come out `GB`; not merged. With it, a repha before one of them makes one cluster, as before U+25CC, where it made a broken cluster with a dotted circle. Microsoft is asked for the override in MicrosoftDocs/typography-issues#1249.
 
 ---
 
@@ -1820,7 +1820,7 @@ $ comm -23 <(grep -o "^option('[a-z0-9_]*'" meson_options.txt | sed "s/option('/
 
 **In 15.2.0 and on main (20 November 2026).** Still present in 15.2.0 and on main at `8846dbbf6`.
 
-**On main (21 November 2026).** Still present on main at `1b988bc38`: the repro still gives 24, and the Graphite entry is still `-Dgraphite=enabled` (`docs/usermanual-install-harfbuzz.xml:259`).
+**On main (21 November 2026).** Still present on main at `1b988bc38`: the repro still gives 24, and the Graphite entry is still `-Dgraphite=enabled` (`docs/usermanual-install-harfbuzz.xml:259`). In progress: pull request #6868 (branch `docs-manual-build-options`, “Describe the rest of the build options in the user manual”), which adds the sixteen and names `-Dgraphite2`; not merged.
 
 ---
 
@@ -1845,7 +1845,7 @@ Both fail in 15.2.0, and both shape the text in 15.1.0.
 
 **On main.** Still present (`main` at `8846dbbf6`, 20 November 2026). Found during the book’s move to 15.2.0: the repro was run with a Core Text build, and the code path read again for this report.
 
-**On main (21 November 2026).** Still present on main at `1b988bc38`: `hb-coretext.cc` is as it is in 15.2.0 (not rerun: this check was on Linux).
+**On main (21 November 2026).** Still present on main at `1b988bc38`: `hb-coretext.cc` is as it is in 15.2.0 (not rerun: this check was on Linux). In progress: draft pull request #6872 (branch `coretext-face-without-postscript-name`, “Load a face that has no PostScript name”), which opens the font data itself when the face has no PostScript name and is the only face of its file. It was written without Core Text, so it is a draft until HarfBuzz’s macOS CI job has built and tested it.
 
 ---
 
@@ -1870,7 +1870,7 @@ Without `vkrn` every advance is −1000. With it, a’s advance is −1050 and b
 
 **On main.** Still present (`main` at `8846dbbf6`, 20 November 2026). Found during the book’s move to 15.2.0, and shown live in the chapter Legacy kern.
 
-**On main (21 November 2026).** Still present on main at `1b988bc38`: the repro gives the same line.
+**On main (21 November 2026).** Still present on main at `1b988bc38`: the repro gives the same line. In progress: pull request #6871 (branch `kern-vertical-sign`, “Apply vertical kerning values in the advance direction”), which subtracts the value in vertical text, in the kern machine and in the state-machine kerning of format 1; not merged. With it the repro gives `[a=0@-250,-850+0,-950|b=1@-250,-800+0,-850|c=2@-250,-750+0,-900|d=3@-250,-850+0,-1000]`. Apple’s `kern` and `kerx` documentation says, as OpenType does, that a value below zero moves the glyphs together, with no exception for vertical subtables.
 
 ---
 
@@ -1895,7 +1895,7 @@ The loop spends the whole budget on the `a`, and the second subtable still runs.
 
 **On main.** Still present (`main` at `8846dbbf6`, 20 November 2026). Found during the book’s move to 15.2.0, by reading the code; the chapter AAT inside HarfBuzz shows the result live.
 
-**On main (21 November 2026).** Still present on main at `1b988bc38`: `loop.ttf` still gives `[a=0+500|e.sc=1+450]`.
+**On main (21 November 2026).** The code is as the summary says, on main at `1b988bc38`, but the repro above did not show it. In 15.2.0 the first subtable of `loop.ttf` was skipped, not looped (`--trace`: “skipped chainsubtable 0 because no completer glyph matches”): since `039b8b8de` (15 November 2026, in 15.2.0) a `morx` subtable none of whose entries can act on a glyph of the text is skipped, and the looping entry only set the mark. `loop.ttf` is rebuilt with an entry that replaces `a` by itself; the subtable now runs and loops, and the line is the same, `[a=0+500|e.sc=1+450]`. The pass charge was dropped by #6605 (`07cabf6e5`), not by #6664. In progress: pull request #6869 (branch `aat-budget-fail-buffer`, “Fail the buffer when a state machine spends the work budget”), which stops the machine and marks the buffer unsuccessful, as OpenType does; not merged.
 
 ---
 
