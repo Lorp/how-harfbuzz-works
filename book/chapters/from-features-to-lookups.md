@@ -263,14 +263,14 @@ The varied lookups belong to `liga`: they run in its stage, with its mask, and `
 
 FeatureVariations 1.1 adds lookup variations, which [Shape plans and their cache](shape-plans-and-their-cache.html#lookup-variations) introduced. `add_lookups` asks the key for them first (`hb-ot-map.cc:144`). If a `LookupVariationRecord` names this feature, its lookups are the union of the groups whose conditions are true, plus the default lookups of the feature table chosen above if the record’s flag says so, and the ordinary path isn’t taken. The result is a set, so the lookups come out in index order whatever order the groups list them in. The first record for a feature is the only one consulted (`hb-ot-layout-common.hh:6132`).
 
-> For type designers: HarfBuzz reads a FeatureVariations table with minorVersion 1 or more as having an array of `LookupVariationRecord`s straight after its records (`hb-ot-layout-common.hh:6059`), and the sanitizer requires that array to be valid (`:6300`). The ISO/IEC 14496-22 working draft (WD9) gives minorVersion 1 a different meaning, “Condition Table Format 2 can also be used”, with nothing after the records, and OpenType 1.9.1 says minorVersion is 0. In a font written to the draft, whatever follows the records is read as a count, and if that makes the array run past the table, the FeatureVariations table fails, which fails the whole GSUB, and since 12.3.0 a failed table is dropped ([Pass or fail](trust-nothing-the-sanitizer.html#pass-or-fail)). `varliga-minor1.ttf` is `varliga.ttf` with only the minor version changed to 1; the bytes after its record are a ConditionSet, read as a count of 65,536:
+> For type designers: a FeatureVariations table of version 1.1 has a 32-bit count and an array of `LookupVariationRecord`s straight after its records. That is how the 2026 edition of the ISO standard, ISO/IEC 14496-22, defines it (clause 6.2.11), and how HarfBuzz reads it (`hb-ot-layout-common.hh:6059`); the sanitizer requires that array to be valid (`:6300`). Microsoft’s OpenType 1.9.1 has only version 1.0. So a table mustn’t say minorVersion 1 unless the count is there, even if the count is 0. Without it, whatever follows the records is read as the count, and if that makes the array run past the table, the FeatureVariations table fails, which fails the whole GSUB, and since 12.3.0 a failed table is dropped ([Pass or fail](trust-nothing-the-sanitizer.html#pass-or-fail)). `varliga-minor1.ttf` is `varliga.ttf` with only the minor version changed to 1, which makes it malformed; the bytes after its record are a ConditionSet, read as a count of 65,536:
 
 ```shape
 varliga-minor1.ttf  I  --language=en  --variations=wght=400
 varliga-minor1.ttf  I  --language=en  --variations=wght=800
 ```
 
-> Even `liga`’s default substitution is gone. Until the two definitions are reconciled, a FeatureVariations table that doesn’t use lookup variations is safest at minorVersion 0.
+> Even `liga`’s default substitution is gone. A FeatureVariations table that doesn’t use lookup variations belongs at minorVersion 0.
 
 ### Sorting, and lookups shared by features
 
@@ -318,5 +318,5 @@ The same lookup in two stages is two entries, and runs twice.
 * Features are found in the chosen language system; the required feature is added by index and can’t be turned off.
 * Global features with value 1 share bit 31. Others get up to eight bits each, from bits 4 to 29, in tag order; when those run out, features are dropped without a word.
 * Pauses divide GSUB into stages. `rvrn` has stage 0 to itself; `Harf` and `Buzz` bracket the script shaper’s stages. GPOS has one stage.
-* A FeatureVariations record replaces whole feature tables, for any feature; 1.1 lookup variations choose groups of lookups by condition. HarfBuzz’s reading of minorVersion 1 differs from the ISO draft’s, and a mismatch can cost the whole GSUB.
+* A FeatureVariations record replaces whole feature tables, for any feature; 1.1 lookup variations choose groups of lookups by condition. HarfBuzz reads minorVersion 1 as the 2026 ISO standard defines it, and a table that says 1.1 without the lookup variation array loses the whole GSUB.
 * Within a stage, lookups are sorted by index and shared ones merged, with their masks OR-ed.

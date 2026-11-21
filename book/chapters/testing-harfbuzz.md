@@ -259,7 +259,7 @@ Some things this book learned to do in its own test fonts:
 
 ## The bugs this book found
 
-Writing this book meant building small fonts that exercise one thing each, shaping text with them, and checking every result against the code and the specifications. Some results didn’t match. Those became draft bug reports. None is yet on HarfBuzz’s issue tracker, but most have gone to its author directly, and many are already fixed. [Bugs this book found](bugs-this-book-found.html) lists them all, with what has happened to each upstream.
+Writing this book meant building small fonts that exercise one thing each, shaping text with them, and checking every result against the code and the specifications. Some results didn’t match. Those became draft bug reports. Two are on HarfBuzz’s issue tracker; the rest went to its author directly, and most are already fixed. [Bugs this book found](bugs-this-book-found.html) lists them all, with what has happened to each upstream.
 
 ## Where the bugs are
 
