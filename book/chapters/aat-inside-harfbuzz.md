@@ -207,6 +207,8 @@ loop.ttf  ae
 
 The loop ends when the budget is gone, after about half a million transitions on the `a`, and then the machine moves on. The second subtable still runs, and the `e` becomes `e.sc`: unlike OpenType shaping, which marks the buffer as failed when the budget runs out, AAT carries on, and nothing tells the client the budget ran out ([HHW-86](bugs-this-book-found.html#hhw-86)). In 15.1.0, HarfBuzz charged each subtable a pass over the buffer, and with the budget spent that charge failed, so the buffer was marked as failed and the second subtable never ran. 15.2.0 dropped that charge and raised the budget, 16-fold per glyph and eightfold at the minimum, because “Very complex fonts exceeded the old limits” (`NEWS`).
 
+> Since {{hb}}: fixed on HarfBuzz main by [#6869](https://github.com/harfbuzz/harfbuzz/pull/6869) (21 November 2026), so on main the machine stops when the budget is gone and the buffer is marked as failed. The second subtable doesn’t run, and the `e` stays `e`.
+
 The fast path, from 12.3.0, skips runs of glyphs of one class that lead from the start state back to it and do nothing.
 
 ### Deleted glyphs are still there

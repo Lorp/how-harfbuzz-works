@@ -6,6 +6,8 @@ This appendix lists them. It starts with how the macros are processed, then the 
 
 HarfBuzz explains configuration itself in two places: its user manual’s [Configuration options](https://harfbuzz.github.io/building.html#configuration), for the Meson options, and [`CONFIG.md`](https://github.com/harfbuzz/harfbuzz/blob/{{hb}}/CONFIG.md), for the macros, as advice on small builds. This appendix is drawn from the source instead, `hb-config.hh` and `meson_options.txt`, so it lists everything in {{hb}}. In particular, the manual describes ten of the 34 Meson options, mostly the outside libraries HarfBuzz can use, and leaves out its own optional libraries and backends, such as `subset`, `raster`, and `harfrust`.
 
+> Since {{hb}}: fixed on HarfBuzz main by [#6868](https://github.com/harfbuzz/harfbuzz/pull/6868) (21 November 2026), so main’s manual describes all but the eight options for tests, benchmarks, fuzzing, and packaging, and gives Graphite’s option as `-Dgraphite2` ([HHW-83](bugs-this-book-found.html#hhw-83)).
+
 ## How the macros are processed
 
 All configuration goes through one header, `hb-config.hh`. `hb.hh` includes it before anything else it includes (`hb.hh:174`), and every source file includes `hb.hh` first, so every file sees the same answers. The header does its work in this order:

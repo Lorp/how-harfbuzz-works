@@ -91,6 +91,8 @@ The machine’s categories (`hb-ot-shaper-use-machine.rl:65`) are numbered, and 
 
 DOTTED CIRCLE is a `B`, not a `GB`. Microsoft’s file made it a `Consonant` in 2019 so that, in Glass’s words, it can “appear in subjoined forms also” ([typography-issues #289](https://github.com/MicrosoftDocs/typography-issues/issues/289)), but the specification still calls it a generic base ([#482](https://github.com/MicrosoftDocs/typography-issues/issues/482), open). The specification also names U+2015, U+2022, and U+25FB to U+25FE as generic bases, and so does the generator’s `is_BASE_OTHER` (`gen-use-table.py:224`), but they come out `O`: the generator makes a record only for a character that is in one of Unicode’s Indic, joining, or default-ignorable files, or is a space (`:101`–`:108`), and these are none of those ([HHW-82](bugs-this-book-found.html#hhw-82)).
 
+> Since {{hb}}: fixed on HarfBuzz main by [#6870](https://github.com/harfbuzz/harfbuzz/pull/6870) (21 November 2026), so main gives these six a record, and they come out `GB`.
+
 Two things in this table matter later. RA is a plain `B`: nothing in the category says it can be a reph, which the font must say instead. And ZWJ is `CGJ`, which the grammar never sees.
 
 ## Syllables
