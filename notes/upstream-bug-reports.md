@@ -12,7 +12,7 @@ Eighty-six possible bugs found while writing the book, drafted for the HarfBuzz 
 
 Since 17 November many of them have been fixed on HarfBuzz’s `main` branch, and others have open pull requests. On 18 November 2026 every report was rechecked against `main` at commit `454f9c49c` (17 November 2026), built with the same options, by rerunning its repro or, for those read from the code, reading the code again. Report 83, written on 20 November, was checked against `main` at `94715f603` (19 November 2026). Each report ends with the result, under **On main.**: fixed (with the commit and pull request), changed, in progress (with the open pull request and its branch), or still present. On 20 November 2026 every report was checked again, against HarfBuzz 15.2.0, released that day with every fix merged up to 19 November, and against `main` at `8846dbbf6` (20 November 2026), by rerunning its repro where it had changed; each report ends with the result, under **In 15.2.0 and on main**. Fifty-three are fixed in 15.2.0 and fifteen more on `main`; seven are partly fixed, one is changed but not fixed, two were declined (13 and 32), and five still apply.
 
-On 21 November 2026 the reports were checked once more, against `main` at `1b988bc38` (21 November 2026) and against HarfBuzz’s recent issues and pull requests. Between `8846dbbf6` and `1b988bc38`, `main` changed only in the paint, raster, vector, and cairo code (#6835 to #6837, #6862 to #6865, and #6867). So the repros were rerun, on Linux, with the options above, for the reports those changes could touch (37, 66, 67, and 69) and for the reports not yet fixed that have a repro to run (7, 23, 40, 50, 64, 82, 83, 85, and 86). For the others not yet fixed (57, 63, 65, 81, and 84) the files they concern are the same in both commits. Each report whose status or history changed, or that is not yet fixed, ends with the result, under **On main (21 November 2026)**. What changed: 7 is withdrawn, as HarfBuzz and the published ISO standard agree; one more item of 37 is fixed on `main`; 40 is declined, by a pull request that the earlier check missed; 67 has two follow-ups; and 71 and 82 are on the issue tracker. Of the 85 reports that stand, 53 are fixed in 15.2.0 and 15 more on `main`; seven are partly fixed, one is changed but not fixed, three were declined (13, 32, and 40), and six still apply (50, and 82 to 86). Five of the six have pull requests since, opened on 21 November 2026 and not yet merged: #6868 for 83, #6869 for 86, #6870 for 82, #6871 for 85, and #6872 for 84. The reports say so.
+On 21 November 2026 the reports were checked once more, against `main` at `1b988bc38` (21 November 2026) and against HarfBuzz’s recent issues and pull requests. Between `8846dbbf6` and `1b988bc38`, `main` changed only in the paint, raster, vector, and cairo code (#6835 to #6837, #6862 to #6865, and #6867). So the repros were rerun, on Linux, with the options above, for the reports those changes could touch (37, 66, 67, and 69) and for the reports not yet fixed that have a repro to run (7, 23, 40, 50, 64, 82, 83, 85, and 86). For the others not yet fixed (57, 63, 65, 81, and 84) the files they concern are the same in both commits. Each report whose status or history changed, or that is not yet fixed, ends with the result, under **On main (21 November 2026)**. What changed: 7 is withdrawn, as HarfBuzz and the published ISO standard agree; one more item of 37 is fixed on `main`; 40 is declined, by a pull request that the earlier check missed; 67 has two follow-ups; and 71 and 82 are on the issue tracker. Of the 85 reports that stand, 53 are fixed in 15.2.0 and 15 more on `main`; seven are partly fixed, with what is left of each declined (37, 57, 61, 63, 64, 65, and 81); five were declined (13, 23, 32, 40, and 50); and five still apply (82 to 86). The declines made on 21 November 2026 are HarfBuzz’s author’s. The five that still apply have pull requests, opened on 21 November 2026 and not yet merged: #6868 for 83, #6869 for 86, #6870 for 82, #6871 for 85, and #6872 for 84. The reports say so.
 
 ---
 
@@ -621,7 +621,7 @@ $ hb-shape full.ttf $'\u0915\u0915\u093F'
 
 **In 15.2.0 and on main (20 November 2026).** Unchanged: Changed, not fixed: #6558 keeps the pieces the same in every pass and makes the whole syllable one cluster, but this draft’s example is still reordered wrongly at the cut; the pull requests named are in 15.2.0.
 
-**On main (21 November 2026).** Unchanged on main at `1b988bc38`: the same example still ends with a visible virama on the last TA and the I matra just before KA, in one cluster.
+**On main (21 November 2026).** Unchanged on main at `1b988bc38`: the same example still ends with a visible virama on the last TA and the I matra just before KA, in one cluster. Declined on 21 November 2026: the 64-glyph limit is kept on purpose, and #6558 already made the cut consistent.
 
 ---
 
@@ -1139,7 +1139,7 @@ $ hb-shape nested-a.ttf a
 
 **In 15.2.0 and on main (20 November 2026).** Documented on main only (after 15.2.0) by #6831, docs and help only; behavior unchanged.
 
-**On main (21 November 2026).** Unchanged on main at `1b988bc38`: `kern.ttf` cut with the reversing map still kerns only `A Q`.
+**On main (21 November 2026).** Unchanged on main at `1b988bc38`: `kern.ttf` cut with the reversing map still kerns only `A Q`. Declined on 21 November 2026: a map that reorders glyphs isn’t supported with layout tables, which #6831 documents; a fix would mean sorting again in every layout subsetter.
 
 ---
 
@@ -1260,7 +1260,7 @@ None affects the generated tables.
 
 **New in 15.2.0.** `hb-limits.hh:258`–`:268` defines fixed budget weights from `HB_BUDGET_1` to `HB_BUDGET_1024`; four of them, `HB_BUDGET_64`, `HB_BUDGET_128`, `HB_BUDGET_512`, and `HB_BUDGET_1024`, are used nowhere in `src/` or `util/`. The same kind of slip as the unused macros above.
 
-**On main (21 November 2026).** Unchanged on main at `1b988bc38`: `CONFIG.md` still names seven `HB_NO_*` macros, and the four budget weights are still used nowhere.
+**On main (21 November 2026).** Unchanged on main at `1b988bc38`: `CONFIG.md` still names seven `HB_NO_*` macros, and the four budget weights are still used nowhere. Declined on 21 November 2026: `CONFIG.md` is a guide and points to `hb-config.hh` for the rest, and the weights are a ladder of powers of two whose other steps are used.
 
 ---
 
@@ -1355,7 +1355,7 @@ harfbuzz buffer verify error: unsafe-to-break test failed.
 
 **In 15.2.0 and on main (20 November 2026).** Partly fixed in 15.2.0 by #6750: MinMax missing values; “MinMax without BaseValues hides `DFLT`” remains.
 
-**On main (21 November 2026).** Unchanged on main at `1b988bc38`: `hb-ot-layout-base-table.hh` is as it is in 15.2.0 (not rerun).
+**On main (21 November 2026).** Unchanged on main at `1b988bc38`: `hb-ot-layout-base-table.hh` is as it is in 15.2.0 (not rerun). Declined on 21 November 2026: the specification lets a BaseScript have a NULL BaseValues offset when “no baseline data is defined for the script”, and gives no fallback, so HarfBuzz doesn’t take `DFLT`’s baselines for a script that has a record.
 
 ---
 
@@ -1372,7 +1372,7 @@ harfbuzz buffer verify error: unsafe-to-break test failed.
 
 **In 15.2.0 and on main (20 November 2026).** Partly fixed in 15.2.0: synthetic slant by #6743; #6755 adds sibling flag and format 4; style-stat.ttf still weight 300, deliberately not guessed.
 
-**On main (21 November 2026).** Unchanged on main at `1b988bc38`: `style-stat.ttf` still reports weight 300.
+**On main (21 November 2026).** Unchanged on main at `1b988bc38`: `style-stat.ttf` still reports weight 300. Declined on 21 November 2026: as #6755 said, between two unmarked values STAT doesn’t say which is the font’s own, and HarfBuzz doesn’t guess.
 
 ---
 
@@ -1389,7 +1389,7 @@ harfbuzz buffer verify error: unsafe-to-break test failed.
 
 **In 15.2.0 and on main (20 November 2026).** Partly fixed in 15.2.0, 3 of 4: list-names by #6741, BASE dev2 by #6760; ltag interning remains.
 
-**On main (21 November 2026).** Unchanged on main at `1b988bc38`: `name` still calls `ltag::get_language` (`OT/name/name.hh:111`).
+**On main (21 November 2026).** Unchanged on main at `1b988bc38`: `name` still calls `ltag::get_language` (`OT/name/name.hh:111`). Declined on 21 November 2026: `hb_ot_name_list_names` returns `hb_language_t`, so `name` has to intern, and one font can add at most 65,535 tags of 63 bytes.
 
 ---
 
@@ -1755,7 +1755,7 @@ $ hb-raster test/subset/data/fonts/Roboto-Regular.ttf Wave --font-size=32 --show
 
 **In 15.2.0 and on main (20 November 2026).** Partly fixed on main only by #6817 and #6821: everything except the NEWS 11.0.0 item.
 
-**On main (21 November 2026).** Unchanged on main at `1b988bc38`: `NEWS` for 11.0.0 is as it was.
+**On main (21 November 2026).** Unchanged on main at `1b988bc38`: `NEWS` for 11.0.0 is as it was. Declined on 21 November 2026: old release notes stay as they are.
 
 ---
 
