@@ -119,6 +119,8 @@ The AAT state machines are charged to the buffer’s `max_ops`, like the OpenTyp
 
 The DontAdvance case is the one to understand. The machine in `loop.ttf` never advances, so it spends the whole budget on one glyph, and then DontAdvance is ignored and the machine moves on. The buffer isn’t marked unsuccessful, so the next subtable still runs. Before 15.2.0, each subtable was also charged a pass over the buffer, which then failed, so that the subtable after the loop never ran. The [AAT chapter](aat-inside-harfbuzz.html#the-loop) shows the machine live.
 
+> Since {{hb}}: fixed on HarfBuzz main by [#6869](https://github.com/harfbuzz/harfbuzz/pull/6869) (21 November 2026), so main marks the buffer unsuccessful when the loop spends the budget, and no later subtable runs ([HHW-86](bugs-this-book-found.html#hhw-86)).
+
 ## Drawing and painting
 
 Drawing and painting have the most limits, because outlines, paint graphs, and renderers drive each other. Each format has structural limits, and since 14.5.0 a session also has a work budget, `HB_BUDGET_GLYPH` (2²⁵ since 15.2.0, 2²⁴ before), which a client can set with `hb_draw_set_budget` or `hb_paint_set_budget` to a number, to `HB_BUDGET_DEFAULT`, or to `HB_BUDGET_UNLIMITED`, which leaves only the structural limits ([Drawing outlines](drawing-outlines.html#the-budget)).

@@ -199,13 +199,15 @@ for (buffer->idx = 0; buffer->successful;)
 
 At each glyph it finds the class and the entry, lets the subtable act, and moves to the new state. When the glyphs run out, it makes one more transition, with class 0, so a machine can finish what it started, and stops.
 
-An entry with the **DontAdvance** flag doesn’t move on: the machine reads the same position again, in its new state. That is how a font runs two rules on one glyph, and how it could loop for ever, so each such transition takes one from the buffer’s operations budget, `max_ops` (65,536 per glyph, at least 524,288; `hb-limits.hh:40–50`), and once that is spent, DontAdvance is ignored. `loop.ttf` has a subtable in which `a`, in state 0, marks itself and goes back to state 0 without advancing, and after it a second subtable that makes every `e` into `e.sc`:
+An entry with the **DontAdvance** flag doesn’t move on: the machine reads the same position again, in its new state. That is how a font runs two rules on one glyph, and how it could loop for ever, so each such transition takes one from the buffer’s operations budget, `max_ops` (65,536 per glyph, at least 524,288; `hb-limits.hh:40–50`), and once that is spent, DontAdvance is ignored. `loop.ttf` has a subtable in which `a`, in state 0, is replaced by itself and goes back to state 0 without advancing, and after it a second subtable that makes every `e` into `e.sc`:
 
 ```shape
 loop.ttf  ae
 ```
 
 The loop ends when the budget is gone, after about half a million transitions on the `a`, and then the machine moves on. The second subtable still runs, and the `e` becomes `e.sc`: unlike OpenType shaping, which marks the buffer as failed when the budget runs out, AAT carries on, and nothing tells the client the budget ran out ([HHW-86](bugs-this-book-found.html#hhw-86)). In 15.1.0, HarfBuzz charged each subtable a pass over the buffer, and with the budget spent that charge failed, so the buffer was marked as failed and the second subtable never ran. 15.2.0 dropped that charge and raised the budget, 16-fold per glyph and eightfold at the minimum, because “Very complex fonts exceeded the old limits” (`NEWS`).
+
+> Since {{hb}}: fixed on HarfBuzz main by [#6869](https://github.com/harfbuzz/harfbuzz/pull/6869) (21 November 2026), so on main the machine stops when the budget is gone and the buffer is marked as failed. The second subtable doesn’t run, and the `e` stays `e`.
 
 The fast path, from 12.3.0, skips runs of glyphs of one class that lead from the start state back to it and do nothing.
 
@@ -232,7 +234,7 @@ to: end table morx
 
 ### Before the loop
 
-Each chain has an accelerator, made when it is first used (`hb-aat-layout-morx-table.hh:1045`). For each subtable it collects the glyphs whose class, in state 0, leads to another state, an action, or a mark or push (`StateTable::collect_initial_glyphs`, `hb-aat-layout-common.hh:940`), and a subtable is skipped if the buffer holds none of them: the “no glyph matches” of the trace above. `morx` version 3 adds a glyph coverage table per subtable for the same purpose; HarfBuzz checks it and doesn’t otherwise read it. The accelerator also caches glyph classes.
+Each chain has an accelerator, made when it is first used (`hb-aat-layout-morx-table.hh:1045`). For each subtable it collects the glyphs whose class, in state 0, leads to another state, an action, or a mark or push (`StateTable::collect_initial_glyphs`, `hb-aat-layout-common.hh:940`), and a subtable is skipped if the buffer holds none of them: the “no glyph matches” of the trace above. Since 15.2.0 it collects a second set too, the glyphs whose class leads to an action from a state the machine can reach (`StateTable::collect_second_glyphs`, `:981`), and a subtable is also skipped if the buffer holds none of those, “because no completer glyph matches” (`hb-aat-layout-morx-table.hh:1261`). The second set is used only where every action needs a glyph with a class of its own: not for `mort`, and not for a machine that acts at the end of the text or on a glyph outside its classes. Setting the mark isn’t an action, which is why the looping entry of `loop.ttf` substitutes. `morx` version 3 adds a glyph coverage table per subtable for the same purpose; HarfBuzz checks it and doesn’t otherwise read it. The accelerator also caches glyph classes.
 
 The machine itself is mostly checked as it runs, since the entries and actions it reaches depend on the text ([The AAT tables](trust-nothing-the-sanitizer.html#the-aat-tables)). A table has at most 1,024 subtables (`HB_AAT_MAX_SUBTABLES`, `hb-limits.hh:110`), and one known-broken `morx`, that of AALMAGHRIBI.ttf, is ignored (`hb-aat-layout.cc:215`, issue #4108).
 

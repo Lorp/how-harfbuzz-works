@@ -132,6 +132,8 @@ hb:test/shape/data/in-house/fonts/e671efb00d233d04699b796e0495015fa4e73335.ttf  
 
 With `vkrn`, the values are split between the two glyphs’ vertical advances, as along a horizontal line. Before 15.2.0, `vkrn` had no mask bit unless GPOS had the feature, so no vertical subtable could kern ([HHW-18](bugs-this-book-found.html#hhw-18)). The values are added as they are, though, and vertical advances are negative, growing downwards: the negative values make the advances longer, −1,050 and −1,150, and move the glyphs apart. The OpenType specification says a value below zero moves the glyphs closer together ([`kern`](https://learn.microsoft.com/en-us/typography/opentype/spec/kern)), and GPOS negates a vertical advance for this reason ([Vertical text](vertical-text.html)). HarfBuzz’s own tests (`kern-vertical.tests`) expect exactly these advances, but the sign looks like a HarfBuzz bug ([HHW-85](bugs-this-book-found.html#hhw-85)); `trak` had the same mistake until 15.2.0 ([AAT positioning](aat-positioning.html#vertical-tracking)).
 
+> Since {{hb}}: fixed on HarfBuzz main by [#6871](https://github.com/harfbuzz/harfbuzz/pull/6871) (21 November 2026), so main subtracts the values in vertical text: the advances are −950 and −850, and the glyphs move together.
+
 [Vertical text](vertical-text.html) has the rest.
 
 ## When the plan uses kern

@@ -1,6 +1,6 @@
 # Draft bug reports for HarfBuzz
 
-Eighty-six possible bugs found while writing the book, drafted for the HarfBuzz issue tracker. None has been filed. Each report carries a tag naming the batch it was sent in, to go with it when it’s filed: 1–65 are `hhw-20261117`, the batch shown to Behdad Esfahbod on 17 November 2026. 66–82, found later, are `hhw-20261118`, the second batch, of 18 November 2026. 83 to 86 are `hhw-20261120`, of 20 November 2026; 84 to 86 were found on 15.2.0, during the book’s move to it. Each was reproduced on HarfBuzz 15.1.0 (commit `3df40d9b`), built by `tools/build-harfbuzz.sh` (meson, with FreeType, ICU and cairo off), on macOS. Repros use `test/subset/data/fonts/Roboto-Regular.ttf` from HarfBuzz’s own repository where they can, so they need nothing from this book.
+Eighty-six possible bugs found while writing the book, drafted for the HarfBuzz issue tracker. Two have been filed there, both on 20 November 2026: 71 as issue #6827 and 82 as #6828. The rest went to HarfBuzz’s author directly. One, 7, is withdrawn. Each report carries a tag naming the batch it was sent in, to go with it when it’s filed: 1–65 are `hhw-20261117`, the batch shown to Behdad Esfahbod on 17 November 2026. 66–82, found later, are `hhw-20261118`, the second batch, of 18 November 2026. 83 to 86 are `hhw-20261120`, of 20 November 2026; 84 to 86 were found on 15.2.0, during the book’s move to it. Each was reproduced on HarfBuzz 15.1.0 (commit `3df40d9b`), built by `tools/build-harfbuzz.sh` (meson, with FreeType, ICU and cairo off), on macOS. Repros use `test/subset/data/fonts/Roboto-Regular.ttf` from HarfBuzz’s own repository where they can, so they need nothing from this book.
 
 **The numbers are permanent.** HarfBuzz pull requests and commits already cite these reports by number (“How HarfBuzz Works bug 75”), so a number, once given, always means the same report. Cite a report as **HHW-75**, as the book does: “HHW” for How HarfBuzz Works, then its number.
 
@@ -11,6 +11,8 @@ Eighty-six possible bugs found while writing the book, drafted for the HarfBuzz 
 * The tables in the appendix Bugs this book found (`book/appendices/bugs-this-book-found.md`) use the same numbers, and each row’s anchor is its ID in lower case (`bugs-this-book-found.html#hhw-75`).
 
 Since 17 November many of them have been fixed on HarfBuzz’s `main` branch, and others have open pull requests. On 18 November 2026 every report was rechecked against `main` at commit `454f9c49c` (17 November 2026), built with the same options, by rerunning its repro or, for those read from the code, reading the code again. Report 83, written on 20 November, was checked against `main` at `94715f603` (19 November 2026). Each report ends with the result, under **On main.**: fixed (with the commit and pull request), changed, in progress (with the open pull request and its branch), or still present. On 20 November 2026 every report was checked again, against HarfBuzz 15.2.0, released that day with every fix merged up to 19 November, and against `main` at `8846dbbf6` (20 November 2026), by rerunning its repro where it had changed; each report ends with the result, under **In 15.2.0 and on main**. Fifty-three are fixed in 15.2.0 and fifteen more on `main`; seven are partly fixed, one is changed but not fixed, two were declined (13 and 32), and five still apply.
+
+On 21 November 2026 the reports were checked once more, against `main` at `1b988bc38` (21 November 2026) and against HarfBuzz’s recent issues and pull requests. Between `8846dbbf6` and `1b988bc38`, `main` changed only in the paint, raster, vector, and cairo code (#6835 to #6837, #6862 to #6865, and #6867). So the repros were rerun, on Linux, with the options above, for the reports those changes could touch (37, 66, 67, and 69) and for the reports not yet fixed that have a repro to run (7, 23, 40, 50, 64, 82, 83, 85, and 86). For the others not yet fixed (57, 63, 65, 81, and 84) the files they concern are the same in both commits. Each report whose status or history changed, or that is not yet fixed, ends with the result, under **On main (21 November 2026)**. What changed: 7 is withdrawn, as HarfBuzz and the published ISO standard agree; one more item of 37 is fixed on `main`; 40 is declined, by a pull request that the earlier check missed; 67 has two follow-ups; and 71 and 82 are on the issue tracker. Of the 85 reports that stand, 53 are fixed in 15.2.0 and 15 more on `main`; seven are partly fixed, with what is left of each declined (37, 57, 61, 63, 64, 65, and 81); five were declined (13, 23, 32, 40, and 50); and five still applied (82 to 86). The declines made on 21 November 2026 are HarfBuzz’s author’s. Those five were fixed on `main` the same day, by #6868 (83), #6869 (86), #6870 (82), #6871 (85), and #6872 (84), and their repros rerun at `ce1ecd7c0`, except 84’s, which needs Core Text and was tested by HarfBuzz’s macOS CI. So 53 are fixed in 15.2.0 and 20 on `main`, and none is open.
 
 ---
 
@@ -240,6 +242,8 @@ if (!HB_BUFFER_CLUSTER_LEVEL_IS_MONOTONE (cluster_level) || …)
 
 **ID:** `HHW-7` · **Tag:** `hhw-20261117`
 
+**Withdrawn.** Not a bug. The published standard, ISO/IEC 14496-22:2026 (the fifth edition), defines FeatureVariations version 1.1 in clause 6.2.11 as HarfBuzz reads it: after the feature variation records come a 32-bit `lookupVariationRecordCount` and a sorted array of `LookupVariationRecord`s, each a feature index and an offset to a FeatureLookupsTable. The summary below compared HarfBuzz with a working draft (WD9), not with the published text. A table that says minorVersion 1 and has no such array is malformed, and the sanitizer is right to reject it. Withdrawn on 21 November 2026, after reading the published standard. The report stays below as it was written.
+
 *A question about the standard as much as a bug. Raise it as a discussion before filing as a bug.*
 
 **Summary.** Since 14.6.0 HarfBuzz reads a FeatureVariations table of version 1.1 or later as having an array of `LookupVariationRecord`s after its `FeatureVariationRecord`s (`src/hb-ot-layout-common.hh:5957`), and its sanitizer requires that array to be there (`:6187`). The ISO/IEC 14496-22 working draft (WD9) defines minorVersion 1 differently: it allows Condition format 2, with nothing after the records.
@@ -256,6 +260,8 @@ A FeatureVariations table that fails to sanitize makes the whole GSUB (or GPOS) 
 
 
 **In 15.2.0 and on main (20 November 2026).** Still present in 15.2.0 and on main at `8846dbbf6`.
+
+**On main (21 November 2026).** Withdrawn, as above. The behavior is the same on main at `1b988bc38`, and is right: `varliga-minor1.ttf` says version 1.1 without the array that version has, so it is malformed.
 
 ---
 
@@ -615,6 +621,8 @@ $ hb-shape full.ttf $'\u0915\u0915\u093F'
 
 **In 15.2.0 and on main (20 November 2026).** Unchanged: Changed, not fixed: #6558 keeps the pieces the same in every pass and makes the whole syllable one cluster, but this draft’s example is still reordered wrongly at the cut; the pull requests named are in 15.2.0.
 
+**On main (21 November 2026).** Unchanged on main at `1b988bc38`: the same example still ends with a visible virama on the last TA and the I matra just before KA, in one cluster. Declined on 21 November 2026: the 64-glyph limit is kept on purpose, and #6558 already made the cut consistent.
+
 ---
 
 ## 24. `stch` tiles are shifted when they fit the word exactly
@@ -896,6 +904,8 @@ $ hb-shape circle.ttf $'\u0905\u200D\u093E'
 
 **In 15.2.0 and on main (20 November 2026).** Unchanged: Partly fixed: #6691 corrects the stale comments and documentation, and #6730 documents that PDF gradients only pad; the API differences remain; the pull requests named are in 15.2.0.
 
+**On main (21 November 2026).** One more item is fixed, on `main` only. `3c242a7da`, part of #6863 (21 November 2026), paints linear and radial gradients that repeat or reflect in PDF, a period of the color line at a time, and takes the note that only PAD is supported out of the documentation. `colr1.ttf`’s `R` and `F` now have their rings in PDF: four shadings each, where 15.2.0 writes one. The API differences remain (`hb-vector.h:281`, `:288` at `1b988bc38`), and are declined: HarfBuzz doesn’t change public API for a difference that does no harm.
+
 ---
 
 ## 38. A font with GSUB, GPOS and `kerx` never applies `kerx`, and stops zeroing marks
@@ -956,6 +966,8 @@ Without `trak` the advance is −1000; with +100 tracking it should be −1100.
 
 
 **In 15.2.0 and on main (20 November 2026).** Still present in 15.2.0 and on main at `8846dbbf6`.
+
+**On main (21 November 2026).** Declined upstream: HarfBuzz doesn’t want its own font functions to answer contour-point queries, so the behavior stays, on main at `1b988bc38` as in 15.2.0. The entries above missed #6762 (“Prepare disabled contour-point callbacks”, merged 18 November 2026, in 15.2.0), which cites this report. It writes `glyph_contour_point` for the `ot` font functions, and for Fontations, but leaves each registration inside `if (false)` (`hb-ot-font.cc:1004`), as its review asked, and puts FreeType’s, which had been registered, inside one as well (`hb-ft.cc:1174`). So since 15.2.0 a control-point action does nothing with any of HarfBuzz’s own font functions, where in 15.1.0 FreeType’s were registered (`hb-ft.cc:1167` there) and could answer. The `/*XXX*/` is gone: a comment now says that positioning uses horizontal glyph origins in vertical runs too (`hb-aat-layout-kerx-table.hh:680`). `points.ttf` still gives `[A=0+600|acutecomb=0+0|o=2+500|acutecomb=2+0]`.
 
 ---
 
@@ -1127,6 +1139,8 @@ $ hb-shape nested-a.ttf a
 
 **In 15.2.0 and on main (20 November 2026).** Documented on main only (after 15.2.0) by #6831, docs and help only; behavior unchanged.
 
+**On main (21 November 2026).** Unchanged on main at `1b988bc38`: `kern.ttf` cut with the reversing map still kerns only `A Q`. Declined on 21 November 2026: a map that reorders glyphs isn’t supported with layout tables, which #6831 documents; a fix would mean sorting again in every layout subsetter.
+
 ---
 
 ## 51. Subsetting a symbol font drops its only `cmap` subtable
@@ -1246,6 +1260,8 @@ None affects the generated tables.
 
 **New in 15.2.0.** `hb-limits.hh:258`–`:268` defines fixed budget weights from `HB_BUDGET_1` to `HB_BUDGET_1024`; four of them, `HB_BUDGET_64`, `HB_BUDGET_128`, `HB_BUDGET_512`, and `HB_BUDGET_1024`, are used nowhere in `src/` or `util/`. The same kind of slip as the unused macros above.
 
+**On main (21 November 2026).** Unchanged on main at `1b988bc38`: `CONFIG.md` still names seven `HB_NO_*` macros, and the four budget weights are still used nowhere. Declined on 21 November 2026: `CONFIG.md` is a guide and points to `hb-config.hh` for the rest, and the weights are a ladder of powers of two whose other steps are used.
+
 ---
 
 ## 58. Cross-stream kerning breaks the unsafe-to-break promise
@@ -1339,6 +1355,8 @@ harfbuzz buffer verify error: unsafe-to-break test failed.
 
 **In 15.2.0 and on main (20 November 2026).** Partly fixed in 15.2.0 by #6750: MinMax missing values; “MinMax without BaseValues hides `DFLT`” remains.
 
+**On main (21 November 2026).** Unchanged on main at `1b988bc38`: `hb-ot-layout-base-table.hh` is as it is in 15.2.0 (not rerun). Declined on 21 November 2026: the specification lets a BaseScript have a NULL BaseValues offset when “no baseline data is defined for the script”, and gives no fallback, so HarfBuzz doesn’t take `DFLT`’s baselines for a script that has a record.
+
 ---
 
 ## 64. `STAT::get_value` takes the first axis value, and STAT suppresses synthetic slant
@@ -1354,6 +1372,8 @@ harfbuzz buffer verify error: unsafe-to-break test failed.
 
 **In 15.2.0 and on main (20 November 2026).** Partly fixed in 15.2.0: synthetic slant by #6743; #6755 adds sibling flag and format 4; style-stat.ttf still weight 300, deliberately not guessed.
 
+**On main (21 November 2026).** Unchanged on main at `1b988bc38`: `style-stat.ttf` still reports weight 300. Declined on 21 November 2026: as #6755 said, between two unmarked values STAT doesn’t say which is the font’s own, and HarfBuzz doesn’t guess.
+
 ---
 
 ## 65. Smaller things in `name`, BASE and MATH
@@ -1367,14 +1387,15 @@ harfbuzz buffer verify error: unsafe-to-break test failed.
 
 **On main.** Partly fixed. The `minConnectorOverlap` sign is fixed on 17 November 2026 by `eaf004a2c` (#6708). `hb-info --list-names` is in progress: pull request #6741 (branch `codex/upstream-report-65-name-list`), not merged. The other two are still present: `name` still calls `ltag::get_language` (`OT/name/name.hh:111` on `main`; the 9 November change to `ltag`, `488e98dd8`, avoids interning only for `morx`), and the BASE tags are still the last script tag (the function is now `choose_layout_tags`).
 
+**In 15.2.0 and on main (20 November 2026).** Partly fixed in 15.2.0, 3 of 4: list-names by #6741, BASE dev2 by #6760; ltag interning remains.
+
+**On main (21 November 2026).** Unchanged on main at `1b988bc38`: `name` still calls `ltag::get_language` (`OT/name/name.hh:111`). Declined on 21 November 2026: `hb_ot_name_list_names` returns `hb_language_t`, so `name` has to intern, and one font can add at most 65,535 tags of 63 bytes.
+
 ---
 
 ## Found while writing the chapters on building, the tools and the renderers, November 2026
 
 These were found after the batch tagged `hhw-20261117`: 66–78 while writing the chapters on hb-raster, hb-vector, hb-gpu, building HarfBuzz and the command-line tools, 79–81 while writing the chapter on integrations, and 82 while revising the chapter on the Universal Shaping Engine. Each was reproduced on HarfBuzz 15.1.0 (commit `3df40d9b`), or is marked as read from the code, and checked against `main` at commit `454f9c49c` (17 November 2026), built with the same options. On 18 November `main` was still at that commit, and no open pull request addresses any of them. File and line references are to 15.1.0. They are tagged `hhw-20261118`.
-
-
-**In 15.2.0 and on main (20 November 2026).** Partly fixed in 15.2.0, 3 of 4: list-names by #6741, BASE dev2 by #6760; ltag interning remains.
 
 ---
 
@@ -1425,6 +1446,8 @@ poppler and Ghostscript both leave a white square 64 units on a side beside the 
 
 
 **In 15.2.0 and on main (20 November 2026).** Fixed on main only by #6824.
+
+**On main (21 November 2026).** Two follow-ups cite this report. `5b8f48160` (#6836, 20 November 2026) gives each PDF sweep the radius that reaches what its clips let through, where every mesh had reached 32,767 units. With a mesh that large, the 16-bit coordinates put a sweep’s center up to 32 font units off, and PDFium and pdf.js drew the patches coarsely. `0880a1146` (#6837, 21 November 2026), found while testing a fix for this report, makes hb-raster paint a padded sweep whose color line has no length, which it had left blank. At `1b988bc38`, `colr1.ttf`’s `S` in PDF has no hole.
 
 ---
 
@@ -1516,6 +1539,8 @@ Not run: the book’s build has no GPU.
 
 
 **In 15.2.0 and on main (20 November 2026).** Fixed on main only by #6832.
+
+**On main (21 November 2026).** Filed as issue #6827 on 20 November 2026, which #6832 closed the same day.
 
 ---
 
@@ -1730,6 +1755,8 @@ $ hb-raster test/subset/data/fonts/Roboto-Regular.ttf Wave --font-size=32 --show
 
 **In 15.2.0 and on main (20 November 2026).** Partly fixed on main only by #6817 and #6821: everything except the NEWS 11.0.0 item.
 
+**On main (21 November 2026).** Unchanged on main at `1b988bc38`: `NEWS` for 11.0.0 is as it was. Declined on 21 November 2026: old release notes stay as they are.
+
 ---
 
 ## 82. USE: the generator’s list of generic bases is dead code
@@ -1759,6 +1786,8 @@ U+25FB 0
 
 
 **In 15.2.0 and on main (20 November 2026).** Still present in 15.2.0 and on main at `8846dbbf6`.
+
+**On main (21 November 2026).** Still present on main at `1b988bc38`: `test-use-table` gives the same categories. Filed as issue #6828 on 20 November 2026, as a question. David Corbett answered there the same day: Microsoft should add these bases to `IndicSyllabicCategory-Additional.txt`, and until it does the generator should override them, as a section removed in `13bb46cfd` used to. So the list is to be made to apply, not removed. Fixed on main on 21 November 2026 by `ce1ecd7c0` (#6870, “Give the generic bases named by code point their class”), which gives the six code points records, and closed issue #6828: at `ce1ecd7c0`, `test-use-table` gives 5, `GB`, for U+2015, U+2022, and U+25FB to U+25FE, and no other code point changes. With it, a repha before one of them makes one cluster, as before U+25CC, where it made a broken cluster with a dotted circle. Microsoft is asked for the override in MicrosoftDocs/typography-issues#1249.
 
 ---
 
@@ -1791,6 +1820,8 @@ $ comm -23 <(grep -o "^option('[a-z0-9_]*'" meson_options.txt | sed "s/option('/
 
 **In 15.2.0 and on main (20 November 2026).** Still present in 15.2.0 and on main at `8846dbbf6`.
 
+**On main (21 November 2026).** Still present on main at `1b988bc38`: the repro still gives 24, and the Graphite entry is still `-Dgraphite=enabled` (`docs/usermanual-install-harfbuzz.xml:259`). Fixed on main on 21 November 2026 by `4cea535e9` (#6868, “Describe the rest of the build options in the user manual”), which adds the sixteen and names `-Dgraphite2`: at `ce1ecd7c0` the repro gives 8, the eight left out on purpose.
+
 ---
 
 ## 84. The Core Text face loader fails for a font with named instances or several faces and no PostScript name
@@ -1813,6 +1844,8 @@ Both fail in 15.2.0, and both shape the text in 15.1.0.
 **Expected.** A fallback when the face has no PostScript name: for example, the face’s data opened directly, as for a single-face file, or the descriptor chosen another way.
 
 **On main.** Still present (`main` at `8846dbbf6`, 20 November 2026). Found during the book’s move to 15.2.0: the repro was run with a Core Text build, and the code path read again for this report.
+
+**On main (21 November 2026).** Still present on main at `1b988bc38`: `hb-coretext.cc` is as it is in 15.2.0 (not rerun: this check was on Linux). Fixed on main on 21 November 2026 by `df8f44373` (#6872, “Load a face that has no PostScript name”), which opens the font data itself when the face has no PostScript name and is the only face of its file. It was written without Core Text, and the repro above was not rerun: HarfBuzz’s macOS CI job built it, and passed `test-coretext` with a new font that has named instances and no name ID 6.
 
 ---
 
@@ -1837,6 +1870,8 @@ Without `vkrn` every advance is −1000. With it, a’s advance is −1050 and b
 
 **On main.** Still present (`main` at `8846dbbf6`, 20 November 2026). Found during the book’s move to 15.2.0, and shown live in the chapter Legacy kern.
 
+**On main (21 November 2026).** Still present on main at `1b988bc38`: the repro gives the same line. Fixed on main on 21 November 2026 by `95b30548a` (#6871, “Apply vertical kerning values in the advance direction”), which subtracts the value in vertical text, in the kern machine and in the state-machine kerning of format 1. At `ce1ecd7c0` the repro gives `[a=0@-250,-850+0,-950|b=1@-250,-800+0,-850|c=2@-250,-750+0,-900|d=3@-250,-850+0,-1000]`. Apple’s `kern` and `kerx` documentation says, as OpenType does, that a value below zero moves the glyphs together, with no exception for vertical subtables.
+
 ---
 
 ## 86. An AAT DontAdvance loop that runs out of the operations budget doesn’t mark the buffer failed, unlike OpenType
@@ -1860,6 +1895,12 @@ The loop spends the whole budget on the `a`, and the second subtable still runs.
 
 **On main.** Still present (`main` at `8846dbbf6`, 20 November 2026). Found during the book’s move to 15.2.0, by reading the code; the chapter AAT inside HarfBuzz shows the result live.
 
+**On main (21 November 2026).** The code is as the summary says, on main at `1b988bc38`, but the repro above did not show it. In 15.2.0 the first subtable of `loop.ttf` was skipped, not looped (`--trace`: “skipped chainsubtable 0 because no completer glyph matches”): since `039b8b8de` (15 November 2026, in 15.2.0) a `morx` subtable none of whose entries can act on a glyph of the text is skipped, and the looping entry only set the mark. `loop.ttf` is rebuilt with an entry that replaces `a` by itself; the subtable now runs and loops, and the line is the same, `[a=0+500|e.sc=1+450]`. The pass charge was dropped by #6605 (`07cabf6e5`), not by #6664. Fixed on main on 21 November 2026 by `544484dca` (#6869, “Fail the buffer when a state machine spends the work budget”), which stops the machine and marks the buffer unsuccessful, as OpenType does: at `ce1ecd7c0` the rebuilt `loop.ttf` gives `[a=0+500|e=1+500]`, the second subtable not run.
+
 ---
 
 Note from chapter 41: `test/fuzzing/README.md:13` lists the fuzzers without the gpu fuzzer (add to draft 42 if filed). Fixed on `main` by `202b3e2c2` (#6692), with report 42’s README item. Draft 43 is related to the closed issue #5993.
+
+Issue #6829 (20 November 2026) is not one of these reports, though it cites this file: it was found while checking a fix for one of them. hb-vector wrote the Porter-Duff composite modes as SRC_OVER, or as a blend mode, in SVG and in PDF. #6863 (21 November 2026) writes them with masks, tested with the book’s `modes.ttf`, and closes the issue. The chapter on hb-vector describes what 15.2.0 does.
+
+HarfRust: harfbuzz/harfrust#635 (21 November 2026, not merged) ports the fixes for 82, 85, and 86, and that for 33 (#6830), with its USE table and shaping tests regenerated from HarfBuzz `main` at `ce1ecd7c0`.
