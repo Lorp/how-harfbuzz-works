@@ -297,7 +297,7 @@ function blockShape(body, fonts) {
         `<td class="in"><span class="txt">${esc(shown(text))}</span>` +
         `<span class="cps">${codepoints(text)}</span></td>`) +
       `<td class="opt">${esc(opts.join(" "))}</td>` +
-      `<td class="out"><code>${esc(out)}</code></td>` +
+      `<td class="out"><code>${esc(out).replaceAll("|", "|<wbr>")}</code></td>` +
       (drawn ? `<td class="drawn">${isDrawn(file) ? drawShaped(file, text, opts) : ""}</td>` : "") +
       "</tr>";
   });

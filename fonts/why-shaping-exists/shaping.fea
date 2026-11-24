@@ -54,10 +54,12 @@ feature akhn {
     sub ka virama ssa by k_ssa;
 } akhn;
 
-# A mark-to-base attachment for the acute.
-markClass acutecomb <anchor 0 500> @TOP;
+# A mark-to-base attachment for the acute: its anchor is below its outline,
+# and each base's is at the top of its outline, half its advance across.
+markClass acutecomb <anchor 138 611> @TOP;
 
 feature mark {
   script latn;
-    pos base [a e] <anchor 250 650> mark @TOP;
+    pos base a <anchor 277 540> mark @TOP;
+    pos base e <anchor 286 540> mark @TOP;
 } mark;

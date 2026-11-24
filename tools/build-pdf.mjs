@@ -251,6 +251,8 @@ figure.listing pre { orphans: 4; widows: 4; }
 .shape td, .trace td, .info td, .shape td *, .trace td *, .info td * { white-space: normal !important; }
 .shape td.out code, .trace td.buf code, .info td.out code, .shape td.in .cps { white-space: pre-wrap !important; overflow-wrap: anywhere; }
 .shape td.font, .shape th { white-space: nowrap !important; }
+/* A drawn example's code points stay whole under their glyphs. */
+.shape td.in .char .cp { white-space: nowrap !important; }
 .shape td.opt, .shape td.opt * { overflow-wrap: break-word; word-break: normal; }
 .trace td.what { white-space: normal !important; }
 td code { overflow-wrap: break-word; }

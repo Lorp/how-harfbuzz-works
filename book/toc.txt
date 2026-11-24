@@ -111,6 +111,3 @@ end/credits.md
 end/general-index.md
 end/code-index.md
 end/colophon.md
-
-[drafts]
-chapters/why-shaping-exists-draft.md

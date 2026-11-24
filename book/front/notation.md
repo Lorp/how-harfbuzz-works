@@ -22,7 +22,7 @@ Results are shown as `hb-shape` prints them ([The command-line tools](command-li
 [f_i=0+900|acutecomb=0@-675,562+0]
 ```
 
-Each glyph is `name=cluster`, then `@x,y` if it is offset, then `+advance`. Glyphs are listed in visual order. Text that is hard to see is spelled out: `◌́` is a combining mark on a dotted circle, `⟨ZWJ⟩` and `⟨ZWNJ⟩` are the joiners, and `␣` is a space. The Unicode code points are listed under each piece of text, and the text itself is set in the page’s own font, not the test font.
+Each glyph is `name=cluster`, then `@x,y` if it is offset, then `+advance`. Glyphs are listed in visual order. Text that is hard to see is spelled out: `◌́` is a combining mark on a dotted circle, `⟨ZWJ⟩` and `⟨ZWNJ⟩` are the joiners, and `␣` is a space. The Unicode code points are listed under each piece of text, and the text itself is set in the page’s own font, not the test font. Where a test font has real outlines, as in [Why shaping exists](why-shaping-exists.html), the text is drawn instead, each character on its own with the glyph the font’s `cmap` gives it, and a last column draws the shaped result.
 
 ## Traces
 

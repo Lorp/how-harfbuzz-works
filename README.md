@@ -88,7 +88,7 @@ fonts/gsub/build.sh       # a chapter's test fonts, and their FONT.views.json
 
 Each `FONT.views.json` holds the views made from the compiled font: spec-like, TTX and bytes. It’s committed beside the font, and the site build stops with a message if a font has changed since its views were written.
 
-Most test fonts have boxes for glyphs. A font can instead borrow real outlines, with `tools/real_outlines.py`, from Libre Baskerville (`fonts/quick-start/`) or the Noto fonts in `fonts/sources/noto/`: `fonts/why-shaping-exists-draft/build-font.py` shows how. List such a font in a `drawn.txt` beside it, and every `shape` block that uses it gets a column that draws the output with `hb-vector`.
+Most test fonts have boxes for glyphs. A font can instead borrow real outlines, with `tools/real_outlines.py`, from Libre Baskerville (`fonts/quick-start/`) or the Noto fonts in `fonts/sources/noto/`: `fonts/why-shaping-exists/build-font.py` shows how. List such a font in a `drawn.txt` beside it, and every `shape` block that uses it gets a column that draws the output with `hb-vector`.
 
 ## Writing a chapter
 
