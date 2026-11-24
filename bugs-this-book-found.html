@@ -1,0 +1,1023 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bugs this book found · How HarfBuzz Works</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=Commissioner:wght@500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one reading column of ~66ch; figures (views, shaping runs, traces)
+   break out to a wider measure, because code and buffers need the room. */
+:root {
+  --paper: #f6f7f9;
+  --ink: #1a1e27;
+  --muted: #5a6373;
+  --rule: #d8dce4;
+  --well: #eceff5;
+  --accent: #2c48c9;
+  --accent-soft: #dfe5fb;
+  --hit: #7a4b00;
+  --ok: #1d7a3c;
+  --font-text: "Source Serif 4", "Iowan Old Style", Georgia, serif;
+  --font-head: "Commissioner", "Helvetica Neue", Arial, sans-serif;
+  --font-code: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --measure: 620px;
+  --wide: 58rem;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #13161d; --ink: #e3e6ed; --muted: #9aa2b1; --rule: #2b313d;
+    --well: #1b2029; --accent: #93a6ff; --accent-soft: #252d4a; --hit: #f0c674; --ok: #72d08f;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #13161d; --ink: #e3e6ed; --muted: #9aa2b1; --rule: #2b313d;
+  --well: #1b2029; --accent: #93a6ff; --accent-soft: #252d4a; --hit: #f0c674; --ok: #72d08f;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--paper); color: var(--ink);
+  font: 400 1.0625rem/1.65 var(--font-text);
+  font-optical-sizing: auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 4rem;
+}
+body::before {
+  content: ""; position: fixed; inset: 0 0 auto;
+  height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--paper);
+}
+.page { max-width: var(--wide); margin: 0 auto; display: grid; }
+.page > * { width: 100%; min-width: 0; }
+.flow { display: grid; min-width: 0; }
+.flow > * { width: 100%; max-width: var(--measure); justify-self: start; min-width: 0; }
+.flow > .views, .flow > .shape, .flow > .trace, .flow > table { max-width: var(--wide); }
+.flow > .macros, .flow > .listing, .flow > .command-run { max-width: var(--wide); }
+.macros table { display: table; table-layout: fixed; font-size: .85rem; }
+.macros th:nth-child(1) { width: 25%; }
+.macros th:nth-child(2) { width: 35%; }
+.macros th:nth-child(3) { width: 17%; }
+.macros th:nth-child(4) { width: 23%; }
+.macros td:nth-child(1) code { overflow-wrap: anywhere; }
+.macros td { overflow-wrap: break-word; }
+.flow > .bugs { max-width: var(--wide); }
+.bugs table { display: table; table-layout: fixed; font-size: .85rem; }
+.bugs th:nth-child(1) { width: 9%; }
+.bugs th:nth-child(2) { width: 31%; }
+.bugs td:first-child .kind { margin: 0; white-space: nowrap; }
+.bugs th:nth-child(3) { width: 20%; }
+.bugs th:nth-child(4) { width: 9%; }
+.bugs th:nth-child(5) { width: 31%; }
+.bugs td { overflow-wrap: break-word; }
+/* A report's status upstream: a mark and the word, in a color, so that
+   neither color nor mark has to carry it alone. */
+.status svg { width: .85em; height: .85em; vertical-align: -.08em; margin-right: .35em; }
+.st-fixed, .st-partly { color: var(--ok); }
+.st-progress { color: var(--accent); }
+.st-changed { color: var(--muted); }
+.st-open { color: var(--ink); }
+.st-declined { color: var(--muted); }
+
+/* Top: the book and the HarfBuzz version. */
+.masthead {
+  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between;
+  gap: .5rem 1.5rem; padding-block: 1.5rem .75rem;
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--font-head);
+}
+.masthead .book { font-weight: 700; letter-spacing: .01em; }
+.masthead .book a { color: inherit; text-decoration: none; }
+.masthead .sub { color: var(--muted); font-weight: 500; }
+.masthead .ver { color: var(--muted); font: 400 .8rem var(--font-code); }
+button {
+  font: inherit; color: var(--ink); background: none; cursor: pointer;
+  border: 1px solid var(--rule); border-radius: 4px; padding: .2rem .6rem;
+}
+button[aria-selected="true"] {
+  background: var(--accent-soft); border-color: var(--accent); color: var(--ink);
+}
+button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+details.contents { padding-block: .75rem 0; font: 500 .9rem var(--font-head); }
+details.contents summary { cursor: pointer; color: var(--muted); }
+/* The whole contents opens at full length (no inner scroll box), in two
+   columns where there's room, without splitting a part across them. */
+details.contents .toc { padding-bottom: .75rem; columns: 2 20rem; column-gap: 2.5rem; }
+details.contents .toc .toc-section { break-inside: avoid; }
+
+/* Contents: in the header, and in full on the title page */
+.toc .toc-section { margin-top: .9rem; }
+.toc .toc-head { margin: 0 0 .2rem; font: 600 .72rem var(--font-head); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.toc ol { list-style: none; margin: 0; padding: 0; line-height: 1.7; }
+.toc li { display: grid; grid-template-columns: 2.2em 1fr; }
+.toc li > a { grid-column: 2; }
+.toc .num { grid-column: 1; color: var(--muted); font-variant-numeric: tabular-nums; }
+.toc li.planned > a { color: var(--muted); }
+.toc .summary { grid-column: 2; display: block; margin: -.1rem 0 .5rem; color: var(--muted); font: 400 .92rem/1.45 var(--font-text); }
+.toc.full { font: 500 1.05rem var(--font-head); }
+.toc .toc-sub { grid-column: 2; margin: 0 0 .4rem; font: 400 .9rem/1.5 var(--font-text); }
+.toc .toc-sub li { display: block; }
+.toc .toc-sub .toc-sub { margin: 0 0 .2rem 1.2em; font-size: .85rem; color: var(--muted); }
+.toc .toc-sub .toc-sub a { color: var(--muted); }
+.toc.full .toc-section { margin-top: 1.75rem; }
+.eyebrow { margin: 2.5rem 0 -1.5rem; font: 600 .78rem var(--font-head); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.planned-note { color: var(--muted); font-style: italic; padding: .75rem 1rem; background: var(--well); border-radius: 6px; }
+
+/* Text */
+h1, h2, h3 { font-family: var(--font-head); line-height: 1.2; text-wrap: balance; }
+h1 { font-size: 2.6rem; font-weight: 500; letter-spacing: -.01em; margin: 2.5rem 0 1rem; }
+h2 { font-size: 1.55rem; font-weight: 600; margin: 2.75rem 0 .5rem; padding-top: .75rem; border-top: 1px solid var(--rule); }
+h3 { font-size: 1.15rem; font-weight: 600; margin: 1.75rem 0 .25rem; }
+p, ul, ol { margin: 0 0 1rem; }
+a { color: var(--accent); text-underline-offset: .15em; }
+code { font-family: var(--font-code); font-size: .86em; font-variant-ligatures: none; }
+p code, li code, td code { background: var(--well); padding: .05em .3em; border-radius: 3px; }
+blockquote {
+  margin: 1.25rem 0; padding: .25rem 0 .25rem 1.1rem; border-left: 3px solid var(--accent);
+  color: var(--ink);
+}
+blockquote p:last-child { margin-bottom: 0; }
+table { border-collapse: collapse; width: 100%; font-size: .95rem; margin: 0 0 1.25rem; display: block; overflow-x: auto; }
+th, td { text-align: left; vertical-align: top; padding: .35rem .75rem .35rem 0; border-bottom: 1px solid var(--rule); }
+th { font: 600 .78rem var(--font-head); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+pre { margin: 0; overflow-x: auto; }
+pre code { font-size: .82rem; line-height: 1.55; }
+/* In the PDF, each chapter is a <section> inside .flow. */
+.flow > pre, .flow > section > pre { background: var(--well); padding: .9rem 1rem; border-radius: 6px; margin-bottom: 1.25rem; }
+
+/* Figures: views of a lookup */
+.views { margin: .5rem 0 1.75rem; border: 1px solid var(--rule); border-radius: 6px; background: var(--well); }
+.views .tabs { display: flex; flex-wrap: wrap; gap: .25rem; padding: .5rem; border-bottom: 1px solid var(--rule); font: 500 .8rem var(--font-head); }
+.views .pane { padding: .9rem 1rem; }
+.views .pane:not(.on) { display: none; }
+.views .src { display: inline-block; margin-top: .6rem; font: 400 .78rem var(--font-code); }
+.views figcaption { padding: 0 1rem .6rem; color: var(--muted); font: 400 .78rem var(--font-code); }
+
+/* Figures: shaping runs and traces */
+.shape, .trace { margin: .5rem 0 1.75rem; overflow-x: auto; }
+.shape table, .trace table { display: table; margin: 0; font-size: .85rem; }
+.shape td.font, .shape td.opt { font: 400 .78rem var(--font-code); color: var(--muted); white-space: nowrap; }
+.shape td.in .txt { display: block; font: 400 1.05rem var(--font-code); }
+.shape td.in .cps { display: block; font: 400 .7rem var(--font-code); color: var(--muted); white-space: nowrap; }
+.shape td.out code, .trace td.buf code { background: none; padding: 0; white-space: nowrap; color: var(--hit); font-weight: 600; }
+.shape td.out code { white-space: pre; }
+.shape td.drawn { vertical-align: middle; }
+.shape td.in .chars { display: flex; gap: .4rem; align-items: flex-start; justify-content: flex-start; }
+.shape td.in .char { display: flex; flex-direction: column; align-items: flex-start; }
+.shape td.in .char svg { display: block; max-width: none; color: var(--ink); }
+.shape td.in .char .unmapped { display: block; height: 2.4rem; width: 1.4rem; margin: .4rem 0; border: 1px dashed var(--muted); border-radius: 2px; }
+.shape td.in .char .cp { font: 400 .7rem var(--font-code); color: var(--muted); white-space: nowrap; }
+.shape td.drawn svg { display: block; max-width: none; color: var(--ink); }
+.trace { border: 1px solid var(--rule); border-radius: 6px; }
+.trace-head { padding: .5rem .75rem; border-bottom: 1px solid var(--rule); background: var(--well); }
+.trace-head code { background: none; font-size: .78rem; color: var(--muted); }
+.trace td { padding: .3rem .75rem; }
+.trace td.what { font: 400 .78rem var(--font-code); white-space: nowrap; color: var(--ink); }
+.trace tr:last-child td { border-bottom: 0; }
+
+/* Figures: example programs, their output, and live demos. The glyphs are
+   black on transparent, so they sit on white in dark mode too. */
+.listing { margin: .5rem 0 1rem; border: 1px solid var(--rule); border-radius: 6px; background: var(--well); }
+.listing figcaption { padding: .45rem 1rem; border-bottom: 1px solid var(--rule); font: 400 .78rem var(--font-code); color: var(--muted); }
+.listing pre { padding: .9rem 1rem; }
+.example-output { margin: 0 0 1.75rem; }
+.example-output img { display: block; max-width: 100%; height: auto; background: #fff; border: 1px solid var(--rule); padding: .5rem; box-sizing: content-box; }
+.example-output img.vector { width: 24rem; }
+.example-output img.pixels { image-rendering: pixelated; }
+.flow > .example-output.text { max-width: var(--wide); }
+.example-output pre { background: var(--well); border: 1px solid var(--rule); border-radius: 6px; padding: .6rem 1rem; white-space: pre-wrap; overflow-wrap: anywhere; }
+.example-output figcaption { font-size: .78rem; color: var(--muted); margin-top: .25rem; }
+/* What kind of picture an output is: vector or raster */
+.kind { display: inline-block; margin-right: .4em; padding: 0 .45em; border: 1px solid var(--rule); border-radius: 3px; font: 600 .7rem var(--font-head); letter-spacing: .04em; text-transform: uppercase; color: var(--ink); }
+.demo { margin: 0 0 1.75rem; padding: .75rem 1rem; border: 1px solid var(--rule); border-radius: 6px; font: 400 .85rem var(--font-head); }
+.demo input[type=text] { width: 16rem; max-width: 100%; font: inherit; }
+.demo input[type=number] { width: 4rem; font: inherit; }
+.demo-canvas { margin: .75rem 0 .25rem; overflow-x: auto; }
+.demo canvas { display: block; background: #fff; border: 1px solid var(--rule); }
+.demo-note { margin: 0; font-size: .78rem; color: var(--muted); }
+
+/* Figures: a command line, run when the page was built, and what it gives */
+.command-run { margin: .5rem 0 1.75rem; }
+.command-run pre { margin: 0; padding: .6rem 1rem; border-radius: 6px; background: var(--well); }
+.command-run pre.command-output { margin-top: .4rem; background: none; border: 1px solid var(--rule); }
+.command-run img { display: block; margin-top: .6rem; max-width: 100%; height: auto; background: #fff; border: 1px solid var(--rule); }
+.command-run img.vector { width: 24rem; padding: .5rem; box-sizing: content-box; }
+.command-run img.pixels { image-rendering: pixelated; }
+.command-run figcaption { font-size: .78rem; color: var(--muted); margin-top: .25rem; }
+
+/* Figures: outlines drawn by hb-vector */
+.rasters { margin: .5rem 0 1.75rem; }
+.raster { margin: 0 0 .75rem; }
+.raster img { display: block; max-width: 100%; height: auto; image-rendering: pixelated; border: 1px solid var(--rule); }
+.raster figcaption { font-size: .78rem; color: var(--muted); margin-top: .25rem; }
+.draw { margin: .5rem 0 1.75rem; border: 1px solid var(--rule); border-radius: 6px; padding: .75rem 1rem .5rem; }
+.draw .frames { display: flex; flex-wrap: wrap; gap: 1rem; }
+.draw.slider .frames { display: block; }
+.draw .frame { flex: 1 1 10rem; min-width: 0; }
+.draw .frame[hidden] { display: none; }
+.draw svg { display: block; width: 100%; height: auto; max-height: 14rem; color: var(--ink); }
+.draw.row svg { max-height: 9rem; }
+.draw .frame-label { font: 600 .75rem var(--font-code); color: var(--muted); margin-top: .35rem; }
+.draw .frame-shape { display: block; background: none; padding: 0; font-size: .78rem; color: var(--hit); font-weight: 600; white-space: nowrap; overflow-x: auto; }
+.draw.slider .frame-label { display: none; }
+.draw .control { display: flex; align-items: center; gap: .75rem; margin-top: .6rem; font: 600 .8rem var(--font-code); }
+.draw .control input { flex: 1; accent-color: var(--accent); }
+.draw .control output { min-width: 3.5em; text-align: right; font-variant-numeric: tabular-nums; }
+.draw figcaption { margin-top: .5rem; color: var(--muted); font: 400 .75rem var(--font-code); }
+.draw figcaption code { background: none; padding: 0; }
+.ttx pre { padding: .9rem 1rem; max-height: 28rem; overflow: auto; }
+.ttx figcaption { padding: .5rem 1rem .6rem; color: var(--muted); font: 400 .78rem var(--font-code); border-top: 1px solid var(--rule); }
+.info td.out pre { margin: 0; }
+.info td.out code { white-space: pre; }
+
+footer.version { margin: 1.25rem 0 2rem; font: 400 .75rem var(--font-head); color: var(--muted); }
+footer.version a { color: inherit; }
+nav.pager { display: flex; justify-content: space-between; gap: 1rem; padding-top: 2rem; margin-top: 2rem; border-top: 1px solid var(--rule); font: 500 .95rem var(--font-head); }
+
+@media (max-width: 600px) {
+  body { font-size: 1rem; }
+  h1 { font-size: 2rem; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+/* Text for one medium only: the screen hides print-only text, and print
+   (the PDF build, or printing a page) hides screen-only text. */
+.print-only { display: none !important; }
+@media print {
+  .screen-only { display: none !important; }
+  .print-only { display: revert !important; }
+}
+/* The two indexes. */
+.index .index-letter { margin-top: 1.25rem; }
+.index .index-letter h2 { margin: 0 0 .4rem; font-size: 1.1rem; }
+.index ul { list-style: none; margin: 0; padding: 0; columns: 2 16rem; column-gap: 2rem; }
+.index li { break-inside: avoid; margin: 0 0 .2rem; padding-left: 1.2em; text-indent: -1.2em; line-height: 1.4; }
+.index a.loc { font-variant-numeric: tabular-nums; }
+.index a.loc.def { font-weight: 700; }
+.index .term code { font-size: .9em; }
+</style>
+
+</head>
+<body>
+<div class="page">
+  <header class="masthead">
+    <div><span class="book"><a href="title.html">How HarfBuzz Works</a></span> <span class="sub">From Unicode to positioned glyphs, and everything in between</span></div>
+    <span class="ver">HarfBuzz 15.2.0</span>
+  </header>
+  <details class="contents"><summary>Contents</summary><nav class="toc"><div class="toc-section"><ol><li><a href="title.html">How HarfBuzz Works</a></li><li><a href="foreword.html">Foreword</a></li><li><a href="preface.html">Preface</a></li><li><a href="introduction.html">Introduction</a></li><li><a href="notation.html">Reading this book</a></li></ol></div><div class="toc-section"><p class="toc-head">Part I: Getting started</p><ol><li><span class="num">1</span> <a href="why-shaping-exists.html">Why shaping exists</a></li><li><span class="num">2</span> <a href="command-line-tools.html">The command-line tools</a></li><li><span class="num">3</span> <a href="quick-start.html">Quick start: shaping text, then drawing it</a></li><li><span class="num">4</span> <a href="building-harfbuzz.html">Building HarfBuzz</a></li></ol></div><div class="toc-section"><p class="toc-head">Part II: Foundations</p><ol><li><span class="num">5</span> <a href="fonts-as-bytes.html">Fonts as bytes</a></li><li><span class="num">6</span> <a href="trust-nothing-the-sanitizer.html">Trust nothing: the sanitizer</a></li><li><span class="num">7</span> <a href="blobs-faces-and-lazy-tables.html">Blobs, faces, and lazy tables</a></li><li><span class="num">8</span> <a href="fonts-and-font-functions.html">Fonts and font functions</a></li><li><span class="num">9</span> <a href="where-metrics-come-from.html">Where metrics come from</a></li></ol></div><div class="toc-section"><p class="toc-head">Part III: Text in</p><ol><li><span class="num">10</span> <a href="unicode-inside-harfbuzz.html">Unicode inside HarfBuzz</a></li><li><span class="num">11</span> <a href="buffers.html">Buffers</a></li><li><span class="num">12</span> <a href="hb_shape-and-its-backends.html">hb_shape and its backends</a></li></ol></div><div class="toc-section"><p class="toc-head">Part IV: Planning</p><ol><li><span class="num">13</span> <a href="shape-plans-and-their-cache.html">Shape plans and their cache</a></li><li><span class="num">14</span> <a href="from-features-to-lookups.html">From features to lookups</a></li><li><span class="num">15</span> <a href="choosing-a-script-shaper.html">Choosing a script shaper</a></li></ol></div><div class="toc-section"><p class="toc-head">Part V: The pipeline</p><ol><li><span class="num">16</span> <a href="pipeline-step-by-step.html">The pipeline, step by step</a></li><li><span class="num">17</span> <a href="normalization.html">Normalization</a></li><li><span class="num">18</span> <a href="gsub.html">GSUB: substituting glyphs</a></li><li><span class="num">19</span> <a href="gpos.html">GPOS: positioning glyphs</a></li><li><span class="num">20</span> <a href="fallbacks.html">Fallbacks</a></li><li><span class="num">21</span> <a href="legacy-kern.html">Legacy kern</a></li><li><span class="num">22</span> <a href="vertical-text.html">Vertical text</a></li></ol></div><div class="toc-section"><p class="toc-head">Part VI: Scripts</p><ol><li><span class="num">23</span> <a href="joining-scripts.html">Joining scripts</a></li><li><span class="num">24</span> <a href="hebrew-thai-lao-and-hangul.html">Hebrew, Thai, Lao, and Hangul</a></li><li><span class="num">25</span> <a href="indic-model.html">The Indic model</a></li><li><span class="num">26</span> <a href="khmer-and-myanmar.html">Khmer and Myanmar</a></li><li><span class="num">27</span> <a href="universal-shaping-engine.html">The Universal Shaping Engine</a></li><li><span class="num">28</span> <a href="dotted-circles-and-broken-clusters.html">Dotted circles and broken clusters</a></li></ol></div><div class="toc-section"><p class="toc-head">Part VII: Apple Advanced Typography</p><ol><li><span class="num">29</span> <a href="aat-inside-harfbuzz.html">AAT inside HarfBuzz</a></li><li><span class="num">30</span> <a href="aat-positioning.html">AAT positioning</a></li></ol></div><div class="toc-section"><p class="toc-head">Part VIII: Variations</p><ol><li><span class="num">31</span> <a href="design-space.html">Design space</a></li><li><span class="num">32</span> <a href="deltas.html">Deltas</a></li><li><span class="num">33</span> <a href="varying-outlines.html">Varying outlines</a></li><li><span class="num">34</span> <a href="variable-components.html">VARC: variable components</a></li></ol></div><div class="toc-section"><p class="toc-head">Part IX: Drawing</p><ol><li><span class="num">35</span> <a href="drawing-outlines.html">Drawing outlines</a></li><li><span class="num">36</span> <a href="color.html">Color</a></li><li><span class="num">37</span> <a href="hb-raster.html">hb-raster: rendering to pixels</a></li><li><span class="num">38</span> <a href="hb-vector.html">hb-vector: rendering to SVG and PDF</a></li><li><span class="num">39</span> <a href="hb-gpu.html">hb-gpu: rendering on the GPU</a></li></ol></div><div class="toc-section"><p class="toc-head">Part X: Writing fonts</p><ol><li><span class="num">40</span> <a href="subsetting.html">Subsetting</a></li><li><span class="num">41</span> <a href="writing-tables.html">Writing tables</a></li><li><span class="num">42</span> <a href="instancing.html">Instancing</a></li><li><span class="num">43</span> <a href="hb-depend.html">hb-depend: the glyph dependency graph</a></li></ol></div><div class="toc-section"><p class="toc-head">Part XI: Using HarfBuzz</p><ol><li><span class="num">44</span> <a href="for-applications.html">For applications</a></li><li><span class="num">45</span> <a href="integrations.html">Integrations: FreeType, cairo, ICU, and the platforms</a></li><li><span class="num">46</span> <a href="other-tables.html">Other tables</a></li><li><span class="num">47</span> <a href="testing-and-debugging-fonts-with-harfbuzz.html">Testing and debugging fonts with HarfBuzz</a></li></ol></div><div class="toc-section"><p class="toc-head">Part XII: HarfBuzz and its relatives</p><ol><li><span class="num">48</span> <a href="testing-harfbuzz.html">Testing HarfBuzz</a></li><li><span class="num">49</span> <a href="harfrust.html">HarfRust</a></li><li><span class="num">50</span> <a href="family.html">The family</a></li></ol></div><div class="toc-section"><p class="toc-head">Appendices</p><ol><li><span class="num">A</span> <a href="feature-order.html">Feature order</a></li><li><span class="num">B</span> <a href="reading-feature-files.html">Reading feature files</a></li><li><span class="num">C</span> <a href="reading-harfbuzz-cpp.html">Reading HarfBuzz’s C++</a></li><li><span class="num">D</span> <a href="limits.html">Limits</a></li><li><span class="num">E</span> <a href="compile-time-configuration.html">Compile-time configuration</a></li><li><span class="num">F</span> <a href="regenerating-the-unicode-and-shaping-tables.html">Regenerating the Unicode and shaping tables</a></li><li><span class="num">G</span> <a href="bugs-this-book-found.html">Bugs this book found</a></li></ol></div><div class="toc-section"><ol><li><a href="glossary.html">Glossary</a></li><li><a href="bibliography.html">Bibliography</a></li><li><a href="credits.html">Credits</a></li><li><a href="general-index.html">Index</a></li><li><a href="code-index.html">Code index</a></li><li><a href="colophon.html">Colophon</a></li></ol></div></nav></details>
+  <main class="flow">
+<p class="eyebrow">Appendix G</p>
+<h1 id="bugs-this-book-found">Bugs this book found</h1>
+<p id="ix-1">Writing this book meant building small fonts that exercise one thing each, shaping text with them, and checking every result against the code and the specifications (<a href="testing-harfbuzz.html#testing-with-a-font-of-your-own">Testing with a font of your own</a>). Some results didn’t match. Those are drafted as bug reports in <a href="https://github.com/Lorp/how-harfbuzz-works/blob/main/notes/upstream-bug-reports.md"><code>notes/upstream-bug-reports.md</code></a>, in the book’s repository, 86 so far, the first 83 reproduced on HarfBuzz 15.1.0 (commit <code>3df40d9b</code>), the version the book then described, and the last three on 15.2.0, most with a font or a command that needs nothing from this book. This appendix lists them all. What they suggest about where bugs are left to find is in <a href="testing-harfbuzz.html#where-the-bugs-are">Where the bugs are</a>.</p>
+<p><strong>Two are on HarfBuzz’s issue tracker.</strong> HHW-71 is issue <a href="https://github.com/harfbuzz/harfbuzz/issues/6827">#6827</a>, and HHW-82 is <a href="https://github.com/harfbuzz/harfbuzz/issues/6828">#6828</a>, both now closed. The rest went to HarfBuzz’s author directly, and most are fixed, in HarfBuzz 15.2.0 or since (see the last column below), but they are still drafts, written by the book’s authors. Some are certainly bugs, some are matters of policy that HarfBuzz’s developers may well decide the other way, and a few were found by reading code and have no example yet. One, HHW-7, turned out not to be a bug, and is withdrawn.</p>
+<p>Each draft keeps its number for good, and its ID, such as HHW-75, is how HarfBuzz’s pull requests cite it (“How HarfBuzz Works bug 75”). A withdrawn draft keeps its number too.</p>
+<p>The tables below give each draft’s number in that file, a one-line summary, the chapter that describes the behavior, and how it was checked:</p>
+<ul>
+<li><strong>Live.</strong> The chapter showed the behavior in a live block, built from HarfBuzz 15.1.0. Where 15.2.0 fixed it, the block now shows the fix.</li>
+<li id="ix-2"><strong>Run.</strong> Reproduced with HarfBuzz’s tools or a small program, but not shown live.</li>
+<li><strong>Read.</strong> Found by reading the code.</li>
+</ul>
+<p id="ix-3">The last column records what has happened upstream. Drafts 1–65 were shown to HarfBuzz’s author, Behdad Esfahbod, on 17 November 2026, and he fixed many of them on the <code>main</code> branch the same day; most of the rest were fixed over the next three days. HarfBuzz 15.2.0, released on 20 November 2026, has every fix merged up to 19 November. Every draft was checked again against <code>main</code> at commit <code>8846dbbf6</code> (20 November), by rerunning its example or, for those found by reading, reading the code again. On 21 November the drafts not yet fixed, and those about the renderers, were checked once more, against <code>main</code> at <code>1b988bc38</code>. The five drafts still open then were fixed on <code>main</code> later that day, and checked at <code>ce1ecd7c0</code>. The column says “fixed in 15.2.0” or “fixed on main”, for a fix merged after the release, with the pull requests that fixed the draft (<code>notes/upstream-bug-reports.md</code> has the commits); “partly fixed” where some of a draft’s items are fixed; “declined” where HarfBuzz’s developers decided to keep the behavior; “open” where the draft still describes <code>main</code>; and “withdrawn” where the draft turned out to be wrong. Related issues come from a keyword search of HarfBuzz’s issues and pull requests, which isn’t exhaustive.</p>
+<!-- Generated by hand from notes/upstream-bug-reports.md. To add a draft: give it a
+     row in the group that fits, with its number, a summary, the chapter that shows it
+     and how it was checked; update the counts in the paragraph after the tables.
+     The numbers are permanent, as HarfBuzz cites them: never renumber or reuse one. -->
+<h2 id="shaping-results">Shaping results</h2>
+<p id="ix-4">Wrong glyphs or positions from <code>hb_shape</code>, in fonts and text that are valid.</p>
+<div class="bugs">
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Summary</th>
+<th>Chapter</th>
+<th>Checked</th>
+<th>Upstream</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span id="hhw-5" class="kind">HHW-5</span></td>
+<td id="ix-5">Two glyph-flag functions treat cluster level 3 as monotone</td>
+<td><a href="buffers.html">Buffers</a></td>
+<td>Read</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6706">#6706</a></td>
+</tr>
+<tr>
+<td><span id="hhw-8" class="kind">HHW-8</span></td>
+<td id="ix-6">A ranged request then a global one for the same feature clears the global bit, turning off every global feature in the range</td>
+<td id="ix-7"><a href="from-features-to-lookups.html">From features to lookups</a></td>
+<td>Live</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6704">#6704</a></td>
+</tr>
+<tr>
+<td><span id="hhw-10" class="kind">HHW-10</span></td>
+<td id="ix-8">In the Indic shapers’ normalization mode, text without marks is decomposed but never recomposed</td>
+<td id="ix-9"><a href="normalization.html">Normalization</a></td>
+<td>Live</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6705">#6705</a></td>
+</tr>
+<tr>
+<td><span id="hhw-11" class="kind">HHW-11</span></td>
+<td id="ix-10">A variation-selector cluster ignores the not-found glyph</td>
+<td id="ix-11"><a href="normalization.html">Normalization</a></td>
+<td>Live</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6699">#6699</a></td>
+</tr>
+<tr>
+<td><span id="hhw-12" class="kind">HHW-12</span></td>
+<td id="ix-12">A mark skips a base whose <code>mark</code> bit is off and attaches to an earlier one</td>
+<td id="ix-13"><a href="gpos.html">GPOS: positioning glyphs</a></td>
+<td>Live</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6736">#6736</a></td>
+</tr>
+<tr>
+<td><span id="hhw-15" class="kind">HHW-15</span></td>
+<td id="ix-14">A cross-stream <code>kern</code> value of 0x8000 isn’t treated as a reset</td>
+<td><a href="legacy-kern.html">Legacy kern</a></td>
+<td>Live</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6732">#6732</a></td>
+</tr>
+<tr>
+<td><span id="hhw-16" class="kind">HHW-16</span></td>
+<td id="ix-15">Fallback mark positioning ignores the base’s x offset</td>
+<td id="ix-16"><a href="fallbacks.html">Fallbacks</a></td>
+<td>Live</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6701">#6701</a></td>
+</tr>
+<tr>
+<td><span id="hhw-17" class="kind">HHW-17</span></td>
+<td>Fallback positioning centers LEFT and RIGHT marks, contrary to its comment</td>
+<td id="ix-17"><a href="fallbacks.html">Fallbacks</a></td>
+<td>Live</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6742">#6742</a> corrects the comment, and keeps the centering, which is deliberate</td>
+</tr>
+<tr>
+<td><span id="hhw-18" class="kind">HHW-18</span></td>
+<td id="ix-18">Vertical <code>kern</code> subtables can never apply</td>
+<td><a href="legacy-kern.html">Legacy kern</a></td>
+<td>Live</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6734">#6734</a></td>
+</tr>
+<tr>
+<td><span id="hhw-19" class="kind">HHW-19</span></td>
+<td id="ix-19">The Hangul shaper’s dotted circle copies the tone mark’s properties</td>
+<td><a href="hebrew-thai-lao-and-hangul.html">Hebrew, Thai, Lao, and Hangul</a></td>
+<td>Live</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6711">#6711</a></td>
+</tr>
+<tr>
+<td><span id="hhw-20" class="kind">HHW-20</span></td>
+<td id="ix-20">Two dotted circles before a Hangul tone mark at the start of text</td>
+<td><a href="hebrew-thai-lao-and-hangul.html">Hebrew, Thai, Lao, and Hangul</a></td>
+<td>Live</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6712">#6712</a></td>
+</tr>
+<tr>
+<td><span id="hhw-21" class="kind">HHW-21</span></td>
+<td id="ix-21">Hebrew: a <code>mark</code> feature under <code>DFLT</code> stops composition, but GPOS isn’t applied</td>
+<td><a href="hebrew-thai-lao-and-hangul.html">Hebrew, Thai, Lao, and Hangul</a></td>
+<td>Live</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6738">#6738</a></td>
+</tr>
+<tr>
+<td><span id="hhw-22" class="kind">HHW-22</span></td>
+<td id="ix-22">Indic <code>init</code> ignores pre-context</td>
+<td><a href="indic-model.html">The Indic model</a></td>
+<td>Live</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6713">#6713</a></td>
+</tr>
+<tr>
+<td><span id="hhw-24" class="kind">HHW-24</span></td>
+<td id="ix-23"><code>stch</code> tiles are shifted when they fit the word exactly</td>
+<td id="ix-24"><a href="joining-scripts.html">Joining scripts</a></td>
+<td>Live</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6733">#6733</a> and <a href="https://github.com/harfbuzz/harfbuzz/pull/6763">#6763</a></td>
+</tr>
+<tr>
+<td><span id="hhw-29" class="kind">HHW-29</span></td>
+<td id="ix-25">Khmer moves a second COENG + RO in front of the first</td>
+<td><a href="khmer-and-myanmar.html">Khmer and Myanmar</a></td>
+<td>Live</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6735">#6735</a></td>
+</tr>
+<tr>
+<td><span id="hhw-30" class="kind">HHW-30</span></td>
+<td id="ix-26">USE: a mark after a space attaches to the space</td>
+<td id="ix-27"><a href="universal-shaping-engine.html">The Universal Shaping Engine</a></td>
+<td>Live</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6765">#6765</a></td>
+</tr>
+<tr>
+<td><span id="hhw-31" class="kind">HHW-31</span></td>
+<td id="ix-28">USE: a space doesn’t end a word for topographical forms</td>
+<td id="ix-29"><a href="universal-shaping-engine.html">The Universal Shaping Engine</a></td>
+<td>Live</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6764">#6764</a></td>
+</tr>
+<tr>
+<td><span id="hhw-32" class="kind">HHW-32</span></td>
+<td id="ix-30">USE: ZWNJ after a virama doesn’t stop a half form</td>
+<td id="ix-31"><a href="universal-shaping-engine.html">The Universal Shaping Engine</a></td>
+<td>Live</td>
+<td><span class="status st-declined"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.8 12.2 12.2 3.8" stroke="currentColor" stroke-width="1.8"/></svg></span>Declined: <a href="https://github.com/harfbuzz/harfbuzz/pull/6768">#6768</a> was closed; Indic3 tags are “a novelty only”</td>
+</tr>
+<tr>
+<td><span id="hhw-33" class="kind">HHW-33</span></td>
+<td id="ix-32">Indic: a broken cluster starting with RA + virama loses its reph</td>
+<td id="ix-33"><a href="dotted-circles-and-broken-clusters.html">Dotted circles and broken clusters</a></td>
+<td>Live</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed on main: <a href="https://github.com/harfbuzz/harfbuzz/pull/6830">#6830</a></td>
+</tr>
+<tr>
+<td><span id="hhw-34" class="kind">HHW-34</span></td>
+<td>A ZWJ defeats the vowel constraints</td>
+<td id="ix-34"><a href="dotted-circles-and-broken-clusters.html">Dotted circles and broken clusters</a></td>
+<td>Live</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6767">#6767</a></td>
+</tr>
+<tr>
+<td><span id="hhw-35" class="kind">HHW-35</span></td>
+<td id="ix-35">The vowel-constraint dotted circle copies the next character’s properties</td>
+<td id="ix-36"><a href="dotted-circles-and-broken-clusters.html">Dotted circles and broken clusters</a></td>
+<td>Live</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6710">#6710</a></td>
+</tr>
+<tr>
+<td><span id="hhw-38" class="kind">HHW-38</span></td>
+<td id="ix-37">With GSUB, GPOS, and <code>kerx</code>, <code>kerx</code> never applies and marks stop being zeroed</td>
+<td><a href="aat-positioning.html">AAT positioning</a></td>
+<td>Live</td>
+<td id="ix-38"><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6761">#6761</a>: cross-stream <code>kerx</code> is skipped when GPOS is active</td>
+</tr>
+<tr>
+<td><span id="hhw-39" class="kind">HHW-39</span></td>
+<td id="ix-39"><code>trak</code> vertical tracking is added with the wrong sign</td>
+<td><a href="aat-positioning.html">AAT positioning</a></td>
+<td>Live</td>
+<td id="ix-40"><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6700">#6700</a>, with <a href="https://github.com/harfbuzz/harfbuzz/pull/6716">#6716</a> for the Core Text font functions</td>
+</tr>
+<tr>
+<td><span id="hhw-40" class="kind">HHW-40</span></td>
+<td id="ix-41"><code>kerx</code> format 4 control-point attachment does nothing with the <code>ot</code> font functions</td>
+<td><a href="aat-positioning.html">AAT positioning</a></td>
+<td>Live</td>
+<td id="ix-42"><span class="status st-declined"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.8 12.2 12.2 3.8" stroke="currentColor" stroke-width="1.8"/></svg></span>Declined: HarfBuzz doesn’t want its own font functions to answer contour-point queries. <a href="https://github.com/harfbuzz/harfbuzz/pull/6762">#6762</a>, in 15.2.0, writes the callback for the <code>ot</code> font functions but leaves it unregistered, and unregisters FreeType’s too</td>
+</tr>
+<tr>
+<td><span id="hhw-58" class="kind">HHW-58</span></td>
+<td id="ix-43">Cross-stream kerning in legacy <code>kern</code> and <code>kerx</code> raises every later glyph but marks only the pair unsafe to break</td>
+<td><a href="for-applications.html">For applications</a></td>
+<td>Live</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6747">#6747</a></td>
+</tr>
+<tr>
+<td><span id="hhw-59" class="kind">HHW-59</span></td>
+<td id="ix-44">Hangul at cluster level 1 leaves a trailing jamo in its own cluster, unflagged</td>
+<td><a href="for-applications.html">For applications</a></td>
+<td>Live</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6709">#6709</a></td>
+</tr>
+<tr>
+<td><span id="hhw-85" class="kind">HHW-85</span></td>
+<td id="ix-45">Vertical <code>kern</code> values are applied with the horizontal sign, so negative kerning moves glyphs apart</td>
+<td><a href="legacy-kern.html#vertical-subtables">Legacy kern</a></td>
+<td>Live</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed on main: <a href="https://github.com/harfbuzz/harfbuzz/pull/6871">#6871</a></td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="limits-and-budgets">Limits and budgets</h2>
+<p>Places where a limit meant to stop malicious fonts changes the result for valid ones. <a href="limits.html">Limits</a> lists every limit.</p>
+<div class="bugs">
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Summary</th>
+<th>Chapter</th>
+<th>Checked</th>
+<th>Upstream</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span id="hhw-1" class="kind">HHW-1</span></td>
+<td id="ix-46">A null or unknown-format Coverage in a format 1 single lookup charges about 2 billion operations to the sanitizer, which then drops the whole GSUB or GPOS</td>
+<td><a href="fonts-as-bytes.html">Fonts as bytes</a></td>
+<td>Live</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6696">#6696</a></td>
+</tr>
+<tr>
+<td><span id="hhw-9" class="kind">HHW-9</span></td>
+<td id="ix-47">Mask bit 30 is never handed out, so 26 bits are free for features, not 27</td>
+<td id="ix-48"><a href="from-features-to-lookups.html">From features to lookups</a></td>
+<td>Live</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6697">#6697</a></td>
+</tr>
+<tr>
+<td><span id="hhw-13" class="kind">HHW-13</span></td>
+<td id="ix-49">Cursive chains that run against the buffer’s direction break after 64 links</td>
+<td id="ix-50"><a href="gpos.html">GPOS: positioning glyphs</a></td>
+<td>Live</td>
+<td><span class="status st-declined"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.8 12.2 12.2 3.8" stroke="currentColor" stroke-width="1.8"/></svg></span>Declined: <a href="https://github.com/harfbuzz/harfbuzz/pull/6753">#6753</a> was closed; the 64-link limit is kept on purpose</td>
+</tr>
+<tr>
+<td><span id="hhw-23" class="kind">HHW-23</span></td>
+<td id="ix-51">Syllables longer than 64 glyphs are reordered in pieces</td>
+<td><a href="indic-model.html">The Indic model</a></td>
+<td id="ix-52">Run</td>
+<td id="ix-53"><span class="status st-declined"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.8 12.2 12.2 3.8" stroke="currentColor" stroke-width="1.8"/></svg></span>Declined: the 64-glyph limit is kept on purpose. <a href="https://github.com/harfbuzz/harfbuzz/pull/6558">#6558</a>, in 15.2.0, keeps the pieces the same in every pass and makes the whole syllable one cluster; this draft’s example is still reordered wrongly at the cut</td>
+</tr>
+<tr>
+<td><span id="hhw-28" class="kind">HHW-28</span></td>
+<td id="ix-54">A CFF charstring with no <code>endchar</code> runs to 200,000 operations and uses up the drawing budget for later glyphs</td>
+<td><a href="drawing-outlines.html">Drawing outlines</a></td>
+<td id="ix-55">Run</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6737">#6737</a></td>
+</tr>
+<tr>
+<td><span id="hhw-43" class="kind">HHW-43</span></td>
+<td id="ix-56">The subsetter’s GSUB closure stops after 14 passes, losing glyphs from long nested chains that shaping reaches</td>
+<td><a href="subsetting.html">Subsetting</a></td>
+<td>Live</td>
+<td id="ix-57"><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6757">#6757</a>: the closure reaches <code>s20</code></td>
+</tr>
+<tr>
+<td><span id="hhw-44" class="kind">HHW-44</span></td>
+<td id="ix-58"><code>HB_CLOSURE_MAX_STAGES</code> is 12, though its comment requires more than the Indic shaper’s 14 pauses</td>
+<td><a href="subsetting.html">Subsetting</a></td>
+<td>Read</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6725">#6725</a></td>
+</tr>
+<tr>
+<td><span id="hhw-47" class="kind">HHW-47</span></td>
+<td id="ix-59">The sanitizer’s operation budget rejects a whole valid GSUB whose few single substitutions cover many glyphs by range</td>
+<td><a href="limits.html">Limits</a></td>
+<td id="ix-60">Run</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6751">#6751</a></td>
+</tr>
+<tr>
+<td><span id="hhw-48" class="kind">HHW-48</span></td>
+<td id="ix-61">The subsetter’s 256× buffer cap makes a valid subset fail when a tiny table legitimately grows</td>
+<td><a href="writing-tables.html">Writing tables</a></td>
+<td id="ix-62">Run</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6752">#6752</a>: the cap is now 256 times the table’s size or 1 MiB, whichever is larger</td>
+</tr>
+<tr>
+<td><span id="hhw-54" class="kind">HHW-54</span></td>
+<td id="ix-63">Texts of 524,289 to 1,048,575 characters go almost unshaped: the operation budget starts negative</td>
+<td><a href="limits.html">Limits</a></td>
+<td id="ix-64">Run</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6664">#6664</a>, which raises the operations budget</td>
+</tr>
+<tr>
+<td><span id="hhw-86" class="kind">HHW-86</span></td>
+<td id="ix-65">An AAT DontAdvance loop that runs out of the operations budget doesn’t mark the buffer failed, unlike OpenType</td>
+<td><a href="aat-inside-harfbuzz.html">AAT inside HarfBuzz</a></td>
+<td>Live</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed on main: <a href="https://github.com/harfbuzz/harfbuzz/pull/6869">#6869</a></td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="extents-drawing-and-subset-fonts">Extents, drawing, and subset fonts</h2>
+<div class="bugs">
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Summary</th>
+<th>Chapter</th>
+<th>Checked</th>
+<th>Upstream</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span id="hhw-3" class="kind">HHW-3</span></td>
+<td id="ix-66">With synthetic bold, grade, or slant, an empty glyph’s extents are <code>&lt;0,-1,-1,1&gt;</code></td>
+<td id="ix-67"><a href="fonts-and-font-functions.html">Fonts and font functions</a></td>
+<td id="ix-68">Run</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6685">#6685</a></td>
+</tr>
+<tr>
+<td><span id="hhw-4" class="kind">HHW-4</span></td>
+<td id="ix-69">Scaled glyph extents are rounded inwards vertically, so the box doesn’t cover the ink</td>
+<td><a href="where-metrics-come-from.html">Where metrics come from</a></td>
+<td>Live</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6707">#6707</a></td>
+</tr>
+<tr>
+<td><span id="hhw-25" class="kind">HHW-25</span></td>
+<td id="ix-70">CBDT format 19 images are never painted</td>
+<td><a href="color.html">Color</a></td>
+<td>Read</td>
+<td id="ix-71"><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6754">#6754</a> (reading and painting; the subsetter still writes only index formats 1 and 3)</td>
+</tr>
+<tr>
+<td><span id="hhw-27" class="kind">HHW-27</span></td>
+<td id="ix-72">Point matching in nested composites counts from the wrong start</td>
+<td><a href="drawing-outlines.html">Drawing outlines</a></td>
+<td>Live</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6749">#6749</a></td>
+</tr>
+<tr>
+<td><span id="hhw-36" class="kind">HHW-36</span></td>
+<td><code>hb-vector</code>’s PDF output drops PNG alpha</td>
+<td id="ix-73"><a href="hb-vector.html#color-glyphs-in-pdf">hb-vector</a></td>
+<td id="ix-74">Run</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6758">#6758</a></td>
+</tr>
+<tr>
+<td><span id="hhw-45" class="kind">HHW-45</span></td>
+<td id="ix-75">MATH variants and italics corrections are lost for glyphs that only GSUB produces</td>
+<td><a href="subsetting.html">Subsetting</a></td>
+<td>Live</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6745">#6745</a></td>
+</tr>
+<tr>
+<td><span id="hhw-50" class="kind">HHW-50</span></td>
+<td id="ix-76">A reordering custom glyph map breaks PairPos and ClassDef in the subset</td>
+<td><a href="subsetting.html">Subsetting</a></td>
+<td>Live</td>
+<td id="ix-77"><span class="status st-declined"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.8 12.2 12.2 3.8" stroke="currentColor" stroke-width="1.8"/></svg></span>Declined: a map that reorders glyphs isn’t supported with layout tables, and <a href="https://github.com/harfbuzz/harfbuzz/pull/6831">#6831</a>, on main, says so in the documentation</td>
+</tr>
+<tr>
+<td><span id="hhw-51" class="kind">HHW-51</span></td>
+<td id="ix-78">Subsetting a symbol font drops its only, (3,0), <code>cmap</code> subtable</td>
+<td><a href="subsetting.html">Subsetting</a></td>
+<td>Live</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6746">#6746</a></td>
+</tr>
+<tr>
+<td><span id="hhw-52" class="kind">HHW-52</span></td>
+<td id="ix-79">The keep-<code>.notdef</code>-outline flag is ignored for CFF</td>
+<td><a href="subsetting.html">Subsetting</a></td>
+<td>Live</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6748">#6748</a></td>
+</tr>
+<tr>
+<td><span id="hhw-61" class="kind">HHW-61</span></td>
+<td id="ix-80">Small instancing differences from fontTools: an <code>avar</code> map one unit off after limiting, a misleading VARC refusal, an unreachable <code>MVAR</code> region</td>
+<td><a href="instancing.html">Instancing</a></td>
+<td>Live</td>
+<td id="ix-81"><span class="status st-partly"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 2a6 6 0 0 1 0 12z" fill="currentColor"/></svg></span>Partly fixed in 15.2.0: the <code>avar</code> map, <a href="https://github.com/harfbuzz/harfbuzz/pull/6770">#6770</a>, and MVAR, <a href="https://github.com/harfbuzz/harfbuzz/pull/6772">#6772</a>; the VARC message was declined (<a href="https://github.com/harfbuzz/harfbuzz/pull/6766">#6766</a>)</td>
+</tr>
+<tr>
+<td><span id="hhw-66" class="kind">HHW-66</span></td>
+<td id="ix-82"><code>hb_color_lerp</code> reverses a color’s bytes, so every PDF sweep, and SVG sweeps that cross 0°, have the wrong colors</td>
+<td id="ix-83"><a href="hb-vector.html#color-glyphs-in-pdf">hb-vector</a></td>
+<td id="ix-84">Run</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed on main: <a href="https://github.com/harfbuzz/harfbuzz/pull/6814">#6814</a></td>
+</tr>
+<tr>
+<td><span id="hhw-67" class="kind">HHW-67</span></td>
+<td><code>hb-vector</code>’s PDF sweeps leave a square hole at their center, from 16-bit mesh coordinates</td>
+<td id="ix-85"><a href="hb-vector.html#color-glyphs-in-pdf">hb-vector</a></td>
+<td id="ix-86">Run</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed on main: <a href="https://github.com/harfbuzz/harfbuzz/pull/6824">#6824</a>, and <a href="https://github.com/harfbuzz/harfbuzz/pull/6836">#6836</a>, which sizes each sweep’s mesh to what it paints</td>
+</tr>
+<tr>
+<td><span id="hhw-68" class="kind">HHW-68</span></td>
+<td id="ix-87"><code>hb-vector</code>’s PDF output ignores custom palette colors</td>
+<td id="ix-88"><a href="hb-vector.html#color-glyphs-in-pdf">hb-vector</a></td>
+<td id="ix-89">Run</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6804">#6804</a></td>
+</tr>
+<tr>
+<td><span id="hhw-69" class="kind">HHW-69</span></td>
+<td id="ix-90"><code>hb-vector</code>’s PDF compositing isn’t isolated, so SCREEN and DIFFERENCE blend with the white page</td>
+<td id="ix-91"><a href="hb-vector.html#color-glyphs-in-pdf">hb-vector</a></td>
+<td id="ix-92">Run</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed on main: <a href="https://github.com/harfbuzz/harfbuzz/pull/6825">#6825</a></td>
+</tr>
+<tr>
+<td><span id="hhw-70" class="kind">HHW-70</span></td>
+<td id="ix-93">hb-gpu drops a fill whose only clip is a rectangle, though its comment says rectangles are just ignored</td>
+<td id="ix-94"><a href="hb-gpu.html#what-isnt-supported">hb-gpu</a></td>
+<td id="ix-95">Run</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed on main: <a href="https://github.com/harfbuzz/harfbuzz/pull/6823">#6823</a></td>
+</tr>
+<tr>
+<td><span id="hhw-75" class="kind">HHW-75</span></td>
+<td id="ix-96"><code>hb-vector --show-extents</code> and <code>hb-raster --show-extents</code> draw each box after the first at twice its pen position</td>
+<td><a href="command-line-tools.html#a-bug-in-show-extents">The command-line tools</a></td>
+<td id="ix-97">Run</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed on main: <a href="https://github.com/harfbuzz/harfbuzz/pull/6818">#6818</a></td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="api-and-format-consistency">API and format consistency</h2>
+<p>The same thing done differently in two places, or defined differently in two documents.</p>
+<div class="bugs">
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Summary</th>
+<th>Chapter</th>
+<th>Checked</th>
+<th>Upstream</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span id="hhw-6" class="kind">HHW-6</span></td>
+<td id="ix-98">Three slips in <a class="src" href="https://github.com/harfbuzz/harfbuzz/blob/15.2.0/src/hb-shape-plan.cc"><code>hb-shape-plan.cc</code></a>: a loop index, a null check after the dereference, a missing null-face guard</td>
+<td id="ix-99"><a href="shape-plans-and-their-cache.html">Shape plans and their cache</a></td>
+<td>Read</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6693">#6693</a> and <a href="https://github.com/harfbuzz/harfbuzz/pull/6698">#6698</a></td>
+</tr>
+<tr>
+<td><span id="hhw-7" class="kind">HHW-7</span></td>
+<td id="ix-100">FeatureVariations minor version 1 means one thing to HarfBuzz and another to the ISO draft, and a font following the draft loses its GSUB</td>
+<td id="ix-101"><a href="from-features-to-lookups.html#lookup-variations">From features to lookups</a></td>
+<td>Live</td>
+<td>Withdrawn: not a bug. The 2026 edition of ISO/IEC 14496-22 defines version 1.1 as HarfBuzz reads it; this draft had compared HarfBuzz with a working draft of the standard</td>
+</tr>
+<tr>
+<td><span id="hhw-14" class="kind">HHW-14</span></td>
+<td id="ix-102">With <code>HB_NO_HINTING</code>, y Device tables fall through into the variation branch, unlike x</td>
+<td id="ix-103"><a href="gpos.html">GPOS: positioning glyphs</a></td>
+<td>Read</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6694">#6694</a></td>
+</tr>
+<tr>
+<td><span id="hhw-26" class="kind">HHW-26</span></td>
+<td id="ix-104">The bitmap tables are tried in one order for images and extents, the other for painting</td>
+<td><a href="color.html">Color</a></td>
+<td>Read</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6723">#6723</a></td>
+</tr>
+<tr>
+<td><span id="hhw-37" class="kind">HHW-37</span></td>
+<td id="ix-105">Smaller <code>hb-vector</code> and <code>hb-gpu</code> differences: PDF gradients that only pad, palette functions with other types than their twins, stale comments</td>
+<td id="ix-106"><a href="hb-vector.html#color-glyphs-in-pdf">hb-vector</a>, <a href="hb-gpu.html">hb-gpu</a></td>
+<td>Read</td>
+<td><span class="status st-partly"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 2a6 6 0 0 1 0 12z" fill="currentColor"/></svg></span>Partly fixed in 15.2.0 and on main: <a href="https://github.com/harfbuzz/harfbuzz/pull/6691">#6691</a>, in 15.2.0, corrects the stale comments and documentation, and <a href="https://github.com/harfbuzz/harfbuzz/pull/6863">#6863</a>, on main, makes PDF gradients repeat and reflect; the API differences were declined, as harmless</td>
+</tr>
+<tr>
+<td><span id="hhw-41" class="kind">HHW-41</span></td>
+<td id="ix-107">Of two requests for one feature, AAT keeps the first and OpenType the last</td>
+<td><a href="aat-inside-harfbuzz.html">AAT inside HarfBuzz</a></td>
+<td>Live</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6714">#6714</a></td>
+</tr>
+<tr>
+<td><span id="hhw-55" class="kind">HHW-55</span></td>
+<td id="ix-108"><code>HB_LEAN</code> removes drawing and painting in every Meson build</td>
+<td><a href="compile-time-configuration.html">Compile-time configuration</a></td>
+<td id="ix-109">Run</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6724">#6724</a></td>
+</tr>
+<tr>
+<td><span id="hhw-56" class="kind">HHW-56</span></td>
+<td id="ix-110"><code>hb-features.h</code> never defines <code>HB_HAS_GPU</code> or <code>HB_HAS_GRAPHITE</code></td>
+<td><a href="compile-time-configuration.html">Compile-time configuration</a></td>
+<td id="ix-111">Run</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6721">#6721</a> and <a href="https://github.com/harfbuzz/harfbuzz/pull/6722">#6722</a></td>
+</tr>
+<tr>
+<td><span id="hhw-62" class="kind">HHW-62</span></td>
+<td id="ix-112"><code>hb_style_get_value</code> returns OS/2 optical sizes in twentieths of a point</td>
+<td><a href="other-tables.html">Other tables</a></td>
+<td>Live</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6695">#6695</a></td>
+</tr>
+<tr>
+<td><span id="hhw-63" class="kind">HHW-63</span></td>
+<td id="ix-113">BASE min/max: missing values read as 0, and MinMax without BaseValues hides <code>DFLT</code></td>
+<td><a href="other-tables.html">Other tables</a></td>
+<td id="ix-114">Run</td>
+<td id="ix-115"><span class="status st-partly"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 2a6 6 0 0 1 0 12z" fill="currentColor"/></svg></span>Partly fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6750">#6750</a> fixes the missing values; the rest was declined: a script record without BaseValues defines no baselines, and HarfBuzz doesn’t fall back to <code>DFLT</code> for it</td>
+</tr>
+<tr>
+<td><span id="hhw-64" class="kind">HHW-64</span></td>
+<td id="ix-116"><code>STAT::get_value</code> takes the first axis value, and STAT suppresses synthetic slant</td>
+<td><a href="other-tables.html">Other tables</a></td>
+<td>Live</td>
+<td id="ix-117"><span class="status st-partly"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 2a6 6 0 0 1 0 12z" fill="currentColor"/></svg></span>Partly fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6743">#6743</a> fixes the synthetic slant, and <a href="https://github.com/harfbuzz/harfbuzz/pull/6755">#6755</a> adds the sibling flag and format 4; the rest was declined: between two unmarked values STAT doesn’t say which is the font’s own, and HarfBuzz doesn’t guess</td>
+</tr>
+<tr>
+<td><span id="hhw-72" class="kind">HHW-72</span></td>
+<td id="ix-118"><code>HB_FEATURES_H</code> is both <a class="src" href="https://github.com/harfbuzz/harfbuzz/blob/15.2.0/src/harfbuzz-world.cc"><code>harfbuzz-world.cc</code></a>’s header name and <code>hb-features.h</code>’s include guard, so Meson’s header can’t be named</td>
+<td><a href="building-harfbuzz.html#single-file-builds">Building HarfBuzz</a></td>
+<td id="ix-119">Run</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed on main: <a href="https://github.com/harfbuzz/harfbuzz/pull/6815">#6815</a></td>
+</tr>
+<tr>
+<td><span id="hhw-77" class="kind">HHW-77</span></td>
+<td id="ix-120">Smaller things in the build: Graphite in the single-file build, the <code>libs</code> target without hb-gpu, <code>meson build</code> without <code>setup</code>, an undefined <code>HAVE_ISATTY</code></td>
+<td><a href="building-harfbuzz.html#single-file-builds">Building HarfBuzz</a></td>
+<td id="ix-121">Run</td>
+<td id="ix-122"><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed on main: <a href="https://github.com/harfbuzz/harfbuzz/pull/6820">#6820</a>, <a href="https://github.com/harfbuzz/harfbuzz/pull/6821">#6821</a>, and <a href="https://github.com/harfbuzz/harfbuzz/pull/6819">#6819</a>, after the Graphite item, <a href="https://github.com/harfbuzz/harfbuzz/pull/6722">#6722</a>, in 15.2.0</td>
+</tr>
+<tr>
+<td><span id="hhw-79" class="kind">HHW-79</span></td>
+<td id="ix-123"><code>hb_directwrite_font_set_funcs</code> takes a reference to the DirectWrite font face that nothing releases, where the Core Text version takes none</td>
+<td><a href="integrations.html#directwrite">Integrations</a></td>
+<td>Read</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed on main: <a href="https://github.com/harfbuzz/harfbuzz/pull/6812">#6812</a></td>
+</tr>
+<tr>
+<td><span id="hhw-80" class="kind">HHW-80</span></td>
+<td id="ix-124"><code>_hb_gdi_reference_table</code> returns before its <code>ReleaseDC</code> guard when <code>SelectObject</code> fails, leaking the screen DC</td>
+<td><a href="integrations.html#gdi-and-uniscribe">Integrations</a></td>
+<td>Read</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed on main: <a href="https://github.com/harfbuzz/harfbuzz/pull/6811">#6811</a></td>
+</tr>
+<tr>
+<td><span id="hhw-82" class="kind">HHW-82</span></td>
+<td id="ix-125">USE: the generator’s list of generic bases (U+2015, U+2022, U+25FB to U+25FE) never applies, and they come out <code>O</code></td>
+<td id="ix-126"><a href="universal-shaping-engine.html#the-categories">The Universal Shaping Engine</a></td>
+<td id="ix-127">Run</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed on main: <a href="https://github.com/harfbuzz/harfbuzz/pull/6870">#6870</a>, which closed issue <a href="https://github.com/harfbuzz/harfbuzz/issues/6828">#6828</a></td>
+</tr>
+<tr>
+<td><span id="hhw-84" class="kind">HHW-84</span></td>
+<td id="ix-128">The Core Text face loader fails for a font with named instances or several faces and no PostScript name, a regression in 15.2.0</td>
+<td><a href="integrations.html">Integrations</a></td>
+<td id="ix-129">Run</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed on main: <a href="https://github.com/harfbuzz/harfbuzz/pull/6872">#6872</a></td>
+</tr>
+</tbody>
+</table>
+</div>
+<h2 id="documentation-and-messages">Documentation and messages</h2>
+<div class="bugs">
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Summary</th>
+<th>Chapter</th>
+<th>Checked</th>
+<th>Upstream</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span id="hhw-2" class="kind">HHW-2</span></td>
+<td id="ix-130">The “start table GPOS” trace message prints GSUB’s chosen script</td>
+<td id="ix-131"><a href="choosing-a-script-shaper.html">Choosing a script shaper</a></td>
+<td>Live</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6686">#6686</a></td>
+</tr>
+<tr>
+<td><span id="hhw-42" class="kind">HHW-42</span></td>
+<td id="ix-132">hb-depend: errors in its header and design notes, a declared function that doesn’t exist, a wrong build option in the fuzzing README</td>
+<td id="ix-133"><a href="hb-depend.html">hb-depend</a></td>
+<td id="ix-134">Run</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6703">#6703</a>, <a href="https://github.com/harfbuzz/harfbuzz/pull/6692">#6692</a>, <a href="https://github.com/harfbuzz/harfbuzz/pull/6744">#6744</a>, and <a href="https://github.com/harfbuzz/harfbuzz/pull/6745">#6745</a></td>
+</tr>
+<tr>
+<td><span id="hhw-46" class="kind">HHW-46</span></td>
+<td id="ix-135"><code>hb_set_invert</code> is documented as “Since: 3.0.0”, but <code>NEWS</code> has it before 1.6.1</td>
+<td id="ix-136"><a href="reading-harfbuzz-cpp.html">Reading HarfBuzz’s C++</a></td>
+<td>Read</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6690">#6690</a></td>
+</tr>
+<tr>
+<td><span id="hhw-49" class="kind">HHW-49</span></td>
+<td id="ix-137"><a class="src" href="https://github.com/harfbuzz/harfbuzz/blob/15.2.0/docs/serializer.md"><code>docs/serializer.md</code></a> and <a class="src" href="https://github.com/harfbuzz/harfbuzz/blob/15.2.0/docs/repacker.md"><code>docs/repacker.md</code></a> are out of date</td>
+<td><a href="writing-tables.html">Writing tables</a></td>
+<td>Read</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6702">#6702</a></td>
+</tr>
+<tr>
+<td><span id="hhw-53" class="kind">HHW-53</span></td>
+<td id="ix-138">Small faults in the data generators, none affecting the tables</td>
+<td><a href="regenerating-the-unicode-and-shaping-tables.html">Regenerating the tables</a></td>
+<td>Read</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6688">#6688</a>, <a href="https://github.com/harfbuzz/harfbuzz/pull/6689">#6689</a>, <a href="https://github.com/harfbuzz/harfbuzz/pull/6715">#6715</a>, <a href="https://github.com/harfbuzz/harfbuzz/pull/6739">#6739</a>, and <a href="https://github.com/harfbuzz/harfbuzz/pull/6740">#6740</a>, except the <code>www-01.sil.org</code> citation, which is kept on purpose</td>
+</tr>
+<tr>
+<td><span id="hhw-57" class="kind">HHW-57</span></td>
+<td>Configuration macros and limits defined but unused, or used but undocumented</td>
+<td><a href="compile-time-configuration.html">Compile-time configuration</a></td>
+<td>Read</td>
+<td id="ix-139"><span class="status st-partly"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 2a6 6 0 0 1 0 12z" fill="currentColor"/></svg></span>Partly fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6728">#6728</a>, <a href="https://github.com/harfbuzz/harfbuzz/pull/6727">#6727</a>, and <a href="https://github.com/harfbuzz/harfbuzz/pull/6759">#6759</a>; the rest was declined: <a class="src" href="https://github.com/harfbuzz/harfbuzz/blob/15.2.0/CONFIG.md"><code>CONFIG.md</code></a> leaves the full list of <code>HB_NO_*</code> macros to <a class="src" href="https://github.com/harfbuzz/harfbuzz/blob/15.2.0/src/hb-config.hh"><code>hb-config.hh</code></a>, and the four budget weights that nothing uses, new in 15.2.0, complete a ladder</td>
+</tr>
+<tr>
+<td><span id="hhw-60" class="kind">HHW-60</span></td>
+<td><code>hb-shape --text-before</code> echoes its value to stderr</td>
+<td><a href="for-applications.html">For applications</a></td>
+<td id="ix-140">Run</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6687">#6687</a></td>
+</tr>
+<tr>
+<td><span id="hhw-65" class="kind">HHW-65</span></td>
+<td id="ix-141">Smaller things in <code>name</code>, BASE, and MATH: <code>hb-info --list-names</code>, a sign error, a quadratic risk, a missed script tag</td>
+<td><a href="other-tables.html">Other tables</a></td>
+<td>Live</td>
+<td id="ix-142"><span class="status st-partly"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 2a6 6 0 0 1 0 12z" fill="currentColor"/></svg></span>Partly fixed in 15.2.0: <a href="https://github.com/harfbuzz/harfbuzz/pull/6708">#6708</a>, <a href="https://github.com/harfbuzz/harfbuzz/pull/6741">#6741</a>, and <a href="https://github.com/harfbuzz/harfbuzz/pull/6760">#6760</a>; the <code>ltag</code> item was declined: the <code>name</code> API returns interned languages, and what one font can add is bounded</td>
+</tr>
+<tr>
+<td><span id="hhw-71" class="kind">HHW-71</span></td>
+<td id="ix-143">hb-gpu’s stem darkening is documented, and used by its viewer, with pixels per font unit for its ppem</td>
+<td id="ix-144"><a href="hb-gpu.html#small-sizes">hb-gpu</a></td>
+<td>Read</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed on main: <a href="https://github.com/harfbuzz/harfbuzz/pull/6832">#6832</a>, which closed issue <a href="https://github.com/harfbuzz/harfbuzz/issues/6827">#6827</a></td>
+</tr>
+<tr>
+<td><span id="hhw-73" class="kind">HHW-73</span></td>
+<td><code>hb-shape -v</code> turns on <code>--ned</code> as well as <code>--verbose</code></td>
+<td><a href="command-line-tools.html#reading-the-output">The command-line tools</a></td>
+<td>Live</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed on main: <a href="https://github.com/harfbuzz/harfbuzz/pull/6813">#6813</a></td>
+</tr>
+<tr>
+<td><span id="hhw-74" class="kind">HHW-74</span></td>
+<td id="ix-145"><code>--features</code> and <code>--variations</code> split at spaces, so the CSS forms their help offers don’t work</td>
+<td><a href="command-line-tools.html#features">The command-line tools</a></td>
+<td id="ix-146">Run</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed on main: <a href="https://github.com/harfbuzz/harfbuzz/pull/6822">#6822</a></td>
+</tr>
+<tr>
+<td><span id="hhw-76" class="kind">HHW-76</span></td>
+<td id="ix-147">Smaller things in the renderers: hb-raster’s HSL luminosity weights, stale hb-vector and hb-gpu documentation</td>
+<td id="ix-148"><a href="hb-raster.html#groups-and-the-composite-modes">hb-raster</a>, <a href="hb-gpu.html">hb-gpu</a></td>
+<td id="ix-149">Run</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed on main: <a href="https://github.com/harfbuzz/harfbuzz/pull/6816">#6816</a>, <a href="https://github.com/harfbuzz/harfbuzz/pull/6817">#6817</a>, and <a href="https://github.com/harfbuzz/harfbuzz/pull/6826">#6826</a>, after <a href="https://github.com/harfbuzz/harfbuzz/pull/6806">#6806</a> in 15.2.0</td>
+</tr>
+<tr>
+<td><span id="hhw-78" class="kind">HHW-78</span></td>
+<td>Smaller things in the command-line tools: <code>--font-size</code> help, an unused <code>refuse_tty</code>, <code>hb-fc-list -V</code></td>
+<td><a href="command-line-tools.html#the-tools-that-arent-installed">The command-line tools</a></td>
+<td id="ix-150">Run</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed on main: <a href="https://github.com/harfbuzz/harfbuzz/pull/6819">#6819</a></td>
+</tr>
+<tr>
+<td><span id="hhw-81" class="kind">HHW-81</span></td>
+<td id="ix-151">Smaller things in the integration documentation: <code>hb_ft_font_set_funcs</code> and <code>hb_ft_hb_font_changed</code>, swapped cairo scale factors, missing <code>Since:</code> lines, <code>NEWS</code> for 11.0.0, the user manual’s integration chapter</td>
+<td><a href="integrations.html">Integrations</a></td>
+<td>Read</td>
+<td id="ix-152"><span class="status st-partly"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 2a6 6 0 0 1 0 12z" fill="currentColor"/></svg></span>Partly fixed on main: <a href="https://github.com/harfbuzz/harfbuzz/pull/6817">#6817</a> and <a href="https://github.com/harfbuzz/harfbuzz/pull/6821">#6821</a>; the <code>NEWS</code> item for 11.0.0 was declined: old release notes stay as they are</td>
+</tr>
+<tr>
+<td><span id="hhw-83" class="kind">HHW-83</span></td>
+<td id="ix-153">The user manual’s Configuration options leave out HarfBuzz’s own libraries and backends, and name the deprecated <code>graphite</code> option</td>
+<td><a href="compile-time-configuration.html#the-meson-options">Compile-time configuration</a></td>
+<td>Read</td>
+<td><span class="status st-fixed"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.9" fill="currentColor"/></svg></span>Fixed on main: <a href="https://github.com/harfbuzz/harfbuzz/pull/6868">#6868</a></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p id="ix-154">Of the 86 drafts, 45 were shown live in the book, 25 were run outside it, and 16 were found by reading. One, HHW-7, is withdrawn. Of the other 85, 53 have been fixed in 15.2.0 and 20 more on <code>main</code>; seven are partly fixed, with what is left of each declined; and five were declined. None is open. The book now describes 15.2.0, so its live blocks show the fixes that 15.2.0 made, and the chapters note the fixes made on <code>main</code> since.</p>
+<h2 id="in-short">In short</h2>
+<ul>
+<li>Writing the book turned up 86 draft bug reports, HHW-1 to HHW-86, all but the last three reproduced on HarfBuzz 15.1.0. Two are on HarfBuzz’s issue tracker, and one is withdrawn; 53 are fixed in 15.2.0 and 20 more on <code>main</code>, and none is open.</li>
+<li>Each was shown live in a chapter, run outside the book, or found by reading the code, and the last column says what has happened to it upstream.</li>
+<li>The numbers are permanent: HarfBuzz’s pull requests cite them.</li>
+</ul>
+
+  </main>
+  <nav class="pager"><a rel="prev" href="regenerating-the-unicode-and-shaping-tables.html">← Regenerating the Unicode and shaping tables</a><a rel="next" href="glossary.html">Glossary →</a></nav>
+  <footer class="version">Draft, <a href="https://github.com/Lorp/how-harfbuzz-works/commit/917ca239f1549bd53ff41c28abb5297c3c771edd">24 November 2026 · 917ca23</a>. It describes HarfBuzz 15.2.0.</footer>
+</div>
+
+<script>
+(function () {
+  // Each lookup's tabs change only that lookup. Every lookup starts on
+  // the spec-like view.
+  function show(fig, v) {
+    var has = fig.querySelector('.pane[data-view="' + v + '"]');
+    var s = has ? v : "spec";
+    fig.querySelectorAll(".pane").forEach(function (p) { p.classList.toggle("on", p.dataset.view === s); });
+    fig.querySelectorAll(".tabs button").forEach(function (b) { b.setAttribute("aria-selected", String(b.dataset.view === s)); });
+  }
+  document.addEventListener("click", function (e) {
+    var tab = e.target.closest(".views .tabs button");
+    if (tab) show(tab.closest("figure.views"), tab.dataset.view);
+  });
+  document.querySelectorAll("figure.views").forEach(function (fig) { show(fig, "spec"); });
+
+  // Sliders on drawings: every frame was drawn when the book was built, so
+  // moving the slider shows the nearest one.
+  document.querySelectorAll(".draw.slider").forEach(function (fig) {
+    var input = fig.querySelector("input[type=range]");
+    var out = fig.querySelector("output");
+    var frames = Array.prototype.slice.call(fig.querySelectorAll(".frame"));
+    input.addEventListener("input", function () {
+      var v = Number(input.value), best = frames[0];
+      frames.forEach(function (f) {
+        if (Math.abs(f.dataset.value - v) < Math.abs(best.dataset.value - v)) best = f;
+      });
+      frames.forEach(function (f) { f.hidden = f !== best; });
+      out.textContent = best.dataset.value;
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
