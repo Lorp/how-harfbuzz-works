@@ -133,7 +133,7 @@ shaping.ttf  fi  --features=-liga
 
 How a list of features turns into a list of lookups, and in what order those run, is the subject of [From features to lookups](from-features-to-lookups.html).
 
-## Where one-to-one breaks
+## Where one-to-one is not enough
 
 With those words in hand, here are the ways in which characters and glyphs fail to correspond. Each is shown in the test font.
 

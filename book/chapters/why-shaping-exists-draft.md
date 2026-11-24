@@ -140,7 +140,7 @@ shaping.ttf  fi  --features=-liga
 
 How a list of features turns into a list of lookups, and in what order those run, is the subject of [From features to lookups](from-features-to-lookups.html).
 
-## Where one-to-one breaks
+## Where one-to-one is not enough
 
 With those words in hand, here are the ways in which characters and glyphs fail to correspond. Each is shown in the test font.
 
@@ -251,7 +251,7 @@ shaping.ttf  कि  --cluster-level=1
 shaping.ttf  कि  --cluster-level=2
 ```
 
-At level 1 the acute has its own cluster, 1. The reordered vowel sign doesn’t: putting it first with cluster 1 would break the order, so its cluster is merged with the consonant’s. At level 2, nothing is merged just to keep the order, and the vowel sign keeps its cluster, 1, though it comes first. Level 3, which merges marks as level 0 does but doesn’t keep the order, is the newest: it arrived in 11.0.0. The header comment says level 0 is the default only for backward compatibility and recommends level 1 for new programs. The user manual adds where level 0 came from: it is how the Windows shaping engine behaves, and the old HarfBuzz copied it. All four levels are covered in [Buffers](buffers.html).
+Each pair of drawings is identical: the cluster level changes only the numbers HarfBuzz reports, not the glyphs or where they go. At level 1 the acute has its own cluster, 1. The reordered vowel sign doesn’t: putting it first with cluster 1 would break the order, so its cluster is merged with the consonant’s. At level 2, nothing is merged just to keep the order, and the vowel sign keeps its cluster, 1, though it comes first. Level 3, which merges marks as level 0 does but doesn’t keep the order, is the newest: it arrived in 11.0.0. The header comment says level 0 is the default only for backward compatibility and recommends level 1 for new programs. The user manual adds where level 0 came from: it is how the Windows shaping engine behaves, and the old HarfBuzz copied it. All four levels are covered in [Buffers](buffers.html).
 
 Merging is one of two things HarfBuzz records about the boundaries in its output. The other is whether a boundary is safe to break at: whether the text on each side could be shaped separately and give the same glyphs. Between joined Arabic letters it is not, since each one’s form depends on the next. HarfBuzz marks a glyph with `UNSAFE_TO_BREAK` when the run can’t safely be broken at the start of its cluster, and `hb-shape` shows the flag as `#1`:
 
