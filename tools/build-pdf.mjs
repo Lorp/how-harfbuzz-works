@@ -43,16 +43,19 @@ const slugify = (text) => text.normalize("NFKD").replace(/[^\x00-\x7f]/g, "")
 // carries the part (number and name), for its part title page.
 const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII", "XIII", "XIV", "XV"];
 const pages = [];
-let part = null, parts = 0, chapter = 0, partStarts = false;
+let part = null, parts = 0, chapter = 0, partStarts = false, drafts = false;
 for (const raw of fs.readFileSync(path.join(ROOT, "book", "toc.txt"), "utf8").split("\n")) {
   const l = raw.trim();
   if (!l || l.startsWith("#")) continue;
   const sec = l.match(/^\[(\w+)\]\s*(.*)$/);
   if (sec) {
+    // Drafts are built on the site for review, and left out of the book.
+    drafts = sec[1] === "drafts";
     part = sec[1] === "part" ? { label: `Part ${ROMAN[parts++]}`, name: sec[2] } : null;
     partStarts = !!part;
     continue;
   }
+  if (drafts) continue;
   const page = l.startsWith("?")
     ? { slug: slugify(l.slice(1).split("|")[0]), written: false }
     : { slug: path.basename(l, path.extname(l)), written: true };

@@ -160,6 +160,13 @@ pre code { font-size: .82rem; line-height: 1.55; }
 .shape td.in .cps { display: block; font: 400 .7rem var(--font-code); color: var(--muted); white-space: nowrap; }
 .shape td.out code, .trace td.buf code { background: none; padding: 0; white-space: nowrap; color: var(--hit); font-weight: 600; }
 .shape td.out code { white-space: pre; }
+.shape td.drawn { vertical-align: middle; }
+.shape td.in .chars { display: flex; gap: .4rem; align-items: flex-start; justify-content: flex-start; }
+.shape td.in .char { display: flex; flex-direction: column; align-items: flex-start; }
+.shape td.in .char svg { display: block; max-width: none; color: var(--ink); }
+.shape td.in .char .unmapped { display: block; height: 2.4rem; width: 1.4rem; margin: .4rem 0; border: 1px dashed var(--muted); border-radius: 2px; }
+.shape td.in .char .cp { font: 400 .7rem var(--font-code); color: var(--muted); white-space: nowrap; }
+.shape td.drawn svg { display: block; max-width: none; color: var(--ink); }
 .trace { border: 1px solid var(--rule); border-radius: 6px; }
 .trace-head { padding: .5rem .75rem; border-bottom: 1px solid var(--rule); background: var(--well); }
 .trace-head code { background: none; font-size: .78rem; color: var(--muted); }

@@ -219,24 +219,91 @@ function runShape(font, text, opts, msg = false) {
   return (msg ? r.stderr + r.stdout : r.stdout).trim();
 }
 
+// A shape block draws its output, with hb-vector, for fonts whose glyphs are
+// real outlines: those named in a drawn.txt beside them, one per line. Most
+// test fonts are boxes, which say nothing when drawn, and get no drawing.
+const drawnLists = new Map();
+function isDrawn(fontFile) {
+  const dir = path.dirname(fontFile);
+  if (!drawnLists.has(dir)) {
+    const list = path.join(dir, "drawn.txt");
+    drawnLists.set(dir, new Set(fs.existsSync(list)
+      ? fs.readFileSync(list, "utf8").split("\n").map((l) => l.trim()).filter((l) => l && !l.startsWith("#"))
+      : []));
+  }
+  return drawnLists.get(dir).has(path.basename(fontFile));
+}
+
+// The shaped output drawn by hb-vector, with the options that change shaping
+// (not the ones that only change how hb-shape prints its result).
+let shapeDrawCount = 0;
+function drawShaped(fontFile, text, opts) {
+  const keep = opts.filter((o) => o === "--glyphs" || /^--(script|direction|language|features|variations)=/.test(o));
+  const svg = runTool(HB_VECTOR, [fontFile, text, ...keep, "--background=none", "--margin=30", "-o", "/dev/stdout"]).stdout;
+  const pre = `s${++shapeDrawCount}-`;
+  return svg.replace(/^[\s\S]*?<svg/, "<svg").replace(/\s(width|height)="[^"]*"/g, "")
+    // A fixed scale: every drawing is 3.2rem high, and as wide as its viewBox
+    // says, so a table cell can't shrink one glyph more than another.
+    .replace(/<svg([^>]*)viewBox="([^"]+)"/, (m, attrs, vb) => {
+      const [, , w, h] = vb.split(/\s+/).map(Number);
+      return `<svg${attrs}viewBox="${vb}" style="height:3.2rem;width:${(3.2 * w / h).toFixed(3)}rem"`;
+    })
+    .replace(/<svg/, `<svg role="img" aria-label="${esc(shown(text))}, as shaped"`)
+    .replace(/fill="#000(000)?"/g, 'fill="currentColor"')
+    .replace(/\bid="([^"]+)"/g, (_, id) => `id="${pre}${id}"`)
+    .replace(/url\(#([^)]+)\)/g, (_, id) => `url(#${pre}${id})`)
+    .replace(/(\b(?:xlink:)?href)="#([^"]+)"/g, (_, a, id) => `${a}="#${pre}${id}"`);
+}
+
+// A font's cmap, from hb-info: code point → glyph name.
+const cmaps = new Map();
+function cmapOf(fontFile) {
+  if (!cmaps.has(fontFile)) {
+    const m = new Map();
+    for (const line of runTool(HB_INFO, ["--list-unicodes", fontFile]).stdout.split("\n")) {
+      const hit = line.match(/^U\+([0-9A-F]+)\t(\S+)/);
+      if (hit) m.set(parseInt(hit[1], 16), hit[2]);
+    }
+    cmaps.set(fontFile, m);
+  }
+  return cmaps.get(fontFile);
+}
+
+// The input of a drawn font's shape block: each character's own glyph, from
+// the cmap and unshaped, in the order the text stores them, with its code
+// point beneath. A character the font doesn't map gets an empty box.
+function drawCharacters(fontFile, text) {
+  const cmap = cmapOf(fontFile);
+  return '<span class="chars">' + [...text].map((ch) => {
+    const cp = ch.codePointAt(0);
+    const label = "U+" + cp.toString(16).toUpperCase().padStart(4, "0");
+    const glyph = cmap.get(cp);
+    const pic = glyph ? drawShaped(fontFile, glyph, ["--glyphs"]) : '<span class="unmapped" title="not in the font"></span>';
+    return `<span class="char">${pic}<span class="cp">${label}</span></span>`;
+  }).join("") + "</span>";
+}
+
 function blockShape(body, fonts) {
-  const rows = [];
-  for (const line of body.trim().split("\n")) {
-    const parts = line.trim().split(/\s{2,}/);
-    const [font, rawText, ...opts] = parts;
-    const text = decode(rawText);
-    const out = runShape(fontPath(font, fonts), text, opts);
-    rows.push("<tr>" +
+  const lines = body.trim().split("\n").map((line) => {
+    const [font, rawText, ...opts] = line.trim().split(/\s{2,}/);
+    return { font, file: fontPath(font, fonts), text: decode(rawText), opts };
+  });
+  const drawn = lines.some((l) => isDrawn(l.file));
+  const rows = lines.map(({ font, file, text, opts }) => {
+    const out = runShape(file, text, opts);
+    return "<tr>" +
       `<td class="font">${esc(font)}</td>` +
-      `<td class="in"><span class="txt">${esc(shown(text))}</span>` +
-      `<span class="cps">${codepoints(text)}</span></td>` +
+      (isDrawn(file) ? `<td class="in">${drawCharacters(file, text)}</td>` :
+        `<td class="in"><span class="txt">${esc(shown(text))}</span>` +
+        `<span class="cps">${codepoints(text)}</span></td>`) +
       `<td class="opt">${esc(opts.join(" "))}</td>` +
       `<td class="out"><code>${esc(out)}</code></td>` +
-      "</tr>");
-  }
+      (drawn ? `<td class="drawn">${isDrawn(file) ? drawShaped(file, text, opts) : ""}</td>` : "") +
+      "</tr>";
+  });
   return '<div class="shape"><table><thead><tr><th>Font</th><th>Text</th>' +
-         "<th>Options</th><th>hb-shape output</th></tr></thead><tbody>" +
-         rows.join("") + "</tbody></table></div>";
+         "<th>Options</th><th>hb-shape output</th>" + (drawn ? "<th>Drawn</th>" : "") +
+         "</tr></thead><tbody>" + rows.join("") + "</tbody></table></div>";
 }
 
 // hb-raster's PNG output, one image per line, enlarged so its pixels show.
@@ -1067,7 +1134,7 @@ function readToc() {
   const pages = [], sections = [];
   let section = null, chapter = 0, parts = 0, appendix = 0;
   for (const line of lines) {
-    const m = line.match(/^\[(front|part|appendices|end)\]\s*(.*)$/);
+    const m = line.match(/^\[(front|part|appendices|end|drafts)\]\s*(.*)$/);
     if (m) {
       const kind = m[1];
       const label = kind === "part" ? `Part ${ROMAN[parts++]}` : kind === "appendices" ? "Appendices" : "";
@@ -1088,7 +1155,8 @@ function readToc() {
     if (section.kind === "part") page.number = String(++chapter);
     if (section.kind === "appendices") page.number = String.fromCharCode(65 + appendix++);
     page.eyebrow = section.kind === "part" ? `${section.label} · ${section.title}`
-                 : section.kind === "appendices" ? `Appendix ${page.number}` : "";
+                 : section.kind === "appendices" ? `Appendix ${page.number}`
+                 : section.kind === "drafts" ? "Draft for review: not part of the book" : "";
     page.section = section;
     if (pages.some((p) => p.slug === page.slug)) throw new Error(`toc.txt: two pages are named ${page.slug}`);
     pages.push(page);
@@ -1107,7 +1175,7 @@ function contents(sections, md, withSummaries, depth = 1) {
     const subs = depth > 1 && !p.planned && p.slug !== "title" ? subheadings(p, md, depth) : "";
     return `<li${cls}>${num}<a href="${p.slug}.html">${esc(p.title)}</a>${summary}${subs}</li>`;
   };
-  return sections.map((s) => {
+  return sections.filter((s) => s.kind !== "drafts").map((s) => {
     const head = s.label ? `<p class="toc-head">${esc(s.label)}${s.title ? `: ${esc(s.title)}` : ""}</p>` : "";
     return `<div class="toc-section">${head}<ol>${s.pages.map(item).join("")}</ol></div>`;
   }).join("");
@@ -1194,7 +1262,9 @@ function main(outDir, fragment) {
     // A chapter is headed “15. Title”, under “Part IV · Name”.
     if (p.section.kind === "part") body = body.replace(/(<h1[^>]*>)/, `$1${p.number}. `);
     if (p.eyebrow) body = `<p class="eyebrow">${esc(p.eyebrow)}</p>\n` + body;
-    const prev = n ? pages[n - 1] : null, next = pages[n + 1];
+    // Drafts are outside the book's reading order: no links to them, and none from them.
+    const order = pages.filter((q) => q.section.kind !== "drafts"), at = order.indexOf(p);
+    const prev = at > 0 ? order[at - 1] : null, next = at >= 0 ? order[at + 1] : null;
     const prevLink = prev ? `<a rel="prev" href="${prev.slug}.html">← ${esc(prev.title)}</a>` : "<span></span>";
     const nextLink = next ? `<a rel="next" href="${next.slug}.html">${esc(next.title)} →</a>` : "<span></span>";
     // Functions as replacements, so a "$" in the content is never special.

@@ -7,6 +7,9 @@
 #   [part] Title          chapters, numbered through the whole book; pages
 #   [appendices]          in [appendices] are lettered A, B, C…
 #   [end]
+#   [drafts]              pages built on the site for review, under a
+#                         “Draft for review” label, but left out of the
+#                         contents, the reading order, the indexes, and the PDF
 #
 # A page's name (and its fonts folder, fonts/<name>/) is its file name, or
 # for a planned page, its title made into a name: “Buffers” is buffers.
@@ -108,3 +111,6 @@ end/credits.md
 end/general-index.md
 end/code-index.md
 end/colophon.md
+
+[drafts]
+chapters/why-shaping-exists-draft.md
